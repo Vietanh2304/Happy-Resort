@@ -23,9 +23,19 @@ export interface Decor { id: string; owner_id: string; island: string; item_id: 
 export interface InvRow { item_id: string; qty: number }
 export interface Note { id: string; from_id: string; to_id: string; body: string; gift_item: string | null; read_at: string | null; created_at: string; voice_path?: string | null; voice_secs?: number | null }
 
+const EXPIRED = /jwt expired|token is expired|invalid jwt/i;
+let refreshing: Promise<unknown> | null = null;
+/** Làm mới phiên đăng nhập (nhiều lệnh cùng lỗi thì chỉ làm mới một lần) */
+const refresh = () => (refreshing ??= supabase.auth.refreshSession().finally(() => { refreshing = null; }));
+
 async function run<T>(query: PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<T> {
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
+  let { data, error } = await query;
+  // Máy ngủ / tab để lâu: token hết hạn mà chưa kịp làm mới → làm mới rồi gửi lại lệnh (builder gửi lại mỗi lần await)
+  if (error && EXPIRED.test(error.message)) {
+    await refresh();
+    ({ data, error } = await query);
+  }
+  if (error) throw new Error(EXPIRED.test(error.message) ? 'Phiên đăng nhập hết hạn — tải lại trang (Ctrl+F5) giúp mình nhé' : error.message);
   return data as T;
 }
 

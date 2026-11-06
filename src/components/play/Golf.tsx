@@ -1,7 +1,10 @@
 // ⛳ Golf mini quanh làng: thay lượt, kéo ngược từ bóng để ngắm (kéo càng xa càng mạnh), thả tay để đánh.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DECO, HOLES, MAX_POWER, shoot, simulate, startGolf, type Golf as G } from '../../lib/golf';
-import { emojiSprite, makeSprite } from '../../lib/pixel';
+import { makeSprite, type Sprite } from '../../lib/pixel';
+import { beachUmbrellaSprite, flowerBedSprite, golfFlagSprite, haystackSprite, miniFountainSprite, miniPalmSprite, rockSprite } from '../../lib/playSprites';
+
+const DECO_SPRITE: Record<string, () => Sprite> = { F: miniFountainSprite, P: miniPalmSprite, R: rockSprite, H: haystackSprite, B: flowerBedSprite, U: beachUmbrellaSprite };
 import { reward } from '../gameKit';
 import { Chibi, PlayScreen, useFrame, usePeer, useViewport, type PlayProps } from './kit';
 
@@ -89,8 +92,14 @@ export function Golf({ me, partner, date, onLeave }: PlayProps) {
         onPointerMove={e => { if (drag) { const p = toTile(e); setDrag({ ...drag, x: p.x, y: p.y }); } }}
         onPointerUp={release} onPointerCancel={() => setDrag(null)}>
         <img className="k-bg" src={bg.url} alt="" draggable={false} style={{ width: cols * tile, height: rows * tile }} />
-        {hole.map.flatMap((row, y) => [...row].map((c, x) => DECO[c] ? <img key={`${x},${y}`} className="golf-deco" src={emojiSprite(DECO[c]).url} alt="" style={{ left: x * tile, top: y * tile - tile * 0.25, width: tile, height: tile }} /> : null))}
-        {(() => { for (let y = 0; y < rows; y++) { const x = hole.map[y].indexOf('O'); if (x >= 0) return <span className="golf-flag" style={{ left: (x + 0.5) * tile, top: (y + 0.5) * tile, fontSize: tile * 0.9 }}>🚩</span>; } return null; })()}
+        {hole.map.flatMap((row, y) => [...row].map((c, x) => {
+          if (!DECO[c]) return null;
+          // Đài phun nước chiếm khối 2×2: chỉ vẽ một lần ở ô góc trên trái
+          if (c === 'F' && (row[x - 1] === 'F' || hole.map[y - 1]?.[x] === 'F')) return null;
+          const sp = DECO_SPRITE[c](), cw = c === 'F' ? 2 : 1;
+          return <img key={`${x},${y}`} className="golf-deco" src={sp.url} alt="" style={{ left: (x + cw / 2) * tile - (sp.w * s) / 2, top: (y + cw * 0.95) * tile - sp.h * s, width: sp.w * s, height: sp.h * s, zIndex: y * 10 + 6 }} />;
+        }))}
+        {(() => { for (let y = 0; y < rows; y++) { const x = hole.map[y].indexOf('O'); if (x >= 0) { const f = golfFlagSprite(); return <img className="golf-flag" src={f.url} alt="" style={{ left: (x + 0.5) * tile - s, top: (y + 0.5) * tile - f.h * s, width: f.w * s, height: f.h * s }} />; } } return null; })()}
         {g && [me.id, them].filter(Boolean).map(id => {
           const b = ballAt(id);
           if (!b) return null;

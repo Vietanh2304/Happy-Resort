@@ -2,8 +2,11 @@
 // khi quả cầu tới gần. Cầu rơi bên sân ai thì máy người đó phân xử (đỡ được hay mất điểm).
 // Hai kiểu chơi: đối kháng (chạm 11 điểm) hoặc giữ cầu (đếm số lần đánh qua lại).
 import { useEffect, useRef, useState } from 'react';
-import { canHit, COURT, landT, landX, NET_H, NET_X, plan, posAt, type Shot } from '../../lib/badminton';
+import { canHit, COURT, landT, landX, NET_X, plan, posAt, type Shot } from '../../lib/badminton';
 import { characterSprite } from '../../lib/sprites';
+import { makeSprite } from '../../lib/pixel';
+import { shuttleSprite } from '../../lib/playSprites';
+import { cloudSprite } from '../../lib/sprites';
 import { reward } from '../gameKit';
 import { PlayScreen, typing, useFrame, usePeer, useViewport, type PlayProps } from './kit';
 
@@ -101,10 +104,13 @@ export function Badminton({ me, partner, date, onLeave }: PlayProps) {
   }, []);
 
   const vw = useViewport();
-  const W = Math.min(vw.w - 16, 1000), u = W / COURT, H = u * 7.5;
+  // Sân vẽ pixel 160×60 (8 px logic mỗi đơn vị sân); phóng theo bề ngang màn hình
+  const k = Math.max(2, Math.floor((Math.min(vw.w - 16, 1000) / 160) * 2) / 2);
+  const W = 160 * k, u = W / COURT, H = 60 * k;
   const ground = H - u * 1.1;
   const X = (x: number) => x * u, Y = (y: number) => ground - y * u;
-  const sp = Math.max(1.5, u / 12);
+  const sp = k;
+  const court = courtSprite(), shuttle = shuttleSprite(), racket = racketSprite();
   const moved = useRef<Record<string, { x: number; at: number }>>({});
   const player = (look: typeof me.avatar, x: number, who: string, faceRight: boolean, label?: string) => {
     const swinging = swing && swing.who === who && now - swing.at < 300;
@@ -115,9 +121,9 @@ export function Badminton({ me, partner, date, onLeave }: PlayProps) {
     const spr = swinging ? characterSprite(look, 'act', undefined, 'front', now - swing!.at < 120 ? 6 : 7)
       : characterSprite(look, running ? 'walk' : 'idle', undefined, 'side', running ? Math.floor(now / 110) % 4 : 0);
     return (
-      <div className="bad-player" style={{ left: X(x), top: ground }}>
+      <div className={`bad-player ${who === me.id ? '' : 'them'}`} style={{ left: X(x), top: ground }}>
         <img src={spr.url} alt="" style={{ width: spr.w * sp, height: spr.h * sp, marginLeft: -spr.w * sp / 2, marginTop: -spr.h * sp, transform: faceRight ? undefined : 'scaleX(-1)' }} />
-        <span className={`bad-racket ${swinging ? 'swing' : ''}`} style={{ fontSize: sp * 11, top: -spr.h * sp * 0.75, left: faceRight ? sp * 3 : -sp * 14, transform: faceRight ? undefined : 'scaleX(-1)' }}>🏸</span>
+        <img className={`bad-racket ${swinging ? 'swing' : ''}`} src={racket.url} alt="" style={{ width: racket.w * sp, height: racket.h * sp, top: -spr.h * sp * 0.72, left: faceRight ? sp * 4 : -sp * 10, scale: faceRight ? undefined : '-1 1' }} />
         {label && <span className="k-name">{label}</span>}
       </div>
     );
@@ -151,16 +157,40 @@ export function Badminton({ me, partner, date, onLeave }: PlayProps) {
         </div>
       }>
       <div className="k-view bad-court" style={{ width: W, height: H }}>
-        <div className="bad-ground" style={{ top: ground, height: H - ground }} />
-        <div className="bad-line" style={{ left: X(0.3), width: X(COURT - 0.6), top: ground }} />
-        <div className="bad-net" style={{ left: X(NET_X) - 2, top: Y(NET_H), height: NET_H * u }} />
+        <img className="k-bg" src={court.url} alt="" draggable={false} style={{ width: W, height: H }} />
+        {[[18, 6], [96, 3], [132, 10]].map(([x, y], i) => { const c = cloudSprite(false); return <img key={i} className="bad-cloud" src={c.url} alt="" style={{ left: x * k, top: y * k, width: c.w * k, height: c.h * k, animationDelay: `${-i * 9}s` }} />; })}
         {player(me.avatar, myX.current, me.id, left)}
         {partner && here && player(partner.avatar, theirX, them, !left, name)}
-        {cock && <span className="bad-cock" style={{ left: X(cock.x), top: Y(cock.y), fontSize: u * 0.55 }}>🪶</span>}
-        {serving && game.serve === me.id && <span className="bad-cock" style={{ left: X(myX.current + dir * 0.6), top: Y(1.2), fontSize: u * 0.55 }}>🪶</span>}
-        {serving && game.serve === them && <span className="bad-cock" style={{ left: X(theirX - dir * 0.6), top: Y(1.2), fontSize: u * 0.55 }}>🪶</span>}
+        {[cock, serving && game.serve === me.id ? { x: myX.current + dir * 0.6, y: 1.2 } : null, serving && game.serve === them ? { x: theirX - dir * 0.6, y: 1.2 } : null].map((c, i) => c && (
+          <img key={i} className="bad-cock" src={shuttle.url} alt="" style={{ left: X(c.x), top: Y(c.y), width: shuttle.w * k, height: shuttle.h * k, }} />
+        ))}
         {game?.last !== undefined && game?.last !== null && !shot && game.mode === 'versus' && <span className="bad-pt">{game.last === me.id ? '🎉 Điểm cho bạn!' : `Điểm cho ${name}`}</span>}
       </div>
     </PlayScreen>
   );
+}
+
+/** Sân cầu lông nhìn ngang: trời, hàng cây xa, hàng rào, sân cỏ có vạch, lưới ở giữa */
+function courtSprite() {
+  return makeSprite('badminton-court', 160, 60, p => {
+    for (let y = 0; y < 34; y++) p.rect(0, y, 160, 1, y < 12 ? '#9fd8f6' : y < 24 ? '#b5e2f8' : '#cdeefc');
+    for (let x = 0; x < 160; x += 12) { const h = 6 + ((x * 7) % 5); for (let y = 0; y < h; y++) p.rect(x + 6 - (y * 0.6), 40 - h + y, Math.max(1, y * 1.2), 1, y < 2 ? '#8cc75a' : '#6aa645'); }
+    p.rect(0, 34, 160, 7, '#7cba52');
+    for (let x = 2; x < 160; x += 6) p.rect(x, 36, 1, 6, '#f4e6d0');
+    p.rect(0, 38, 160, 1, '#f4e6d0');
+    for (let y = 41; y < 60; y++) p.rect(0, y, 160, 1, (y >> 1) % 2 ? '#8fd16a' : '#84c860');
+    for (let x = 0; x < 160; x += 16) p.rect(x, 41, 8, 19, '#00000008');
+    p.rect(2, 51, 156, 1, '#ffffff'); p.rect(2, 52, 156, 1, '#e8f4e0');
+    // Lưới
+    p.rect(79, 38, 2, 14, '#6a6e7a'); p.rect(78, 37, 4, 2, '#fffaf0');
+    for (let y = 39; y < 51; y++) for (let x = 77; x < 84; x++) if ((x + y) % 2 === 0) p.px(x, y, '#3b2d3f');
+    p.rect(76, 38, 9, 1, '#fffaf0');
+  }, null);
+}
+function racketSprite() {
+  return makeSprite('racket', 6, 12, p => {
+    p.rect(1, 0, 4, 1, '#e8604a'); p.rect(0, 1, 1, 4, '#e8604a'); p.rect(5, 1, 1, 4, '#e8604a'); p.rect(1, 5, 4, 1, '#e8604a');
+    for (let y = 1; y < 5; y++) for (let x = 1; x < 5; x++) if ((x + y) % 2) p.px(x, y, '#e8e0d4');
+    p.rect(2, 6, 2, 2, '#e8604a'); p.rect(2, 8, 2, 4, '#3b2d3f');
+  });
 }

@@ -336,8 +336,23 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const ARCADE_GAMES: GameId[] = ['cook', 'snow', 'boat', 'golf', 'badminton', 'hide', 'cards', 'quiz', 'puzzle', 'dance', 'focus', 'fishrace', 'castle', 'caro', 'rps', 'memory', 'draw'];
   // ───── Động tác (té nước, búng tai…): mình làm thì máy người ấy cũng thấy ─────
   const [acts, setActs] = useState<{ me?: Act; them?: Act }>({});
-  const doAct = (n: AnimName) => { setActs(a => ({ ...a, me: { n, at: Date.now() } })); sendEvent('act', { n }); };
-  useEffect(() => onEvent('act', ({ n }: { n: AnimName }) => setActs(a => ({ ...a, them: { n, at: Date.now() } }))), []);
+  const inTubRef = useRef({ me: false, them: false });
+  inTubRef.current = { me: scene === 'bathroom' && live.mine.act === 'bath', them: !!partnerHere && scene === 'bathroom' && theirs?.act === 'bath' };
+  const sayRef = useRef(live.say); sayRef.current = live.say;
+  // Té nước: nước bay sang người kia, ~nửa giây sau người bị té giơ tay che mặt
+  const hitLater = (who: 'me' | 'them') => setTimeout(() => {
+    setActs(a => ({ ...a, [who]: { n: 'ouch', at: Date.now() } }));
+    if (who === 'me') sayRef.current('💦 Á! Ướt hết rồi!');
+  }, 480);
+  const doAct = (n: AnimName) => {
+    setActs(a => ({ ...a, me: { n, at: Date.now() } }));
+    sendEvent('act', { n });
+    if (n === 'splash' && inTubRef.current.them) hitLater('them');
+  };
+  useEffect(() => onEvent('act', ({ n }: { n: AnimName }) => {
+    setActs(a => ({ ...a, them: { n, at: Date.now() } }));
+    if (n === 'splash' && inTubRef.current.me) hitLater('me');
+  }), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [kitchenOpen, setKitchenOpen] = useState(false);
   const [playing, setPlaying] = useState<GameId | null>(null);
   function openGame(g: GameId, invite = true) {

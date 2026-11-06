@@ -13,6 +13,7 @@ import { cropDays, needsWater, STAR_PERIOD, starVisible, type Pickup } from '../
 import { arcadeRoom, picnicSprite, BATH_WATERS, tubBackSprite, tubFrontSprite, type BathWater, chandelierSprite, dinnerTableSprite, farmBackground, farmGateSprite, gameTentSprite, plantSprite, restaurantRoom, shopRoom, soilSprite, velvetChairSprite } from '../lib/interiors';
 import { emojiSprite, makeSprite, type Sprite } from '../lib/pixel';
 import type { Act } from '../lib/acts';
+import { dropSprite } from '../lib/playSprites';
 import { cellsOf, isWallCell, rotSize } from '../lib/placement';
 import type { Ghost } from '../lib/useDecorEditor';
 import { SKY } from '../lib/sky';
@@ -1082,33 +1083,42 @@ function BathContent(p: WorldProps) {
   );
 }
 
-/** Vịt cao su bơi trong bồn (chạm vào kêu "quạc") và nước bắn tung toé khi té nước */
+/** Vịt cao su bơi trong bồn (chạm vào kêu "quạc") và nước té sang người kia */
 function BathToys(p: WorldProps) {
   const s = useScale();
   const [hop, setHop] = useState(0);
   const theirs = p.partnerHere ? p.live.theirs : null;
   const ducks = [p.live.mine.duck && 'me', theirs?.duck && 'them'].filter(Boolean) as string[];
+  const inTub = { me: p.live.mine.act === 'bath', them: theirs?.act === 'bath' };
   const seat = (who: 'me' | 'them') => BATH.seats[(who === 'me') === p.firstSeat ? 0 : 1];
   const [, tick] = useState(0);
   const splashing = (['me', 'them'] as const).filter(w => p.acts[w]?.n === 'splash' && Date.now() - p.acts[w]!.at < 1300);
   useEffect(() => { if (!splashing.length) return; const t = setTimeout(() => tick(v => v + 1), 1350); return () => clearTimeout(t); });
-  const duck = duckSprite();
+  const duck = duckSprite(), drop = dropSprite();
+  // Chỗ nước trống trong lòng bồn (cạnh hai người, sau thành bồn)
+  const SPOTS = [roomPt(5.6, 2.0, 14), roomPt(4.6, 1.5, 14)];
   return (
     <>
       {ducks.map((d, i) => {
-        const x = (BATH.seats[0].x + BATH.seats[1].x) / 2 + (i ? 8 : -3), y = BATH.seats[0].y + 3 + i * 2;
+        const at = SPOTS[i];
         return (
           <img key={d} src={duck.url} alt="Vịt cao su" title="Vịt cao su — chạm để nghe quạc quạc" draggable={false}
             className={`bath-duck ${hop && Date.now() - hop < 700 ? 'hop' : ''}`}
-            style={{ left: (x - duck.w / 2) * s, top: (y - duck.h) * s, width: duck.w * s, height: duck.h * s, zIndex: 400, animationDelay: `${i * 0.7}s` }}
+            style={{ left: (at.x - duck.w / 2) * s, top: (at.y - duck.h + 2) * s, width: duck.w * s, height: duck.h * s, zIndex: Math.round(BATH.front.y) + 2, animationDelay: `${i * 0.7}s` }}
             onClick={e => { e.stopPropagation(); setHop(Date.now()); p.live.say('🦆 Quạc quạc!'); }} />
         );
       })}
       {splashing.map(w => {
-        const st = seat(w), a = p.acts[w]!;
+        const from = seat(w), other = w === 'me' ? 'them' : 'me', a = p.acts[w]!;
+        // Có người kia trong bồn thì nước bay vòng cung sang người đó, không thì bắn tung toé quanh mình
+        const to = inTub[other] ? seat(other) : null;
         return (
-          <div key={`${w}${a.at}`} className="bath-splash" style={{ left: st.x * s, top: (st.y - 14) * s, zIndex: Math.round(BATH.front.y) + 2 }}>
-            {Array.from({ length: 9 }, (_, i) => <i key={i} style={{ ['--dx' as string]: `${(i - 4) * 9 * s}px`, ['--dy' as string]: `${-(14 + (i % 3) * 7) * s}px`, animationDelay: `${(i % 4) * 0.12}s`, width: 2.4 * s, height: 3.2 * s }} />)}
+          <div key={`${w}${a.at}`} className="bath-splash" style={{ left: from.x * s, top: (from.y - 12) * s, zIndex: 300 }}>
+            {Array.from({ length: 8 }, (_, i) => {
+              const dx = to ? (to.x - from.x + (i % 3 - 1) * 3) * s : (i - 3.5) * 8 * s;
+              const dy = to ? (to.y - from.y - 2 + (i % 2) * 3) * s : -(10 + (i % 3) * 6) * s;
+              return <img key={i} src={drop.url} alt="" className={to ? 'to' : ''} style={{ ['--dx' as string]: `${dx}px`, ['--dy' as string]: `${dy}px`, ['--arc' as string]: `${-14 * s}px`, animationDelay: `${(i % 4) * 0.09 + Math.floor(i / 4) * 0.35}s`, width: drop.w * s * 0.8, height: drop.h * s * 0.8 }} />;
+            })}
           </div>
         );
       })}
@@ -1116,9 +1126,9 @@ function BathToys(p: WorldProps) {
   );
 }
 function duckSprite() {
-  return makeSprite('rubber-duck', 12, 10, q => {
-    q.rect(1, 4, 9, 5, '#f6c64e'); q.rect(0, 5, 2, 2, '#f6c64e'); q.rect(2, 8, 7, 1, '#e0a838');
-    q.rect(5, 0, 5, 5, '#f6c64e'); q.px(8, 2, '#3b2d3f'); q.rect(10, 2, 2, 2, '#f7894a'); q.px(3, 5, '#ffe9a0');
+  return makeSprite('rubber-duck:v2', 9, 7, q => {
+    q.rect(0, 3, 7, 4, '#f6c64e'); q.rect(1, 6, 5, 1, '#e0a838'); q.px(0, 2, '#f6c64e');
+    q.rect(4, 0, 4, 4, '#f6c64e'); q.px(6, 1, '#3b2d3f'); q.rect(8, 2, 1, 1, '#f7894a'); q.px(2, 4, '#ffe9a0');
   });
 }
 

@@ -5,6 +5,7 @@ import * as api from '../../lib/api';
 import { grabbed, ROUND_MS, SEA_H, SEA_W, seaMap, startBoat, step, stroke, type Boat as B } from '../../lib/boat';
 import { item } from '../../lib/content';
 import { emojiSprite, makeSprite } from '../../lib/pixel';
+import { islandSprite, miniPalmSprite, rockSprite } from '../../lib/playSprites';
 import { notify } from '../../lib/realtime';
 import { characterSprite } from '../../lib/sprites';
 import { toast } from '../../lib/toast';
@@ -139,13 +140,18 @@ export function Boat({ me, partner, date, onLeave }: PlayProps) {
         </div>
       }>
       <div className="k-view" style={{ width: viewW, height: viewH }}>
-        <div className="k-board" style={{ width: bw, height: bh, transform: `translate(${-camX}px, ${-camY}px)` }}>
+        <div className={`k-board ${here && !(me.id < them) ? 'smooth' : ''}`} style={{ width: bw, height: bh, transform: `translate(${-camX}px, ${-camY}px)` }}>
           <img className="k-bg" src={bg.url} alt="" draggable={false} style={{ width: bw, height: bh }} />
-          {map.rocks.map((r, i) => r.isle ? (
-            <div key={i} className="boat-isle" style={{ left: (r.x - r.r) * tile, top: (r.y - r.r) * tile, width: r.r * 2 * tile, height: r.r * 2 * tile }}>
-              <img src={emojiSprite(i % 2 ? '🌴' : '🏝️').url} alt="" style={{ width: r.r * tile, height: r.r * tile }} />
-            </div>
-          ) : <img key={i} className="boat-rock" src={emojiSprite('🪨').url} alt="" style={{ left: (r.x - 0.7) * tile, top: (r.y - 0.7) * tile, width: tile * 1.4, height: tile * 1.4 }} />)}
+          {map.rocks.map((r, i) => {
+            if (!r.isle) { const sp = rockSprite(); return <img key={i} className="boat-rock" src={sp.url} alt="" style={{ left: r.x * tile - (sp.w * s) / 2, top: r.y * tile - (sp.h * s) / 2, width: sp.w * s, height: sp.h * s }} />; }
+            const isle = islandSprite(Math.round(r.r * T)), palm = miniPalmSprite();
+            return (
+              <div key={i} className="boat-isle" style={{ left: (r.x - r.r) * tile, top: (r.y - r.r * 0.75) * tile, width: isle.w * s, height: isle.h * s }}>
+                <img src={isle.url} alt="" style={{ width: isle.w * s, height: isle.h * s }} />
+                <img src={palm.url} alt="" style={{ position: 'absolute', left: isle.w * s * 0.55 - (palm.w * s) / 2, top: isle.h * s * 0.45 - palm.h * s, width: palm.w * s, height: palm.h * s }} />
+              </div>
+            );
+          })}
           {map.loot.map((l, i) => run?.got.includes(i) ? null : (
             <img key={i} className="boat-loot" src={emojiSprite(item(l.id).icon).url} alt="" style={{ left: (l.x - 0.5) * tile, top: (l.y - 0.5) * tile, width: tile, height: tile, animationDelay: `${(i % 5) * 0.3}s` }} />
           ))}

@@ -1,7 +1,9 @@
 // 🙈 Trốn tìm trong góc làng: người trốn có 15 giây chui vào một chỗ (bụi cây, đống rơm, thùng, hộp),
 // người tìm bịt mắt đếm rồi có 60 giây đi tìm. Chỗ trốn chỉ máy người trốn biết; thỉnh thoảng chỗ trốn rung lên 🍃.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { emojiSprite, makeSprite } from '../../lib/pixel';
+import { makeSprite, type Sprite } from '../../lib/pixel';
+import { barrelSprite, crateSprite, haystackSprite, houseSprite, leafSprite } from '../../lib/playSprites';
+import { bushSprite, pineSprite } from '../../lib/townSprites';
 import type { Act } from '../../lib/acts';
 import { reward } from '../gameKit';
 import { Chibi, DPad, PlayScreen, typing, useFrame, usePeer, useViewport, useWalker, type PlayProps, type Pos } from './kit';
@@ -21,7 +23,7 @@ const MAP = [
   '..................',
 ];
 const COLS = MAP[0].length, ROWS = MAP.length;
-const SPOT_ICON: Record<string, string> = { b: '🌳', h: '🌾', k: '🛢️', x: '📦' };
+const SPOT_ICON: Record<string, (i: number) => Sprite> = { b: i => bushSprite(i), h: () => haystackSprite(), k: () => barrelSprite(), x: () => crateSprite() };
 const SPOT_NAME: Record<string, string> = { b: 'bụi cây', h: 'đống rơm', k: 'thùng gỗ', x: 'thùng các-tông' };
 const SPOTS: [number, number][] = [];
 MAP.forEach((r, y) => [...r].forEach((c, x) => { if (SPOT_ICON[c]) SPOTS.push([x, y]); }));
@@ -164,14 +166,14 @@ export function HideSeek({ me, partner, date, onLeave }: PlayProps) {
       <div ref={board} className="k-view" style={{ width: COLS * tile, height: ROWS * tile }} onClick={tap}>
         <img className="k-bg" src={bg.url} alt="" draggable={false} style={{ width: COLS * tile, height: ROWS * tile }} />
         {MAP.flatMap((row, y) => [...row].map((c, x) => {
-          if (c === 'T') return <img key={`${x},${y}`} className="snow-obst" src={emojiSprite('🌲').url} alt="" style={{ left: x * tile, top: (y - 0.4) * tile, width: tile * 1.1, height: tile * 1.1, zIndex: y * 10 + 6 }} />;
-          if (c === '#' && MAP[y - 1]?.[x] !== '#' && row[x - 1] !== '#') return <img key={`${x},${y}`} className="snow-obst" src={emojiSprite('🏠').url} alt="" style={{ left: x * tile, top: (y - 0.3) * tile, width: tile * 2, height: tile * 2, zIndex: y * 10 + 16 }} />;
+          if (c === 'T') { const sp = pineSprite(), k = s * 0.62; return <img key={`${x},${y}`} className="snow-obst" src={sp.url} alt="" style={{ left: (x + 0.5) * tile - (sp.w * k) / 2, top: (y + 0.95) * tile - sp.h * k, width: sp.w * k, height: sp.h * k, zIndex: y * 10 + 6 }} />; }
+          if (c === '#' && MAP[y - 1]?.[x] !== '#' && row[x - 1] !== '#') { const sp = houseSprite(); return <img key={`${x},${y}`} className="snow-obst" src={sp.url} alt="" style={{ left: x * tile, top: (y + 2) * tile - sp.h * s, width: sp.w * s, height: sp.h * s, zIndex: y * 10 + 16 }} />; }
           return null;
         }))}
         {SPOTS.map(([x, y], i) => (
-          <div key={i} className={`hide-spot ${rustling === i ? 'rustle' : ''} ${round?.checked.includes(i) ? 'checked' : ''}`} style={{ left: x * tile, top: (y - 0.25) * tile, width: tile, height: tile, zIndex: y * 10 + 7 }}>
-            <img src={emojiSprite(SPOT_ICON[MAP[y][x]]).url} alt="" />
-            {rustling === i && <span className="hide-leaf">🍃</span>}
+          <div key={i} className={`hide-spot ${rustling === i ? 'rustle' : ''} ${round?.checked.includes(i) ? 'checked' : ''}`} style={{ left: x * tile, top: y * tile, width: tile, height: tile, zIndex: y * 10 + 7 }}>
+            {(() => { const sp = SPOT_ICON[MAP[y][x]](i); return <img src={sp.url} alt="" style={{ width: sp.w * s, height: sp.h * s, left: (tile - sp.w * s) / 2, top: tile * 0.95 - sp.h * s }} />; })()}
+            {rustling === i && <img className="hide-leaf" src={leafSprite().url} alt="" style={{ width: 5 * s, height: 4 * s }} />}
             {round?.checked.includes(i) && !(round.result?.how === 'found' && round.result.spot === i) && <span className="hide-x">✗</span>}
             {round?.result?.spot === i && <span className="hide-x found">{round.result.how === 'found' ? '😳' : '😎'}</span>}
           </div>

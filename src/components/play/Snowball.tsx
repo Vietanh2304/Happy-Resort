@@ -1,7 +1,9 @@
 // ⛄ Ném tuyết (mùa đông / làng có tuyết) hoặc 💦 té súng nước ở bãi biển (các mùa khác).
 // Mỗi máy tự lo quả ném của mình: tự tính trúng/trượt theo vị trí người kia rồi báo 'hit'. Ai trúng 10 lần trước thì thắng.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { emojiSprite, makeSprite } from '../../lib/pixel';
+import { makeSprite, type Sprite } from '../../lib/pixel';
+import { beachUmbrellaSprite, dropSprite, sandcastleSprite, snowballSprite, snowmanSprite, waterGunSprite } from '../../lib/playSprites';
+import { pineSprite } from '../../lib/townSprites';
 import type { Act } from '../../lib/acts';
 import { reward } from '../gameKit';
 import { Chibi, DPad, PlayScreen, typing, useFrame, usePeer, useViewport, useWalker, type PlayProps, type Pos } from './kit';
@@ -144,19 +146,23 @@ export function Snowball({ me, partner, date, onLeave, theme = 'water' }: PlayPr
       }>
       <div ref={board} className="k-view snow-board" style={{ width: COLS * tile, height: ROWS * tile, touchAction: 'none' }} onPointerDown={tap}>
         <img className="k-bg" src={bg.url} alt="" draggable={false} style={{ width: COLS * tile, height: ROWS * tile }} />
-        {MAP.flatMap((row, y) => [...row].map((c, x) => c === 'o' ? (
-          <img key={`${x},${y}`} className="snow-obst" src={emojiSprite(snow ? ((x + y) % 2 ? '⛄' : '🌲') : ((x + y) % 2 ? '🏰' : '⛱️')).url} alt=""
-            style={{ left: x * tile, top: (y - 0.35) * tile, width: tile * 1.05, height: tile * 1.05, zIndex: y * 10 + 6 }} />
-        ) : null))}
-        <Chibi look={me.avatar} p={walker.pos} tile={tile} s={s} act={acts.me} tint={wet(me.id) ? (snow ? 'brightness(1.4)' : 'hue-rotate(160deg) saturate(1.6)') : undefined}
-          held={!snow ? <span className="snow-gun">🔫</span> : undefined} bubble={wet(me.id) ? (snow ? '❄️ Á lạnh!' : '💦 Ướt rồi!') : null} />
+        {MAP.flatMap((row, y) => [...row].map((c, x) => {
+          if (c !== 'o') return null;
+          const sp: Sprite = snow ? ((x + y) % 2 ? snowmanSprite() : pineSprite()) : ((x + y) % 2 ? sandcastleSprite() : beachUmbrellaSprite());
+          const k = sp.h > 24 ? s * 0.62 : s;           // cây thông cao: thu nhỏ cho vừa một ô
+          return <img key={`${x},${y}`} className="snow-obst" src={sp.url} alt=""
+            style={{ left: (x + 0.5) * tile - (sp.w * k) / 2, top: (y + 0.95) * tile - sp.h * k, width: sp.w * k, height: sp.h * k, zIndex: y * 10 + 6 }} />;
+        }))}
+        <Chibi look={me.avatar} p={walker.pos} tile={tile} s={s} act={acts.me} tint={wet(me.id) ? (snow ? 'brightness(1.2) drop-shadow(0 0 3px #ffffff)' : 'saturate(0.75) brightness(1.05) drop-shadow(0 0 3px #5aa8e0)') : undefined}
+          held={!snow ? <img className="snow-gun" src={waterGunSprite().url} alt="" style={{ width: 12 * s, height: 8 * s }} /> : undefined} bubble={wet(me.id) ? (snow ? '❄️ Á lạnh!' : '💦 Ướt rồi!') : null} />
         {theirPos && partner && <Chibi look={partner.avatar} p={theirPos} tile={tile} s={s} name={partner.display_name} className="them" act={acts.them}
-          tint={wet(them) ? (snow ? 'brightness(1.4)' : 'hue-rotate(160deg) saturate(1.6)') : undefined}
-          held={!snow ? <span className="snow-gun">🔫</span> : undefined} bubble={wet(them) ? (snow ? '❄️ Trúng rồi!' : '💦 Ướt nhẹp!') : null} />}
+          tint={wet(them) ? (snow ? 'brightness(1.2) drop-shadow(0 0 3px #ffffff)' : 'saturate(0.75) brightness(1.05) drop-shadow(0 0 3px #5aa8e0)') : undefined}
+          held={!snow ? <img className="snow-gun" src={waterGunSprite().url} alt="" style={{ width: 12 * s, height: 8 * s }} /> : undefined} bubble={wet(them) ? (snow ? '❄️ Trúng rồi!' : '💦 Ướt nhẹp!') : null} />}
         {shots.map(sh => {
           const d = Math.min(sh.len, ((now - sh.at) / 1000) * SPEED);
           const arc = Math.sin((d / Math.max(1, sh.len)) * Math.PI) * 0.4;
-          return <span key={sh.id} className={`snow-shot ${snow ? 'snow' : 'water'}`} style={{ left: (sh.x + sh.dx * d) * tile, top: (sh.y + sh.dy * d - arc) * tile, fontSize: tile * 0.45 }}>{ball}</span>;
+          const sp = snow ? snowballSprite() : dropSprite();
+          return <img key={sh.id} src={sp.url} alt="" className={`snow-shot ${snow ? 'snow' : 'water'}`} style={{ left: (sh.x + sh.dx * d) * tile, top: (sh.y + sh.dy * d - arc) * tile, width: sp.w * s * 1.2, height: sp.h * s * 1.2 }} />;
         })}
       </div>
     </PlayScreen>
