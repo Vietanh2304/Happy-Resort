@@ -914,3 +914,12 @@ textarea { resize: vertical; }
 .dance-arrow.both { opacity: 1; filter: drop-shadow(0 0 8px #ff8ab8); }
 .dance-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .dance-keys .btn { font-size: 26px; padding: 10px 0; touch-action: manipulation; }
+
+/* Vẽ đoán: bảng điểm */
+.draw-score { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.draw-player { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: center; padding: 6px 10px; border: 2px solid var(--ink); border-radius: 10px; background: #fffaf0; }
+.draw-player span { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.draw-player i { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: #eadfd4; overflow: hidden; order: 3; }
+.draw-player i b { display: block; height: 100%; background: linear-gradient(90deg, #f59ab3, #f6c64e); transition: width .4s; }
+.draw-player.win { background: #fff3c4; box-shadow: 0 0 12px 2px #f6c64e; }
+.draw-blanks { font-family: monospace; letter-spacing: 1px; font-weight: 700; }

@@ -202,74 +202,153 @@ function Memory(p: GP) {
   );
 }
 
-// ───────── Vẽ đoán: một người vẽ, người kia đoán (nói qua mic càng vui) ─────────
+// ───────── Vẽ đoán: thay phiên vẽ theo chủ đề, đoán nhanh được nhiều điểm, ai chạm mốc trước thì thắng ─────────
 
-const WORDS = ['con mèo', 'trái tim', 'cây dừa', 'mặt trời', 'ngôi nhà', 'cá voi', 'bánh kem', 'máy bay', 'hoa hồng', 'cầu vồng', 'kem ốc quế',
-  'con thỏ', 'mặt trăng', 'ngôi sao', 'xe đạp', 'cái ô', 'con cá', 'quả táo', 'bông hoa', 'con vịt', 'trà sữa', 'bánh bao', 'chiếc nhẫn',
-  'núi', 'con gấu', 'quả dâu', 'ly cà phê', 'đôi giày', 'con bướm', 'thuyền buồm', 'kim chi', 'đèn lồng', 'người tuyết', 'cây thông'];
+export const DRAW_TOPICS: { id: string; name: string; words: string[] }[] = [
+  { id: 'food', name: '🍜 Đồ ăn & đồ uống', words: ['phở', 'bánh mì', 'trà sữa', 'kem ốc quế', 'pizza', 'sushi', 'gà rán', 'bánh kem', 'mì cay', 'cà phê', 'dưa hấu', 'bánh bao', 'kimbap', 'bắp rang', 'trứng ốp la'] },
+  { id: 'animal', name: '🐾 Động vật', words: ['con mèo', 'con chó', 'con thỏ', 'cá voi', 'chim cánh cụt', 'con gấu', 'con hổ', 'con voi', 'con rùa', 'con bướm', 'con vịt', 'hươu cao cổ', 'con khỉ', 'bạch tuộc', 'con cua'] },
+  { id: 'home', name: '🏠 Đồ vật quanh nhà', words: ['cái ô', 'đồng hồ', 'điện thoại', 'đôi giày', 'cái gối', 'bàn chải đánh răng', 'kính mắt', 'cái ghế', 'tivi', 'chìa khóa', 'máy giặt', 'đèn ngủ', 'ba lô', 'cái cốc', 'chiếc nhẫn'] },
+  { id: 'date', name: '💑 Hẹn hò & đi chơi', words: ['xem phim', 'nắm tay', 'đi biển', 'cắm trại', 'vòng đu quay', 'chụp ảnh', 'nấu ăn', 'ngắm sao', 'đạp xe', 'hát karaoke', 'ôm nhau', 'đi máy bay', 'thả diều', 'picnic', 'gọi video'] },
+  { id: 'asia', name: '🌏 Hàn – Đài – Việt', words: ['kim chi', 'tteokbokki', 'hanbok', 'tháp Namsan', 'soju', 'Taipei 101', 'chợ đêm', 'đèn trời', 'nón lá', 'áo dài', 'bánh chưng', 'đôi đũa', 'tàu điện ngầm', 'đèn lồng', 'trà sữa trân châu'] },
+];
+const DRAW_MS = 90_000;
 const COLORS = ['#3a2838', '#e8607a', '#f6a95e', '#f6c64e', '#86c257', '#8db8ef', '#b7a6e8', '#ffffff'];
-const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/\s+/g, ' ').trim();
+const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim()
+  .replace(/^(con|cai|chiec|doi|qua|ly|cay|ban|mot) /, '');
+const sameWord = (a: string, b: string) => norm(a) === norm(b);
+/** Điểm: đoán đúng trong 30 giây đầu +3, trong 60 giây +2, sau đó +1; người vẽ được +1 khi có người đoán ra */
+const guessPts = (ms: number) => (ms < 30_000 ? 3 : ms < 60_000 ? 2 : 1);
+
+interface DrawState {
+  target: number; topic: string; scores: Record<string, number>; drawer: string | null; lastDrawer: string | null;
+  pattern: number[]; topicOf: string; at: number; solved: { word: string; by: string | null; pts: number } | null; winner: string | null; round: number;
+}
+const DRAW0: DrawState = { target: 10, topic: 'mix', scores: {}, drawer: null, lastDrawer: null, pattern: [], topicOf: '', at: 0, solved: null, winner: null, round: 0 };
 
 function Draw(p: GP) {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const [drawer, setDrawer] = useState<string | null>(null);
   const [word, setWord] = useState('');
-  const [len, setLen] = useState(0);
   const [color, setColor] = useState(COLORS[0]);
   const [guess, setGuess] = useState('');
   const [log, setLog] = useState<{ who: string; text: string; ok?: boolean }[]>([]);
-  const [solved, setSolved] = useState<string | null>(null);
-  const wordRef = useRef(word);
-  wordRef.current = word;
+  const [now, setNow] = useState(Date.now());
+  const used = useRef(new Set<string>());
+  const wordRef = useRef(word); wordRef.current = word;
+  const stRef = useRef<DrawState>(DRAW0);
 
   const ctx = () => canvas.current?.getContext('2d') ?? null;
   const stroke = (pts: number[], c: string) => {
     const g = ctx(); if (!g || !canvas.current) return;
     const { width: w, height: h } = canvas.current;
-    g.strokeStyle = c; g.lineWidth = c === '#ffffff' ? 14 : 4; g.lineCap = 'round'; g.lineJoin = 'round';
+    g.strokeStyle = c; g.lineWidth = c === '#ffffff' ? 16 : 4; g.lineCap = 'round'; g.lineJoin = 'round';
     g.beginPath();
     for (let i = 0; i < pts.length; i += 2) (i ? g.lineTo : g.moveTo).call(g, pts[i] * w, pts[i + 1] * h);
     g.stroke();
   };
   const clear = () => { const g = ctx(); if (g && canvas.current) { g.fillStyle = '#ffffff'; g.fillRect(0, 0, canvas.current.width, canvas.current.height); } };
   useEffect(clear, []);
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 250); return () => clearInterval(t); }, []);
+
+  const [st, dispatch] = useReducer((s: DrawState, m: Msg): DrawState => {
+    switch (m.t) {
+      case 'state': return m.by !== p.me.id && !s.round ? m.st : s;
+      case 'match': return { ...DRAW0, target: m.target, topic: m.topic, scores: { [p.me.id]: 0, [p.them]: 0 } };
+      case 'topic': return { ...s, topic: m.topic };
+      case 'new': return { ...s, drawer: m.by, lastDrawer: m.by, pattern: m.pattern, topicOf: m.topicOf, at: m.at, solved: null, round: s.round + 1 };
+      case 'solved': {
+        if (s.solved || s.winner) return s;
+        const scores = { ...s.scores };
+        if (m.guesser) { scores[m.guesser] = (scores[m.guesser] ?? 0) + m.pts; scores[s.drawer!] = (scores[s.drawer!] ?? 0) + 1; }
+        const winner = Object.entries(scores).find(([, v]) => v >= s.target)?.[0] ?? null;
+        return { ...s, scores, solved: { word: m.word, by: m.guesser, pts: m.pts }, winner };
+      }
+      default: return s;
+    }
+  }, DRAW0);
+  stRef.current = st;
 
   const send = useGameChannel('draw', p.me.id, m => {
-    if (m.t === 'new') { setDrawer(m.by); setLen(m.len); setSolved(null); setLog([]); clear(); if (m.by !== p.me.id) setWord(''); }
+    if (m.t === 'hello' && m.by !== p.me.id && stRef.current.round) send('state', { st: stRef.current });
+    if (m.t === 'new') { setLog([]); clear(); if (m.by !== p.me.id) setWord(''); }
+    if (m.t === 'match') { setLog([]); clear(); setWord(''); used.current.clear(); }
     if (m.t === 'stroke' && m.by !== p.me.id) stroke(m.pts, m.c);
     if (m.t === 'clear') clear();
     if (m.t === 'guess') {
-      const ok = !!wordRef.current && norm(m.text) === norm(wordRef.current);
       setLog(l => [...l.slice(-6), { who: m.by, text: m.text }]);
-      if (ok && m.by !== p.me.id) send('solved', { word: wordRef.current, guesser: m.by });
+      const s = stRef.current;
+      if (s.drawer === p.me.id && !s.solved && m.by !== p.me.id && wordRef.current && sameWord(m.text, wordRef.current)) {
+        send('solved', { word: wordRef.current, guesser: m.by, pts: guessPts(Date.now() - s.at) });
+      }
     }
-    if (m.t === 'solved') { setSolved(m.word); setLog(l => [...l, { who: m.guesser, text: m.word, ok: true }]); reward('draw', p.date); }
+    if (m.t === 'solved') setLog(l => [...l, { who: m.guesser ?? '', text: m.guesser ? `${m.word} (+${m.pts})` : `Hết giờ — từ là “${m.word}”`, ok: !!m.guesser }]);
+    dispatch(m);
   });
+  useEffect(() => { send('hello'); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function start() {
-    const w = WORDS[Math.floor(Math.random() * WORDS.length)];
-    setWord(w);
-    send('new', { len: w.replace(/\s/g, '').length });
+  // Người vẽ canh giờ: hết 90 giây thì lộ đáp án, không ai được điểm
+  const left = st.drawer && !st.solved ? Math.max(0, st.at + DRAW_MS - now) : 0;
+  useEffect(() => {
+    if (st.drawer === p.me.id && !st.solved && st.at && left === 0 && wordRef.current) send('solved', { word: wordRef.current, guesser: null, pts: 0 });
+  }, [left === 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (st.winner) reward('draw', p.date); }, [st.winner]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function draw() {
+    const pool = st.topic === 'mix' ? DRAW_TOPICS : DRAW_TOPICS.filter(t => t.id === st.topic);
+    const all = pool.flatMap(t => t.words.map(w => ({ w, t: t.name })));
+    const fresh = all.filter(x => !used.current.has(x.w));
+    const pick = (fresh.length ? fresh : all)[Math.floor(Math.random() * (fresh.length || all.length))];
+    used.current.add(pick.w);
+    setWord(pick.w);
+    send('new', { pattern: pick.w.split(' ').map(x => x.length), topicOf: pick.t, at: Date.now() });
   }
 
-  // Nét vẽ: gom điểm rồi gửi từng đoạn ngắn
   const pts = useRef<number[]>([]);
   const drawing = useRef(false);
-  const amDrawer = drawer === p.me.id && !solved;
+  const amDrawer = st.drawer === p.me.id && !st.solved;
+  const myTurnNext = !st.lastDrawer ? true : st.lastDrawer !== p.me.id;
   function pos(e: React.PointerEvent) {
     const r = canvas.current!.getBoundingClientRect();
     return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height];
   }
   function flush() {
-    if (pts.current.length >= 4) { send('stroke', { pts: pts.current, c: color }); }
+    if (pts.current.length >= 4) send('stroke', { pts: pts.current, c: color });
     pts.current = pts.current.slice(-2);
   }
+  const playing = st.round > 0 || Object.keys(st.scores).length > 0;
+  const sc = (id: string) => st.scores[id] ?? 0;
+
+  if (!playing) return (
+    <div className="gamebox">
+      <p className="game-status">Thay phiên nhau vẽ — đoán đúng càng nhanh càng nhiều điểm (+3 / +2 / +1), người vẽ +1 khi có người đoán ra.</p>
+      <div className="field"><span>Chủ đề</span>
+        <div className="choice-row wrap">
+          <button className={`chip ${st.topic === 'mix' ? 'active' : ''}`} onClick={() => send('topic', { topic: 'mix' })}>🎲 Trộn tất cả</button>
+          {DRAW_TOPICS.map(t => <button key={t.id} className={`chip ${st.topic === t.id ? 'active' : ''}`} onClick={() => send('topic', { topic: t.id })}>{t.name}</button>)}
+        </div>
+      </div>
+      <div className="field"><span>Ai đạt trước bao nhiêu điểm thì thắng?</span>
+        <div className="choice-row">{[5, 10, 15].map(n => <button key={n} className="btn small ghost" onClick={() => send('match', { target: n, topic: st.topic })}>🏁 {n} điểm</button>)}</div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="gamebox">
+      <div className="draw-score">
+        {[p.me.id, p.them].map(id => (
+          <div key={id} className={`draw-player ${st.winner === id ? 'win' : ''}`}>
+            <span>{nameOf(p, id)}{st.drawer === id && !st.solved ? ' ✏️' : ''}</span>
+            <i><b style={{ width: `${Math.min(100, (sc(id) / st.target) * 100)}%` }} /></i>
+            <strong>{sc(id)}/{st.target}</strong>
+          </div>
+        ))}
+      </div>
       <p className="game-status">
-        {solved ? `🎉 Đoán đúng rồi: “${solved}”!` : !drawer ? 'Bấm "Mình vẽ" để nhận một từ bí mật và vẽ cho người ấy đoán.'
-          : amDrawer ? <>Vẽ từ: <b>{word}</b> (đừng viết chữ nha 🤫)</> : `${nameOf(p, drawer)} đang vẽ — từ có ${len} chữ cái. Đoán đi!`}
+        {st.winner ? (st.winner === p.me.id ? '🏆 Bạn thắng ván này!' : `🏆 ${nameOf(p, st.winner)} thắng ván này!`)
+          : st.solved ? (st.solved.by ? `🎉 ${nameOf(p, st.solved.by)} đoán đúng “${st.solved.word}” (+${st.solved.pts})` : `⏰ Hết giờ! Từ là “${st.solved.word}”`)
+            : !st.drawer ? (myTurnNext ? 'Tới lượt bạn vẽ!' : `Chờ ${nameOf(p, p.them)} vẽ…`)
+              : amDrawer ? <>Vẽ: <b>{word}</b> <small>({st.topicOf})</small> · ⏱️ {Math.ceil(left / 1000)}s</>
+                : <>{st.topicOf} · <span className="draw-blanks">{st.pattern.map(n => '_'.repeat(n).split('').join(' ')).join('   ')}</span> · ⏱️ {Math.ceil(left / 1000)}s</>}
       </p>
       <canvas ref={canvas} width={480} height={320} className={`draw-canvas ${amDrawer ? 'can-draw' : ''}`}
         onPointerDown={e => { if (!amDrawer) return; drawing.current = true; (e.target as Element).setPointerCapture(e.pointerId); pts.current = pos(e); }}
@@ -285,16 +364,20 @@ function Draw(p: GP) {
         <div className="row wrap center">
           {COLORS.map(c => <button key={c} className={`swatch ${c === color ? 'active' : ''}`} style={{ background: c }} onClick={() => setColor(c)} aria-label={c === '#ffffff' ? 'Tẩy' : 'Màu'} />)}
           <button className="btn small ghost" onClick={() => send('clear')}>🧽 Xóa hết</button>
+          <button className="btn small ghost" onClick={() => send('solved', { word, guesser: null, pts: 0 })}>⏭️ Bỏ qua</button>
         </div>
       )}
-      {drawer && !amDrawer && !solved && (
+      {st.drawer && !amDrawer && !st.solved && (
         <form className="row" onSubmit={e => { e.preventDefault(); if (guess.trim()) { send('guess', { text: guess.trim() }); setGuess(''); } }}>
-          <input value={guess} maxLength={40} onChange={e => setGuess(e.target.value)} placeholder="Đoán là…" />
+          <input value={guess} maxLength={40} onChange={e => setGuess(e.target.value)} placeholder="Đoán là…" autoFocus />
           <button className="btn small">Đoán</button>
         </form>
       )}
       <ul className="chat-log">{log.map((l, i) => <li key={i} className={l.who === p.me.id ? 'me' : 'partner'}>{l.ok ? '✅ ' : ''}{l.text}</li>)}</ul>
-      <button className="btn small" onClick={start}>✏️ Mình vẽ</button>
+      <div className="row center wrap">
+        {!st.winner && (!st.drawer || st.solved) && myTurnNext && <button className="btn" onClick={draw}>✏️ {st.round ? 'Tới lượt mình vẽ' : 'Mình vẽ trước'}</button>}
+        <button className="btn small ghost" onClick={() => send('match', { target: st.target, topic: st.topic })}>🔄 Ván mới</button>
+      </div>
     </div>
   );
 }
