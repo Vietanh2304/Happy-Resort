@@ -27,6 +27,18 @@ export function MeetupSheet({ me, meetup, today, onClose }: Props) {
     }
   }
 
+  async function clear() {
+    if (!confirm('Xóa ngày gặp đã hẹn?')) return;
+    try {
+      await api.clearMeetup(me);
+      notify('meetup');
+      setDay('');
+      toast('🗑️ Đã xóa ngày hẹn');
+    } catch (err) {
+      toastError(err);
+    }
+  }
+
   return (
     <Sheet title="📅 Ngày gặp nhau" onClose={onClose}>
       {left !== null && (
@@ -42,6 +54,7 @@ export function MeetupSheet({ me, meetup, today, onClose }: Props) {
           <input type="date" min={today} value={day} onChange={e => setDay(e.target.value)} required />
         </label>
         <button className="btn" disabled={!day || day === meetup?.day}>Lưu ngày hẹn</button>
+        {meetup && <button type="button" className="btn ghost" onClick={clear}>🗑️ Xóa ngày hẹn</button>}
         <p className="muted">Đúng ngày đó, cả hai bờ sẽ có pháo hoa và một kỷ vật đặc biệt.</p>
       </form>
     </Sheet>

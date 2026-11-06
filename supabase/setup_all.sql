@@ -947,3 +947,6 @@ begin
     if not found then raise exception 'Tủ lạnh hết: %', r.id; end if;
   end loop;
 end $$;
+
+-- 011: xóa ngày gặp
+create policy "xóa ngày gặp" on public.meetup for delete using (couple_id = my_couple_id());

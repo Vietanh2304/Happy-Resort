@@ -97,6 +97,17 @@ export function CalendarSheet({ me, partner, couple, days, today, meetup, onSave
   const [anniv, setAnniv] = useState(couple?.anniversary ?? '');
   const [bday, setBday] = useState(me.birthday ?? '');
 
+  const clearMeet = async () => {
+    if (confirm('Xóa ngày gặp đã hẹn?') && await act(() => api.clearMeetup(me))) { notify('meetup'); toast('🗑️ Đã xóa ngày hẹn'); }
+  };
+  const clearAnniv = async () => {
+    if (!confirm('Xóa ngày bắt đầu yêu nhau khỏi lịch?')) return;
+    if (await act(() => api.setAnniversary(null))) { notify('profiles'); onSaved(); setAnniv(''); toast('🗑️ Đã xóa ngày yêu nhau'); }
+  };
+  const clearBday = async () => {
+    if (!confirm('Xóa sinh nhật của bạn khỏi lịch?')) return;
+    if (await act(() => api.updateProfile(me.id, { birthday: null }))) { notify('profiles'); onSaved(); setBday(''); toast('🗑️ Đã xóa sinh nhật'); }
+  };
   const first = `${month}-01`;
   const lead = (new Date(`${first}T00:00:00Z`).getUTCDay() + 6) % 7;
   const nDays = new Date(Date.UTC(+month.slice(0, 4), +month.slice(5, 7), 0)).getUTCDate();
@@ -133,12 +144,15 @@ export function CalendarSheet({ me, partner, couple, days, today, meetup, onSave
         <b>{fmt(picked)}</b>
         {pickedFests.length === 0 && meetup?.day !== picked && <span className="muted"> — chưa có gì, ghi chú một ngày đáng nhớ nhé</span>}
         <ul className="cal-events">
-          {meetup?.day === picked && <li>✈️ Ngày gặp nhau</li>}
+          {meetup?.day === picked && <li>✈️ Ngày gặp nhau
+ <button className="link" onClick={clearMeet}>xóa</button></li>}
           {pickedFests.map(f => {
             const c = f.custom ? days.find(x => f.id.startsWith(`custom:${x.id}:`)) : null;
             return (
               <li key={f.id}>{f.icon} {f.name} <small className="muted">· {THEMES[f.theme].label}</small>
-                {c && <button className="link" onClick={async () => { if (await act(() => api.deleteDay(c.id))) notify('days'); }}>xóa</button>}
+                {c && <button className="link" onClick={async () => { if (confirm(`Xóa "${c.title}" khỏi lịch?`) && await act(() => api.deleteDay(c.id))) notify('days'); }}>xóa</button>}
+                {!c && /^(anniv|day\d)/.test(f.id) && <button className="link" onClick={clearAnniv}>xóa</button>}
+                {!c && f.id.startsWith('bday-me') && <button className="link" onClick={clearBday}>xóa</button>}
               </li>
             );
           })}
@@ -168,6 +182,7 @@ export function CalendarSheet({ me, partner, couple, days, today, meetup, onSave
           <button className="btn small" disabled={anniv === (couple?.anniversary ?? '')} onClick={async () => {
             if (await act(() => api.setAnniversary(anniv || null))) { notify('profiles'); onSaved(); toast('💞 Đã lưu ngày yêu nhau'); }
           }}>Lưu</button>
+          {couple?.anniversary && <button className="btn small ghost" onClick={clearAnniv}>🗑️ Xóa</button>}
         </div>
       </div>
       <div className="field">
@@ -177,13 +192,14 @@ export function CalendarSheet({ me, partner, couple, days, today, meetup, onSave
           <button className="btn small" disabled={bday === (me.birthday ?? '')} onClick={async () => {
             if (await act(() => api.updateProfile(me.id, { birthday: bday || null }))) { notify('profiles'); onSaved(); toast('🎂 Đã lưu sinh nhật'); }
           }}>Lưu</button>
+          {me.birthday && <button className="btn small ghost" onClick={clearBday}>🗑️ Xóa</button>}
         </div>
       </div>
 
       <div className="field">
         <span>⏳ Sắp tới</span>
         <ul className="cal-events">
-          {meetup && meetup.day >= today && <li>✈️ Ngày gặp nhau — {fmt(meetup.day)} ({diffDays(today, meetup.day) === 0 ? 'hôm nay!' : `còn ${diffDays(today, meetup.day)} ngày`})</li>}
+          {meetup && meetup.day >= today && <li>✈️ Ngày gặp nhau — {fmt(meetup.day)} ({diffDays(today, meetup.day) === 0 ? 'hôm nay!' : `còn ${diffDays(today, meetup.day)} ngày`}) <button className="link" onClick={clearMeet}>xóa</button></li>}
           {soon.map(u => <li key={u.name + u.date}>{u.icon} {u.name} — {fmt(u.date)} ({u.inDays === 0 ? 'hôm nay!' : `còn ${u.inDays} ngày`})</li>)}
           {soon.length === 0 && <li className="muted">Chưa có dịp nào trong 6 tháng tới — thêm ngày yêu nhau hoặc sinh nhật nhé.</li>}
         </ul>

@@ -140,6 +140,7 @@ export const addWish = (me: Profile, body: string) =>
 export const loadMeetup = () => run<Meetup | null>(supabase.from('meetup').select('day, set_by').maybeSingle());
 export const setMeetup = (me: Profile, day: string) =>
   run(supabase.from('meetup').upsert({ couple_id: me.couple_id, day, set_by: me.id, updated_at: new Date().toISOString() }));
+export const clearMeetup = (me: Profile) => run(supabase.from('meetup').delete().eq('couple_id', me.couple_id));
 
 // ───────── Nhân vật, vườn, quà, nấu ăn ─────────
 
