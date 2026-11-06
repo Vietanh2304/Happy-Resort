@@ -337,7 +337,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // ───── Động tác (té nước, búng tai…): mình làm thì máy người ấy cũng thấy ─────
   const [acts, setActs] = useState<{ me?: Act; them?: Act }>({});
   const inTubRef = useRef({ me: false, them: false });
-  inTubRef.current = { me: scene === 'bathroom' && live.mine.act === 'bath', them: !!partnerHere && scene === 'bathroom' && theirs?.act === 'bath' };
+  // Ai đang ở phòng tắm (trong bồn hay đứng cạnh) đều có thể bị té nước
+  inTubRef.current = { me: scene === 'bathroom', them: !!partnerHere && scene === 'bathroom' };
   const sayRef = useRef(live.say); sayRef.current = live.say;
   // Té nước: nước bay sang người kia, ~nửa giây sau người bị té giơ tay che mặt
   const hitLater = (who: 'me' | 'them') => setTimeout(() => {

@@ -1082,7 +1082,7 @@ textarea { resize: vertical; }
 /* Bồn tắm: vịt cao su & té nước */
 .bath-duck { position: absolute; image-rendering: pixelated; cursor: pointer; animation: duckbob 2.4s ease-in-out infinite; }
 .bath-duck.hop { animation: duckhop .6s ease-out; }
-@keyframes duckbob { 0%, 100% { transform: translate(0, 0) rotate(-4deg); } 50% { transform: translate(4px, 1px) rotate(4deg); } }
+@keyframes duckbob { 0%, 100% { transform: translate(0, 0) rotate(-4deg); } 50% { transform: translate(2px, 1px) rotate(4deg); } }
 @keyframes duckhop { 0% { transform: translateY(0); } 40% { transform: translateY(-12px) rotate(-12deg); } 100% { transform: translateY(0); } }
 .bath-splash { position: absolute; width: 0; height: 0; pointer-events: none; }
 .bath-splash img { position: absolute; left: 0; top: 0; image-rendering: pixelated; opacity: 0; animation: splash .6s ease-out 2; }

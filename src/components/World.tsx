@@ -1096,7 +1096,15 @@ function BathToys(p: WorldProps) {
   useEffect(() => { if (!splashing.length) return; const t = setTimeout(() => tick(v => v + 1), 1350); return () => clearTimeout(t); });
   const duck = duckSprite(), drop = dropSprite();
   // Chỗ nước trống trong lòng bồn (cạnh hai người, sau thành bồn)
-  const SPOTS = [roomPt(5.6, 2.0, 14), roomPt(4.6, 1.5, 14)];
+  // Hai góc mặt nước phía sau-phải (toạ độ màn hình đo theo lòng bồn, tránh thành bồn và hai người)
+  const SPOTS = [{ x: 120, y: 58 }, { x: 130, y: 64 }];
+  // Đích nước té: người kia trong bồn → chỗ ngồi; đứng trong phòng → ngang mặt; không có ai → bay sang phía bên kia bồn
+  const aim = (who: 'me' | 'them') => {
+    if (inTub[who]) return { x: seat(who).x, y: seat(who).y };
+    const pos = who === 'me' ? p.live.mine.pos : theirs?.pos;
+    if (pos) return { x: pos.x, y: pos.y - 14 };
+    return { x: seat(who).x, y: seat(who).y };
+  };
   return (
     <>
       {ducks.map((d, i) => {
@@ -1111,13 +1119,13 @@ function BathToys(p: WorldProps) {
       {splashing.map(w => {
         const from = seat(w), other = w === 'me' ? 'them' : 'me', a = p.acts[w]!;
         // Có người kia trong bồn thì nước bay vòng cung sang người đó, không thì bắn tung toé quanh mình
-        const to = inTub[other] ? seat(other) : null;
+        const to = aim(other);
         return (
           <div key={`${w}${a.at}`} className="bath-splash" style={{ left: from.x * s, top: (from.y - 12) * s, zIndex: 300 }}>
             {Array.from({ length: 8 }, (_, i) => {
-              const dx = to ? (to.x - from.x + (i % 3 - 1) * 3) * s : (i - 3.5) * 8 * s;
-              const dy = to ? (to.y - from.y - 2 + (i % 2) * 3) * s : -(10 + (i % 3) * 6) * s;
-              return <img key={i} src={drop.url} alt="" className={to ? 'to' : ''} style={{ ['--dx' as string]: `${dx}px`, ['--dy' as string]: `${dy}px`, ['--arc' as string]: `${-14 * s}px`, animationDelay: `${(i % 4) * 0.09 + Math.floor(i / 4) * 0.35}s`, width: drop.w * s * 0.8, height: drop.h * s * 0.8 }} />;
+              const dx = (to.x - from.x + (i % 3 - 1) * 3) * s;
+              const dy = (to.y - from.y + 10 + (i % 2) * 3) * s;
+              return <img key={i} src={drop.url} alt="" className="to" style={{ ['--dx' as string]: `${dx}px`, ['--dy' as string]: `${dy}px`, ['--arc' as string]: `${-14 * s}px`, animationDelay: `${(i % 4) * 0.08 + Math.floor(i / 4) * 0.3}s`, width: drop.w * s * 0.45, height: drop.h * s * 0.45 }} />;
             })}
           </div>
         );
@@ -1126,9 +1134,10 @@ function BathToys(p: WorldProps) {
   );
 }
 function duckSprite() {
-  return makeSprite('rubber-duck:v2', 9, 7, q => {
-    q.rect(0, 3, 7, 4, '#f6c64e'); q.rect(1, 6, 5, 1, '#e0a838'); q.px(0, 2, '#f6c64e');
-    q.rect(4, 0, 4, 4, '#f6c64e'); q.px(6, 1, '#3b2d3f'); q.rect(8, 2, 1, 1, '#f7894a'); q.px(2, 4, '#ffe9a0');
+  // Vịt nhỏ xíu (5×4) — nằm nửa chìm trong nước
+  return makeSprite('rubber-duck:v4', 5, 4, q => {
+    q.rect(0, 2, 4, 2, '#f6c64e'); q.px(0, 1, '#f6c64e'); q.rect(1, 3, 3, 1, '#e0a838');
+    q.rect(2, 0, 2, 2, '#f6c64e'); q.px(3, 0, '#3b2d3f'); q.px(4, 1, '#f7894a');
   });
 }
 
