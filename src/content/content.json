@@ -1,0 +1,3672 @@
+{
+  "grid": {
+    "cols": 6,
+    "rows": 4
+  },
+  "pickupsPerDay": 3,
+  "starterKit": [
+    {
+      "id": "palm",
+      "n": 1
+    },
+    {
+      "id": "umbrella",
+      "n": 1
+    },
+    {
+      "id": "chair",
+      "n": 2
+    },
+    {
+      "id": "flower",
+      "n": 2
+    },
+    {
+      "id": "lantern",
+      "n": 1
+    },
+    {
+      "id": "bucket",
+      "n": 1
+    }
+  ],
+  "items": [
+    {
+      "id": "palm",
+      "name": "Cây dừa",
+      "icon": "🌴",
+      "kind": "decor"
+    },
+    {
+      "id": "umbrella",
+      "name": "Dù che nắng",
+      "icon": "⛱️",
+      "kind": "decor"
+    },
+    {
+      "id": "chair",
+      "name": "Ghế gỗ",
+      "icon": "🪑",
+      "kind": "decor"
+    },
+    {
+      "id": "flower",
+      "name": "Hoa dâm bụt",
+      "icon": "🌺",
+      "kind": "decor"
+    },
+    {
+      "id": "lantern",
+      "name": "Đèn lồng",
+      "icon": "🏮",
+      "kind": "decor"
+    },
+    {
+      "id": "bucket",
+      "name": "Xô xẻng",
+      "icon": "🪣",
+      "kind": "decor"
+    },
+    {
+      "id": "sandcastle",
+      "name": "Lâu đài cát",
+      "icon": "🏰",
+      "kind": "decor"
+    },
+    {
+      "id": "tent",
+      "name": "Lều nhỏ",
+      "icon": "⛺",
+      "kind": "decor"
+    },
+    {
+      "id": "campfire",
+      "name": "Lửa trại",
+      "icon": "🔥",
+      "kind": "decor"
+    },
+    {
+      "id": "canoe",
+      "name": "Thuyền nhỏ",
+      "icon": "🛶",
+      "kind": "decor"
+    },
+    {
+      "id": "fishing",
+      "name": "Cần câu",
+      "icon": "🎣",
+      "kind": "decor"
+    },
+    {
+      "id": "sunflower",
+      "name": "Hướng dương",
+      "icon": "🌻",
+      "kind": "decor"
+    },
+    {
+      "id": "mushroom",
+      "name": "Nấm rừng",
+      "icon": "🍄",
+      "kind": "decor"
+    },
+    {
+      "id": "chime",
+      "name": "Chuông gió",
+      "icon": "🎐",
+      "kind": "decor"
+    },
+    {
+      "id": "teapot",
+      "name": "Ấm trà",
+      "icon": "🫖",
+      "kind": "decor"
+    },
+    {
+      "id": "radio",
+      "name": "Radio cũ",
+      "icon": "📻",
+      "kind": "decor"
+    },
+    {
+      "id": "guitar",
+      "name": "Đàn ghi-ta",
+      "icon": "🎸",
+      "kind": "decor"
+    },
+    {
+      "id": "cactus",
+      "name": "Xương rồng",
+      "icon": "🌵",
+      "kind": "decor"
+    },
+    {
+      "id": "driftwood",
+      "name": "Gỗ trôi dạt",
+      "icon": "🪵",
+      "kind": "decor"
+    },
+    {
+      "id": "lost_umbrella",
+      "name": "Chiếc ô bỏ quên",
+      "icon": "☂️",
+      "kind": "decor"
+    },
+    {
+      "id": "snowman",
+      "name": "Người tuyết",
+      "icon": "☃️",
+      "kind": "decor"
+    },
+    {
+      "id": "candle",
+      "name": "Nến sương",
+      "icon": "🕯️",
+      "kind": "decor"
+    },
+    {
+      "id": "shell",
+      "name": "Vỏ ốc",
+      "icon": "🐚",
+      "kind": "trinket"
+    },
+    {
+      "id": "pebble",
+      "name": "Viên sỏi tròn",
+      "icon": "🪨",
+      "kind": "trinket"
+    },
+    {
+      "id": "seaglass",
+      "name": "Thủy tinh biển",
+      "icon": "💎",
+      "kind": "trinket"
+    },
+    {
+      "id": "starfish",
+      "name": "Sao biển",
+      "icon": "⭐",
+      "kind": "trinket"
+    },
+    {
+      "id": "feather",
+      "name": "Lông hải âu",
+      "icon": "🪶",
+      "kind": "trinket"
+    },
+    {
+      "id": "bottle",
+      "name": "Thư trong chai",
+      "icon": "🍾",
+      "kind": "trinket"
+    },
+    {
+      "id": "sunglasses",
+      "name": "Kính râm ai bỏ quên",
+      "icon": "🕶️",
+      "kind": "trinket"
+    },
+    {
+      "id": "coconut",
+      "name": "Trái dừa",
+      "icon": "🥥",
+      "kind": "trinket"
+    },
+    {
+      "id": "balloon",
+      "name": "Bóng bay lạc",
+      "icon": "🎈",
+      "kind": "trinket"
+    },
+    {
+      "id": "leaf",
+      "name": "Chiếc lá bay",
+      "icon": "🍃",
+      "kind": "trinket"
+    },
+    {
+      "id": "raindrop",
+      "name": "Giọt mưa ngọc",
+      "icon": "💧",
+      "kind": "trinket"
+    },
+    {
+      "id": "snowflake",
+      "name": "Bông tuyết pha lê",
+      "icon": "❄️",
+      "kind": "trinket"
+    },
+    {
+      "id": "mitten",
+      "name": "Găng len lạc",
+      "icon": "🧤",
+      "kind": "trinket"
+    },
+    {
+      "id": "bubble",
+      "name": "Bong bóng sương",
+      "icon": "🫧",
+      "kind": "trinket"
+    },
+    {
+      "id": "rainbow_shard",
+      "name": "Mảnh cầu vồng",
+      "icon": "🌈",
+      "kind": "decor",
+      "rarity": "rare"
+    },
+    {
+      "id": "whale_pearl",
+      "name": "Ngọc cá voi",
+      "icon": "🔮",
+      "kind": "decor",
+      "rarity": "rare"
+    },
+    {
+      "id": "ice_lantern",
+      "name": "Băng đăng",
+      "icon": "🧊",
+      "kind": "decor",
+      "rarity": "rare"
+    },
+    {
+      "id": "stardust",
+      "name": "Bụi sao băng",
+      "icon": "💫",
+      "kind": "decor",
+      "rarity": "rare"
+    },
+    {
+      "id": "keepsake",
+      "name": "Kỷ vật ngày gặp",
+      "icon": "💞",
+      "kind": "decor",
+      "rarity": "rare"
+    },
+    {
+      "id": "peach",
+      "name": "Cành đào",
+      "icon": "🌸",
+      "kind": "decor"
+    },
+    {
+      "id": "lixi",
+      "name": "Bao lì xì",
+      "icon": "🧧",
+      "kind": "trinket"
+    },
+    {
+      "id": "kite",
+      "name": "Diều giấy",
+      "icon": "🪁",
+      "kind": "decor"
+    },
+    {
+      "id": "watermelon",
+      "name": "Dưa hấu",
+      "icon": "🍉",
+      "kind": "trinket"
+    },
+    {
+      "id": "mooncake",
+      "name": "Bánh trung thu",
+      "icon": "🥮",
+      "kind": "trinket"
+    },
+    {
+      "id": "star_lantern",
+      "name": "Đèn ông sao",
+      "icon": "🌟",
+      "kind": "decor"
+    },
+    {
+      "id": "pumpkin",
+      "name": "Bí ngô",
+      "icon": "🎃",
+      "kind": "decor"
+    },
+    {
+      "id": "xmas_tree",
+      "name": "Cây thông nhỏ",
+      "icon": "🎄",
+      "kind": "decor"
+    },
+    {
+      "id": "scarf",
+      "name": "Khăn len",
+      "icon": "🧣",
+      "kind": "trinket"
+    },
+    {
+      "id": "hut",
+      "name": "Chòi lá",
+      "icon": "🛖",
+      "kind": "decor"
+    },
+    {
+      "id": "lotus",
+      "name": "Hoa sen",
+      "icon": "🪷",
+      "kind": "decor"
+    },
+    {
+      "id": "pineapple",
+      "name": "Trái dứa",
+      "icon": "🍍",
+      "kind": "trinket"
+    },
+    {
+      "id": "coral",
+      "name": "San hô hồng",
+      "icon": "🪸",
+      "kind": "decor"
+    },
+    {
+      "id": "trident",
+      "name": "Đinh ba nàng tiên cá",
+      "icon": "🔱",
+      "kind": "decor"
+    },
+    {
+      "id": "pearl",
+      "name": "Ngọc trai",
+      "icon": "🦪",
+      "kind": "trinket"
+    },
+    {
+      "id": "firefly_jar",
+      "name": "Lọ đom đóm",
+      "icon": "🫙",
+      "kind": "decor"
+    },
+    {
+      "id": "fern",
+      "name": "Bụi dương xỉ",
+      "icon": "🌿",
+      "kind": "decor"
+    },
+    {
+      "id": "moon_flower",
+      "name": "Hoa quỳnh",
+      "icon": "🌼",
+      "kind": "decor"
+    },
+    {
+      "id": "bed",
+      "name": "Giường gỗ",
+      "icon": "🛏️",
+      "kind": "decor"
+    },
+    {
+      "id": "sofa",
+      "name": "Ghế sofa",
+      "icon": "🛋️",
+      "kind": "decor"
+    },
+    {
+      "id": "potted_plant",
+      "name": "Chậu cây",
+      "icon": "🪴",
+      "kind": "decor"
+    },
+    {
+      "id": "teddy",
+      "name": "Gấu bông",
+      "icon": "🧸",
+      "kind": "decor"
+    },
+    {
+      "id": "painting",
+      "name": "Bức tranh",
+      "icon": "🖼️",
+      "kind": "decor"
+    },
+    {
+      "id": "clock",
+      "name": "Đồng hồ",
+      "icon": "🕰️",
+      "kind": "decor"
+    },
+    {
+      "id": "books",
+      "name": "Chồng sách",
+      "icon": "📚",
+      "kind": "decor"
+    },
+    {
+      "id": "tv",
+      "name": "TV cũ",
+      "icon": "📺",
+      "kind": "decor"
+    },
+    {
+      "id": "mirror",
+      "name": "Gương",
+      "icon": "🪞",
+      "kind": "decor"
+    },
+    {
+      "id": "fish_goby",
+      "name": "Cá bống",
+      "icon": "🐟",
+      "kind": "fish"
+    },
+    {
+      "id": "fish_clown",
+      "name": "Cá hề",
+      "icon": "🐠",
+      "kind": "fish"
+    },
+    {
+      "id": "fish_puffer",
+      "name": "Cá nóc",
+      "icon": "🐡",
+      "kind": "fish"
+    },
+    {
+      "id": "shrimp",
+      "name": "Tôm",
+      "icon": "🦐",
+      "kind": "fish"
+    },
+    {
+      "id": "squid",
+      "name": "Mực",
+      "icon": "🦑",
+      "kind": "fish"
+    },
+    {
+      "id": "jelly",
+      "name": "Sứa phát sáng",
+      "icon": "🪼",
+      "kind": "fish"
+    },
+    {
+      "id": "lobster",
+      "name": "Tôm hùm",
+      "icon": "🦞",
+      "kind": "fish"
+    },
+    {
+      "id": "shark",
+      "name": "Cá mập con",
+      "icon": "🦈",
+      "kind": "fish",
+      "rarity": "rare"
+    },
+    {
+      "id": "old_boot",
+      "name": "Chiếc ủng cũ",
+      "icon": "🥾",
+      "kind": "fish"
+    },
+    {
+      "id": "carrot",
+      "name": "Cà rốt",
+      "icon": "🥕",
+      "kind": "crop"
+    },
+    {
+      "id": "potato",
+      "name": "Khoai tây",
+      "icon": "🥔",
+      "kind": "crop"
+    },
+    {
+      "id": "rice",
+      "name": "Lúa",
+      "icon": "🌾",
+      "kind": "crop"
+    },
+    {
+      "id": "tomato",
+      "name": "Cà chua",
+      "icon": "🍅",
+      "kind": "crop"
+    },
+    {
+      "id": "corn",
+      "name": "Ngô",
+      "icon": "🌽",
+      "kind": "crop"
+    },
+    {
+      "id": "strawberry",
+      "name": "Dâu tây",
+      "icon": "🍓",
+      "kind": "crop"
+    },
+    {
+      "id": "sushi",
+      "name": "Sushi cá bống",
+      "icon": "🍣",
+      "kind": "dish"
+    },
+    {
+      "id": "fried_shrimp",
+      "name": "Tôm chiên",
+      "icon": "🍤",
+      "kind": "dish"
+    },
+    {
+      "id": "salad",
+      "name": "Salad vườn",
+      "icon": "🥗",
+      "kind": "dish"
+    },
+    {
+      "id": "corn_soup",
+      "name": "Súp ngô",
+      "icon": "🥣",
+      "kind": "dish"
+    },
+    {
+      "id": "strawberry_cake",
+      "name": "Bánh dâu dừa",
+      "icon": "🍰",
+      "kind": "dish"
+    },
+    {
+      "id": "noodles",
+      "name": "Mì hải sản",
+      "icon": "🍜",
+      "kind": "dish"
+    },
+    {
+      "id": "squid_bbq",
+      "name": "Mực nướng",
+      "icon": "🍢",
+      "kind": "dish"
+    },
+    {
+      "id": "curry",
+      "name": "Cà ri tôm hùm",
+      "icon": "🍛",
+      "kind": "dish",
+      "rarity": "rare"
+    },
+    {
+      "id": "wardrobe",
+      "name": "Tủ quần áo",
+      "icon": "🚪",
+      "kind": "decor"
+    },
+    {
+      "id": "nightstand",
+      "name": "Tủ đầu giường",
+      "icon": "🗄️",
+      "kind": "decor"
+    },
+    {
+      "id": "floor_lamp",
+      "name": "Đèn cây",
+      "icon": "💡",
+      "kind": "decor"
+    },
+    {
+      "id": "low_table",
+      "name": "Bàn trà thấp",
+      "icon": "🍵",
+      "kind": "decor"
+    },
+    {
+      "id": "round_rug",
+      "name": "Thảm tròn",
+      "icon": "⭕",
+      "kind": "decor"
+    },
+    {
+      "id": "bookshelf",
+      "name": "Kệ sách",
+      "icon": "📚",
+      "kind": "decor"
+    },
+    {
+      "id": "desk",
+      "name": "Bàn làm việc",
+      "icon": "💻",
+      "kind": "decor"
+    },
+    {
+      "id": "bunting",
+      "name": "Dây cờ màu",
+      "icon": "🎏",
+      "kind": "decor"
+    },
+    {
+      "id": "wall_shelf",
+      "name": "Kệ treo tường",
+      "icon": "🪴",
+      "kind": "decor"
+    },
+    {
+      "id": "photo_string",
+      "name": "Dây ảnh kỷ niệm",
+      "icon": "📸",
+      "kind": "decor"
+    },
+    {
+      "id": "heart_frame",
+      "name": "Khung tim",
+      "icon": "💗",
+      "kind": "decor"
+    },
+    {
+      "id": "hedge",
+      "name": "Rào cây xanh",
+      "icon": "🌳",
+      "kind": "decor"
+    },
+    {
+      "id": "tulip_bed",
+      "name": "Luống tulip",
+      "icon": "🌷",
+      "kind": "decor"
+    },
+    {
+      "id": "daisy_bed",
+      "name": "Luống cúc trắng",
+      "icon": "🌼",
+      "kind": "decor"
+    },
+    {
+      "id": "hydrangea",
+      "name": "Bụi cẩm tú cầu",
+      "icon": "💠",
+      "kind": "decor"
+    },
+    {
+      "id": "rose_arch",
+      "name": "Vòm hoa hồng",
+      "icon": "🌹",
+      "kind": "decor"
+    },
+    {
+      "id": "gazebo",
+      "name": "Chòi lồng chim",
+      "icon": "🕊️",
+      "kind": "decor"
+    },
+    {
+      "id": "garden_bench",
+      "name": "Ghế dài trong vườn",
+      "icon": "🪑",
+      "kind": "decor"
+    },
+    {
+      "id": "lamp_post",
+      "name": "Cột đèn vườn",
+      "icon": "🏮",
+      "kind": "decor"
+    },
+    {
+      "id": "birdbath",
+      "name": "Bể tắm chim",
+      "icon": "🐦",
+      "kind": "decor"
+    },
+    {
+      "id": "picket_fence",
+      "name": "Hàng rào trắng",
+      "icon": "🤍",
+      "kind": "decor"
+    },
+    {
+      "id": "cherry_tree",
+      "name": "Cây anh đào",
+      "icon": "🌸",
+      "kind": "decor"
+    },
+    {
+      "id": "stone_path",
+      "name": "Đá lót lối đi",
+      "icon": "🪨",
+      "kind": "decor"
+    },
+    {
+      "id": "mini_pond",
+      "name": "Ao sen nhỏ",
+      "icon": "🪷",
+      "kind": "decor"
+    },
+    {
+      "id": "swing",
+      "name": "Xích đu hoa",
+      "icon": "🎠",
+      "kind": "decor"
+    },
+    {
+      "id": "fridge",
+      "name": "Tủ lạnh",
+      "icon": "🧊",
+      "kind": "decor"
+    },
+    {
+      "id": "washer",
+      "name": "Máy giặt",
+      "icon": "🫧",
+      "kind": "decor"
+    },
+    {
+      "id": "stove",
+      "name": "Bếp nấu",
+      "icon": "🍳",
+      "kind": "decor"
+    },
+    {
+      "id": "kitchen_counter",
+      "name": "Tủ bếp có bồn rửa",
+      "icon": "🚰",
+      "kind": "decor"
+    },
+    {
+      "id": "microwave",
+      "name": "Lò vi sóng",
+      "icon": "♨️",
+      "kind": "decor"
+    },
+    {
+      "id": "rice_cooker",
+      "name": "Nồi cơm điện",
+      "icon": "🍚",
+      "kind": "decor"
+    },
+    {
+      "id": "standing_fan",
+      "name": "Quạt cây",
+      "icon": "🌀",
+      "kind": "decor"
+    },
+    {
+      "id": "air_conditioner",
+      "name": "Máy lạnh",
+      "icon": "❄️",
+      "kind": "decor"
+    },
+    {
+      "id": "wall_tv",
+      "name": "Tivi treo tường",
+      "icon": "🖥️",
+      "kind": "decor"
+    },
+    {
+      "id": "record_player",
+      "name": "Máy hát đĩa than",
+      "icon": "💿",
+      "kind": "decor"
+    },
+    {
+      "id": "aquarium",
+      "name": "Bể cá cảnh",
+      "icon": "🐠",
+      "kind": "decor"
+    },
+    {
+      "id": "piano",
+      "name": "Đàn piano",
+      "icon": "🎹",
+      "kind": "decor"
+    },
+    {
+      "id": "bathtub",
+      "name": "Bồn tắm",
+      "icon": "🛁",
+      "kind": "decor"
+    },
+    {
+      "id": "coat_rack",
+      "name": "Cây treo áo",
+      "icon": "🧥",
+      "kind": "decor"
+    },
+    {
+      "id": "dining_table",
+      "name": "Bàn ăn",
+      "icon": "🍽️",
+      "kind": "decor"
+    },
+    {
+      "id": "armchair",
+      "name": "Ghế bành",
+      "icon": "🛋️",
+      "kind": "decor"
+    },
+    {
+      "id": "dresser",
+      "name": "Tủ ngăn kéo có gương",
+      "icon": "🪞",
+      "kind": "decor"
+    },
+    {
+      "id": "bean_bag",
+      "name": "Ghế lười",
+      "icon": "🫘",
+      "kind": "decor"
+    },
+    {
+      "id": "curtain_window",
+      "name": "Cửa sổ rèm hồng",
+      "icon": "🪟",
+      "kind": "decor"
+    },
+    {
+      "id": "scarecrow",
+      "name": "Bù nhìn",
+      "icon": "🧑‍🌾",
+      "kind": "decor"
+    },
+    {
+      "id": "hay_bale",
+      "name": "Kiện rơm",
+      "icon": "🌾",
+      "kind": "decor"
+    },
+    {
+      "id": "wheelbarrow",
+      "name": "Xe cút kít",
+      "icon": "🛒",
+      "kind": "decor"
+    },
+    {
+      "id": "beehive",
+      "name": "Tổ ong",
+      "icon": "🐝",
+      "kind": "decor"
+    },
+    {
+      "id": "well",
+      "name": "Giếng nước",
+      "icon": "🪣",
+      "kind": "decor"
+    },
+    {
+      "id": "windmill",
+      "name": "Cối xay gió",
+      "icon": "🌬️",
+      "kind": "decor"
+    },
+    {
+      "id": "farm_sign",
+      "name": "Biển nông trại",
+      "icon": "🪧",
+      "kind": "decor"
+    },
+    {
+      "id": "flower_pots",
+      "name": "Chậu hoa nhỏ",
+      "icon": "🪴",
+      "kind": "decor"
+    },
+    {
+      "id": "fertilizer",
+      "name": "Phân bón",
+      "icon": "🧪",
+      "kind": "trinket"
+    },
+    {
+      "id": "ticket",
+      "name": "Vé vui chơi",
+      "icon": "🎟️",
+      "kind": "trinket",
+      "rarity": "rare"
+    },
+    {
+      "id": "bouquet",
+      "name": "Bó hoa",
+      "icon": "💐",
+      "kind": "decor"
+    },
+    {
+      "id": "cabbage",
+      "name": "Cải thảo",
+      "icon": "🥬",
+      "kind": "crop"
+    },
+    {
+      "id": "chili",
+      "name": "Ớt",
+      "icon": "🌶️",
+      "kind": "crop"
+    },
+    {
+      "id": "eggplant",
+      "name": "Cà tím",
+      "icon": "🍆",
+      "kind": "crop"
+    },
+    {
+      "id": "grape",
+      "name": "Nho",
+      "icon": "🍇",
+      "kind": "crop"
+    },
+    {
+      "id": "squash",
+      "name": "Bí đỏ",
+      "icon": "🎃",
+      "kind": "crop"
+    },
+    {
+      "id": "garlic",
+      "name": "Tỏi",
+      "icon": "🧄",
+      "kind": "crop"
+    },
+    {
+      "id": "peach_fruit",
+      "name": "Quả đào",
+      "icon": "🍑",
+      "kind": "crop"
+    },
+    {
+      "id": "rose_bloom",
+      "name": "Hoa hồng",
+      "icon": "🌹",
+      "kind": "crop"
+    },
+    {
+      "id": "tulip_bloom",
+      "name": "Hoa tulip",
+      "icon": "🌷",
+      "kind": "crop"
+    },
+    {
+      "id": "lavender",
+      "name": "Oải hương",
+      "icon": "🪻",
+      "kind": "crop"
+    },
+    {
+      "id": "daisy_bloom",
+      "name": "Hoa cúc",
+      "icon": "🌼",
+      "kind": "crop"
+    },
+    {
+      "id": "sunflower_bloom",
+      "name": "Bông hướng dương",
+      "icon": "🌻",
+      "kind": "crop"
+    },
+    {
+      "id": "sakura_bloom",
+      "name": "Hoa anh đào",
+      "icon": "🌸",
+      "kind": "crop"
+    },
+    {
+      "id": "kimchi_stew",
+      "name": "Canh kim chi",
+      "icon": "🍲",
+      "kind": "dish"
+    },
+    {
+      "id": "tteokbokki",
+      "name": "Bánh gạo cay",
+      "icon": "🍢",
+      "kind": "dish"
+    },
+    {
+      "id": "bibimbap",
+      "name": "Cơm trộn",
+      "icon": "🍱",
+      "kind": "dish"
+    },
+    {
+      "id": "grape_juice",
+      "name": "Nước nho",
+      "icon": "🧃",
+      "kind": "dish"
+    },
+    {
+      "id": "watermelon_juice",
+      "name": "Sinh tố dưa hấu",
+      "icon": "🍹",
+      "kind": "dish"
+    },
+    {
+      "id": "pumpkin_pie",
+      "name": "Bánh bí đỏ",
+      "icon": "🥧",
+      "kind": "dish"
+    },
+    {
+      "id": "garlic_shrimp",
+      "name": "Tôm bơ tỏi",
+      "icon": "🍤",
+      "kind": "dish"
+    },
+    {
+      "id": "eggplant_bake",
+      "name": "Cà tím nướng",
+      "icon": "🍆",
+      "kind": "dish"
+    },
+    {
+      "id": "peach_tea",
+      "name": "Trà đào",
+      "icon": "🧋",
+      "kind": "dish"
+    },
+    {
+      "id": "chocolate",
+      "name": "Sô-cô-la tình yêu",
+      "icon": "🍫",
+      "kind": "trinket"
+    },
+    {
+      "id": "candy_box",
+      "name": "Hộp kẹo ngọt",
+      "icon": "🍬",
+      "kind": "trinket"
+    },
+    {
+      "id": "love_lock",
+      "name": "Khóa tình yêu",
+      "icon": "🔒",
+      "kind": "trinket",
+      "rarity": "rare"
+    },
+    {
+      "id": "gift_box",
+      "name": "Hộp quà",
+      "icon": "🎁",
+      "kind": "decor"
+    },
+    {
+      "id": "sparkler",
+      "name": "Pháo bông que",
+      "icon": "🎇",
+      "kind": "trinket"
+    },
+    {
+      "id": "birthday_cake",
+      "name": "Bánh sinh nhật",
+      "icon": "🎂",
+      "kind": "dish"
+    },
+    {
+      "id": "love_ring",
+      "name": "Nhẫn đôi",
+      "icon": "💍",
+      "kind": "trinket",
+      "rarity": "rare"
+    },
+    {
+      "id": "pet_food",
+      "name": "Hộp pate thú cưng",
+      "icon": "🥫",
+      "kind": "trinket"
+    },
+    {
+      "id": "pet_treat",
+      "name": "Bánh thưởng",
+      "icon": "🍖",
+      "kind": "trinket"
+    },
+    {
+      "id": "pet_bed",
+      "name": "Ổ nằm thú cưng",
+      "icon": "🧺",
+      "kind": "decor"
+    },
+    {
+      "id": "pet_toy",
+      "name": "Cuộn len",
+      "icon": "🧶",
+      "kind": "decor"
+    },
+    {
+      "id": "pet_ball",
+      "name": "Bóng tennis",
+      "icon": "🎾",
+      "kind": "decor"
+    },
+    {
+      "id": "smore",
+      "name": "Kẹo dẻo nướng",
+      "icon": "🍡",
+      "kind": "dish"
+    },
+    {
+      "id": "photo_frame",
+      "name": "Khung ảnh đôi",
+      "icon": "🖼️",
+      "kind": "decor"
+    },
+    {
+      "id": "eternal_lock",
+      "name": "Lời hứa trên đỉnh vòng quay",
+      "icon": "💞",
+      "kind": "trinket",
+      "rarity": "rare"
+    },
+    {
+      "id": "kid_drawing",
+      "name": "Tranh bé vẽ ba mẹ",
+      "icon": "🖍️",
+      "kind": "decor",
+      "rarity": "rare"
+    },
+    {
+      "id": "kid_card",
+      "name": "Thiệp bé làm tặng",
+      "icon": "💌",
+      "kind": "decor",
+      "rarity": "rare"
+    },
+    {
+      "id": "hoa_mai",
+      "name": "Chậu mai vàng",
+      "icon": "🌼",
+      "kind": "decor"
+    },
+    {
+      "id": "hoa_dao",
+      "name": "Chậu đào hồng",
+      "icon": "🌸",
+      "kind": "decor"
+    },
+    {
+      "id": "banh_chung",
+      "name": "Bánh chưng",
+      "icon": "🟩",
+      "kind": "decor"
+    },
+    {
+      "id": "cau_doi",
+      "name": "Câu đối đỏ",
+      "icon": "🧧",
+      "kind": "decor"
+    },
+    {
+      "id": "lixi_treo",
+      "name": "Dây lì xì",
+      "icon": "🧧",
+      "kind": "decor"
+    },
+    {
+      "id": "phao_tet",
+      "name": "Dây pháo Tết",
+      "icon": "🧨",
+      "kind": "decor"
+    },
+    {
+      "id": "bo_hoa_hong",
+      "name": "Bình hoa hồng",
+      "icon": "🌹",
+      "kind": "decor"
+    },
+    {
+      "id": "bong_bay_tim",
+      "name": "Bóng bay trái tim",
+      "icon": "🎈",
+      "kind": "decor"
+    },
+    {
+      "id": "den_ong_sao",
+      "name": "Đèn ông sao",
+      "icon": "⭐",
+      "kind": "decor"
+    },
+    {
+      "id": "den_ca_chep",
+      "name": "Đèn cá chép",
+      "icon": "🏮",
+      "kind": "decor"
+    },
+    {
+      "id": "banh_trung_thu",
+      "name": "Đĩa bánh trung thu",
+      "icon": "🥮",
+      "kind": "decor"
+    },
+    {
+      "id": "tho_ngoc",
+      "name": "Thỏ ngọc",
+      "icon": "🐇",
+      "kind": "decor"
+    },
+    {
+      "id": "bi_ngo",
+      "name": "Đèn bí ngô",
+      "icon": "🎃",
+      "kind": "decor"
+    },
+    {
+      "id": "cay_thong_noel",
+      "name": "Cây thông Noel",
+      "icon": "🎄",
+      "kind": "decor"
+    },
+    {
+      "id": "nguoi_tuyet",
+      "name": "Người tuyết",
+      "icon": "⛄",
+      "kind": "decor"
+    },
+    {
+      "id": "hop_qua_noel",
+      "name": "Chồng quà Noel",
+      "icon": "🎁",
+      "kind": "decor"
+    },
+    {
+      "id": "vong_nguyet_que",
+      "name": "Vòng nguyệt quế",
+      "icon": "🎀",
+      "kind": "decor"
+    },
+    {
+      "id": "tat_noel",
+      "name": "Tất Noel",
+      "icon": "🧦",
+      "kind": "decor"
+    }
+  ],
+  "animals": [
+    {
+      "id": "gull",
+      "name": "Hải âu",
+      "icon": "🐦",
+      "base": 3,
+      "stayHours": 2,
+      "attracts": {
+        "fishing": 2,
+        "canoe": 1,
+        "painting": 1
+      },
+      "gifts": [
+        "feather",
+        "shell",
+        "bottle"
+      ],
+      "reviews": [
+        {
+          "text": "Gió biển ở đây thơm mùi muối, sẽ ghé lại!",
+          "stars": 5
+        },
+        {
+          "text": "Hơi ít cá, nhưng chủ resort dễ thương.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "crab",
+      "name": "Cua nhỏ",
+      "icon": "🦀",
+      "base": 2,
+      "stayHours": 3,
+      "attracts": {
+        "sandcastle": 4,
+        "bucket": 3
+      },
+      "gifts": [
+        "shell",
+        "pebble",
+        "sandcastle"
+      ],
+      "reviews": [
+        {
+          "text": "Cát mịn ơi là mịn, đi ngang cũng sướng.",
+          "stars": 5
+        },
+        {
+          "text": "Lâu đài cát đẹp, nhưng mình muốn to hơn nữa!",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "turtle",
+      "name": "Rùa biển",
+      "icon": "🐢",
+      "base": 1,
+      "stayHours": 5,
+      "attracts": {
+        "palm": 2,
+        "umbrella": 2,
+        "flower": 1
+      },
+      "gifts": [
+        "seaglass",
+        "starfish",
+        "coconut"
+      ],
+      "reviews": [
+        {
+          "text": "Nằm dưới bóng dừa ngủ một giấc thật dài.",
+          "stars": 5
+        },
+        {
+          "text": "Chậm rãi, yên bình. Đúng gu của tôi.",
+          "stars": 5
+        }
+      ]
+    },
+    {
+      "id": "cat",
+      "name": "Mèo mướp",
+      "icon": "🐈",
+      "base": 1,
+      "stayHours": 4,
+      "attracts": {
+        "chair": 2,
+        "fishing": 3,
+        "lantern": 1,
+        "sofa": 3,
+        "teddy": 1
+      },
+      "gifts": [
+        "fishing",
+        "radio",
+        "feather"
+      ],
+      "reviews": [
+        {
+          "text": "Ghế ấm, nắng vừa, meo meo năm sao.",
+          "stars": 5
+        },
+        {
+          "text": "Không có ai câu cá cho mình... trừ một sao.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "dog",
+      "name": "Cún con",
+      "icon": "🐕",
+      "base": 1,
+      "stayHours": 3,
+      "attracts": {
+        "campfire": 3,
+        "tent": 3,
+        "bed": 2,
+        "tv": 2
+      },
+      "gifts": [
+        "driftwood",
+        "tent",
+        "campfire"
+      ],
+      "reviews": [
+        {
+          "text": "Chạy khắp bãi biển! Vui quá vui!",
+          "stars": 5
+        },
+        {
+          "text": "Mình đào được một khúc gỗ xịn lắm.",
+          "stars": 5
+        }
+      ]
+    },
+    {
+      "id": "flamingo",
+      "name": "Hồng hạc",
+      "icon": "🦩",
+      "base": 0,
+      "stayHours": 3,
+      "attracts": {
+        "flower": 2,
+        "umbrella": 1,
+        "sunflower": 2
+      },
+      "gifts": [
+        "flower",
+        "sunflower",
+        "chime"
+      ],
+      "reviews": [
+        {
+          "text": "Phối màu resort rất có gu, rất hồng.",
+          "stars": 5
+        },
+        {
+          "text": "Đứng một chân ngắm hoàng hôn, tuyệt.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "otter",
+      "name": "Rái cá",
+      "icon": "🦦",
+      "base": 0,
+      "stayHours": 3,
+      "attracts": {
+        "canoe": 4,
+        "fishing": 2
+      },
+      "gifts": [
+        "pebble",
+        "canoe",
+        "seaglass"
+      ],
+      "reviews": [
+        {
+          "text": "Tìm được viên sỏi hoàn hảo để đập sò!",
+          "stars": 5
+        },
+        {
+          "text": "Nước hơi lạnh nhưng thuyền xinh lắm.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "owl",
+      "name": "Cú mèo",
+      "icon": "🦉",
+      "base": 0,
+      "stayHours": 6,
+      "attracts": {
+        "lantern": 3,
+        "radio": 2,
+        "candle": 2,
+        "books": 3,
+        "clock": 2
+      },
+      "gifts": [
+        "feather",
+        "candle",
+        "teapot"
+      ],
+      "reviews": [
+        {
+          "text": "Đèn lồng dịu mắt, đêm ở đây thật hiền.",
+          "stars": 5
+        },
+        {
+          "text": "Nghe radio cả đêm, có bài hơi buồn.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "butterfly",
+      "name": "Bướm",
+      "icon": "🦋",
+      "base": 0,
+      "stayHours": 2,
+      "attracts": {
+        "flower": 3,
+        "sunflower": 3,
+        "potted_plant": 2
+      },
+      "gifts": [
+        "leaf",
+        "flower",
+        "chime"
+      ],
+      "reviews": [
+        {
+          "text": "Hoa nhiều quá, bay hoa cả mắt!",
+          "stars": 5
+        },
+        {
+          "text": "Ước gì có thêm vài chậu hướng dương.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "rabbit",
+      "name": "Thỏ trắng",
+      "icon": "🐇",
+      "base": 0,
+      "stayHours": 4,
+      "attracts": {
+        "mushroom": 4,
+        "teapot": 2,
+        "teddy": 3,
+        "potted_plant": 2
+      },
+      "gifts": [
+        "mushroom",
+        "teapot",
+        "leaf"
+      ],
+      "reviews": [
+        {
+          "text": "Trà chiều bên biển, còn gì bằng.",
+          "stars": 5
+        },
+        {
+          "text": "Cà rốt đâu? Nhưng nấm cũng được.",
+          "stars": 3
+        }
+      ]
+    },
+    {
+      "id": "hedgehog",
+      "name": "Nhím nhỏ",
+      "icon": "🦔",
+      "base": 0,
+      "stayHours": 4,
+      "attracts": {
+        "mushroom": 3,
+        "driftwood": 2,
+        "potted_plant": 2
+      },
+      "gifts": [
+        "mushroom",
+        "guitar"
+      ],
+      "reviews": [
+        {
+          "text": "Cuộn tròn dưới khúc gỗ, ấm áp lạ thường.",
+          "stars": 5
+        },
+        {
+          "text": "Hơi ngại người, nhưng ở đây ai cũng hiền.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "frog",
+      "name": "Ếch xanh",
+      "icon": "🐸",
+      "base": 0,
+      "stayHours": 3,
+      "attracts": {
+        "bucket": 2,
+        "lost_umbrella": 4
+      },
+      "gifts": [
+        "raindrop",
+        "lost_umbrella"
+      ],
+      "reviews": [
+        {
+          "text": "Trú mưa dưới ô, ộp ộp mãn nguyện.",
+          "stars": 5
+        },
+        {
+          "text": "Xô nước vừa vặn làm hồ bơi riêng.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "penguin",
+      "name": "Chim cánh cụt",
+      "icon": "🐧",
+      "base": 0,
+      "stayHours": 5,
+      "attracts": {
+        "snowman": 5,
+        "ice_lantern": 4
+      },
+      "gifts": [
+        "snowflake",
+        "mitten",
+        "ice_lantern"
+      ],
+      "reviews": [
+        {
+          "text": "Có người tuyết làm bạn, như ở nhà.",
+          "stars": 5
+        },
+        {
+          "text": "Cát hơi nóng chân, nhưng vẫn đáng!",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "duck",
+      "name": "Vịt bầu",
+      "icon": "🦆",
+      "base": 0,
+      "stayHours": 3,
+      "attracts": {
+        "canoe": 2,
+        "guitar": 2,
+        "mirror": 2
+      },
+      "gifts": [
+        "feather",
+        "guitar"
+      ],
+      "reviews": [
+        {
+          "text": "Ai đó chơi ghi-ta, mình nhảy theo cạp cạp.",
+          "stars": 5
+        },
+        {
+          "text": "Bơi quanh thuyền cả buổi chiều.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "monkey",
+      "name": "Khỉ con",
+      "icon": "🐒",
+      "island": "middle",
+      "base": 1,
+      "stayHours": 3,
+      "attracts": {
+        "hut": 3,
+        "lotus": 1
+      },
+      "gifts": [
+        "pineapple",
+        "hut",
+        "coconut"
+      ],
+      "reviews": [
+        {
+          "text": "Chòi lá đu võng siêu đã!",
+          "stars": 5
+        },
+        {
+          "text": "Dứa ngọt, nhưng thiếu chuối.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "parrot",
+      "name": "Vẹt sặc sỡ",
+      "icon": "🦜",
+      "island": "middle",
+      "base": 1,
+      "stayHours": 4,
+      "attracts": {
+        "hut": 2,
+        "lotus": 2,
+        "flower": 1
+      },
+      "gifts": [
+        "feather",
+        "lotus"
+      ],
+      "reviews": [
+        {
+          "text": "Đảo đẹp! Đảo đẹp! Đảo đẹp!",
+          "stars": 5
+        },
+        {
+          "text": "Học được câu 'nhớ nhau' từ hai bạn.",
+          "stars": 5
+        }
+      ]
+    },
+    {
+      "id": "octopus",
+      "name": "Bạch tuộc",
+      "icon": "🐙",
+      "island": "coral",
+      "base": 1,
+      "stayHours": 4,
+      "attracts": {
+        "coral": 4,
+        "trident": 3
+      },
+      "gifts": [
+        "pearl",
+        "coral"
+      ],
+      "reviews": [
+        {
+          "text": "Tám tay đều muốn ôm rạn san hô này.",
+          "stars": 5
+        },
+        {
+          "text": "Mình đổi màu theo san hô, vui ghê.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "fish",
+      "name": "Cá nhiệt đới",
+      "icon": "🐠",
+      "island": "coral",
+      "base": 1,
+      "stayHours": 2,
+      "attracts": {
+        "coral": 3
+      },
+      "gifts": [
+        "bubble",
+        "pearl"
+      ],
+      "reviews": [
+        {
+          "text": "Nước trong vắt, thấy cả đáy!",
+          "stars": 5
+        },
+        {
+          "text": "Quên mất mình đến đây làm gì, nhưng vui.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "seal",
+      "name": "Hải cẩu",
+      "icon": "🦭",
+      "island": "coral",
+      "base": 1,
+      "stayHours": 5,
+      "attracts": {
+        "trident": 2,
+        "coral": 1
+      },
+      "gifts": [
+        "trident",
+        "pearl"
+      ],
+      "reviews": [
+        {
+          "text": "Phơi bụng trên đá, hoàn hảo.",
+          "stars": 5
+        },
+        {
+          "text": "Đinh ba lấp lánh quá, xin chụp hình!",
+          "stars": 5
+        }
+      ]
+    },
+    {
+      "id": "fox",
+      "name": "Cáo nhỏ",
+      "icon": "🦊",
+      "island": "firefly",
+      "base": 1,
+      "stayHours": 4,
+      "attracts": {
+        "fern": 3,
+        "firefly_jar": 2
+      },
+      "gifts": [
+        "fern",
+        "firefly_jar"
+      ],
+      "reviews": [
+        {
+          "text": "Đom đóm nhảy múa, mình cũng nhảy theo.",
+          "stars": 5
+        },
+        {
+          "text": "Bụi dương xỉ là chỗ trốn lý tưởng.",
+          "stars": 4
+        }
+      ]
+    },
+    {
+      "id": "deer",
+      "name": "Nai con",
+      "icon": "🦌",
+      "island": "firefly",
+      "base": 1,
+      "stayHours": 5,
+      "attracts": {
+        "moon_flower": 3,
+        "fern": 2
+      },
+      "gifts": [
+        "moon_flower",
+        "leaf"
+      ],
+      "reviews": [
+        {
+          "text": "Hoa quỳnh nở đúng lúc mình ghé. Duyên ghê.",
+          "stars": 5
+        },
+        {
+          "text": "Đêm yên đến nghe được cả tim mình.",
+          "stars": 5
+        }
+      ]
+    }
+  ],
+  "weatherPools": {
+    "clear": [
+      {
+        "id": "shell",
+        "w": 4
+      },
+      {
+        "id": "pebble",
+        "w": 3
+      },
+      {
+        "id": "starfish",
+        "w": 2
+      },
+      {
+        "id": "coconut",
+        "w": 2
+      },
+      {
+        "id": "sunglasses",
+        "w": 1
+      },
+      {
+        "id": "seaglass",
+        "w": 1
+      },
+      {
+        "id": "driftwood",
+        "w": 1
+      },
+      {
+        "id": "bottle",
+        "w": 1
+      },
+      {
+        "id": "cactus",
+        "w": 1
+      }
+    ],
+    "cloudy": [
+      {
+        "id": "shell",
+        "w": 3
+      },
+      {
+        "id": "pebble",
+        "w": 3
+      },
+      {
+        "id": "balloon",
+        "w": 2
+      },
+      {
+        "id": "leaf",
+        "w": 2
+      },
+      {
+        "id": "feather",
+        "w": 2
+      },
+      {
+        "id": "seaglass",
+        "w": 1
+      },
+      {
+        "id": "bottle",
+        "w": 1
+      },
+      {
+        "id": "chime",
+        "w": 1
+      },
+      {
+        "id": "canoe",
+        "w": 1
+      }
+    ],
+    "rain": [
+      {
+        "id": "raindrop",
+        "w": 3
+      },
+      {
+        "id": "lost_umbrella",
+        "w": 2
+      },
+      {
+        "id": "shell",
+        "w": 2
+      },
+      {
+        "id": "pebble",
+        "w": 2
+      },
+      {
+        "id": "mushroom",
+        "w": 1
+      },
+      {
+        "id": "seaglass",
+        "w": 1
+      }
+    ],
+    "snow": [
+      {
+        "id": "snowflake",
+        "w": 3
+      },
+      {
+        "id": "mitten",
+        "w": 2
+      },
+      {
+        "id": "snowman",
+        "w": 1
+      },
+      {
+        "id": "pebble",
+        "w": 2
+      },
+      {
+        "id": "seaglass",
+        "w": 1
+      }
+    ],
+    "fog": [
+      {
+        "id": "bubble",
+        "w": 3
+      },
+      {
+        "id": "candle",
+        "w": 2
+      },
+      {
+        "id": "feather",
+        "w": 2
+      },
+      {
+        "id": "bottle",
+        "w": 1
+      },
+      {
+        "id": "pebble",
+        "w": 2
+      }
+    ]
+  },
+  "combos": [
+    {
+      "id": "rainbow",
+      "name": "Cầu vồng hai bờ",
+      "icon": "🌈",
+      "effect": "rainbow",
+      "reward": "rainbow_shard",
+      "desc": "Cả hai bờ cùng mưa — cầu vồng bắc qua biển.",
+      "both": {
+        "weather": [
+          "rain"
+        ]
+      }
+    },
+    {
+      "id": "whale",
+      "name": "Cá voi phát sáng",
+      "icon": "🐋",
+      "effect": "whale",
+      "reward": "whale_pearl",
+      "desc": "Một bờ ngày, một bờ đêm — cá voi phát sáng bơi giữa hai múi giờ.",
+      "pair": [
+        {
+          "phase": [
+            "dawn",
+            "day",
+            "sunset"
+          ]
+        },
+        {
+          "phase": [
+            "night"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "frozen",
+      "name": "Biển đóng băng",
+      "icon": "🧊",
+      "effect": "frozen",
+      "reward": "ice_lantern",
+      "desc": "Cả hai bờ cùng tuyết — mặt biển đóng băng lấp lánh.",
+      "both": {
+        "weather": [
+          "snow"
+        ]
+      }
+    },
+    {
+      "id": "stars",
+      "name": "Mưa sao băng",
+      "icon": "🌠",
+      "effect": "stars",
+      "reward": "stardust",
+      "desc": "Cả hai cùng đêm quang — chạm sao băng cùng lúc (trong 3 giây) để ước.",
+      "both": {
+        "weather": [
+          "clear"
+        ],
+        "phase": [
+          "night"
+        ]
+      }
+    }
+  ],
+  "seasons": [
+    {
+      "id": "tet",
+      "name": "Tết đến xuân về",
+      "icon": "🧧",
+      "months": [
+        1,
+        2
+      ],
+      "pool": [
+        {
+          "id": "peach",
+          "w": 2
+        },
+        {
+          "id": "lixi",
+          "w": 3
+        }
+      ]
+    },
+    {
+      "id": "summer",
+      "name": "Hè rực rỡ",
+      "icon": "🍉",
+      "months": [
+        5,
+        6,
+        7,
+        8
+      ],
+      "pool": [
+        {
+          "id": "kite",
+          "w": 2
+        },
+        {
+          "id": "watermelon",
+          "w": 3
+        }
+      ]
+    },
+    {
+      "id": "midautumn",
+      "name": "Trung thu trăng tròn",
+      "icon": "🥮",
+      "months": [
+        9
+      ],
+      "pool": [
+        {
+          "id": "star_lantern",
+          "w": 2
+        },
+        {
+          "id": "mooncake",
+          "w": 3
+        }
+      ]
+    },
+    {
+      "id": "pumpkin",
+      "name": "Mùa bí ngô",
+      "icon": "🎃",
+      "months": [
+        10
+      ],
+      "pool": [
+        {
+          "id": "pumpkin",
+          "w": 3
+        }
+      ]
+    },
+    {
+      "id": "winter",
+      "name": "Mùa đông ấm áp",
+      "icon": "🧣",
+      "months": [
+        11,
+        12
+      ],
+      "pool": [
+        {
+          "id": "xmas_tree",
+          "w": 2
+        },
+        {
+          "id": "scarf",
+          "w": 3
+        }
+      ]
+    }
+  ],
+  "seasonGiftChance": 0.2,
+  "islands": [
+    {
+      "id": "middle",
+      "name": "Đảo Giữa",
+      "icon": "🏝️",
+      "planks": 30,
+      "cols": 4,
+      "rows": 3,
+      "pool": [
+        {
+          "id": "pineapple",
+          "w": 3
+        },
+        {
+          "id": "hut",
+          "w": 1
+        },
+        {
+          "id": "lotus",
+          "w": 1
+        }
+      ]
+    },
+    {
+      "id": "coral",
+      "name": "Đảo San Hô",
+      "icon": "🪸",
+      "planks": 60,
+      "cols": 4,
+      "rows": 3,
+      "pool": [
+        {
+          "id": "pearl",
+          "w": 3
+        },
+        {
+          "id": "coral",
+          "w": 1
+        },
+        {
+          "id": "trident",
+          "w": 1
+        }
+      ]
+    },
+    {
+      "id": "firefly",
+      "name": "Đảo Đom Đóm",
+      "icon": "✨",
+      "planks": 100,
+      "cols": 4,
+      "rows": 3,
+      "pool": [
+        {
+          "id": "fern",
+          "w": 2
+        },
+        {
+          "id": "firefly_jar",
+          "w": 1
+        },
+        {
+          "id": "moon_flower",
+          "w": 1
+        }
+      ]
+    }
+  ],
+  "meetup": {
+    "keepsake": "keepsake"
+  },
+  "fishing": {
+    "castsPerDay": 8,
+    "fish": [
+      {
+        "id": "fish_goby",
+        "w": 5
+      },
+      {
+        "id": "shrimp",
+        "w": 3
+      },
+      {
+        "id": "fish_clown",
+        "w": 3,
+        "phase": [
+          "dawn",
+          "day"
+        ]
+      },
+      {
+        "id": "fish_puffer",
+        "w": 2,
+        "weather": [
+          "cloudy",
+          "fog"
+        ]
+      },
+      {
+        "id": "squid",
+        "w": 3,
+        "phase": [
+          "sunset",
+          "night"
+        ]
+      },
+      {
+        "id": "jelly",
+        "w": 2,
+        "phase": [
+          "night"
+        ]
+      },
+      {
+        "id": "lobster",
+        "w": 2,
+        "weather": [
+          "rain",
+          "snow"
+        ]
+      },
+      {
+        "id": "old_boot",
+        "w": 1,
+        "weather": [
+          "rain",
+          "fog"
+        ]
+      },
+      {
+        "id": "shark",
+        "w": 0.4
+      }
+    ]
+  },
+  "garden": {
+    "plots": 3,
+    "harvest": 2,
+    "crops": [
+      {
+        "id": "carrot",
+        "days": 2
+      },
+      {
+        "id": "potato",
+        "days": 2
+      },
+      {
+        "id": "rice",
+        "days": 3
+      },
+      {
+        "id": "tomato",
+        "days": 3
+      },
+      {
+        "id": "corn",
+        "days": 3
+      },
+      {
+        "id": "strawberry",
+        "days": 4
+      },
+      {
+        "id": "cabbage",
+        "days": 3
+      },
+      {
+        "id": "chili",
+        "days": 2
+      },
+      {
+        "id": "eggplant",
+        "days": 3
+      },
+      {
+        "id": "watermelon",
+        "days": 4
+      },
+      {
+        "id": "grape",
+        "days": 4
+      },
+      {
+        "id": "squash",
+        "days": 4
+      },
+      {
+        "id": "garlic",
+        "days": 2
+      },
+      {
+        "id": "peach_fruit",
+        "days": 5
+      },
+      {
+        "id": "rose_bloom",
+        "days": 3,
+        "flower": true
+      },
+      {
+        "id": "tulip_bloom",
+        "days": 2,
+        "flower": true
+      },
+      {
+        "id": "lavender",
+        "days": 3,
+        "flower": true
+      },
+      {
+        "id": "daisy_bloom",
+        "days": 2,
+        "flower": true
+      },
+      {
+        "id": "sunflower_bloom",
+        "days": 3,
+        "flower": true
+      },
+      {
+        "id": "sakura_bloom",
+        "days": 4,
+        "flower": true
+      }
+    ]
+  },
+  "recipes": [
+    {
+      "id": "sushi",
+      "needs": [
+        {
+          "id": "fish_goby",
+          "n": 1
+        },
+        {
+          "id": "rice",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "fried_shrimp",
+      "needs": [
+        {
+          "id": "shrimp",
+          "n": 1
+        },
+        {
+          "id": "potato",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "salad",
+      "needs": [
+        {
+          "id": "tomato",
+          "n": 1
+        },
+        {
+          "id": "carrot",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "corn_soup",
+      "needs": [
+        {
+          "id": "corn",
+          "n": 1
+        },
+        {
+          "id": "potato",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "strawberry_cake",
+      "needs": [
+        {
+          "id": "strawberry",
+          "n": 2
+        },
+        {
+          "id": "coconut",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "noodles",
+      "needs": [
+        {
+          "id": "shrimp",
+          "n": 1
+        },
+        {
+          "id": "squid",
+          "n": 1
+        },
+        {
+          "id": "rice",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "squid_bbq",
+      "needs": [
+        {
+          "id": "squid",
+          "n": 1
+        },
+        {
+          "id": "tomato",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "curry",
+      "needs": [
+        {
+          "id": "lobster",
+          "n": 1
+        },
+        {
+          "id": "rice",
+          "n": 1
+        },
+        {
+          "id": "carrot",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "kimchi_stew",
+      "needs": [
+        {
+          "id": "cabbage",
+          "n": 1
+        },
+        {
+          "id": "chili",
+          "n": 1
+        },
+        {
+          "id": "potato",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "tteokbokki",
+      "needs": [
+        {
+          "id": "rice",
+          "n": 1
+        },
+        {
+          "id": "chili",
+          "n": 2
+        }
+      ]
+    },
+    {
+      "id": "bibimbap",
+      "needs": [
+        {
+          "id": "rice",
+          "n": 1
+        },
+        {
+          "id": "carrot",
+          "n": 1
+        },
+        {
+          "id": "cabbage",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "grape_juice",
+      "needs": [
+        {
+          "id": "grape",
+          "n": 2
+        }
+      ]
+    },
+    {
+      "id": "watermelon_juice",
+      "needs": [
+        {
+          "id": "watermelon",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "pumpkin_pie",
+      "needs": [
+        {
+          "id": "squash",
+          "n": 1
+        },
+        {
+          "id": "strawberry",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "garlic_shrimp",
+      "needs": [
+        {
+          "id": "shrimp",
+          "n": 1
+        },
+        {
+          "id": "garlic",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "eggplant_bake",
+      "needs": [
+        {
+          "id": "eggplant",
+          "n": 1
+        },
+        {
+          "id": "garlic",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "peach_tea",
+      "needs": [
+        {
+          "id": "peach_fruit",
+          "n": 1
+        }
+      ]
+    },
+    {
+      "id": "bouquet",
+      "needs": [
+        {
+          "id": "rose_bloom",
+          "n": 2
+        },
+        {
+          "id": "tulip_bloom",
+          "n": 1
+        },
+        {
+          "id": "daisy_bloom",
+          "n": 1
+        }
+      ]
+    }
+  ],
+  "economy": {
+    "togetherBonus": 200,
+    "sell": {
+      "trinket": 12,
+      "fish": 25,
+      "crop": 18,
+      "dish": 60,
+      "decor": 30
+    },
+    "welcome": 1500,
+    "daily": 150,
+    "game": 100,
+    "cook": 150,
+    "smore": 50
+  },
+  "shop": [
+    {
+      "id": "chair",
+      "price": 30,
+      "cat": "furniture"
+    },
+    {
+      "id": "flower",
+      "price": 20,
+      "cat": "garden"
+    },
+    {
+      "id": "potted_plant",
+      "price": 25,
+      "cat": "decor"
+    },
+    {
+      "id": "lantern",
+      "price": 40,
+      "cat": "decor"
+    },
+    {
+      "id": "teddy",
+      "price": 45,
+      "cat": "decor"
+    },
+    {
+      "id": "books",
+      "price": 35,
+      "cat": "decor"
+    },
+    {
+      "id": "clock",
+      "price": 40,
+      "cat": "decor"
+    },
+    {
+      "id": "painting",
+      "price": 55,
+      "cat": "decor"
+    },
+    {
+      "id": "mirror",
+      "price": 50,
+      "cat": "decor"
+    },
+    {
+      "id": "sofa",
+      "price": 90,
+      "cat": "furniture"
+    },
+    {
+      "id": "bed",
+      "price": 120,
+      "cat": "furniture"
+    },
+    {
+      "id": "tv",
+      "price": 100,
+      "cat": "appliance"
+    },
+    {
+      "id": "teapot",
+      "price": 45,
+      "cat": "decor"
+    },
+    {
+      "id": "radio",
+      "price": 60,
+      "cat": "decor"
+    },
+    {
+      "id": "guitar",
+      "price": 80,
+      "cat": "decor"
+    },
+    {
+      "id": "sunflower",
+      "price": 25,
+      "cat": "garden"
+    },
+    {
+      "id": "cactus",
+      "price": 20,
+      "cat": "garden"
+    },
+    {
+      "id": "chime",
+      "price": 35,
+      "cat": "decor"
+    },
+    {
+      "id": "candle",
+      "price": 30,
+      "cat": "decor"
+    },
+    {
+      "id": "fishing",
+      "price": 50,
+      "cat": "decor"
+    },
+    {
+      "id": "sandcastle",
+      "price": 40,
+      "cat": "decor"
+    },
+    {
+      "id": "wardrobe",
+      "price": 90,
+      "cat": "furniture"
+    },
+    {
+      "id": "nightstand",
+      "price": 40,
+      "cat": "furniture"
+    },
+    {
+      "id": "floor_lamp",
+      "price": 50,
+      "cat": "furniture"
+    },
+    {
+      "id": "low_table",
+      "price": 55,
+      "cat": "furniture"
+    },
+    {
+      "id": "round_rug",
+      "price": 45,
+      "cat": "furniture"
+    },
+    {
+      "id": "bookshelf",
+      "price": 80,
+      "cat": "furniture"
+    },
+    {
+      "id": "desk",
+      "price": 85,
+      "cat": "furniture"
+    },
+    {
+      "id": "bunting",
+      "price": 25,
+      "cat": "decor"
+    },
+    {
+      "id": "wall_shelf",
+      "price": 35,
+      "cat": "decor"
+    },
+    {
+      "id": "photo_string",
+      "price": 40,
+      "cat": "decor"
+    },
+    {
+      "id": "heart_frame",
+      "price": 30,
+      "cat": "decor"
+    },
+    {
+      "id": "hedge",
+      "price": 8,
+      "cat": "garden"
+    },
+    {
+      "id": "tulip_bed",
+      "price": 18,
+      "cat": "garden"
+    },
+    {
+      "id": "daisy_bed",
+      "price": 18,
+      "cat": "garden"
+    },
+    {
+      "id": "hydrangea",
+      "price": 22,
+      "cat": "garden"
+    },
+    {
+      "id": "rose_arch",
+      "price": 70,
+      "cat": "garden"
+    },
+    {
+      "id": "gazebo",
+      "price": 160,
+      "cat": "garden"
+    },
+    {
+      "id": "garden_bench",
+      "price": 45,
+      "cat": "garden"
+    },
+    {
+      "id": "lamp_post",
+      "price": 40,
+      "cat": "garden"
+    },
+    {
+      "id": "birdbath",
+      "price": 50,
+      "cat": "garden"
+    },
+    {
+      "id": "picket_fence",
+      "price": 10,
+      "cat": "garden"
+    },
+    {
+      "id": "cherry_tree",
+      "price": 90,
+      "cat": "garden"
+    },
+    {
+      "id": "stone_path",
+      "price": 6,
+      "cat": "garden"
+    },
+    {
+      "id": "mini_pond",
+      "price": 75,
+      "cat": "garden"
+    },
+    {
+      "id": "swing",
+      "price": 95,
+      "cat": "garden"
+    },
+    {
+      "id": "fridge",
+      "price": 120,
+      "cat": "appliance"
+    },
+    {
+      "id": "washer",
+      "price": 110,
+      "cat": "appliance"
+    },
+    {
+      "id": "stove",
+      "price": 90,
+      "cat": "appliance"
+    },
+    {
+      "id": "kitchen_counter",
+      "price": 95,
+      "cat": "appliance"
+    },
+    {
+      "id": "microwave",
+      "price": 60,
+      "cat": "appliance"
+    },
+    {
+      "id": "rice_cooker",
+      "price": 40,
+      "cat": "appliance"
+    },
+    {
+      "id": "standing_fan",
+      "price": 35,
+      "cat": "appliance"
+    },
+    {
+      "id": "air_conditioner",
+      "price": 130,
+      "cat": "appliance"
+    },
+    {
+      "id": "wall_tv",
+      "price": 140,
+      "cat": "appliance"
+    },
+    {
+      "id": "record_player",
+      "price": 85,
+      "cat": "appliance"
+    },
+    {
+      "id": "aquarium",
+      "price": 110,
+      "cat": "appliance"
+    },
+    {
+      "id": "piano",
+      "price": 200,
+      "cat": "appliance"
+    },
+    {
+      "id": "bathtub",
+      "price": 120,
+      "cat": "appliance"
+    },
+    {
+      "id": "coat_rack",
+      "price": 30,
+      "cat": "appliance"
+    },
+    {
+      "id": "dining_table",
+      "price": 90,
+      "cat": "furniture"
+    },
+    {
+      "id": "armchair",
+      "price": 70,
+      "cat": "furniture"
+    },
+    {
+      "id": "dresser",
+      "price": 95,
+      "cat": "furniture"
+    },
+    {
+      "id": "bean_bag",
+      "price": 40,
+      "cat": "furniture"
+    },
+    {
+      "id": "curtain_window",
+      "price": 45,
+      "cat": "furniture"
+    },
+    {
+      "id": "scarecrow",
+      "price": 35,
+      "cat": "garden"
+    },
+    {
+      "id": "hay_bale",
+      "price": 12,
+      "cat": "garden"
+    },
+    {
+      "id": "wheelbarrow",
+      "price": 40,
+      "cat": "garden"
+    },
+    {
+      "id": "beehive",
+      "price": 45,
+      "cat": "garden"
+    },
+    {
+      "id": "well",
+      "price": 80,
+      "cat": "garden"
+    },
+    {
+      "id": "windmill",
+      "price": 150,
+      "cat": "garden"
+    },
+    {
+      "id": "farm_sign",
+      "price": 15,
+      "cat": "garden"
+    },
+    {
+      "id": "flower_pots",
+      "price": 20,
+      "cat": "garden"
+    },
+    {
+      "id": "fertilizer",
+      "price": 10,
+      "cat": "garden"
+    },
+    {
+      "id": "pet_food",
+      "price": 5,
+      "cat": "pet"
+    },
+    {
+      "id": "pet_treat",
+      "price": 8,
+      "cat": "pet"
+    },
+    {
+      "id": "pet_bed",
+      "price": 25,
+      "cat": "pet"
+    },
+    {
+      "id": "pet_toy",
+      "price": 12,
+      "cat": "pet"
+    },
+    {
+      "id": "pet_ball",
+      "price": 10,
+      "cat": "pet"
+    },
+    {
+      "id": "gift_box",
+      "price": 15,
+      "cat": "decor"
+    },
+    {
+      "id": "photo_frame",
+      "price": 20,
+      "cat": "decor"
+    }
+  ],
+  "dinner": {
+    "menu": [
+      {
+        "cat": "🇰🇷 Món Hàn",
+        "items": [
+          {
+            "name": "Gà rán Hàn",
+            "icon": "🍗"
+          },
+          {
+            "name": "Bibimbap",
+            "icon": "🍱"
+          },
+          {
+            "name": "Tteokbokki",
+            "icon": "🍢"
+          },
+          {
+            "name": "Mì cay",
+            "icon": "🍜"
+          },
+          {
+            "name": "Thịt nướng BBQ",
+            "icon": "🥩"
+          },
+          {
+            "name": "Kimbap",
+            "icon": "🍙"
+          },
+          {
+            "name": "Soju",
+            "icon": "🍶",
+            "drink": true
+          }
+        ]
+      },
+      {
+        "cat": "🇹🇼 Món Đài",
+        "items": [
+          {
+            "name": "Tiểu long bao",
+            "icon": "🥟"
+          },
+          {
+            "name": "Mì bò Đài Loan",
+            "icon": "🍜"
+          },
+          {
+            "name": "Cơm thịt kho",
+            "icon": "🍚"
+          },
+          {
+            "name": "Gà rán Đài",
+            "icon": "🍗"
+          },
+          {
+            "name": "Bánh dứa",
+            "icon": "🍍"
+          },
+          {
+            "name": "Trà sữa trân châu",
+            "icon": "🧋",
+            "drink": true
+          }
+        ]
+      },
+      {
+        "cat": "🇻🇳 Món Việt",
+        "items": [
+          {
+            "name": "Phở bò",
+            "icon": "🍜"
+          },
+          {
+            "name": "Bánh mì",
+            "icon": "🥖"
+          },
+          {
+            "name": "Gỏi cuốn",
+            "icon": "🥗"
+          },
+          {
+            "name": "Bún chả",
+            "icon": "🍢"
+          },
+          {
+            "name": "Cơm tấm",
+            "icon": "🍛"
+          },
+          {
+            "name": "Cà phê sữa đá",
+            "icon": "☕",
+            "drink": true
+          }
+        ]
+      },
+      {
+        "cat": "🍝 Món Âu",
+        "items": [
+          {
+            "name": "Bít tết",
+            "icon": "🥩"
+          },
+          {
+            "name": "Mì Ý",
+            "icon": "🍝"
+          },
+          {
+            "name": "Pizza",
+            "icon": "🍕"
+          },
+          {
+            "name": "Súp kem",
+            "icon": "🥣"
+          },
+          {
+            "name": "Tôm hùm",
+            "icon": "🦞"
+          },
+          {
+            "name": "Sushi",
+            "icon": "🍣"
+          },
+          {
+            "name": "Hamburger",
+            "icon": "🍔"
+          }
+        ]
+      },
+      {
+        "cat": "🍰 Tráng miệng",
+        "items": [
+          {
+            "name": "Bánh kem dâu",
+            "icon": "🍰"
+          },
+          {
+            "name": "Kem",
+            "icon": "🍨"
+          },
+          {
+            "name": "Bánh macaron",
+            "icon": "🧁"
+          },
+          {
+            "name": "Bánh flan",
+            "icon": "🍮"
+          },
+          {
+            "name": "Dâu sô-cô-la",
+            "icon": "🍓"
+          },
+          {
+            "name": "Bánh donut",
+            "icon": "🍩"
+          }
+        ]
+      },
+      {
+        "cat": "🥂 Đồ uống",
+        "items": [
+          {
+            "name": "Vang đỏ",
+            "icon": "🍷",
+            "drink": true
+          },
+          {
+            "name": "Champagne",
+            "icon": "🥂",
+            "drink": true
+          },
+          {
+            "name": "Cocktail",
+            "icon": "🍸",
+            "drink": true
+          },
+          {
+            "name": "Trà nóng",
+            "icon": "🍵",
+            "drink": true
+          },
+          {
+            "name": "Nước cam",
+            "icon": "🧃",
+            "drink": true
+          },
+          {
+            "name": "Sinh tố",
+            "icon": "🍹",
+            "drink": true
+          }
+        ]
+      }
+    ]
+  },
+  "emotes": [
+    "👋",
+    "❤️",
+    "😘",
+    "🤗",
+    "🥺",
+    "😂",
+    "😴",
+    "🌙"
+  ],
+  "questions": [
+    {
+      "id": "q01",
+      "text": "Món ăn nào làm bạn nhớ người ấy nhất?"
+    },
+    {
+      "id": "q02",
+      "text": "Nếu được dịch chuyển tức thời 1 tiếng, mình sẽ đi đâu cùng nhau?"
+    },
+    {
+      "id": "q03",
+      "text": "Bài hát nào khiến bạn nghĩ về chúng mình?"
+    },
+    {
+      "id": "q04",
+      "text": "Hôm nay điều gì làm bạn mỉm cười?"
+    },
+    {
+      "id": "q05",
+      "text": "Kỷ niệm đầu tiên bạn nhớ rõ nhất về người ấy là gì?"
+    },
+    {
+      "id": "q06",
+      "text": "Lần gặp tới, việc đầu tiên bạn muốn làm là gì?"
+    },
+    {
+      "id": "q07",
+      "text": "Một thói quen nhỏ của người ấy mà bạn thấy đáng yêu?"
+    },
+    {
+      "id": "q08",
+      "text": "Nếu resort mình có một món đặc sản, đó sẽ là gì?"
+    },
+    {
+      "id": "q09",
+      "text": "Bạn thích ngày mưa hay ngày nắng hơn? Vì sao?"
+    },
+    {
+      "id": "q10",
+      "text": "Ba từ mô tả tuần này của bạn?"
+    },
+    {
+      "id": "q11",
+      "text": "Bộ phim nào bạn muốn xem cùng nhau nhất?"
+    },
+    {
+      "id": "q12",
+      "text": "Điều bạn biết ơn người ấy gần đây?"
+    },
+    {
+      "id": "q13",
+      "text": "Nếu nuôi một con vật chung, mình sẽ nuôi con gì và đặt tên gì?"
+    },
+    {
+      "id": "q14",
+      "text": "Một nơi bạn muốn cả hai cùng đến trước 30 tuổi?"
+    },
+    {
+      "id": "q15",
+      "text": "Bạn thường làm gì khi nhớ người ấy?"
+    },
+    {
+      "id": "q16",
+      "text": "Món quà nhỏ nào bạn muốn nhận nhất lúc này?"
+    },
+    {
+      "id": "q17",
+      "text": "Bạn đang mặc gì ngay lúc này? 👀"
+    },
+    {
+      "id": "q18",
+      "text": "Nếu được đổi múi giờ với người ấy một ngày, bạn sẽ làm gì?"
+    },
+    {
+      "id": "q19",
+      "text": "Mùi hương nào gợi nhớ về chúng mình?"
+    },
+    {
+      "id": "q20",
+      "text": "Giấc mơ gần đây nhất bạn còn nhớ?"
+    },
+    {
+      "id": "q21",
+      "text": "Một điều bạn chưa từng kể cho người ấy (nhẹ nhàng thôi)?"
+    },
+    {
+      "id": "q22",
+      "text": "Ngôi nhà tương lai của mình nên có căn phòng gì đặc biệt?"
+    },
+    {
+      "id": "q23",
+      "text": "Hôm nay bạn đã ăn gì ngon?"
+    },
+    {
+      "id": "q24",
+      "text": "Câu nói nào của người ấy bạn nhớ mãi?"
+    },
+    {
+      "id": "q25",
+      "text": "Bạn muốn cùng học một kỹ năng mới nào?"
+    },
+    {
+      "id": "q26",
+      "text": "Một buổi hẹn hò lý tưởng không tốn tiền sẽ như thế nào?"
+    },
+    {
+      "id": "q27",
+      "text": "Điều gì ở thành phố bạn mà người ấy nhất định phải thử?"
+    },
+    {
+      "id": "q28",
+      "text": "Nếu chúng mình là hai con vật, đó sẽ là con gì?"
+    },
+    {
+      "id": "q29",
+      "text": "Bạn tự hào về điều gì ở bản thân tuần này?"
+    },
+    {
+      "id": "q30",
+      "text": "Viết một lời hứa nhỏ cho lần gặp tới."
+    }
+  ],
+  "cozyKit": [
+    {
+      "id": "hedge",
+      "n": 8
+    },
+    {
+      "id": "tulip_bed",
+      "n": 2
+    },
+    {
+      "id": "daisy_bed",
+      "n": 2
+    },
+    {
+      "id": "stone_path",
+      "n": 3
+    },
+    {
+      "id": "lamp_post",
+      "n": 1
+    },
+    {
+      "id": "garden_bench",
+      "n": 1
+    },
+    {
+      "id": "round_rug",
+      "n": 1
+    },
+    {
+      "id": "floor_lamp",
+      "n": 1
+    },
+    {
+      "id": "nightstand",
+      "n": 1
+    },
+    {
+      "id": "bunting",
+      "n": 1
+    },
+    {
+      "id": "photo_string",
+      "n": 1
+    }
+  ],
+  "farmKit": [
+    {
+      "id": "fertilizer",
+      "n": 3
+    },
+    {
+      "id": "scarecrow",
+      "n": 1
+    },
+    {
+      "id": "hay_bale",
+      "n": 2
+    },
+    {
+      "id": "flower_pots",
+      "n": 1
+    }
+  ],
+  "homeKit": [
+    {
+      "id": "bed",
+      "island": "bedroom",
+      "x": 2,
+      "y": 2
+    },
+    {
+      "id": "nightstand",
+      "island": "bedroom",
+      "x": 3,
+      "y": 0
+    },
+    {
+      "id": "wardrobe",
+      "island": "bedroom",
+      "x": 7,
+      "y": 0
+    },
+    {
+      "id": "round_rug",
+      "island": "bedroom",
+      "x": 5,
+      "y": 5
+    },
+    {
+      "id": "floor_lamp",
+      "island": "bedroom",
+      "x": 0,
+      "y": 4
+    },
+    {
+      "id": "potted_plant",
+      "island": "bedroom",
+      "x": 7,
+      "y": 3
+    },
+    {
+      "id": "dresser",
+      "island": "bedroom",
+      "x": 7,
+      "y": 6
+    },
+    {
+      "id": "sofa",
+      "island": "house",
+      "x": 4,
+      "y": 1
+    },
+    {
+      "id": "low_table",
+      "island": "house",
+      "x": 4,
+      "y": 3
+    },
+    {
+      "id": "tv",
+      "island": "house",
+      "x": 4,
+      "y": 5
+    },
+    {
+      "id": "bookshelf",
+      "island": "house",
+      "x": 6,
+      "y": 0
+    },
+    {
+      "id": "potted_plant",
+      "island": "house",
+      "x": 7,
+      "y": 0
+    },
+    {
+      "id": "armchair",
+      "island": "house",
+      "x": 6,
+      "y": 3
+    },
+    {
+      "id": "potted_plant",
+      "island": "bathroom",
+      "x": 7,
+      "y": 1
+    },
+    {
+      "id": "potted_plant",
+      "island": "bathroom",
+      "x": 1,
+      "y": 4
+    }
+  ],
+  "petKit": [
+    {
+      "id": "pet_food",
+      "n": 5
+    },
+    {
+      "id": "pet_bed",
+      "n": 1
+    },
+    {
+      "id": "pet_ball",
+      "n": 1
+    }
+  ],
+  "cafe": [
+    {
+      "cat": "☕ Cà phê",
+      "items": [
+        {
+          "name": "Cà phê sữa đá",
+          "icon": "🧋"
+        },
+        {
+          "name": "Bạc xỉu",
+          "icon": "🥛"
+        },
+        {
+          "name": "Americano đá",
+          "icon": "🧊"
+        },
+        {
+          "name": "Cappuccino trái tim",
+          "icon": "☕"
+        },
+        {
+          "name": "Dalgona",
+          "icon": "🍮"
+        },
+        {
+          "name": "Cà phê muối",
+          "icon": "🧂"
+        }
+      ]
+    },
+    {
+      "cat": "🍵 Trà & sữa",
+      "items": [
+        {
+          "name": "Trà sữa trân châu",
+          "icon": "🧋"
+        },
+        {
+          "name": "Matcha latte",
+          "icon": "🍵"
+        },
+        {
+          "name": "Trà đào cam sả",
+          "icon": "🍑"
+        },
+        {
+          "name": "Ca cao nóng",
+          "icon": "🍫"
+        },
+        {
+          "name": "Trà hoa cúc",
+          "icon": "🌼"
+        },
+        {
+          "name": "Sữa chuối Hàn",
+          "icon": "🍌"
+        }
+      ]
+    },
+    {
+      "cat": "🍰 Bánh ngọt",
+      "items": [
+        {
+          "name": "Bánh croissant",
+          "icon": "🥐"
+        },
+        {
+          "name": "Bánh dứa Đài",
+          "icon": "🍍"
+        },
+        {
+          "name": "Bánh cá taiyaki",
+          "icon": "🐟"
+        },
+        {
+          "name": "Tiramisu",
+          "icon": "🍰"
+        },
+        {
+          "name": "Bingsu dâu",
+          "icon": "🍧"
+        },
+        {
+          "name": "Bánh quy",
+          "icon": "🍪"
+        }
+      ]
+    }
+  ],
+  "books": [
+    {
+      "title": "Thư gửi bờ bên kia",
+      "icon": "📘",
+      "pages": [
+        "Có những ngày em nhìn đồng hồ hai lần: một lần cho giờ của em, một lần cho giờ của anh. Chỉ lệch nhau một tiếng, mà sao thấy xa thế.",
+        "Nhưng rồi em nghĩ: một tiếng thôi mà. Khi bên này mặt trời vừa lặn, bên kia vẫn còn chút nắng cuối ngày. Mình vẫn chung một bầu trời.",
+        "Nên mỗi tối, em để dành một câu chuyện nhỏ. Không phải chuyện gì lớn lao — chỉ là hôm nay mưa, quán quen đổi món, con mèo hàng xóm lại ngủ trên bậc thềm.",
+        "Vì yêu xa không phải là đợi ngày gặp. Yêu xa là kể cho nhau nghe từng ngày bình thường, để khi gặp lại, chẳng có gì là lạ lẫm cả."
+      ]
+    },
+    {
+      "title": "Sổ tay những điều nhỏ",
+      "icon": "📗",
+      "pages": [
+        "Điều nhỏ số 1: Gửi một tấm ảnh bầu trời, không cần chú thích.",
+        "Điều nhỏ số 2: Cùng xem một bộ phim, bấm play cùng lúc, đếm 3 – 2 – 1.",
+        "Điều nhỏ số 3: Học một câu tiếng Hàn hoặc tiếng Trung, nói cho người kia nghe mà không giải thích nghĩa.",
+        "Điều nhỏ số 4: Hẹn nhau cùng ăn một món, mỗi người một nơi, rồi chấm điểm cho nhau.",
+        "Điều nhỏ số 5: Viết một lá thư hẹn giờ, mở vào ngày gặp nhau. (Hộp thư trong làng làm được đó!)"
+      ]
+    },
+    {
+      "title": "Truyện ngắn: Hai ngọn hải đăng",
+      "icon": "📕",
+      "pages": [
+        "Ngày xưa có hai ngọn hải đăng đứng ở hai bờ biển. Chúng không thể bước lại gần nhau, nên chỉ biết chớp đèn mỗi đêm.",
+        "Ngọn bên trái chớp ba lần nghĩa là: hôm nay có bão. Ngọn bên phải chớp hai lần nghĩa là: mình vẫn ổn. Dần dần, chúng có cả một ngôn ngữ riêng.",
+        "Những con tàu đi ngang qua không hiểu gì, chỉ thấy vùng biển ấy lúc nào cũng sáng — sáng hơn mọi vùng biển khác.",
+        "Có lẽ khoảng cách không làm ánh sáng yếu đi. Nó chỉ khiến người ta biết trân trọng từng lần được nhìn thấy nhau."
+      ]
+    },
+    {
+      "title": "Thơ mùa thu (tự viết)",
+      "icon": "📙",
+      "pages": [
+        "Gió heo may thổi qua hai thành phố,\nmột bên lá vàng, một bên nắng hanh.\nAnh gói mùa thu vào trong tin nhắn,\ngửi sang em — một chút trời xanh.",
+        "Mình chưa thể nắm tay nhau đi phố,\nnhưng có chung một vầng trăng tròn.\nĐêm nay em ngước nhìn lên nhé,\nanh cũng đang nhìn, nỗi nhớ vẫn còn."
+      ]
+    }
+  ],
+  "campfire": [
+    "Kể về lần đầu tiên bạn thấy tim mình rung rinh vì người ấy.",
+    "Nếu hai đứa có một ngôi nhà chung, bạn muốn nó ở đâu?",
+    "Món ăn nào bạn muốn nấu cho người ấy khi gặp nhau?",
+    "Kỷ niệm buồn cười nhất của hai đứa là gì?",
+    "Một thói quen nhỏ của người ấy mà bạn rất thương?",
+    "5 năm nữa, một ngày cuối tuần của hai đứa trông thế nào?",
+    "Bài hát nào bạn muốn hát cho người ấy nghe bên đống lửa này?",
+    "Điều gì ở yêu xa khiến bạn trưởng thành hơn?",
+    "Nếu được tặng nhau một siêu năng lực, bạn chọn gì cho người ấy?",
+    "Lần gần nhất bạn thấy nhớ người ấy nhất là khi nào?",
+    "Ba điều bạn muốn làm cùng nhau trong lần gặp tới?",
+    "Bạn thích được người ấy gọi bằng biệt danh gì nhất?",
+    "Nơi nào ở thành phố của bạn mà bạn muốn dẫn người ấy tới đầu tiên?",
+    "Nếu tối nay là đêm cuối cùng của năm, bạn sẽ ước gì cho hai đứa?"
+  ]
+}

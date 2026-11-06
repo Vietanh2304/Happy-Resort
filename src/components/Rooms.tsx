@@ -1,0 +1,249 @@
+// Rạp phim (chia sẻ màn hình) và nhà hàng (dọn món, camera) — phần hình trong cảnh + bảng điều khiển bên dưới.
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import * as api from '../lib/api';
+import { content, item } from '../lib/content';
+import { emojiSprite } from '../lib/pixel';
+import { notify } from '../lib/realtime';
+import { RtcRoom } from '../lib/rtc';
+import { toast, toastError } from '../lib/toast';
+import { SEATS } from '../lib/world';
+import type { Live } from '../lib/useLive';
+import type { Call } from '../lib/useCall';
+import { Sheet } from './Sheet';
+import { useScale } from './Stage';
+
+/** Kết nối video với người ấy, chỉ sống khi mình đang ở trong phòng */
+export function useRtc(room: string | null, me: api.Profile, partner: api.Profile | null) {
+  const [remote, setRemote] = useState<MediaStream | null>(null);
+  const [local, setLocal] = useState<MediaStream | null>(null);
+  const rtc = useRef<RtcRoom | null>(null);
+  const localRef = useRef<MediaStream | null>(null);
+  localRef.current = local;
+
+  useEffect(() => {
+    if (!room) return;
+    // Chưa có người ấy trong resort thì vẫn chiếu được cho mình xem; có người ấy thì nối WebRTC
+    const r = partner ? new RtcRoom(room, me.id > partner.id, setRemote, setLocal) : null;
+    rtc.current = r;
+    return () => {
+      r?.close();
+      rtc.current = null;
+      localRef.current?.getTracks().forEach(t => t.stop());
+      setRemote(null); setLocal(null);
+    };
+  }, [room, me.id, partner?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function start(kind: 'screen' | 'camera') {
+    const md = navigator.mediaDevices;
+    if (!md) return toastError(new Error('Trình duyệt chặn chia sẻ vì trang không chạy qua https (hoặc localhost). Mở bằng link https đã deploy nhé.'));
+    try {
+      let stream: MediaStream;
+      if (kind === 'screen') {
+        try {
+          stream = await md.getDisplayMedia({ video: true, audio: true });
+        } catch (e) {
+          // Một số trình duyệt (Safari, Firefox) không cho lấy tiếng khi chia sẻ màn hình → thử lại chỉ hình
+          if ((e as Error).name === 'NotAllowedError' || (e as Error).name === 'AbortError') throw e;
+          stream = await md.getDisplayMedia({ video: true });
+        }
+      } else {
+        stream = await md.getUserMedia({ video: { width: 640, height: 480 }, audio: false }); // tiếng nói đi qua nút 🎙️ Mic
+      }
+      if (rtc.current) rtc.current.start(stream);
+      else {
+        localRef.current?.getTracks().forEach(t => t.stop());
+        stream.getTracks().forEach(t => { t.onended = () => setLocal(null); });
+        setLocal(stream);
+      }
+    } catch (e) {
+      const name = (e as Error).name;
+      if (name === 'NotAllowedError') toast(kind === 'screen' ? '🖥️ Chưa chia sẻ: bạn đã huỷ, hoặc máy chưa cấp quyền ghi màn hình cho trình duyệt.' : '📷 Chưa bật camera: cần cho phép trình duyệt dùng camera.');
+      else if (name !== 'AbortError') toastError(e);
+    }
+  }
+  function stop() {
+    if (rtc.current) rtc.current.stop();
+    else { localRef.current?.getTracks().forEach(t => t.stop()); setLocal(null); }
+  }
+  return { remote, local, start, stop };
+}
+export type Rtc = ReturnType<typeof useRtc>;
+
+export function StreamVideo({ stream, muted, className }: { stream: MediaStream; muted?: boolean; className?: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => { if (ref.current) ref.current.srcObject = stream; }, [stream]);
+  return <video ref={ref} className={className} autoPlay playsInline muted={muted} />;
+}
+
+/** Màn hình rạp phim (vẽ trong cảnh): phóng to trong rạp, hoặc xem toàn màn hình kèm thả cảm xúc */
+const REACTS = ['❤️', '😂', '😱', '😭', '🥰', '🍿'];
+export function CinemaScreen({ rtc, mode, bubbles, onReact }: { rtc: Rtc; mode: 'movie' | 'karaoke'; bubbles: { me?: string; partner?: string }; onReact: (e: string) => void }) {
+  const s = useScale();
+  const screen = rtc.remote ?? rtc.local;
+  const [big, setBig] = useState(false);
+  const [full, setFull] = useState(false);
+  const fsRef = useRef<HTMLDivElement>(null);
+
+  // Mở toàn màn hình thật (máy tính, Android); iPhone không hỗ trợ thì vẫn phủ kín cửa sổ
+  useEffect(() => {
+    if (!full) return;
+    const el = fsRef.current as (HTMLDivElement & { webkitRequestFullscreen?: () => void }) | null;
+    try { void (el?.requestFullscreen?.() ?? el?.webkitRequestFullscreen?.()); } catch { /* phủ cửa sổ là đủ */ }
+    const onChange = () => { if (!document.fullscreenElement) setFull(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFull(false); };
+    document.addEventListener('fullscreenchange', onChange);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('fullscreenchange', onChange);
+      window.removeEventListener('keydown', onKey);
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    };
+  }, [full]);
+
+  const box = big ? { left: 2 * s, top: 2 * s, width: 156 * s, height: 88 * s } : { left: 14 * s, top: 8 * s, width: 132 * s, height: 66 * s };
+  const hint = mode === 'karaoke' ? 'Mở video karaoke rồi bấm “Chia sẻ màn hình” để hát cùng nhau 🎤' : 'Bấm “Chia sẻ màn hình” để chiếu phim lên đây 🍿';
+  return (
+    <>
+      <div className={`cinema-screen ${mode} ${big ? 'big' : ''}`} style={box}>
+        {screen && !full ? <StreamVideo stream={screen} muted={!rtc.remote} className="screen-video" /> : !full && <p className="screen-hint">{hint}</p>}
+        {full && <p className="screen-hint">📺 Đang xem toàn màn hình</p>}
+        <div className="screen-tools">
+          <button title={big ? 'Thu nhỏ' : 'Phóng to trong rạp'} onClick={e => { e.stopPropagation(); setBig(b => !b); }}>{big ? '🔽' : '🔍'}</button>
+          <button title="Xem toàn màn hình" onClick={e => { e.stopPropagation(); setFull(true); }}>⛶</button>
+        </div>
+      </div>
+      {full && createPortal(
+        <div className="cinema-full" ref={fsRef}>
+          {screen ? <StreamVideo stream={screen} muted={!rtc.remote} className="screen-video" /> : <p className="screen-hint">{hint}</p>}
+          <div className="cinema-full-bubbles">
+            {bubbles.partner && <span className="them">{bubbles.partner}</span>}
+            {bubbles.me && <span className="me">{bubbles.me}</span>}
+          </div>
+          <div className="cinema-full-bar">
+            {REACTS.map(e => <button key={e} onClick={() => onReact(e)}>{e}</button>)}
+            <button className="exit" onClick={() => setFull(false)}>✕ Thoát</button>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
+/** Camera ở nhà hàng: hình người ấy hiện trong khung vàng ngay trên ghế đối diện, hình mình nhỏ ở góc (dùng chung cuộc gọi) */
+export function DinnerTiles({ remote, local, firstSeat }: { remote: MediaStream | null; local: MediaStream | null; firstSeat: boolean }) {
+  const s = useScale();
+  const [left, right] = SEATS.restaurant!;
+  const other = firstSeat ? right : left, mine = firstSeat ? left : right;
+  return (
+    <>
+      {remote && (
+        <div className="dinner-frame" style={{ left: (other.x - 26) * s, top: 44 * s, width: 52 * s, height: 40 * s }}>
+          <StreamVideo stream={remote} muted className="tile-remote" />
+        </div>
+      )}
+      {local && (
+        <div className="dinner-frame small" style={{ left: (mine.x - 14) * s, top: 66 * s, width: 28 * s, height: 22 * s }}>
+          <StreamVideo stream={local} muted className="tile-local" />
+        </div>
+      )}
+    </>
+  );
+}
+
+/** Bảng điều khiển dưới cảnh khi đang ở rạp phim / nhà hàng */
+export function RoomPanel({ scene, rtc, call, live, inventory, partnerHere, partnerName, cinemaMode }: {
+  scene: 'cinema' | 'restaurant';
+  cinemaMode: 'movie' | 'karaoke';
+  rtc: Rtc;
+  call: Call;
+  live: Live;
+  inventory: api.InvRow[];
+  partnerHere: boolean;
+  partnerName: string;
+}) {
+  const [text, setText] = useState('');
+  const [menu, setMenu] = useState(false);
+  const canShare = typeof navigator.mediaDevices?.getDisplayMedia === 'function' || !window.isSecureContext;
+  const canCam = typeof navigator.mediaDevices?.getUserMedia === 'function';
+  const dishes = inventory.filter(r => item(r.item_id).kind === 'dish');
+
+  const [cat, setCat] = useState(0);
+  async function serve(name: string, icon: string, itemId?: string, drink = false) {
+    try {
+      if (itemId) { await api.craft([{ id: itemId, n: 1 }]); notify('inventory'); }
+      live.update(drink ? { drink: name } : { dish: name });
+      live.say(drink ? `${icon} Cạn ly nhé ${partnerName}!` : `${icon} Mời ${partnerName}!`);
+      setMenu(false);
+    } catch (e) {
+      toastError(e);
+    }
+  }
+
+  return (
+    <div className="room-panel">
+      <p className="muted small-note">{partnerHere ? `💗 ${partnerName} đang ở đây cùng bạn` : `Đang chờ ${partnerName} tới…`}</p>
+      {scene === 'cinema' && (
+        <div className="sky-chips">
+          <button className={`chip ${cinemaMode === 'movie' ? 'active' : ''}`} onClick={() => live.update({ cinema: 'movie', cinemaAt: Date.now() })}>🎬 Xem phim (tắt đèn)</button>
+          <button className={`chip ${cinemaMode === 'karaoke' ? 'active' : ''}`} onClick={() => live.update({ cinema: 'karaoke', cinemaAt: Date.now() })}>🎤 Karaoke</button>
+        </div>
+      )}
+      {scene === 'cinema' ? (
+        <div className="row wrap">
+          {canShare
+            ? (rtc.local
+              ? <button className="btn small ghost" onClick={rtc.stop}>⏹ Dừng chia sẻ</button>
+              : <button className="btn small" onClick={() => rtc.start('screen')}>🖥️ Chia sẻ màn hình (có tiếng)</button>)
+            : <span className="muted small-note">Điện thoại không chia sẻ màn hình được (trình duyệt không hỗ trợ) — hãy chia sẻ từ máy tính, còn trên điện thoại vẫn xem được.</span>}
+        </div>
+      ) : (
+        <div className="row wrap">
+          <button className="btn small" onClick={() => setMenu(true)}>🍽️ Gọi món</button>
+          <button className="btn small ghost" onClick={() => live.say('🥂 Cụng ly!')}>🥂 Cụng ly</button>
+          <button className="btn small ghost" onClick={() => live.say('🌹 Tặng em/anh bông hồng')}>🌹 Tặng hoa</button>
+          <button className="btn small ghost" onClick={() => live.say('💕')}>💕</button>
+          {canCam && <button className="btn small ghost" onClick={call.toggleCam}>{call.cam ? '📷 Tắt camera' : '📷 Bật camera'}</button>}
+          {canCam && <button className="btn small ghost" onClick={call.toggleMic}>{call.mic ? '🎙️ Tắt mic' : '🎙️ Bật mic'}</button>}
+        </div>
+      )}
+      {scene === 'cinema' && <p className="muted small-note">{cinemaMode === 'karaoke' ? 'Mẹo: mở video karaoke trên YouTube, chia sẻ tab đó (tick “Chia sẻ âm thanh”), rồi bật 🎙️ Mic để hát cho nhau nghe.' : 'Mẹo: chọn đúng tab phim và tick “Chia sẻ âm thanh”. Netflix và web có bản quyền thường hiện màn đen.'}</p>}
+
+      <ul className="chat-log">
+        {live.chat.slice(-4).map(c => <li key={c.at} className={c.from}>{c.text}</li>)}
+      </ul>
+      <form className="row" onSubmit={e => { e.preventDefault(); if (text.trim()) { live.say(text.trim()); setText(''); } }}>
+        <input value={text} maxLength={120} onChange={e => setText(e.target.value)} placeholder="Nhắn gì đó…" />
+        <button className="btn small">Gửi</button>
+      </form>
+
+      {menu && (
+        <Sheet title="🍽️ Thực đơn tối nay" onClose={() => setMenu(false)}>
+          <div className="tabs scroll">
+            {content.dinner.menu.map((c, i) => <button key={c.cat} className={cat === i ? 'active' : ''} onClick={() => setCat(i)}>{c.cat}</button>)}
+            <button className={cat === -1 ? 'active' : ''} onClick={() => setCat(-1)}>👩‍🍳 Món tự nấu</button>
+          </div>
+          <div className="bag-grid">
+            {cat === -1 ? (
+              <>
+                {dishes.length === 0 && <p className="muted">Chưa có món tự nấu — vào bếp nhà gỗ nấu từ rau nông trại và cá câu được nhé.</p>}
+                {dishes.map(r => (
+                  <button key={r.item_id} className="bag-item" onClick={() => serve(item(r.item_id).name, item(r.item_id).icon, r.item_id)}>
+                    <img src={emojiSprite(item(r.item_id).icon).url} className="px-img" alt="" />
+                    <small>{item(r.item_id).name}</small><i>×{r.qty}</i>
+                  </button>
+                ))}
+              </>
+            ) : content.dinner.menu[cat].items.map(f => (
+              <button key={f.name} className="bag-item" onClick={() => serve(f.name, f.icon, undefined, f.drink)}>
+                <img src={emojiSprite(f.icon).url} className="px-img" alt="" />
+                <small>{f.name}</small><i>{f.drink ? 'đồ uống' : 'món'}</i>
+              </button>
+            ))}
+          </div>
+        </Sheet>
+      )}
+    </div>
+  );
+}
