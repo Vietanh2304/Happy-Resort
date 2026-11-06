@@ -30,10 +30,12 @@ interface Props {
   umbrella?: boolean;
   /** Độ sâu theo vị trí (trong phòng: đứng trước đồ thì vẽ đè lên đồ) */
   zAt?: (x: number, y: number) => number;
+  /** Đang nhảy: động tác (0..7), lúc bắt đầu, cả hai cùng trúng nhịp */
+  dance?: { m: number; at: number; both?: boolean } | null;
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -73,7 +75,8 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
 
   useEffect(() => { if (faceLeft !== undefined && !moving) setShown(v => ({ ...v, left: faceLeft })); }, [faceLeft, moving]);
 
-  const sprite = characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : view, step);
+  const dancing = !!dance && !moving && !sitting;
+  const sprite = dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : view, step);
   const ax = sprite.ax ?? sprite.w / 2;
   const ps = avatarPx(s);
   return (
@@ -85,7 +88,9 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
       }}
       onClick={onClick && (e => { e.stopPropagation(); onClick(); })}
     >
+      {dancing && dance!.both && <span key={`h${dance!.at}`} className="dance-hearts">💞</span>}
       <img
+        key={dancing ? `d${dance!.at}` : 'still'} className={dancing ? `dancing dm-${dance!.m}` : undefined}
         src={sprite.url} alt={name ?? ''} draggable={false}
         style={{
           width: sprite.w * ps, height: sprite.h * ps,

@@ -532,3 +532,38 @@ export const LANDMARKS: Record<CityKind, Landmark[]> = {
 };
 /** Vị trí ghim trên khung thành phố (80×70) */
 export const PIN_AT: [number, number][] = [[40, 24], [14, 46], [62, 46], [28, 60], [54, 60]];
+
+// ───────── Phòng sàn nhảy ─────────
+export function discoRoom() {
+  return makeSprite('room:disco:v1', 192, 144, p => {
+    // Tường tím đêm có vạch neon
+    p.rect(0, 0, 192, 86, '#22163a');
+    for (let x = 0; x < 192; x += 12) p.rect(x, 0, 1, 86, '#2c1e48');
+    p.rect(0, 20, 192, 2, '#ff6ac8'); p.rect(0, 24, 192, 1, '#6ae0ff');
+    // Sân khấu DJ
+    p.rect(66, 46, 60, 24, '#3a2a5a'); p.rect(66, 46, 60, 3, '#5a4a8a');
+    p.rect(72, 52, 48, 12, '#1a1028');
+    ellipse(p, 84, 58, 5, 4, '#2a2a3a'); ellipse(p, 84, 58, 2, 1.5, '#ff6ac8');
+    ellipse(p, 108, 58, 5, 4, '#2a2a3a'); ellipse(p, 108, 58, 2, 1.5, '#6ae0ff');
+    for (let i = 0; i < 6; i++) p.rect(92 + i * 2, 54 + (i % 3), 1, 8 - (i % 3), ['#ff6ac8', '#f6c64e', '#6ae0ff'][i % 3]);
+    // Loa hai bên
+    for (const x0 of [10, 160]) {
+      p.rect(x0, 40, 22, 46, '#1a1028'); p.rect(x0 + 2, 42, 18, 42, '#2a1e40');
+      ellipse(p, x0 + 11, 54, 7, 7, '#3a2e58'); ellipse(p, x0 + 11, 54, 3, 3, '#5a4a8a');
+      ellipse(p, x0 + 11, 74, 5, 5, '#3a2e58'); ellipse(p, x0 + 11, 74, 2, 2, '#5a4a8a');
+    }
+    // Sàn ô màu
+    const tiles = ['#ff6ac8', '#6ae0ff', '#f6c64e', '#a86af0', '#6af09a'];
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 12; c++) {
+      const col = tiles[(r * 3 + c * 2) % tiles.length];
+      p.rect(c * 16, 86 + r * 10, 16, 10, mix(col, '#1a1028', 0.45));
+      p.rect(c * 16 + 1, 86 + r * 10 + 1, 14, 8, mix(col, '#1a1028', 0.25));
+      p.rect(c * 16 + 2, 86 + r * 10 + 1, 5, 1, mix(col, '#ffffff', 0.3));
+    }
+    p.rect(0, 86, 192, 1, '#ff6ac8');
+    // Quả cầu disco
+    p.rect(95, 0, 1, 10, '#8a8aa8');
+    ellipse(p, 95.5, 15, 7, 7, '#c8c8e0');
+    for (let y = 9; y < 22; y += 2) for (let x = 89; x < 103; x += 2) if ((x - 95.5) ** 2 + (y - 15) ** 2 < 42) p.px(x + ((y / 2) % 2), y, (x + y) % 3 ? '#ffffff' : '#8ad8ff');
+  }, null);
+}

@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import * as api from '../lib/api';
 import { animal, content, item, type Combo } from '../lib/content';
 import {
-  activeCombos, beachPickups, catchFish, daysUntil, needsWater, WISH_WINDOW, type Pickup,
+  activeCombos, beachPickups, catchFishQ, daysUntil, needsWater, WISH_WINDOW, type Pickup,
 } from '../lib/game';
 import { useNow, useSynced, useWeather } from '../lib/hooks';
-import { joinCouple, notify, onEvent, sendEvent } from '../lib/realtime';
+import { joinCouple, notify, onEvent, onLink, sendEvent, type LinkState } from '../lib/realtime';
 import { clock, localTime, phaseOf } from '../lib/time';
 import { toast, toastError } from '../lib/toast';
 import { useDecorEditor } from '../lib/useDecorEditor';
@@ -28,6 +28,8 @@ import { kidMood } from '../lib/kids';
 import { AlbumSheet, BookSheet, CalendarSheet, FestTray, PetSheet, PhotoSheet } from './Love';
 import { CafePanel, CampPanel, WheelPanel } from './Places';
 import { PLANE_NOTES, Postcard, type TwinPlane } from './Twin';
+import { FishMeter, type Zone } from './FishMeter';
+import { DanceBar } from './Disco';
 import type { CityKind } from '../lib/places';
 import { AvatarEditor } from './AvatarEditor';
 import { BagSheet } from './BagSheet';
@@ -69,6 +71,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Presence: ai đang online
   const [online, setOnline] = useState<string[]>([]);
   useEffect(() => joinCouple(coupleId, me.id, setOnline), [coupleId, me.id]);
+  const [link, setLinkState] = useState<LinkState>('connecting');
+  useEffect(() => onLink(setLinkState), []);
 
   const [couple] = useSynced('profiles', () => api.getCouple(coupleId), null as api.Couple | null);
   const [partner, reloadPartner] = useSynced('profiles', () => api.getPartner(me), null as api.Profile | null);
@@ -219,26 +223,26 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     if (castsUsed >= content.fishing.castsPerDay) return toast('🎣 Hôm nay câu đủ rồi, mai cá lại cắn câu nhé');
     live.update({ act: 'fishing' });
     setFishing('wait');
-    fishTimers.current.push(setTimeout(() => {
-      setFishing('bite');
-      fishTimers.current.push(setTimeout(() => {
-        setFishing(null);
-        live.update({ act: null });
-        toast('🐟💨 Cá chạy mất rồi, thả câu lại nhé');
-      }, 1400));
-    }, 1500 + Math.random() * 3500));
+    fishTimers.current.push(setTimeout(() => setFishing('bite'), 1500 + Math.random() * 3500));
   }
-  function pull() {
-    const bite = fishing === 'bite';
+  /** Kéo khi phao chưa giật */
+  function pullEarly() {
     cancelFishing();
     live.update({ act: null });
-    if (!bite) return toast('Kéo sớm quá, cá chưa cắn câu 😅');
+    toast('Kéo sớm quá, cá chưa cắn câu 😅');
+  }
+  /** Kết quả thanh căn chuẩn */
+  function land(z: Zone) {
+    cancelFishing();
+    live.update({ act: null });
+    if (z === 'gray') return toast('🐟💨 Hụt rồi, cá chạy mất — thả câu lại nhé');
+    if (z === 'red') { live.say('💥'); return toast('💥 Kéo mạnh quá, đứt dây! Buộc lại rồi thả câu nhé'); }
     const n = castsUsed;
-    const fishId = catchFish(me.id, myTime.date, n, myShore);
+    const fishId = catchFishQ(me.id, myTime.date, n, myShore, z === 'green' ? 'good' : 'junk');
     run(async () => {
       await api.claim(`fish:${myTime.date}:${n}`, [{ id: fishId, n: 1 }]);
       live.say(item(fishId).icon);
-      toast(`🎣 Câu được ${item(fishId).icon} ${item(fishId).name}! (còn ${content.fishing.castsPerDay - n - 1} lượt)`);
+      toast(`${z === 'green' ? '🎯 Chuẩn! ' : '😅 '}Câu được ${item(fishId).icon} ${item(fishId).name}! (còn ${content.fishing.castsPerDay - n - 1} lượt)`);
       notify('claims', 'inventory', 'collection');
     });
   }
@@ -322,6 +326,12 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const [gameInvite, setGameInvite] = useState<GameId | null>(null);
   const ARCADE_GAMES: GameId[] = ['quiz', 'puzzle', 'dance', 'focus', 'fishrace', 'castle', 'caro', 'rps', 'memory', 'draw'];
   function openGame(g: GameId, invite = true) {
+    if (g === 'dance') {                       // khiêu vũ chơi ngay trong phòng sàn nhảy
+      setSheet(null);
+      enter('disco');
+      if (invite) sendEvent('game', { g, t: 'open', by: me.id });
+      return;
+    }
     setSheet({ kind: 'game', game: g });
     if (invite) sendEvent('game', { g, t: 'open', by: me.id });
   }
@@ -459,6 +469,14 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     setBook(m);
     if (scene === 'cafe' && m.b !== null) setSheet(sh => sh ?? { kind: 'book' });
   }), [scene]);
+
+  // ───── Sàn nhảy: động tác của hai nhân vật khi bấm trúng nhịp ─────
+  const [danceMv, setDanceMv] = useState<{ me?: { m: number; at: number; both?: boolean }; them?: { m: number; at: number; both?: boolean } }>({});
+  const danceMove = (who: 'me' | 'them', m: number, both: boolean) => {
+    const at = Date.now();
+    setDanceMv(d => ({ ...d, [who]: { m, at, both } }));
+    setTimeout(() => setDanceMv(d => (d[who]?.at === at ? { ...d, [who]: undefined } : d)), 750);
+  };
 
   // ───── Đài quan sát: máy bay giấy, chạm tay qua kính ─────
   const [planes, setPlanes] = useState<TwinPlane[]>([]);
@@ -673,6 +691,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           daysTogether={bridge.planks}
           theme={theme} festDecor={festDecor} festIcon={scene === 'town' ? festIcon : null}
           twin={{ planes, touch }}
+          dance={danceMv}
           kids={kids} meetupLeft={meetupLeft} pet={pet} petWith={petWith} ride={ride} campHeat={live.mine.act === 'roast' ? campHeat : null}
           screen={scene === 'cinema' ? <CinemaScreen rtc={rtc} mode={cinemaMode} bubbles={live.bubbles} onReact={e => live.say(e)} /> : scene === 'restaurant' ? <DinnerTiles remote={call.remoteVideo ? call.remote : null} local={call.cam ? call.local : null} firstSeat={firstSeat} /> : null}
           go={go} enter={enter} arrived={arrived}
@@ -700,6 +719,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           }}
         />
       </main>
+      {link === 'down' && <div className="link-down">📡 Mất kết nối đồng bộ với người ấy — đang thử nối lại… (kiểm tra mạng, hoặc tải lại trang)</div>}
       {gameInvite && sheet?.kind !== 'game' && <button className="invite-chip" onClick={() => { openGame(gameInvite, false); setGameInvite(null); }}>🎮 Vào chơi {TITLES[gameInvite]}</button>}
 
       {room ? (
@@ -718,6 +738,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <BedPanel live={live} mode={live.mine.act === 'intimate' ? 'intimate' : 'sleep'} together={!!partnerHere && theirs?.bed === live.mine.bed} callThem={callThem} onWake={wake} />
       ) : festIcon && theme && scene === 'town' ? (
         <FestTray theme={theme} icon={festIcon} onPick={setFestIcon} onDone={() => setFestIcon(null)} />
+      ) : scene === 'disco' ? (
+        <DanceBar me={me} them={partner?.id ?? ''} themName={partnerName} date={myTime.date} onMove={danceMove} onLeave={() => enter('town', { x: TOWN.fountain.x, y: TOWN.fountain.y + 28 })} />
       ) : scene === 'twin' ? (
         <div className="room-bar">
           <div className="room-panel">
@@ -761,8 +783,12 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         />
       ) : fishing ? (
         <div className="fish-bar">
-          <span>{fishing === 'bite' ? '❗ Cá cắn câu rồi!' : '🎣 Đang chờ cá cắn câu…'}</span>
-          <button className={`btn ${fishing === 'bite' ? 'pull' : ''}`} onClick={pull}>Kéo!</button>
+          {fishing === 'bite' ? <FishMeter onResult={land} /> : (
+            <>
+              <span>🎣 Đang chờ cá cắn câu… phao giật thì canh mũi tên vào đoạn xanh</span>
+              <button className="btn" onClick={pullEarly}>Kéo!</button>
+            </>
+          )}
           <button className="btn small ghost" onClick={() => { cancelFishing(); live.update({ act: null }); }}>Thôi</button>
         </div>
       ) : (

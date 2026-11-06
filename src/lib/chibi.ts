@@ -7,7 +7,9 @@ import { mix, type Pen, type Sprite } from './pixel';
 
 export interface ChibiLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: 'm' | 'f'; glasses?: number }
 export type View = 'front' | 'back' | 'side';
-export type Pose = 'idle' | 'walk' | 'sit' | 'sleep';
+export type Pose = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance';
+/** Số động tác nhảy (pose 'dance', step = động tác) */
+export const DANCE_MOVES = 8;
 export interface Held { spec: PropSpec; mode: HoldMode; phase: 0 | 1 }
 
 export const SKINS = ['#fde3d0', '#f6cfae', '#e0aa80', '#a8714f'];
@@ -121,8 +123,8 @@ function outfitOf(o: number, C: string, S: string): Outfit {
  * `step`: nhịp bước 0..3, `hold`: đang cầm đồ với động tác.
  */
 export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', step = 0, hold?: Held): Sprite {
-  if (pose === 'sit' || pose === 'sleep' || hold) view = 'front';
-  if (pose !== 'walk') step = 0;
+  if (pose === 'sit' || pose === 'sleep' || pose === 'dance' || hold) view = 'front';
+  if (pose !== 'walk' && pose !== 'dance') step = 0;
   const S = SKINS[look.skin ?? 0] ?? SKINS[0];
   const H = HAIR_COLORS[look.hairColor ?? 0] ?? HAIR_COLORS[0];
   const C = SHIRTS[look.shirt ?? 0] ?? SHIRTS[0];
@@ -216,7 +218,9 @@ function draw(P: HiPen, a: Args) {
     leg(-fwd, legD, 0);                                 // chân phía xa (tối hơn)
     leg(fwd, legC, lift);
   } else {
-    const upL = pose === 'walk' && step === 2 ? 2 : 0, upR = pose === 'walk' && step === 0 ? 2 : 0;
+    // nhảy: động tác lẻ co một chân, động tác 6 khuỵu cả hai
+    const dl = pose === 'dance' ? [0, 3, 0, 0, 0, 0, 2, 0][step] : 0, dr = pose === 'dance' ? [0, 0, 0, 3, 0, 0, 2, 0][step] : 0;
+    const upL = (pose === 'walk' && step === 2 ? 2 : 0) + dl, upR = (pose === 'walk' && step === 0 ? 2 : 0) + dr;
     P.rect(11, 38, 4, 9 - upL, legC); P.rect(17, 38, 4, 9 - upR, legC);
     P.rect(14, 38, 1, 9 - upL, legD); P.rect(20, 38, 1, 9 - upR, legD);
     shoe(10, 47 - upL, 5); shoe(17, 47 - upR, 5);
@@ -258,11 +262,22 @@ function draw(P: HiPen, a: Args) {
   o.deco?.(P, view, y);
 
   // ── Tay ──
+  let lateArms: (() => void) | null = null;
   if (!side) {
     const swingL = pose === 'walk' ? [1, 0, -1, 0][step] : 0;
     const lx = 8, rx = 23;
     if (hold) holdArms(P, hold, y, (sx, sy, hx, hy) => arm(sx, sy, hx, hy));
-    else {
+    else if (pose === 'dance') {
+      // 8 động tác: giơ hai tay · chỉ trời · vỗ tay · dang tay · chỉ chéo · chống hông · vẫy ngang · vẫy chéo ngược
+      const moves: [number, number, number, number][] = [
+        [3, 9, 29, 9], [7, 33, 30, 8], [14, 30, 18, 30], [1, 26, 31, 26],
+        [3, 35, 30, 11], [6, 32, 26, 32], [2, 21, 30, 21], [2, 10, 29, 35],
+      ];
+      const [hlx, hly, hrx, hry] = moves[step % moves.length];
+      // tay giơ cao vẽ sau đầu để không bị tóc che
+      lateArms = () => { arm(lx + 1, y + 26, hlx, y + hly); arm(rx - 1, y + 26, hrx, y + hry); };
+      if (![0, 1, 4, 6, 7].includes(step % moves.length)) { lateArms(); lateArms = null; }
+    } else {
       arm(lx + 1, y + 26, lx, y + 35 + swingL);
       arm(rx - 1, y + 26, rx, y + 35 - swingL);
     }
@@ -270,6 +285,7 @@ function draw(P: HiPen, a: Args) {
 
   // ── Đầu ──
   head(P, a, y, { S, Sd, H, Hd, Hl });
+  lateArms?.();
   if (back) extraBehind(P, hair, view, y, H, Hd);
   accessory(P, acc, view, y, H, Hd);
   if (!back) glassesOn(P, glasses, view, y);

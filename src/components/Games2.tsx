@@ -8,6 +8,7 @@ import { seeded } from '../lib/rng';
 import { characterSprite } from '../lib/sprites';
 import { toast, toastError } from '../lib/toast';
 import { nameOf, reward, useGameChannel, type GP, type Msg } from './gameKit';
+import { FishMeter, type Zone } from './FishMeter';
 
 const pair = (p: GP) => [p.me.id, p.them].sort();
 
@@ -122,37 +123,39 @@ export function FishRace(p: GP) {
   }, { at: 0, got: {} });
   const send = useGameChannel('fishrace', p.me.id, dispatch);
   const [now, setNow] = useState(Date.now());
-  const [rod, setRod] = useState<'wait' | 'bite' | 'scare'>('wait');
-  const biteAt = useRef(0);
+  const [rod, setRod] = useState<'wait' | 'bite' | 'scare' | 'snap'>('wait');
+  const [last, setLast] = useState<string | null>(null);
+  const [bites, setBites] = useState(0);
   const running = st.at > 0 && now >= st.at && now < st.at + RACE_MS;
   const over = st.at > 0 && now >= st.at + RACE_MS;
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 100); return () => clearInterval(t); }, []);
-  // Phao: chờ 1–3,5 giây thì cá cắn, cắn trong 0,9 giây rồi chạy mất
+  // Phao: chờ 1–3 giây thì cá cắn; kéo sớm thì cá sợ; đứt dây thì mất 2,5 giây buộc lại
   useEffect(() => {
     if (!running) return;
-    if (rod === 'wait') { const t = setTimeout(() => { biteAt.current = Date.now(); setRod('bite'); }, 1000 + Math.random() * 2500); return () => clearTimeout(t); }
-    if (rod === 'bite') { const t = setTimeout(() => setRod('wait'), 900); return () => clearTimeout(t); }
-    const t = setTimeout(() => setRod('wait'), 1300); return () => clearTimeout(t);
+    if (rod === 'wait') { const t = setTimeout(() => { setBites(b => b + 1); setRod('bite'); }, 1000 + Math.random() * 2000); return () => clearTimeout(t); }
+    if (rod === 'scare') { const t = setTimeout(() => setRod('wait'), 1300); return () => clearTimeout(t); }
+    if (rod === 'snap') { const t = setTimeout(() => setRod('wait'), 2500); return () => clearTimeout(t); }
   }, [rod, running]);
   const total = (id: string) => (st.got[id] ?? []).reduce((a, f) => a + f.kg, 0);
   const mine = total(p.me.id), theirs = total(p.them);
   useEffect(() => { if (over) reward('fishrace', p.date); }, [over]); // eslint-disable-line react-hooks/exhaustive-deps
-  const pull = () => {
+  const land = (z: Zone) => {
     if (!running) return;
-    if (rod !== 'bite') { setRod('scare'); return; }
-    const quick = Date.now() - biteAt.current < 400;                 // kéo nhanh dễ được cá to
-    const pool = quick ? FISHES.slice(2) : FISHES;
+    if (z === 'gray') { setLast('💨 Hụt rồi'); setRod('wait'); return; }
+    if (z === 'red') { setLast('💥 Đứt dây! Buộc lại…'); setRod('snap'); return; }
+    const pool = z === 'green' ? FISHES.slice(2, 6) : [FISHES[0], FISHES[1], FISHES[6]];
     const f = pool[Math.floor(Math.random() * pool.length)];
     const kg = Math.round((f.kg[0] + Math.random() * (f.kg[1] - f.kg[0])) * 10) / 10;
     send('catch', { icon: f.icon, kg, ts: Date.now() });
+    setLast(`${z === 'green' ? '🎯' : '😅'} ${f.icon} ${f.name} ${kg} kg`);
     setRod('wait');
   };
   const max = Math.max(mine, theirs, 5);
   return (
     <div className="gamebox">
-      {!st.at ? <p className="game-status">Cùng thả câu 45 giây. Phao giật thì bấm Kéo thật nhanh — kéo càng nhanh càng dễ dính cá to!</p>
+      {!st.at ? <p className="game-status">Cùng thả câu 45 giây. Phao giật thì canh mũi tên: XANH = cá to, VÀNG = cá nhỏ/đồ dởm, XÁM = hụt, ĐỎ = đứt dây!</p>
         : now < st.at ? <p className="game-big">Chuẩn bị… {Math.ceil((st.at - now) / 1000)}</p>
-          : <p className="game-status">⏱️ {over ? 'Hết giờ!' : `${Math.ceil((st.at + RACE_MS - now) / 1000)} giây`}</p>}
+          : <p className="game-status">⏱️ {over ? 'Hết giờ!' : `${Math.ceil((st.at + RACE_MS - now) / 1000)} giây`}{last ? ` · ${last}` : ''}</p>}
       <div className="race-bars">
         {[[p.me.id, 'Bạn', mine], [p.them, nameOf(p, p.them), theirs]].map(([id, n, kg]) => (
           <div key={id as string} className="race-row">
@@ -162,13 +165,14 @@ export function FishRace(p: GP) {
           </div>
         ))}
       </div>
-      {running && (
-        <div className={`race-pond ${rod}`} onClick={pull}>
-          <span className="race-bob">{rod === 'bite' ? '❗' : '🎈'}</span>
-          <small>{rod === 'bite' ? 'KÉO!' : rod === 'scare' ? 'Kéo sớm quá, cá sợ chạy mất 💨' : 'Chờ phao giật…'}</small>
-        </div>
-      )}
-      {running && <button className={`btn ${rod === 'bite' ? 'pull' : ''}`} onClick={pull}>🎣 Kéo!</button>}
+      {running && (rod === 'bite'
+        ? <FishMeter key={bites} speed={1.1} greenW={14} timeoutMs={3500} onResult={land} />
+        : (
+          <div className={`race-pond ${rod}`} onClick={() => rod === 'wait' && setRod('scare')}>
+            <span className="race-bob">{rod === 'snap' ? '🪢' : '🎈'}</span>
+            <small>{rod === 'scare' ? 'Kéo sớm quá, cá sợ chạy mất 💨' : rod === 'snap' ? 'Đang buộc lại dây câu…' : 'Chờ phao giật…'}</small>
+          </div>
+        ))}
       {over && <p className="game-big">{mine === theirs ? '🤝 Hòa nhau!' : mine > theirs ? '🏆 Bạn thắng!' : `🏆 ${nameOf(p, p.them)} thắng!`}</p>}
       {!running && <button className="btn" onClick={() => send('new', { at: Date.now() + 3000 })}>{st.at ? '🔄 Thi lại' : '🏁 Bắt đầu thi'}</button>}
     </div>

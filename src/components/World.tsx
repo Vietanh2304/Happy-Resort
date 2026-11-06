@@ -6,7 +6,7 @@ import { cupSprite, drinkProp, foodProp, marshmallow, wareSprite, type Hold } fr
 import { characterSprite } from '../lib/sprites';
 import { THEMES, type Theme } from '../lib/festivals';
 import type { TwinPlane } from './Twin';
-import { hotAirBalloonSprite, kiteSprite, happeningOf, seasonOfMonth, LANDMARKS, PIN_AT, type CityKind, cityKind, citySprite, distanceKm, observatoryRoom, telescopeSprite, cafeBuildingSprite, cafeChairSprite, cafeRoom, cafeTableSprite, campBackground, campfireSprite, ferrisWheelSprite, logSeatSprite, petSprite, tentSprite, wheelCabinSprite, wheelPanorama } from '../lib/places';
+import { discoRoom, hotAirBalloonSprite, kiteSprite, happeningOf, seasonOfMonth, LANDMARKS, PIN_AT, type CityKind, cityKind, citySprite, distanceKm, observatoryRoom, telescopeSprite, cafeBuildingSprite, cafeChairSprite, cafeRoom, cafeTableSprite, campBackground, campfireSprite, ferrisWheelSprite, logSeatSprite, petSprite, tentSprite, wheelCabinSprite, wheelPanorama } from '../lib/places';
 import { animal, content, item, type Combo, type Phase, type WeatherType } from '../lib/content';
 import { ART, BED_PILLOWS, bedQuiltSprite } from '../lib/furniture';
 import { cropDays, needsWater, STAR_PERIOD, starVisible, type Pickup } from '../lib/game';
@@ -96,6 +96,7 @@ export interface WorldProps {
   campHeat: number | null;       // mình đang nướng kẹo dẻo: độ chín 0..100
   kids: Kid[];                   // các bé đã về nhà
   meetupLeft: number | null;     // còn mấy ngày tới ngày gặp nhau
+  dance: { me?: { m: number; at: number; both?: boolean }; them?: { m: number; at: number; both?: boolean } };
   twin: { planes: TwinPlane[]; touch: { me: boolean; them: boolean } };
   go: (to: Pt, then?: () => void) => void;
   enter: (scene: SceneId, at?: Pt) => void;
@@ -145,6 +146,7 @@ export function World(props: WorldProps) {
     wheel: wheelCabinBg,
     camp: () => campBackground(myView.phase),
     twin: observatoryRoom,
+    disco: discoRoom,
   }[scene]();
 
   const walkable = (!!def.walk && !editing) || (!!props.festIcon && scene === 'town');
@@ -347,6 +349,7 @@ function SceneContent(p: WorldProps) {
       {scene === 'cafe' && <CafeContent {...p} dark={dark} />}
       {scene === 'wheel' && <WheelContent {...p} />}
       {scene === 'twin' && <TwinContent {...p} />}
+      {scene === 'disco' && <div className="disco-lights"><i /><i /><i /><i /></div>}
       {scene === 'camp' && <CampContent {...p} dark={phase === 'night' || phase === 'sunset'} />}
       {p.pet && <PetLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />}
 
@@ -356,13 +359,13 @@ function SceneContent(p: WorldProps) {
       {!myBed && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left}
-        sitting={sitting || !!myTub} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt}
+        sitting={sitting || !!myTub} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : undefined}
       />}
       {p.partnerHere && partner && theirs && !theirBed && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left}
-          sitting={sitting || !!theirTub} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt}
+          sitting={sitting || !!theirTub} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : undefined}
         />
       )}
 
@@ -395,7 +398,7 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       {TOWN.benches.map(([x, y], i) => <Spr key={`n${i}`} sprite={ART.garden_bench.sprite()} x={x} y={y} />)}
       <Spr sprite={fountainSprite()} x={TOWN.fountain.x} y={TOWN.fountain.y + 12} />
       <Spr sprite={sparkleSprite()} x={TOWN.fountain.x} y={TOWN.fountain.y - 12} className="twinkle" z={TOWN.fountain.y + 13} />
-      <Tag x={TOWN.fountain.x} y={TOWN.fountain.y + 36} className="label" onClick={() => go({ x: TOWN.fountain.x, y: TOWN.fountain.y + 28 }, () => on.game('dance'))}>💃 Sàn nhảy</Tag>
+      <Tag x={TOWN.fountain.x} y={TOWN.fountain.y + 36} className="label" onClick={() => go({ x: TOWN.fountain.x, y: TOWN.fountain.y + 28 }, () => enter('disco'))}>🪩 Sàn nhảy{theirs?.scene === 'disco' ? ' 💗' : ''}</Tag>
 
       {BUILDINGS.map(b => {
         const sprite = b.scene === 'house' ? cabinSprite(dark) : b.scene === 'shop' ? shopSprite()

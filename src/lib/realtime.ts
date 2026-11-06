@@ -25,6 +25,13 @@ function emit(map: Map<string, Set<Fn>>, key: string, payload?: unknown) {
 }
 
 export const onSync = (topic: Topic, fn: () => void) => listen(syncFns, topic, fn);
+
+/** Trạng thái kênh đồng bộ: 'ok' | 'connecting' | 'down' (để hiện cảnh báo khi mất kết nối) */
+export type LinkState = 'ok' | 'connecting' | 'down';
+const linkFns = new Set<(s: LinkState) => void>();
+let link: LinkState = 'connecting';
+const setLink = (s: LinkState) => { if (s !== link) { link = s; linkFns.forEach(f => f(s)); } };
+export function onLink(fn: (s: LinkState) => void) { linkFns.add(fn); fn(link); return () => { linkFns.delete(fn); }; }
 export const onEvent = (name: string, fn: Fn) => listen(eventFns, name, fn);
 
 /** Báo dữ liệu đã đổi: tải lại ở máy mình và nhắn máy người ấy tải lại. */
@@ -40,14 +47,40 @@ export function sendEvent(name: string, data: unknown = {}) {
 }
 
 export function joinCouple(coupleId: string, userId: string, onOnline: (ids: string[]) => void) {
-  const ch = supabase.channel(`couple:${coupleId}`, { config: { presence: { key: userId } } });
-  ch.on('broadcast', { event: 'sync' }, ({ payload }) => emit(syncFns, payload.topic))
-    .on('broadcast', { event: 'event' }, ({ payload }) => emit(eventFns, payload.name, payload.data))
-    .on('presence', { event: 'sync' }, () => onOnline(Object.keys(ch.presenceState())))
-    .subscribe(status => {
-      if (status === 'SUBSCRIBED') ch.track({ at: Date.now() });
-    });
-  channel = ch;
+  let closed = false;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+  let ch: RealtimeChannel;
+  let fails = 0;
+
+  // Vào kênh; rớt kết nối (mạng chập chờn, máy ngủ, khóa sai...) thì tự vào lại sau vài giây
+  const connect = async () => {
+    const token = (await supabase.auth.getSession()).data.session?.access_token;
+    if (token) supabase.realtime.setAuth(token);
+    if (closed) return;
+    setLink('connecting');
+    ch = supabase.channel(`couple:${coupleId}`, { config: { presence: { key: userId } } });
+    ch.on('broadcast', { event: 'sync' }, ({ payload }) => emit(syncFns, payload.topic))
+      .on('broadcast', { event: 'event' }, ({ payload }) => emit(eventFns, payload.name, payload.data))
+      .on('presence', { event: 'sync' }, () => onOnline(Object.keys(ch.presenceState())))
+      .subscribe(status => {
+        if (closed) return;
+        if (status === 'SUBSCRIBED') {
+          fails = 0;
+          setLink('ok');
+          ch.track({ at: Date.now() });
+          ALL.forEach(t => emit(syncFns, t));          // vừa nối lại: tải lại mọi thứ phòng khi lỡ tin
+          emit(eventFns, 'link-up');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          fails++;
+          setLink(fails >= 2 ? 'down' : 'connecting');
+          onOnline([]);
+          clearTimeout(retry);
+          retry = setTimeout(() => { if (closed) return; supabase.removeChannel(ch); void connect(); }, Math.min(15000, 2000 * fails));
+        }
+      });
+    channel = ch;
+  };
+  void connect();
 
   // Quay lại tab sau một lúc: tải lại mọi thứ phòng khi lỡ tin nhắn
   const onVisible = () => {
@@ -56,8 +89,10 @@ export function joinCouple(coupleId: string, userId: string, onOnline: (ids: str
   document.addEventListener('visibilitychange', onVisible);
 
   return () => {
+    closed = true;
+    clearTimeout(retry);
     document.removeEventListener('visibilitychange', onVisible);
     channel = null;
-    supabase.removeChannel(ch);
+    if (ch) supabase.removeChannel(ch);
   };
 }

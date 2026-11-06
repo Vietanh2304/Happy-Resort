@@ -142,3 +142,14 @@ describe('câu cá, vườn, nấu ăn', () => {
     expect(canCook(needs, [{ item_id: 'rice', qty: 1 }, { item_id: 'fish_goby', qty: 2 }])).toBe(true);
   });
 });
+
+describe('câu cá theo thanh căn chuẩn', () => {
+  it('đoạn vàng chỉ ra đồ dởm, đoạn xanh không bao giờ ra đồ dởm', async () => {
+    const { catchFishQ, JUNK_FISH } = await import('./game');
+    for (let n = 0; n < 60; n++) {
+      const shore = { weather: (['clear', 'rain', 'fog', 'snow', 'cloudy'] as const)[n % 5], phase: (['day', 'night', 'dawn', 'sunset'] as const)[n % 4] };
+      expect(JUNK_FISH.has(catchFishQ('u', '2026-11-06', n, shore, 'junk'))).toBe(true);
+      expect(JUNK_FISH.has(catchFishQ('u', '2026-11-06', n, shore, 'good'))).toBe(false);
+    }
+  });
+});

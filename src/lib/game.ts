@@ -100,6 +100,18 @@ export function catchFish(userId: string, date: string, cast: number, shore: Sho
   return pickWeighted(seeded(`${userId}:${date}:fish:${cast}`), pool)!.id;
 }
 
+/** Đồ "dởm" khi kéo lệch (đoạn vàng của thanh căn chuẩn) */
+export const JUNK_FISH = new Set(['old_boot', 'fish_goby', 'shrimp', 'jelly']);
+/** Câu theo độ chuẩn: 'good' (đoạn xanh) ra cá ngon, cá hiếm dễ ra hơn; 'junk' (đoạn vàng) ra đồ dởm */
+export function catchFishQ(userId: string, date: string, cast: number, shore: ShoreState, quality: 'good' | 'junk') {
+  const pool = content.fishing.fish.filter(f => matches(shore, f));
+  let use = pool.filter(f => (quality === 'junk' ? JUNK_FISH.has(f.id) : !JUNK_FISH.has(f.id)));
+  if (quality === 'junk' && !use.some(f => f.id === 'old_boot')) use = [...use, { id: 'old_boot', w: 2 }];
+  if (!use.length) use = pool;
+  if (quality === 'good') use = use.map(f => (f.id === 'shark' ? { ...f, w: f.w * 4 } : f));
+  return pickWeighted(seeded(`${userId}:${date}:fish:${cast}:${quality}`), use)!.id;
+}
+
 export interface Plot { plot?: number; crop_id: string; water_days: number; last_watered: string | null }
 
 export function cropDays(cropId: string) {

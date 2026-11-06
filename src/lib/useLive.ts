@@ -54,6 +54,13 @@ export function useLive(partnerOnline: boolean) {
     if (partnerOnline) sendEvent('live', mineRef.current);
     else setTheirs(null);
   }, [partnerOnline]);
+  // Nối lại kênh sau khi rớt: gửi lại vị trí của mình; thỉnh thoảng nhắc lại phòng khi người ấy lỡ tin
+  useEffect(() => onEvent('link-up', () => sendEvent('live', mineRef.current)), []);
+  useEffect(() => {
+    if (!partnerOnline) return;
+    const t = setInterval(() => sendEvent('live', mineRef.current), 20000);
+    return () => clearInterval(t);
+  }, [partnerOnline]);
 
   const update = useCallback((patch: Partial<LiveState>) => {
     const next = { ...mineRef.current, ...patch };

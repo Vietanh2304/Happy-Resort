@@ -2,7 +2,7 @@
 // Tọa độ là pixel logic của từng cảnh (trước khi phóng to).
 import { HH, HW } from './iso';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin';
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco';
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -42,6 +42,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   shop: { name: 'Cửa hàng', icon: '🛍️', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 94, y1: 140 }, spawn: { x: 96, y: 136 } },
   cinema: { name: 'Rạp phim', icon: '🎬', w: 160, h: 120, outdoor: false, spawn: { x: 68, y: 100 } },
   restaurant: { name: 'Nhà hàng', icon: '🕯️', w: 192, h: 144, outdoor: false, spawn: { x: 70, y: 118 } },
+  disco: { name: 'Sàn nhảy', icon: '🪩', w: 192, h: 144, outdoor: false, spawn: { x: 76, y: 122 } },
   cafe: { name: 'Cà phê sách', icon: '☕', w: 192, h: 144, outdoor: false, spawn: { x: 70, y: 119 } },
   wheel: { name: 'Vòng đu quay', icon: '🎡', w: 192, h: 144, outdoor: false, spawn: { x: 50, y: 108 } },
   camp: { name: 'Bãi cắm trại', icon: '⛺', w: 192, h: 144, outdoor: true, spawn: { x: 72, y: 120 } },
@@ -118,7 +119,7 @@ export const HOUSE = {
 export const BATH = {
   back: { gx: 2, gy: 1 }, w: 4, d: 3,
   front: roomPt(6, 4),
-  seats: [{ ...roomPt(3.1, 3.5), left: false }, { ...roomPt(4.9, 3.5), left: true }] as (Pt & { left: boolean })[],
+  seats: [{ ...roomPt(3.1, 3.3, 11), left: false }, { ...roomPt(4.9, 3.3, 11), left: true }] as (Pt & { left: boolean })[],
   stand: roomPt(4, 4.7),
   toBath: roomPt(6.8, 0.4),      // cửa phòng ngủ → phòng tắm (tường phải)
 };
@@ -151,6 +152,7 @@ export const SEATS: Partial<Record<SceneId, [Pt & { left: boolean }, Pt & { left
   wheel: [{ x: 50, y: 108, left: false }, { x: 142, y: 108, left: true }],
   camp: [{ x: 70, y: 118, left: false }, { x: 122, y: 118, left: true }],
   twin: [{ x: 86, y: 129, left: false }, { x: 106, y: 129, left: true }],
+  disco: [{ x: 74, y: 124, left: false }, { x: 118, y: 124, left: true }],
 };
 
 export function clampTo(box: Box, p: Pt): Pt {
