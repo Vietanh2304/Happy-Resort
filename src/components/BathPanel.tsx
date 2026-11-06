@@ -3,7 +3,7 @@ import { BATH_WATERS, type BathWater } from '../lib/interiors';
 import type { Live } from '../lib/useLive';
 
 /** Bảng dưới cảnh phòng tắm: chọn nước tắm (cả hai cùng thấy), vào/ra bồn, nhắn tin */
-export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName, onEnter, onLeaveTub, onLeaveRoom }: {
+export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName, onEnter, onLeaveTub, onLeaveRoom, onSplash }: {
   water: BathWater;
   live: Live;
   partnerHere: boolean;
@@ -12,6 +12,7 @@ export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName,
   onEnter: () => void;
   onLeaveTub: () => void;
   onLeaveRoom: () => void;
+  onSplash: () => void;
 }) {
   const [text, setText] = useState('');
   const inTub = live.mine.act === 'bath';
@@ -31,8 +32,8 @@ export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName,
           {inTub
             ? <button className="btn small ghost" onClick={onLeaveTub}>🚿 Ra khỏi bồn</button>
             : <button className="btn small" onClick={onEnter}>🛁 Vào bồn</button>}
-          <button className="btn small ghost" onClick={() => live.say('💦')}>💦 Té nước</button>
-          <button className="btn small ghost" onClick={() => live.say('🦆')}>🦆 Vịt cao su</button>
+          <button className="btn small ghost" disabled={!inTub} title={inTub ? undefined : 'Vào bồn rồi mới té nước được'} onClick={onSplash}>💦 Té nước</button>
+          <button className={`btn small ${live.mine.duck ? '' : 'ghost'}`} onClick={() => live.update({ duck: !live.mine.duck })}>🦆 {live.mine.duck ? 'Cất vịt' : 'Thả vịt cao su'}</button>
           <button className="btn small ghost" onClick={() => live.say('😌')}>😌</button>
         </div>
         <ul className="chat-log">

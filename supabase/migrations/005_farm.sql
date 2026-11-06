@@ -1,4 +1,4 @@
--- Happy Resort — 005: nông trại chung (trồng ở ô nào tùy thích, tưới, bón phân, thu hoạch chung)
+-- Hy's Resort — 005: nông trại chung (trồng ở ô nào tùy thích, tưới, bón phân, thu hoạch chung)
 
 create table public.farm (
   couple_id    uuid not null references public.couples (id) on delete cascade,

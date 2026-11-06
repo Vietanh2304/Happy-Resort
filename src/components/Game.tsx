@@ -37,6 +37,12 @@ import { CollectionSheet } from './CollectionSheet';
 import { DecorTray } from './DecorTray';
 import { GuestbookSheet } from './GuestbookSheet';
 import { KitchenRoom } from './Kitchen';
+import type { Act, AnimName } from '../lib/acts';
+import { Badminton } from './play/Badminton';
+import { Boat } from './play/Boat';
+import { Golf } from './play/Golf';
+import { HideSeek } from './play/HideSeek';
+import { Snowball } from './play/Snowball';
 import { Mailbox } from './Mailbox';
 import { Fireworks, MeetupSheet } from './MeetupSheet';
 import { QuestionSheet } from './QuestionSheet';
@@ -62,6 +68,9 @@ type SheetState =
   | { kind: 'kidname'; id: string }
   | { kind: 'postcard'; city: CityKind; i: number; name: string }
   | null;
+
+/** Trò chơi mở toàn màn hình (không nằm trong bảng) */
+const FULLSCREEN: GameId[] = ['golf', 'snow', 'boat', 'badminton', 'hide'];
 
 export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }) {
   const coupleId = me.couple_id;
@@ -324,9 +333,20 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     if (m.t === 'open' && m.by !== me.id) { toast(`🎮 ${partner?.display_name ?? 'Người ấy'} rủ bạn chơi ${TITLES[m.g] ?? 'cùng'}!`); setGameInvite(m.g); setTimeout(() => setGameInvite(g => (g === m.g ? null : g)), 30000); }
   }), [me.id, partner?.display_name]);
   const [gameInvite, setGameInvite] = useState<GameId | null>(null);
-  const ARCADE_GAMES: GameId[] = ['cook', 'quiz', 'puzzle', 'dance', 'focus', 'fishrace', 'castle', 'caro', 'rps', 'memory', 'draw'];
+  const ARCADE_GAMES: GameId[] = ['cook', 'snow', 'boat', 'golf', 'badminton', 'hide', 'cards', 'quiz', 'puzzle', 'dance', 'focus', 'fishrace', 'castle', 'caro', 'rps', 'memory', 'draw'];
+  // ───── Động tác (té nước, búng tai…): mình làm thì máy người ấy cũng thấy ─────
+  const [acts, setActs] = useState<{ me?: Act; them?: Act }>({});
+  const doAct = (n: AnimName) => { setActs(a => ({ ...a, me: { n, at: Date.now() } })); sendEvent('act', { n }); };
+  useEffect(() => onEvent('act', ({ n }: { n: AnimName }) => setActs(a => ({ ...a, them: { n, at: Date.now() } }))), []);
   const [kitchenOpen, setKitchenOpen] = useState(false);
+  const [playing, setPlaying] = useState<GameId | null>(null);
   function openGame(g: GameId, invite = true) {
+    if (FULLSCREEN.includes(g)) {               // trò toàn màn hình
+      setSheet(null);
+      setPlaying(g);
+      if (invite) sendEvent('game', { g, t: 'open', by: me.id });
+      return;
+    }
     if (g === 'cook') {                        // nấu ăn: vào phòng bếp chung
       setSheet(null);
       setKitchenOpen(true);
@@ -699,6 +719,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           theme={theme} festDecor={festDecor} festIcon={scene === 'town' ? festIcon : null}
           twin={{ planes, touch }}
           dance={danceMv}
+          acts={acts}
           kids={kids} meetupLeft={meetupLeft} pet={pet} petWith={petWith} ride={ride} campHeat={live.mine.act === 'roast' ? campHeat : null}
           screen={scene === 'cinema' ? <CinemaScreen rtc={rtc} mode={cinemaMode} bubbles={live.bubbles} onReact={e => live.say(e)} /> : scene === 'restaurant' ? <DinnerTiles remote={call.remoteVideo ? call.remote : null} local={call.cam ? call.local : null} firstSeat={firstSeat} /> : null}
           go={go} enter={enter} arrived={arrived}
@@ -739,6 +760,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           water={bathWater} live={live} partnerHere={!!partnerHere} partnerInTub={!!partnerHere && theirs?.act === 'bath'} partnerName={partnerName}
           onEnter={() => go(BATH.stand, () => { live.update({ act: 'bath' }); live.say('🛁'); })}
           onLeaveTub={() => live.update({ act: null, pos: BATH.stand })}
+          onSplash={() => doAct('splash')}
           onLeaveRoom={() => enter('bedroom', BATH.toBath)}
         />
       ) : inBed ? (
@@ -867,6 +889,13 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'emote' && <EmoteMenu onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)}
         onStatus={st => run(async () => { await api.setStatus(me, st); reloadMe(); notify('profiles'); if (st) toast(`💭 ${partnerName} sẽ thấy: ${st}`); })} />}
       {sheet?.kind === 'bag' && <BagSheet inventory={inventory} partner={partner} onClose={close} />}
+      {playing && (() => {
+        const pp = { me, partner, date: myTime.date, onLeave: () => setPlaying(null) };
+        // Ném tuyết vào mùa đông hoặc lúc làng có tuyết; các mùa khác té nước ở bãi biển
+        const winter = myWeather?.type === 'snow' || [12, 1, 2].includes(myTime.month);
+        return playing === 'golf' ? <Golf {...pp} /> : playing === 'snow' ? <Snowball {...pp} theme={winter ? 'snow' : 'water'} />
+          : playing === 'boat' ? <Boat {...pp} /> : playing === 'badminton' ? <Badminton {...pp} /> : playing === 'hide' ? <HideSeek {...pp} /> : null;
+      })()}
       {kitchenOpen && <KitchenRoom me={me} partner={partner} inventory={inventory} date={myTime.date} onLeave={() => setKitchenOpen(false)} />}
       {sheet?.kind === 'shop' && <ShopSheet coins={couple?.coins ?? 0} inventory={inventory} onClose={close} />}
       {sheet?.kind === 'seed' && <SeedSheet onPick={c => sow(sheet.cell, c)} onClose={close} />}
@@ -876,7 +905,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onHarvest={() => farmDo('harvest', sheet.cell)} onClear={() => farmDo('clear', sheet.cell)} onClose={close} />
       )}
       {sheet?.kind === 'game' && (
-        <GameSheet game={sheet.game} me={me} partner={partner} partnerOnline={partnerOnline} date={myTime.date} onClose={close} />
+        <GameSheet game={sheet.game} me={me} partner={partner} partnerOnline={partnerOnline} date={myTime.date} onClose={close} say={live.say} act={doAct} />
       )}
       {sheet?.kind === 'question' && <QuestionSheet me={me} partner={partner} date={myTime.date} answers={answers} onClose={close} />}
       {sheet?.kind === 'collection' && <CollectionSheet me={me} partner={partner} owned={owned} wishes={wishes} onClose={close} />}

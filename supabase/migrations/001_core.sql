@@ -1,4 +1,4 @@
--- Happy Resort — 001: lõi (Phase 1)
+-- Hy's Resort — 001: lõi (Phase 1)
 -- Cặp đôi, người chơi, thiết bị, trang trí, túi đồ, bộ sưu tập, phần thưởng, điểm danh, thư.
 --
 -- Đăng nhập: không email, không mật khẩu. Mỗi trình duyệt có một phiên ẩn danh của Supabase

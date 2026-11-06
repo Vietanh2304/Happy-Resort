@@ -1,4 +1,4 @@
--- Happy Resort — 002: giữ chân (Phase 2)
+-- Hy's Resort — 002: giữ chân (Phase 2)
 -- Khách thú, câu hỏi mỗi ngày, điều ước, hẹn gặp.
 
 create table public.guests (

@@ -1,4 +1,4 @@
-# 🏝️ Happy Resort
+# 🏝️ Hy's Resort
 
 Game pixel nhỏ, ấm áp cho hai người yêu xa. Hai nhân vật cùng sống trong một làng ven biển: có căn nhà gỗ chung, cửa hàng, rạp phim, nhà hàng và bãi biển. Bầu trời trong game theo thời tiết và giờ thật nơi mỗi người đang ở. Cửa sổ nhà gỗ nhìn ra trời bên người kia.
 

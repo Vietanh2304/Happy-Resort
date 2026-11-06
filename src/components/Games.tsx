@@ -6,10 +6,12 @@ import type { GameId } from '../lib/world';
 import { Sheet } from './Sheet';
 import { nameOf, reward, useGameChannel, type GP, type Msg, type Props } from './gameKit';
 import { Castle, Dance, FishRace, Focus, Puzzle, Quiz } from './Games2';
+import { Cards } from './Cards';
 
 export const TITLES: Record<GameId, string> = {
   caro: '⭕ Cờ ca-rô', rps: '✊ Oẳn tù tì', memory: '🃏 Lật thẻ tìm cặp', draw: '🎨 Vẽ đoán', cook: '👩‍🍳 Nấu ăn cùng nhau',
   quiz: '💞 Cậu hiểu tớ bao nhiêu', fishrace: '🎣 Câu cá thi', puzzle: '🧩 Ghép tranh cùng nhau', dance: '💃 Khiêu vũ đôi', castle: '🏰 Xây lâu đài cát', focus: '📚 Cùng học / làm việc',
+  golf: '⛳ Golf mini quanh làng', snow: '⛄ Ném tuyết / 💦 Té nước', boat: '🛶 Chèo thuyền đôi', badminton: '🏸 Cầu lông', hide: '🙈 Trốn tìm', cards: '🃏 Sâm & 🤥 Nói dối',
 };
 
 export function GameSheet(p: Props) {
@@ -21,6 +23,7 @@ export function GameSheet(p: Props) {
       {p.game === 'rps' && <Rps {...p} them={them} />}
       {p.game === 'memory' && <Memory {...p} them={them} />}
       {p.game === 'draw' && <Draw {...p} them={them} />}
+      {p.game === 'cards' && <Cards {...p} them={them} />}
       {p.game === 'quiz' && <Quiz {...p} them={them} />}
       {p.game === 'fishrace' && <FishRace {...p} them={them} />}
       {p.game === 'puzzle' && <Puzzle {...p} them={them} />}

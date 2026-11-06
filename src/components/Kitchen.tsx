@@ -15,6 +15,7 @@ import { notify } from '../lib/realtime';
 import { characterSprite, type View } from '../lib/sprites';
 import { toast, toastError } from '../lib/toast';
 import { reward, useGameChannel, type Msg } from './gameKit';
+import { actFrame, type Act } from '../lib/acts';
 
 const T = 16;              // cỡ ô (pixel logic)
 const SPEED = 4.2;         // ô mỗi giây
@@ -43,6 +44,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
   const [atFridge, setAtFridge] = useState<[number, number] | null>(null);
   const [now, setNow] = useState(Date.now());
   const [bubble, setBubble] = useState<{ text: string; at: number } | null>(null);
+  const [acts, setActs] = useState<{ me?: Act; them?: Act }>({});
 
   const commit = (r: Room) => { roomRef.current = r; setRoom(r); send('st', { r, now: Date.now() }); };
   const hostAct = (by: string, m: Msg) => {
@@ -63,6 +65,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
       send('pos', posRef.current);
     }
     if (m.t === 'pos') setTheirPos({ x: m.x, y: m.y, f: m.f, mv: m.mv });
+    if (m.t === 'anim') setActs(a => ({ ...a, them: { n: m.n, at: Date.now() } }));
     if (m.t === 'bye') {
       setTheirPos(null);
       const r = roomRef.current;
@@ -208,6 +211,10 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
     const t = tileAt(x, y);
     const h = roomRef.current.hands[me.id];
     if (t === 'F' && !o.pick && !(h?.k === 'ing')) { setAtFridge([x, y]); setPanel('fridge'); return; }
+    // Thái trên thớt / rửa bát: nhân vật làm động tác thật (máy kia cũng thấy)
+    const cell = roomRef.current.cells[`${x},${y}`];
+    const n = !h && t === 'B' && cell?.k === 'ing' && !cell.cut ? 'chop' : !h && t === 'K' && roomRef.current.sink.n > 0 ? 'wash' : null;
+    if (n) { setActs(a => ({ ...a, me: { n, at: Date.now() } })); send('anim', { n }); }
     send('act', { x, y, o });
   }
   doActRef.current = doAct;
@@ -253,7 +260,9 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
   // Màn rộng: thấy cả bếp. Điện thoại dọc: phóng to và camera đi theo nhân vật mình
   const availW = vw.w - 16, availH = vw.h - 190;
   const fit = Math.min(5, availW / (COLS * T), availH / (ROWS * T));
-  const s = fit >= 2.4 ? fit : Math.max(fit, Math.min(2.8, availH / (ROWS * T)));
+  const small = fit < 2.4;
+  const [wide, setWide] = useState(false);
+  const s = !small || wide ? fit : Math.max(fit, Math.min(2.8, availH / (ROWS * T)));
   const bw = COLS * T * s, bh = ROWS * T * s, viewW = Math.min(bw, availW), viewH = Math.min(bh, availH);
   const cam = (p: number, view: number, full: number) => Math.max(0, Math.min(full - view, p - view / 2));
   const mySpot = mySeat !== undefined ? { x: CHAIRS[mySeat][0] + 0.5, y: CHAIRS[mySeat][1] + 0.5 } : pos;
@@ -270,7 +279,11 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
       x = cx + 0.5; y = cy + 0.75; flip = cx > COLS / 2 + 3; view = 'front';
       const dish = room.meal?.dishes[seat] ?? room.meal?.dishes[0];
       sp = characterSprite(look, 'sit', eating && dish ? { spec: foodProp(item(dish).name).utensil, mode: 'eat', phase } : undefined, 'front');
-    } else sp = characterSprite(look, p.mv ? 'walk' : 'idle', undefined, view, p.mv ? Math.floor(now / 130) % 4 : 0);
+    } else {
+      const af = p.mv ? null : actFrame(acts[who], now);
+      sp = af !== null ? characterSprite(look, 'act', undefined, 'front', af) : characterSprite(look, p.mv ? 'walk' : 'idle', undefined, view, p.mv ? Math.floor(now / 130) % 4 : 0);
+      if (af !== null) flip = false;
+    }
     const ax = sp.ax ?? sp.w / 2;
     const z = Math.round(y * 10) + 5;
     return (
@@ -297,6 +310,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
         <b>👩‍🍳 Phòng bếp</b>
         <span className="k-who">{them && theirPos ? `🟢 ${partner?.display_name} đang trong bếp` : `💤 ${partner?.display_name ?? 'Người ấy'} chưa vào bếp`}</span>
         <span className="row">
+          {small && <button className="btn small ghost" onClick={() => setWide(v => !v)}>{wide ? '🔎 Phóng to' : '🔍 Xem cả bếp'}</button>}
           <button className={`btn small ${panel === 'book' ? '' : 'ghost'}`} onClick={() => setPanel(panel === 'book' ? null : 'book')}>📖 Công thức</button>
           <button className={`btn small ${panel === 'fridge' ? '' : 'ghost'}`} onClick={() => { setAtFridge(null); setPanel(panel === 'fridge' ? null : 'fridge'); }}>🧊 Tủ lạnh</button>
           <button className="btn small ghost" onClick={onLeave}>🚪 Ra khỏi bếp</button>

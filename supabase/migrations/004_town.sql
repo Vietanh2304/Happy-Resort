@@ -1,4 +1,4 @@
--- Happy Resort — 004: làng chung, nhà gỗ chung, hũ xu chung
+-- Hy's Resort — 004: làng chung, nhà gỗ chung, hũ xu chung
 
 -- Hũ xu chung của hai người
 alter table public.couples add column coins int not null default 50 check (coins >= 0);

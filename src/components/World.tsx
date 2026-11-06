@@ -11,7 +11,8 @@ import { animal, content, item, type Combo, type Phase, type WeatherType } from 
 import { ART, BED_PILLOWS, bedQuiltSprite } from '../lib/furniture';
 import { cropDays, needsWater, STAR_PERIOD, starVisible, type Pickup } from '../lib/game';
 import { arcadeRoom, picnicSprite, BATH_WATERS, tubBackSprite, tubFrontSprite, type BathWater, chandelierSprite, dinnerTableSprite, farmBackground, farmGateSprite, gameTentSprite, plantSprite, restaurantRoom, shopRoom, soilSprite, velvetChairSprite } from '../lib/interiors';
-import { emojiSprite, type Sprite } from '../lib/pixel';
+import { emojiSprite, makeSprite, type Sprite } from '../lib/pixel';
+import type { Act } from '../lib/acts';
 import { cellsOf, isWallCell, rotSize } from '../lib/placement';
 import type { Ghost } from '../lib/useDecorEditor';
 import { SKY } from '../lib/sky';
@@ -97,6 +98,8 @@ export interface WorldProps {
   kids: Kid[];                   // các bé đã về nhà
   meetupLeft: number | null;     // còn mấy ngày tới ngày gặp nhau
   dance: { me?: { m: number; at: number; both?: boolean }; them?: { m: number; at: number; both?: boolean } };
+  /** Động tác đang làm (té nước, búng tai…) của mình và người ấy */
+  acts: { me?: Act; them?: Act };
   twin: { planes: TwinPlane[]; touch: { me: boolean; them: boolean } };
   go: (to: Pt, then?: () => void) => void;
   enter: (scene: SceneId, at?: Pt) => void;
@@ -349,7 +352,7 @@ function SceneContent(p: WorldProps) {
       {scene === 'cafe' && <CafeContent {...p} dark={dark} />}
       {scene === 'wheel' && <WheelContent {...p} />}
       {scene === 'twin' && <TwinContent {...p} />}
-      {scene === 'disco' && <div className="disco-lights"><i /><i /><i /><i /></div>}
+      {scene === 'disco' && <div className="ballroom-lights"><i /><b /></div>}
       {scene === 'camp' && <CampContent {...p} dark={phase === 'night' || phase === 'sunset'} />}
       {p.pet && <PetLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />}
 
@@ -359,13 +362,13 @@ function SceneContent(p: WorldProps) {
       {!myBed && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left}
-        sitting={sitting || !!myTub} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : undefined}
+        sitting={sitting || !!myTub} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : undefined}
       />}
       {p.partnerHere && partner && theirs && !theirBed && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left}
-          sitting={sitting || !!theirTub} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : undefined}
+          sitting={sitting || !!theirTub} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : undefined}
         />
       )}
 
@@ -398,7 +401,7 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       {TOWN.benches.map(([x, y], i) => <Spr key={`n${i}`} sprite={ART.garden_bench.sprite()} x={x} y={y} />)}
       <Spr sprite={fountainSprite()} x={TOWN.fountain.x} y={TOWN.fountain.y + 12} />
       <Spr sprite={sparkleSprite()} x={TOWN.fountain.x} y={TOWN.fountain.y - 12} className="twinkle" z={TOWN.fountain.y + 13} />
-      <Tag x={TOWN.fountain.x} y={TOWN.fountain.y + 36} className="label" onClick={() => go({ x: TOWN.fountain.x, y: TOWN.fountain.y + 28 }, () => enter('disco'))}>🪩 Sàn nhảy{theirs?.scene === 'disco' ? ' 💗' : ''}</Tag>
+      <Tag x={TOWN.fountain.x} y={TOWN.fountain.y + 36} className="label" onClick={() => go({ x: TOWN.fountain.x, y: TOWN.fountain.y + 28 }, () => enter('disco'))}>💃 Sàn khiêu vũ{theirs?.scene === 'disco' ? ' 💗' : ''}</Tag>
 
       {BUILDINGS.map(b => {
         const sprite = b.scene === 'house' ? cabinSprite(dark) : b.scene === 'shop' ? shopSprite()
@@ -1074,8 +1077,49 @@ function BathContent(p: WorldProps) {
         {Array.from({ length: 7 }, (_, i) => <i key={i} style={{ left: `${10 + i * 13}%`, animationDelay: `${i * 0.5}s` }} />)}
       </div>
       <div className="bath-ambient" />
+      <BathToys {...p} />
     </>
   );
+}
+
+/** Vịt cao su bơi trong bồn (chạm vào kêu "quạc") và nước bắn tung toé khi té nước */
+function BathToys(p: WorldProps) {
+  const s = useScale();
+  const [hop, setHop] = useState(0);
+  const theirs = p.partnerHere ? p.live.theirs : null;
+  const ducks = [p.live.mine.duck && 'me', theirs?.duck && 'them'].filter(Boolean) as string[];
+  const seat = (who: 'me' | 'them') => BATH.seats[(who === 'me') === p.firstSeat ? 0 : 1];
+  const [, tick] = useState(0);
+  const splashing = (['me', 'them'] as const).filter(w => p.acts[w]?.n === 'splash' && Date.now() - p.acts[w]!.at < 1300);
+  useEffect(() => { if (!splashing.length) return; const t = setTimeout(() => tick(v => v + 1), 1350); return () => clearTimeout(t); });
+  const duck = duckSprite();
+  return (
+    <>
+      {ducks.map((d, i) => {
+        const x = (BATH.seats[0].x + BATH.seats[1].x) / 2 + (i ? 8 : -3), y = BATH.seats[0].y + 3 + i * 2;
+        return (
+          <img key={d} src={duck.url} alt="Vịt cao su" title="Vịt cao su — chạm để nghe quạc quạc" draggable={false}
+            className={`bath-duck ${hop && Date.now() - hop < 700 ? 'hop' : ''}`}
+            style={{ left: (x - duck.w / 2) * s, top: (y - duck.h) * s, width: duck.w * s, height: duck.h * s, zIndex: 400, animationDelay: `${i * 0.7}s` }}
+            onClick={e => { e.stopPropagation(); setHop(Date.now()); p.live.say('🦆 Quạc quạc!'); }} />
+        );
+      })}
+      {splashing.map(w => {
+        const st = seat(w), a = p.acts[w]!;
+        return (
+          <div key={`${w}${a.at}`} className="bath-splash" style={{ left: st.x * s, top: (st.y - 14) * s, zIndex: Math.round(BATH.front.y) + 2 }}>
+            {Array.from({ length: 9 }, (_, i) => <i key={i} style={{ ['--dx' as string]: `${(i - 4) * 9 * s}px`, ['--dy' as string]: `${-(14 + (i % 3) * 7) * s}px`, animationDelay: `${(i % 4) * 0.12}s`, width: 2.4 * s, height: 3.2 * s }} />)}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+function duckSprite() {
+  return makeSprite('rubber-duck', 12, 10, q => {
+    q.rect(1, 4, 9, 5, '#f6c64e'); q.rect(0, 5, 2, 2, '#f6c64e'); q.rect(2, 8, 7, 1, '#e0a838');
+    q.rect(5, 0, 5, 5, '#f6c64e'); q.px(8, 2, '#3b2d3f'); q.rect(10, 2, 2, 2, '#f7894a'); q.px(3, 5, '#ffe9a0');
+  });
 }
 
 /** Karaoke: đèn sân khấu quét màu, nốt nhạc bay quanh khung chiếu, micro đứng */

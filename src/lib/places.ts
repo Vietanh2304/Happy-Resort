@@ -535,35 +535,40 @@ export const PIN_AT: [number, number][] = [[40, 24], [14, 46], [62, 46], [28, 60
 
 // ───────── Phòng sàn nhảy ─────────
 export function discoRoom() {
-  return makeSprite('room:disco:v1', 192, 144, p => {
-    // Tường tím đêm có vạch neon
-    p.rect(0, 0, 192, 86, '#22163a');
-    for (let x = 0; x < 192; x += 12) p.rect(x, 0, 1, 86, '#2c1e48');
-    p.rect(0, 20, 192, 2, '#ff6ac8'); p.rect(0, 24, 192, 1, '#6ae0ff');
-    // Sân khấu DJ
-    p.rect(66, 46, 60, 24, '#3a2a5a'); p.rect(66, 46, 60, 3, '#5a4a8a');
-    p.rect(72, 52, 48, 12, '#1a1028');
-    ellipse(p, 84, 58, 5, 4, '#2a2a3a'); ellipse(p, 84, 58, 2, 1.5, '#ff6ac8');
-    ellipse(p, 108, 58, 5, 4, '#2a2a3a'); ellipse(p, 108, 58, 2, 1.5, '#6ae0ff');
-    for (let i = 0; i < 6; i++) p.rect(92 + i * 2, 54 + (i % 3), 1, 8 - (i % 3), ['#ff6ac8', '#f6c64e', '#6ae0ff'][i % 3]);
-    // Loa hai bên
-    for (const x0 of [10, 160]) {
-      p.rect(x0, 40, 22, 46, '#1a1028'); p.rect(x0 + 2, 42, 18, 42, '#2a1e40');
-      ellipse(p, x0 + 11, 54, 7, 7, '#3a2e58'); ellipse(p, x0 + 11, 54, 3, 3, '#5a4a8a');
-      ellipse(p, x0 + 11, 74, 5, 5, '#3a2e58'); ellipse(p, x0 + 11, 74, 2, 2, '#5a4a8a');
+  // Phòng khiêu vũ: tường kem viền vàng, cửa sổ vòm có rèm nhung, đèn chùm, đàn piano, sàn gỗ ghép bóng loáng
+  return makeSprite('room:ballroom:v2', 192, 144, p => {
+    p.rect(0, 0, 192, 86, '#f4e6d0');
+    for (let x = 0; x < 192; x += 8) p.rect(x, 0, 1, 70, '#eedcc0');           // giấy dán tường sọc mờ
+    p.rect(0, 70, 192, 16, '#c8a07a'); p.rect(0, 70, 192, 2, '#e8c46a'); p.rect(0, 84, 192, 2, '#9a7050');   // ốp chân tường
+    p.rect(0, 6, 192, 2, '#e8c46a');
+    // Cửa sổ vòm ánh trăng + rèm nhung
+    for (const x0 of [22, 146]) {
+      p.rect(x0, 18, 24, 46, '#2a3a6a'); ellipse(p, x0 + 12, 18, 12, 8, '#2a3a6a');
+      p.rect(x0 + 11, 12, 2, 52, '#e8c46a'); p.rect(x0, 38, 24, 2, '#e8c46a');
+      ellipse(p, x0 + 17, 26, 3, 3, '#fff6d8'); p.px(x0 + 5, 30, '#ffffff'); p.px(x0 + 8, 48, '#ffffff');
+      p.rect(x0 - 6, 10, 7, 58, '#a8283a'); p.rect(x0 + 23, 10, 7, 58, '#a8283a');
+      p.rect(x0 - 6, 10, 2, 58, '#c8404e'); p.rect(x0 + 28, 10, 2, 58, '#7a1a2a');
+      p.rect(x0 - 8, 8, 40, 4, '#e8c46a');
     }
-    // Sàn ô màu
-    const tiles = ['#ff6ac8', '#6ae0ff', '#f6c64e', '#a86af0', '#6af09a'];
-    for (let r = 0; r < 6; r++) for (let c = 0; c < 12; c++) {
-      const col = tiles[(r * 3 + c * 2) % tiles.length];
-      p.rect(c * 16, 86 + r * 10, 16, 10, mix(col, '#1a1028', 0.45));
-      p.rect(c * 16 + 1, 86 + r * 10 + 1, 14, 8, mix(col, '#1a1028', 0.25));
-      p.rect(c * 16 + 2, 86 + r * 10 + 1, 5, 1, mix(col, '#ffffff', 0.3));
+    // Đàn piano góc trái
+    p.rect(58, 54, 30, 18, '#1a1a22'); p.rect(58, 54, 30, 3, '#3a3a48'); p.rect(60, 64, 26, 3, '#fffaf0');
+    for (let k = 0; k < 8; k++) p.rect(61 + k * 3, 64, 1, 2, '#1a1a22');
+    p.rect(60, 72, 2, 10, '#1a1a22'); p.rect(84, 72, 2, 10, '#1a1a22');
+    // Bình hoa hồng góc phải
+    p.rect(118, 66, 8, 14, '#e8e0f0'); ellipse(p, 122, 62, 7, 5, '#5a9a4a');
+    for (const [x, y] of [[118, 60], [122, 58], [126, 61], [120, 63], [124, 63]]) ellipse(p, x, y, 2, 2, '#e8506a');
+    // Đèn chùm
+    p.rect(95, 0, 2, 8, '#c8a050');
+    ellipse(p, 96, 12, 14, 4, '#e8c46a'); ellipse(p, 96, 12, 10, 2, '#f8e0a0');
+    for (let k = -12; k <= 12; k += 4) { p.rect(96 + k, 7, 1, 4, '#fffaf0'); p.px(96 + k, 6, '#ffd24a'); p.px(96 + k, 16, '#cfe8ff'); p.px(96 + k, 18, '#cfe8ff'); }
+    // Sàn gỗ ghép xương cá
+    for (let r = 0; r < 12; r++) for (let c = 0; c < 24; c++) {
+      const x = c * 8, y = 86 + r * 5;
+      const col = (r + c) % 2 ? '#c8905a' : '#b67e4a';
+      p.rect(x, y, 8, 5, col); p.rect(x, y, 8, 1, mix(col, '#ffffff', 0.18)); p.rect(x + ((r % 2) ? 0 : 7), y, 1, 5, mix(col, '#2a1a10', 0.25));
     }
-    p.rect(0, 86, 192, 1, '#ff6ac8');
-    // Quả cầu disco
-    p.rect(95, 0, 1, 10, '#8a8aa8');
-    ellipse(p, 95.5, 15, 7, 7, '#c8c8e0');
-    for (let y = 9; y < 22; y += 2) for (let x = 89; x < 103; x += 2) if ((x - 95.5) ** 2 + (y - 15) ** 2 < 42) p.px(x + ((y / 2) % 2), y, (x + y) % 3 ? '#ffffff' : '#8ad8ff');
+    // Vòng sáng giữa sàn nơi hai người khiêu vũ
+    for (let k = 0; k < 3; k++) ellipse(p, 96, 122, 44 - k * 10, 14 - k * 3, mix('#f6d48a', '#c8905a', 0.55 - k * 0.12));
+    p.rect(0, 86, 192, 1, '#e8c46a');
   }, null);
 }

@@ -7,7 +7,20 @@ import { mix, type Pen, type Sprite } from './pixel';
 
 export interface ChibiLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: 'm' | 'f'; glasses?: number }
 export type View = 'front' | 'back' | 'side';
-export type Pose = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance';
+export type Pose = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance' | 'act' | 'actsit';
+/**
+ * Động tác tay (pose 'act' đứng / 'actsit' ngồi, `step` = số thứ tự):
+ * 0 vung tay sau đầu · 1 ném ra · 2 hất nước sang hai bên · 3 hất nước lên · 4 chèo kéo · 5 chèo đẩy
+ * 6 vung vợt lên · 7 đập vợt xuống · 8 vung gậy ra sau · 9 vung gậy theo đà · 10 búng · 11 ôm tai kêu đau · 12 giơ tay ăn mừng
+ * 13 thái (dao giơ) · 14 thái (dao xuống)
+ * Khiêu vũ đôi: 15/16 nắm tay (người trái/phải) · 17/18 giơ tay cho người kia xoay · 19/20 đập tay
+ */
+export const ACTS: [number, number, number, number][] = [
+  [6, 33, 29, 9], [5, 31, 31, 20], [1, 33, 31, 33], [3, 18, 29, 18], [12, 34, 20, 34], [6, 29, 26, 29],
+  [6, 33, 28, 8], [6, 33, 27, 36], [27, 22, 29, 20], [4, 22, 6, 20], [7, 34, 31, 24], [5, 15, 27, 15], [3, 9, 29, 9],
+  [11, 34, 22, 27], [11, 34, 20, 34],
+  [8, 35, 31, 28], [1, 28, 24, 35], [8, 35, 30, 10], [2, 10, 24, 35], [8, 35, 31, 19], [1, 19, 24, 35],
+];
 /** Số động tác nhảy (pose 'dance', step = động tác) */
 export const DANCE_MOVES = 8;
 export interface Held { spec: PropSpec; mode: HoldMode; phase: 0 | 1 }
@@ -123,8 +136,8 @@ function outfitOf(o: number, C: string, S: string): Outfit {
  * `step`: nhịp bước 0..3, `hold`: đang cầm đồ với động tác.
  */
 export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', step = 0, hold?: Held): Sprite {
-  if (pose === 'sit' || pose === 'sleep' || pose === 'dance' || hold) view = 'front';
-  if (pose !== 'walk' && pose !== 'dance') step = 0;
+  if (pose === 'sit' || pose === 'sleep' || pose === 'dance' || pose === 'act' || pose === 'actsit' || hold) view = 'front';
+  if (pose !== 'walk' && pose !== 'dance' && pose !== 'act' && pose !== 'actsit') step = 0;
   const S = SKINS[look.skin ?? 0] ?? SKINS[0];
   const H = HAIR_COLORS[look.hairColor ?? 0] ?? HAIR_COLORS[0];
   const C = SHIRTS[look.shirt ?? 0] ?? SHIRTS[0];
@@ -134,7 +147,7 @@ export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', s
   const hit = cache.get(key);
   if (hit) return hit;
 
-  const LW = hold ? 24 : 16, LH = pose === 'sit' ? 24 : 26;
+  const LW = hold ? 24 : 16, LH = pose === 'sit' || pose === 'actsit' ? 24 : 26;
   const canvas = document.createElement('canvas');
   canvas.width = (LW + 2) * K; canvas.height = (LH + 2) * K;
   const ctx = canvas.getContext('2d')!;
@@ -183,7 +196,7 @@ function draw(P: HiPen, a: Args) {
   const Sd = mix(S, '#c07060', 0.28), Hd = mix(H, '#2a1a1a', 0.3), Hl = mix(H, '#ffffff', 0.32);
   const hair = HAIRS[hairIx];
   const o = outfitOf(out, C, S);
-  const sit = pose === 'sit';
+  const sit = pose === 'sit' || pose === 'actsit';
   const bob = pose === 'walk' && step % 2 === 1 ? -1 : 0;   // nhịp giữa hai bước: người nhổm lên
   const y = bob;                                            // độ lệch phần thân trên
   const side = view === 'side', back = view === 'back';
@@ -219,7 +232,7 @@ function draw(P: HiPen, a: Args) {
     leg(fwd, legC, lift);
   } else {
     // nhảy: động tác lẻ co một chân, động tác 6 khuỵu cả hai
-    const dl = pose === 'dance' ? [0, 3, 0, 0, 0, 0, 2, 0][step] : 0, dr = pose === 'dance' ? [0, 0, 0, 3, 0, 0, 2, 0][step] : 0;
+    const dl = pose === 'dance' ? [0, 3, 0, 0, 0, 0, 2, 0][step] ?? 0 : 0, dr = pose === 'dance' ? [0, 0, 0, 3, 0, 0, 2, 0][step] ?? 0 : 0;
     const upL = (pose === 'walk' && step === 2 ? 2 : 0) + dl, upR = (pose === 'walk' && step === 0 ? 2 : 0) + dr;
     P.rect(11, 38, 4, 9 - upL, legC); P.rect(17, 38, 4, 9 - upR, legC);
     P.rect(14, 38, 1, 9 - upL, legD); P.rect(20, 38, 1, 9 - upR, legD);
@@ -277,6 +290,11 @@ function draw(P: HiPen, a: Args) {
       // tay giơ cao vẽ sau đầu để không bị tóc che
       lateArms = () => { arm(lx + 1, y + 26, hlx, y + hly); arm(rx - 1, y + 26, hrx, y + hry); };
       if (![0, 1, 4, 6, 7].includes(step % moves.length)) { lateArms(); lateArms = null; }
+    } else if (pose === 'act' || pose === 'actsit') {
+      const [hlx, hly, hrx, hry] = ACTS[step % ACTS.length];
+      const draw = () => { arm(lx + 1, y + 26, hlx, y + hly); arm(rx - 1, y + 26, hrx, y + hry); };
+      // tay đưa lên cao (ngang đầu) vẽ sau đầu để không bị tóc che
+      if (hly < 24 || hry < 24) lateArms = draw; else draw();
     } else {
       arm(lx + 1, y + 26, lx, y + 35 + swingL);
       arm(rx - 1, y + 26, rx, y + 35 - swingL);

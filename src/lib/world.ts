@@ -42,7 +42,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   shop: { name: 'Cửa hàng', icon: '🛍️', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 94, y1: 140 }, spawn: { x: 96, y: 136 } },
   cinema: { name: 'Rạp phim', icon: '🎬', w: 160, h: 120, outdoor: false, spawn: { x: 68, y: 100 } },
   restaurant: { name: 'Nhà hàng', icon: '🕯️', w: 192, h: 144, outdoor: false, spawn: { x: 70, y: 118 } },
-  disco: { name: 'Sàn nhảy', icon: '🪩', w: 192, h: 144, outdoor: false, spawn: { x: 76, y: 122 } },
+  disco: { name: 'Sàn khiêu vũ', icon: '💃', w: 192, h: 144, outdoor: false, spawn: { x: 76, y: 122 } },
   cafe: { name: 'Cà phê sách', icon: '☕', w: 192, h: 144, outdoor: false, spawn: { x: 70, y: 119 } },
   wheel: { name: 'Vòng đu quay', icon: '🎡', w: 192, h: 144, outdoor: false, spawn: { x: 50, y: 108 } },
   camp: { name: 'Bãi cắm trại', icon: '⛺', w: 192, h: 144, outdoor: true, spawn: { x: 72, y: 120 } },
@@ -84,7 +84,7 @@ export const FARM = { x: 32, y: 62, cw: 16, ch: 14, cols: 12, rows: 8, exit: { x
 export const farmCell = (x: number, y: number) => y * FARM.cols + x;
 
 /** Khu vui chơi: mỗi trạm một trò */
-export type GameId = 'caro' | 'rps' | 'memory' | 'draw' | 'cook' | 'quiz' | 'fishrace' | 'puzzle' | 'dance' | 'castle' | 'focus';
+export type GameId = 'caro' | 'rps' | 'memory' | 'draw' | 'cook' | 'quiz' | 'fishrace' | 'puzzle' | 'dance' | 'castle' | 'focus' | 'golf' | 'snow' | 'boat' | 'badminton' | 'hide' | 'cards';
 export const ARCADE: { game: GameId; name: string; icon: string; hot: Box; stand: Pt }[] = [
   { game: 'draw', name: 'Vẽ đoán', icon: '🎨', hot: { x0: 14, x1: 50, y0: 32, y1: 88 }, stand: { x: 32, y: 96 } },
   { game: 'rps', name: 'Oẳn tù tì', icon: '✊', hot: { x0: 80, x1: 112, y0: 26, y1: 88 }, stand: { x: 96, y: 96 } },
@@ -152,7 +152,8 @@ export const SEATS: Partial<Record<SceneId, [Pt & { left: boolean }, Pt & { left
   wheel: [{ x: 50, y: 108, left: false }, { x: 142, y: 108, left: true }],
   camp: [{ x: 70, y: 118, left: false }, { x: 122, y: 118, left: true }],
   twin: [{ x: 86, y: 129, left: false }, { x: 106, y: 129, left: true }],
-  disco: [{ x: 74, y: 124, left: false }, { x: 118, y: 124, left: true }],
+  // Đứng sát nhau vừa một cánh tay để nắm tay khiêu vũ
+  disco: [{ x: 89, y: 124, left: false }, { x: 104, y: 124, left: true }],
 };
 
 export function clampTo(box: Box, p: Pt): Pt {

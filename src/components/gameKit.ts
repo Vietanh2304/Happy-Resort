@@ -31,6 +31,6 @@ export function reward(g: GameId, date: string) {
   }, console.error);
 }
 
-export interface Props { game: GameId; me: api.Profile; partner: api.Profile | null; partnerOnline: boolean; date: string; onClose: () => void }
+export interface Props { game: GameId; me: api.Profile; partner: api.Profile | null; partnerOnline: boolean; date: string; onClose: () => void; say?: (t: string) => void; act?: (n: import('../lib/acts').AnimName) => void }
 export type GP = Props & { them: string };
 export const nameOf = (p: GP, id: string | null) => (id === p.me.id ? 'Bạn' : p.partner?.display_name ?? 'Người ấy');

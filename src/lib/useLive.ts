@@ -25,6 +25,7 @@ export interface LiveState {
   ride?: number;          // lúc bấm quay vòng đu quay
   bed?: string | null;    // đang nằm trên giường nào (act = 'sleep' | 'intimate')
   walkKid?: string | null; // đang dắt bé nào đi chơi
+  duck?: boolean;          // thả vịt cao su vào bồn tắm
 }
 export interface ChatLine { from: 'me' | 'partner'; text: string; at: number }
 

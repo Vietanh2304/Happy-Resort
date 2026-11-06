@@ -1,4 +1,4 @@
--- Happy Resort — 010: tủ lạnh chung trong bếp (đồ của cả hai, ai cũng lấy được)
+-- Hy's Resort — 010: tủ lạnh chung trong bếp (đồ của cả hai, ai cũng lấy được)
 
 create table public.fridge (
   couple_id uuid not null references public.couples (id) on delete cascade,

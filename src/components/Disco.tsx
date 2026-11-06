@@ -67,7 +67,7 @@ export function DanceBar({ me, them, themName, date, onMove, onLeave }: {
         {running ? <span>💃 Bạn {mine.length} · {themName} {theirs.length} · <b>💞 Đồng điệu {sync}</b></span>
           : over ? <span>🎉 Đồng điệu <b>{sync}/{BEATS}</b> · Bạn {mine.length} · {themName} {theirs.length} — {sync >= 22 ? 'Cặp đôi sàn nhảy! 🔥' : sync >= 12 ? 'Ăn ý ghê 💞' : 'Nhảy thêm vài bài nữa nào 😆'}</span>
             : st.at && now < st.at ? <span>🎶 Vào nhạc… {Math.ceil((st.at - now) / 1000)}</span>
-              : <span>🪩 Mũi tên chạy tới vòng tròn thì bấm đúng hướng (máy tính: phím mũi tên). Cùng trúng một nhịp = 💞</span>}
+              : <span>💃 Nhạc waltz: mũi tên chạy tới vòng tròn thì bấm đúng hướng (máy tính: phím mũi tên) — mỗi nhịp trúng là một động tác khiêu vũ đôi. Cùng trúng một nhịp = 💞</span>}
         <div className="row">
           {!running && <button className="btn small" onClick={() => send('new', { at: Date.now() + 3000, seed: Date.now() })}>{st.at ? '🔄 Bài khác' : '🎶 Bắt đầu nhảy'}</button>}
           <button className="btn small ghost" onClick={onLeave}>🚪 Ra ngoài</button>

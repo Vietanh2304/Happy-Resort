@@ -1,4 +1,4 @@
--- Happy Resort — 007: album ảnh chung, thư hẹn giờ, thú cưng chung, sinh nhật & ngày yêu nhau
+-- Hy's Resort — 007: album ảnh chung, thư hẹn giờ, thú cưng chung, sinh nhật & ngày yêu nhau
 
 -- ───────── Ngày đặc biệt ─────────
 alter table public.profiles add column birthday date;          -- mỗi người tự đặt trong Cài đặt

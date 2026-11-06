@@ -3,6 +3,7 @@ import type { Hold } from '../lib/props';
 import { characterSprite, type AvatarLook, type View } from '../lib/sprites';
 import { umbrellaSprite } from '../lib/places';
 import { useScale } from './Stage';
+import { actFrame, actMs, type Act } from '../lib/acts';
 
 const SPEED = 45; // pixel logic mỗi giây
 
@@ -32,10 +33,14 @@ interface Props {
   zAt?: (x: number, y: number) => number;
   /** Đang nhảy: động tác (0..7), lúc bắt đầu, cả hai cùng trúng nhịp */
   dance?: { m: number; at: number; both?: boolean } | null;
+  /** Đang làm động tác (té nước, búng tai…) */
+  act?: Act | null;
+  /** Khiêu vũ đôi: đứng bên trái/phải của cặp; together = người ấy cũng đang ở sàn */
+  duo?: { side: 'L' | 'R'; together: boolean };
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -76,7 +81,20 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
   useEffect(() => { if (faceLeft !== undefined && !moving) setShown(v => ({ ...v, left: faceLeft })); }, [faceLeft, moving]);
 
   const dancing = !!dance && !moving && !sitting;
-  const sprite = dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : view, step);
+  // Động tác: vẽ lại theo nhịp khung cho tới khi xong
+  const [, tickAct] = useState(0);
+  useEffect(() => {
+    if (!act) return;
+    const t = setInterval(() => tickAct(v => v + 1), 70);
+    const end = setTimeout(() => clearInterval(t), actMs(act.n) + 100);
+    return () => { clearInterval(t); clearTimeout(end); };
+  }, [act]);
+  const af = moving ? null : actFrame(act, Date.now());
+  // Khiêu vũ đôi: mỗi động tác là một nửa của điệu nhảy hai người (nắm tay, xoay, waltz, ngả người…)
+  const pair = duo && !moving && !sitting ? duoPose(duo, dancing ? dance!.m : null) : null;
+  const sprite = af !== null ? characterSprite(look, sitting ? 'actsit' : 'act', undefined, 'front', af)
+    : pair ? (pair.f === 'side' ? characterSprite(look, 'idle', undefined, 'side') : characterSprite(look, 'act', undefined, 'front', pair.f))
+    : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : view, step);
   const ax = sprite.ax ?? sprite.w / 2;
   const ps = avatarPx(s);
   return (
@@ -90,12 +108,13 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
     >
       {dancing && dance!.both && <span key={`h${dance!.at}`} className="dance-hearts">💞</span>}
       <img
-        key={dancing ? `d${dance!.at}` : 'still'} className={dancing ? `dancing dm-${dance!.m}` : undefined}
+        key={dancing ? `d${dance!.at}` : 'still'} className={pair ? `duo duo-${pair.cls} duo-${duo!.side}` : dancing ? `dancing dm-${dance!.m}` : undefined}
         src={sprite.url} alt={name ?? ''} draggable={false}
         style={{
           width: sprite.w * ps, height: sprite.h * ps,
           marginLeft: -Math.round(ax * ps), transformOrigin: `${Math.round(ax * ps)}px 50%`, marginTop: -Math.round(sprite.h * ps),
-          transform: shown.left ? 'scaleX(-1)' : undefined,
+          transform: pair ? undefined : shown.left ? 'scaleX(-1)' : undefined,
+          scale: pair?.f === 'side' && duo!.side === 'R' ? '-1 1' : undefined,
         }}
       />
       {umbrella && !hold && (() => {
@@ -127,4 +146,21 @@ function useHoldPhase(mode?: Hold['mode']): 0 | 1 {
     return () => { clearTimeout(start); clearTimeout(start2); clearTimeout(off); };
   }, [mode]);
   return phase;
+}
+
+/** Điệu nhảy đôi: động tác m (0..7) → khung động tác của người bên trái/phải ('side' = quay mặt vào nhau) */
+const DUO: { L: number | 'side'; R: number | 'side'; cls: string }[] = [
+  { L: 15, R: 16, cls: 'sway' },      // nắm tay đung đưa
+  { L: 17, R: 18, cls: 'twirl' },     // giơ tay cho người kia xoay một vòng
+  { L: 'side', R: 'side', cls: 'waltz' }, // waltz: quay mặt vào nhau, lướt nhẹ
+  { L: 15, R: 16, cls: 'dip' },       // ngả người
+  { L: 12, R: 12, cls: 'hop' },       // cùng giơ tay nhún nhảy
+  { L: 15, R: 16, cls: 'slide' },     // nắm tay lướt sang
+  { L: 19, R: 20, cls: 'clap' },      // đập tay nhau
+  { L: 'side', R: 'side', cls: 'hug' }, // ôm nhau
+];
+function duoPose(duo: { side: 'L' | 'R'; together: boolean }, m: number | null): { f: number | 'side'; cls: string } | null {
+  if (m === null) return duo.together ? { f: duo.side === 'L' ? 15 : 16, cls: 'hold' } : null;   // đứng nắm tay chờ nhạc
+  const d = DUO[m % DUO.length];
+  return { f: d[duo.side], cls: d.cls };
 }

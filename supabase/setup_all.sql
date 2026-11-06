@@ -1,7 +1,7 @@
--- Happy Resort — gộp 001 → 009 để dán một lần vào SQL Editor (chỉ dùng cho database chưa chạy file nào)
+-- Hy's Resort — gộp 001 → 010 để dán một lần vào SQL Editor (chỉ dùng cho database chưa chạy file nào)
 
 -- ═════════ migrations/001_core.sql ═════════
--- Happy Resort — 001: lõi (Phase 1)
+-- Hy's Resort — 001: lõi (Phase 1)
 -- Cặp đôi, người chơi, thiết bị, trang trí, túi đồ, bộ sưu tập, phần thưởng, điểm danh, thư.
 --
 -- Đăng nhập: không email, không mật khẩu. Mỗi trình duyệt có một phiên ẩn danh của Supabase
@@ -322,7 +322,7 @@ revoke execute on function public._link_device(uuid) from public, anon, authenti
 
 
 -- ═════════ migrations/002_retention.sql ═════════
--- Happy Resort — 002: giữ chân (Phase 2)
+-- Hy's Resort — 002: giữ chân (Phase 2)
 -- Khách thú, câu hỏi mỗi ngày, điều ước, hẹn gặp.
 
 create table public.guests (
@@ -415,7 +415,7 @@ grant update (left_at, review, stars) on public.guests to authenticated;
 
 
 -- ═════════ migrations/003_cozy.sql ═════════
--- Happy Resort — 003: nhân vật, vườn, nấu ăn, tặng quà
+-- Hy's Resort — 003: nhân vật, vườn, nấu ăn, tặng quà
 
 -- Nhân vật pixel: {"skin": 0, "hair": 1, "hairColor": 2, "shirt": 3}
 alter table public.profiles add column avatar jsonb not null default '{}';
@@ -489,7 +489,7 @@ end $$;
 
 
 -- ═════════ migrations/004_town.sql ═════════
--- Happy Resort — 004: làng chung, nhà gỗ chung, hũ xu chung
+-- Hy's Resort — 004: làng chung, nhà gỗ chung, hũ xu chung
 
 -- Hũ xu chung của hai người
 alter table public.couples add column coins int not null default 50 check (coins >= 0);
@@ -555,7 +555,7 @@ end $$;
 
 
 -- ═════════ migrations/005_farm.sql ═════════
--- Happy Resort — 005: nông trại chung (trồng ở ô nào tùy thích, tưới, bón phân, thu hoạch chung)
+-- Hy's Resort — 005: nông trại chung (trồng ở ô nào tùy thích, tưới, bón phân, thu hoạch chung)
 
 create table public.farm (
   couple_id    uuid not null references public.couples (id) on delete cascade,
@@ -623,7 +623,7 @@ $$;
 
 
 -- ═════════ migrations/006_decor_rotate.sql ═════════
--- Happy Resort — 006: xoay đồ trang trí (0 = hướng gốc, 1 = quay sang hướng kia)
+-- Hy's Resort — 006: xoay đồ trang trí (0 = hướng gốc, 1 = quay sang hướng kia)
 
 alter table public.decor add column rot int not null default 0 check (rot in (0, 1));
 
@@ -646,7 +646,7 @@ end $$;
 
 
 -- ═════════ migrations/007_love.sql ═════════
--- Happy Resort — 007: album ảnh chung, thư hẹn giờ, thú cưng chung, sinh nhật & ngày yêu nhau
+-- Hy's Resort — 007: album ảnh chung, thư hẹn giờ, thú cưng chung, sinh nhật & ngày yêu nhau
 
 -- ───────── Ngày đặc biệt ─────────
 alter table public.profiles add column birthday date;          -- mỗi người tự đặt trong Cài đặt
@@ -783,7 +783,7 @@ create policy "gỡ" on public.fest_decor for delete using (couple_id = my_coupl
 
 
 -- ═════════ migrations/008_family.sql ═════════
--- Happy Resort — 008: em bé của hai bạn (cò mang tới khi cả hai cùng muốn), chăm bé lớn dần theo ngày thật
+-- Hy's Resort — 008: em bé của hai bạn (cò mang tới khi cả hai cùng muốn), chăm bé lớn dần theo ngày thật
 
 create table public.kids (
   id         uuid primary key default gen_random_uuid(),
@@ -843,7 +843,7 @@ end $$;
 
 
 -- ═════════ migrations/009_media.sql ═════════
--- Happy Resort — 009: trạng thái "đang làm gì", tin nhắn thoại, ảnh album lưu ở Storage
+-- Hy's Resort — 009: trạng thái "đang làm gì", tin nhắn thoại, ảnh album lưu ở Storage
 
 -- ───────── Trạng thái ─────────
 alter table public.profiles add column status text check (char_length(status) <= 40);
@@ -899,7 +899,7 @@ end $$;
 
 
 -- ═════════ migrations/010_fridge.sql ═════════
--- Happy Resort — 010: tủ lạnh chung trong bếp (đồ của cả hai, ai cũng lấy được)
+-- Hy's Resort — 010: tủ lạnh chung trong bếp (đồ của cả hai, ai cũng lấy được)
 
 create table public.fridge (
   couple_id uuid not null references public.couples (id) on delete cascade,

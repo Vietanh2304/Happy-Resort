@@ -1,4 +1,4 @@
-/* Happy Resort — giao diện pixel ấm áp */
+/* Hy's Resort — giao diện pixel ấm áp */
 :root {
   --ink: #3b2d3f;
   --muted: #7d6e85;
@@ -979,3 +979,136 @@ textarea { resize: vertical; }
 .k-recipes .needs { display: block; font-size: 13px; }
 .k-recipes .needs .missing { opacity: .4; }
 .k-can { margin-left: auto; font-weight: 700; color: #3a8a3a; }
+
+/* ───────── Trò chơi toàn màn hình ───────── */
+.play-full .k-view { background: #2a2030; }
+.play-full .k-bottom .row { gap: 8px; }
+.dpad { display: inline-grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(2, 36px); gap: 3px; }
+.dpad button { border: 2px solid var(--ink); border-radius: 8px; background: #fffaf0; font-size: 16px; touch-action: none; user-select: none; cursor: pointer; }
+.dpad button:active { background: #f8d4e0; }
+.dpad .dpad-u { grid-column: 2; grid-row: 1; } .dpad .dpad-l { grid-column: 1; grid-row: 2; } .dpad .dpad-d { grid-column: 2; grid-row: 2; } .dpad .dpad-r { grid-column: 3; grid-row: 2; }
+@media (hover: hover) and (pointer: fine) { .dpad { display: none; } }
+
+/* Golf */
+.golf-board { cursor: crosshair; user-select: none; }
+.golf-deco, .snow-obst { position: absolute; image-rendering: pixelated; pointer-events: none; }
+.golf-flag { position: absolute; transform: translate(-15%, -95%); pointer-events: none; z-index: 40; }
+.golf-ball { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; background: #fff; border: 2px solid var(--ink); z-index: 50; box-shadow: 0 2px 0 #0004; pointer-events: none; }
+.golf-ball.them { background: #ffd4e2; }
+.golf-ball.sunk { opacity: .35; }
+.golf-aim { position: absolute; height: 0; border-top: 3px dashed #fff; transform-origin: 0 50%; z-index: 60; pointer-events: none; filter: drop-shadow(0 1px 0 #0008); }
+.golf-power { position: absolute; transform: translate(-50%, -100%); font-size: 12px; font-weight: 800; background: #fffaf0; border: 2px solid var(--ink); border-radius: 999px; padding: 0 6px; z-index: 61; pointer-events: none; }
+.golf-bar b { font-size: 14px; }
+
+/* Ném tuyết / té nước */
+.snow-board { cursor: crosshair; user-select: none; }
+.snow-shot { position: absolute; transform: translate(-50%, -50%); z-index: 200; pointer-events: none; filter: drop-shadow(0 2px 0 #0003); }
+.snow-shot.snow { color: #fff; text-shadow: 0 0 0 #fff; }
+.snow-ammo i { font-style: normal; opacity: .25; font-size: 18px; }
+.snow-ammo i.on { opacity: 1; }
+.snow-gun { font-size: 14px; }
+
+/* Trốn tìm */
+.hide-spot { position: absolute; pointer-events: none; }
+.hide-spot img { width: 100%; height: 100%; image-rendering: pixelated; }
+.hide-spot.rustle img { animation: rustle .15s 6 alternate; }
+@keyframes rustle { from { transform: rotate(-8deg) translateX(-2px); } to { transform: rotate(8deg) translateX(2px); } }
+.hide-leaf { position: absolute; left: 50%; top: -10px; animation: leaf 1.4s ease-out forwards; }
+@keyframes leaf { to { transform: translate(14px, -18px) rotate(90deg); opacity: 0; } }
+.hide-x { position: absolute; right: -2px; top: -6px; font-weight: 900; color: #e8604a; text-shadow: 0 0 2px #fff; }
+.hide-x.found { color: inherit; font-size: 18px; }
+.hide-me { position: absolute; transform: translate(-50%, -30%); z-index: 300; animation: pop .3s; pointer-events: none; }
+.hide-blind { position: absolute; inset: 0; z-index: 500; background: #1e1626f2; color: #fffaf0; display: grid; place-content: center; text-align: center; gap: 6px; }
+.hide-blind span { font-size: 54px; } .hide-blind b { font-size: 40px; }
+
+/* Chèo thuyền */
+.boat { position: absolute; width: 0; height: 0; z-index: 100; }
+.boat > img { position: absolute; image-rendering: pixelated; }
+.boat-sit { position: absolute; image-rendering: pixelated; }
+.boat .oar { position: absolute; background: #8a5430; border: 1px solid var(--ink); border-radius: 3px; transform-origin: center; transition: transform .2s; }
+.boat .oar.l { transform-origin: 100% 50%; } .boat .oar.r { transform-origin: 0 50%; }
+.boat .oar.l.swing { transform: rotate(-35deg); } .boat .oar.r.swing { transform: rotate(35deg); }
+.boat-isle { position: absolute; border-radius: 50%; background: radial-gradient(#f6e2ae 55%, #e8cf92 70%, #9fd4f5 72%, transparent 76%); display: grid; place-items: center; }
+.boat-isle img, .boat-rock, .boat-loot { image-rendering: pixelated; }
+.boat-rock, .boat-loot { position: absolute; }
+.boat-loot { animation: bob 1.6s ease-in-out infinite alternate; filter: drop-shadow(0 2px 0 #2a6a9a); }
+@keyframes bob { from { transform: translateY(-2px) rotate(-6deg); } to { transform: translateY(3px) rotate(6deg); } }
+.boat-row { font-size: 18px; padding: 10px 18px; touch-action: manipulation; }
+.boat-cheer { color: #e8508a; animation: pop .3s; }
+
+/* Cầu lông */
+.bad-court { background: linear-gradient(#bfe6fb, #e8f6ff 70%); }
+.bad-ground { position: absolute; left: 0; right: 0; background: repeating-linear-gradient(90deg, #8fd16a 0 24px, #84c860 24px 48px); border-top: 3px solid #5e8a3e; }
+.bad-line { position: absolute; height: 3px; background: #fff; }
+.bad-net { position: absolute; width: 4px; background: repeating-linear-gradient(#3b2d3f 0 4px, #fff 4px 7px); border-top: 4px solid #fff; }
+.bad-player { position: absolute; width: 0; height: 0; }
+.bad-player img { position: absolute; image-rendering: pixelated; }
+.bad-racket { position: absolute; transition: transform .12s; }
+.bad-racket.swing { transform: rotate(-70deg) !important; }
+.bad-cock { position: absolute; transform: translate(-50%, -50%); z-index: 20; pointer-events: none; }
+.bad-pt { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); font-weight: 800; background: #fffaf0; border: 2px solid var(--ink); border-radius: 999px; padding: 2px 10px; }
+.bad-pad { display: inline-flex; gap: 6px; }
+.bad-pad button { width: 52px; height: 44px; border: 2px solid var(--ink); border-radius: 10px; background: #fffaf0; font-size: 18px; touch-action: none; user-select: none; cursor: pointer; }
+.bad-pad button.hit { width: 70px; background: #ffe3ec; }
+.bad-pad button.hit.ready { background: #a5d470; animation: pop .3s; }
+
+/* Đánh bài */
+.cards .hand { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; }
+.cards-row, .cards-table { display: grid; gap: 4px; justify-items: center; margin: 6px 0; }
+.cards-table { min-height: 64px; padding: 6px; border-radius: 12px; background: #2e7a4e; color: #fff; width: 100%; }
+.pcard { width: 38px; height: 54px; border: 2px solid var(--ink); border-radius: 6px; background: #fffaf0; font-weight: 800; font-size: 14px; color: #222; cursor: pointer; transition: transform .1s; }
+.pcard.red { color: #d2343a; }
+.pcard.back { background: repeating-linear-gradient(45deg, #e86a7a 0 5px, #f59ab3 5px 10px); color: transparent; }
+.pcard.on { transform: translateY(-10px); box-shadow: 0 4px 0 #f59ab3; }
+.pcard:disabled { cursor: default; }
+.hand.mini .pcard { width: 22px; height: 32px; font-size: 9px; margin-left: -8px; }
+.penalty { display: grid; gap: 6px; justify-items: center; padding: 8px; border: 2px dashed #f59ab3; border-radius: 12px; margin: 6px 0; }
+.cards-after { display: grid; gap: 4px; justify-items: center; }
+.pcard.liar { width: 44px; height: 62px; font-size: 20px; color: #3b2d3f; background: #fff4e0; }
+.pcard.liar.joker { background: linear-gradient(135deg, #f6c64e, #f59ab3); }
+.pcard.liar.bad { background: #ffd0cc; border-color: #d2343a; }
+.liar-table { font-size: 16px; }
+.liar-rank { display: inline-block; min-width: 34px; padding: 2px 8px; border: 3px solid var(--ink); border-radius: 8px; background: #fffaf0; font-size: 22px; }
+.liar-call { background: #e8604a; color: #fff; }
+.flick { display: flex; align-items: center; gap: 10px; }
+.flick .ear { font-size: 34px; }
+.flick .ear.hit { animation: flick .35s ease-out; }
+@keyframes flick { 0% { transform: scale(1); } 30% { transform: scale(1.5) rotate(-15deg); filter: hue-rotate(-40deg) saturate(3); } 100% { transform: scale(1); } }
+
+/* Bồn tắm: vịt cao su & té nước */
+.bath-duck { position: absolute; image-rendering: pixelated; cursor: pointer; animation: duckbob 2.4s ease-in-out infinite; }
+.bath-duck.hop { animation: duckhop .6s ease-out; }
+@keyframes duckbob { 0%, 100% { transform: translate(0, 0) rotate(-4deg); } 50% { transform: translate(4px, 1px) rotate(4deg); } }
+@keyframes duckhop { 0% { transform: translateY(0); } 40% { transform: translateY(-12px) rotate(-12deg); } 100% { transform: translateY(0); } }
+.bath-splash { position: absolute; width: 0; height: 0; pointer-events: none; }
+.bath-splash i { position: absolute; left: 0; top: 0; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #bfe9ff; border: 1px solid #5aa8e0; opacity: 0; animation: splash .7s ease-out 2; }
+@keyframes splash { 0% { transform: translate(0, 0); opacity: 1; } 60% { opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) translateY(10px); opacity: 0; } }
+
+/* Phòng khiêu vũ: đèn rọi ấm và lấp lánh; động tác đôi */
+.ballroom-lights { position: absolute; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
+.ballroom-lights i { position: absolute; left: 50%; top: -10%; width: 46%; height: 130%; transform: translateX(-50%); background: radial-gradient(ellipse at 50% 92%, #fff2c880 0%, #ffe9a840 30%, transparent 62%); animation: ballglow 4s ease-in-out infinite alternate; }
+.ballroom-lights b { position: absolute; inset: 0; background-image: radial-gradient(#fff8 1px, transparent 1.5px); background-size: 37px 29px; animation: sparkle 6s linear infinite; opacity: .5; }
+@keyframes ballglow { to { opacity: .65; transform: translateX(-50%) scaleX(1.08); } }
+@keyframes sparkle { to { background-position: 37px 58px; } }
+.avatar img.duo { transform-origin: 50% 100%; }
+.avatar img.duo-hold { animation: duohold 2.4s ease-in-out infinite; }
+.avatar img.duo-sway { animation: duosway .6s ease-in-out; }
+.avatar img.duo-twirl.duo-R { animation: duotwirl .6s ease-in-out; }
+.avatar img.duo-twirl.duo-L, .avatar img.duo-slide { animation: duoslide .6s ease-in-out; }
+.avatar img.duo-waltz { animation: duowaltz .6s ease-in-out; }
+.avatar img.duo-dip.duo-R { animation: duodipR .6s ease-out; }
+.avatar img.duo-dip.duo-L { animation: duodipL .6s ease-out; }
+.avatar img.duo-hop { animation: dancejump .6s ease-out; }
+.avatar img.duo-clap { animation: duoclap .5s ease-out; }
+.avatar img.duo-hug.duo-L { animation: duohugL .7s ease-out; }
+.avatar img.duo-hug.duo-R { animation: duohugR .7s ease-out; }
+@keyframes duohold { 50% { transform: translateY(-1px) rotate(1deg); } }
+@keyframes duosway { 30% { transform: rotate(-6deg); } 70% { transform: rotate(6deg); } }
+@keyframes duotwirl { from { transform: rotateY(0); } to { transform: rotateY(360deg); } }
+@keyframes duoslide { 50% { translate: 6px -2px; } }
+@keyframes duowaltz { 25% { transform: translate(-3px, -2px) rotate(-4deg); } 75% { transform: translate(3px, -2px) rotate(4deg); } }
+@keyframes duodipR { 50% { transform: rotate(-24deg) translate(2px, 1px); } }
+@keyframes duodipL { 50% { transform: rotate(10deg) translateX(-1px); } }
+@keyframes duoclap { 40% { transform: translateY(-3px) scale(1.04); } }
+@keyframes duohugL { 50% { translate: 3px 0; transform: rotate(6deg); } }
+@keyframes duohugR { 50% { translate: -3px 0; transform: rotate(-6deg); } }
