@@ -144,6 +144,11 @@ export const clearPlot = (me: Profile, plot: number) =>
   run(supabase.from('garden').delete().eq('user_id', me.id).eq('plot', plot));
 
 export const sendGift = (itemId: string, body: string) => run(supabase.rpc('send_gift', { p_item: itemId, p_body: body }));
+// ───────── Tủ lạnh chung trong bếp ─────────
+export const loadFridge = () => run<InvRow[]>(supabase.from('fridge').select('item_id, qty').gt('qty', 0));
+export const fridgePut = (items: Gift[]) => run(supabase.rpc('fridge_put', { p_items: items }));
+export const fridgeTake = (itemId: string, n = 1) => run(supabase.rpc('fridge_take', { p_item: itemId, p_n: n }));
+export const fridgeUse = (items: Gift[]) => run(supabase.rpc('fridge_use', { p_items: items }));
 export const craft = (take: Gift[], give: Gift[] = []) => run(supabase.rpc('craft', { p_take: take, p_give: give }));
 
 // ───────── Hũ xu chung ─────────

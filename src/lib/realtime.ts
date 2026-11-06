@@ -7,8 +7,8 @@ import { supabase } from './supabase';
 
 export type Topic =
   | 'profiles' | 'decor' | 'inventory' | 'notes' | 'checkins'
-  | 'claims' | 'guests' | 'answers' | 'meetup' | 'collection' | 'wishes' | 'garden' | 'farm' | 'photos' | 'capsules' | 'pets' | 'days' | 'festdecor' | 'kids';
-const ALL: Topic[] = ['profiles', 'decor', 'inventory', 'notes', 'checkins', 'claims', 'guests', 'answers', 'meetup', 'collection', 'wishes', 'garden', 'farm', 'photos', 'capsules', 'pets', 'days', 'festdecor', 'kids'];
+  | 'claims' | 'guests' | 'answers' | 'meetup' | 'collection' | 'wishes' | 'garden' | 'farm' | 'photos' | 'capsules' | 'pets' | 'days' | 'festdecor' | 'kids' | 'fridge';
+const ALL: Topic[] = ['profiles', 'decor', 'inventory', 'notes', 'checkins', 'claims', 'guests', 'answers', 'meetup', 'collection', 'wishes', 'garden', 'farm', 'photos', 'capsules', 'pets', 'days', 'festdecor', 'kids', 'fridge'];
 
 type Fn = (payload?: any) => void;
 const syncFns = new Map<string, Set<Fn>>();

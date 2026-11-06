@@ -36,7 +36,7 @@ import { BagSheet } from './BagSheet';
 import { CollectionSheet } from './CollectionSheet';
 import { DecorTray } from './DecorTray';
 import { GuestbookSheet } from './GuestbookSheet';
-import { KitchenSheet } from './KitchenSheet';
+import { KitchenRoom } from './Kitchen';
 import { Mailbox } from './Mailbox';
 import { Fireworks, MeetupSheet } from './MeetupSheet';
 import { QuestionSheet } from './QuestionSheet';
@@ -54,7 +54,7 @@ import { World, type Lantern, type View } from './World';
 import { CallButtons, CallTiles, EnterGate, RemoteAudio } from './Call';
 
 type SheetState =
-  | { kind: 'games' | 'mail' | 'settings' | 'question' | 'collection' | 'meetup' | 'wish' | 'bag' | 'kitchen' | 'shop' | 'map' | 'avatar' | 'emote' | 'guestbook' | 'album' | 'calendar' | 'pet' | 'book' | 'photo' }
+  | { kind: 'games' | 'mail' | 'settings' | 'question' | 'collection' | 'meetup' | 'wish' | 'bag' | 'shop' | 'map' | 'avatar' | 'emote' | 'guestbook' | 'album' | 'calendar' | 'pet' | 'book' | 'photo' }
   | { kind: 'seed' | 'plot'; cell: number }
   | { kind: 'game'; game: GameId }
   | { kind: 'bed'; bed: string }
@@ -324,8 +324,15 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     if (m.t === 'open' && m.by !== me.id) { toast(`🎮 ${partner?.display_name ?? 'Người ấy'} rủ bạn chơi ${TITLES[m.g] ?? 'cùng'}!`); setGameInvite(m.g); setTimeout(() => setGameInvite(g => (g === m.g ? null : g)), 30000); }
   }), [me.id, partner?.display_name]);
   const [gameInvite, setGameInvite] = useState<GameId | null>(null);
-  const ARCADE_GAMES: GameId[] = ['quiz', 'puzzle', 'dance', 'focus', 'fishrace', 'castle', 'caro', 'rps', 'memory', 'draw'];
+  const ARCADE_GAMES: GameId[] = ['cook', 'quiz', 'puzzle', 'dance', 'focus', 'fishrace', 'castle', 'caro', 'rps', 'memory', 'draw'];
+  const [kitchenOpen, setKitchenOpen] = useState(false);
   function openGame(g: GameId, invite = true) {
+    if (g === 'cook') {                        // nấu ăn: vào phòng bếp chung
+      setSheet(null);
+      setKitchenOpen(true);
+      if (invite) sendEvent('game', { g, t: 'open', by: me.id });
+      return;
+    }
     if (g === 'dance') {                       // khiêu vũ chơi ngay trong phòng sàn nhảy
       setSheet(null);
       enter('disco');
@@ -701,7 +708,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
             guest: patGuest,
             pickup: pickUp,
             dock: startFishing,
-            kitchen: () => setSheet({ kind: 'kitchen' }),
+            kitchen: () => setKitchenOpen(true),
             festPlace,
             festRemove,
             pet: () => setSheet({ kind: 'pet' }),
@@ -860,7 +867,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'emote' && <EmoteMenu onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)}
         onStatus={st => run(async () => { await api.setStatus(me, st); reloadMe(); notify('profiles'); if (st) toast(`💭 ${partnerName} sẽ thấy: ${st}`); })} />}
       {sheet?.kind === 'bag' && <BagSheet inventory={inventory} partner={partner} onClose={close} />}
-      {sheet?.kind === 'kitchen' && <KitchenSheet inventory={inventory} onClose={close} onCookTogether={() => openGame('cook')} />}
+      {kitchenOpen && <KitchenRoom me={me} partner={partner} inventory={inventory} date={myTime.date} onLeave={() => setKitchenOpen(false)} />}
       {sheet?.kind === 'shop' && <ShopSheet coins={couple?.coins ?? 0} inventory={inventory} onClose={close} />}
       {sheet?.kind === 'seed' && <SeedSheet onPick={c => sow(sheet.cell, c)} onClose={close} />}
       {sheet?.kind === 'plot' && farm.find(r => r.cell === sheet.cell) && (

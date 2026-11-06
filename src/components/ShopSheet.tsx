@@ -11,13 +11,14 @@ import { Sheet } from './Sheet';
 
 const CATS = [
   { id: 'furniture', label: '🛋️ Nội thất' },
+  { id: 'food', label: '🥬 Nguyên liệu' },
   { id: 'appliance', label: '📺 Gia dụng' },
   { id: 'decor', label: '🎀 Trang trí' },
   { id: 'garden', label: '🌷 Vườn & trại' },
   { id: 'pet', label: '🐾 Thú cưng' },
   { id: 'holiday', label: '🎊 Đồ lễ theo mùa' },
 ] as const;
-const WHERE: Record<string, string> = { furniture: 'vào nhà gỗ để bày nhé', appliance: 'vào nhà gỗ để lắp nhé', decor: 'bấm Trang trí để bày nhé', garden: 'ra vườn hoặc nông trại để đặt nhé', pet: 'bé cưng sẽ mừng lắm đó', holiday: 'bấm Trang trí để bày cho ngày lễ nhé' };
+const WHERE: Record<string, string> = { food: 'vào bếp cất vào tủ lạnh chung rồi cùng nấu nhé', furniture: 'vào nhà gỗ để bày nhé', appliance: 'vào nhà gỗ để lắp nhé', decor: 'bấm Trang trí để bày nhé', garden: 'ra vườn hoặc nông trại để đặt nhé', pet: 'bé cưng sẽ mừng lắm đó', holiday: 'bấm Trang trí để bày cho ngày lễ nhé' };
 
 const art = (id: string) => (ART[id] ? ART[id].sprite().url : emojiSprite(item(id).icon).url);
 

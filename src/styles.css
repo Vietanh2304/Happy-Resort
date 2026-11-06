@@ -923,3 +923,59 @@ textarea { resize: vertical; }
 .draw-player i b { display: block; height: 100%; background: linear-gradient(90deg, #f59ab3, #f6c64e); transition: width .4s; }
 .draw-player.win { background: #fff3c4; box-shadow: 0 0 12px 2px #f6c64e; }
 .draw-blanks { font-family: monospace; letter-spacing: 1px; font-weight: 700; }
+
+/* ───────── Phòng bếp chung ───────── */
+.kitchen-full { position: fixed; inset: 0; z-index: 9000; background: #3b2d3f; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 8px; overflow: hidden; color: var(--ink); }
+.k-top { width: 100%; max-width: 1100px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; background: #fffaf0; border: 3px solid var(--ink); border-radius: 12px; padding: 6px 10px; }
+.k-top .row { gap: 6px; }
+.k-who { font-size: 13px; }
+.k-view { position: relative; flex: none; overflow: hidden; border: 3px solid var(--ink); border-radius: 6px; box-shadow: 0 6px 0 #0004; box-sizing: content-box; }
+.k-board { position: absolute; left: 0; top: 0; cursor: pointer; touch-action: manipulation; user-select: none; transition: transform .12s linear; }
+.k-bg { position: absolute; left: 0; top: 0; image-rendering: pixelated; pointer-events: none; }
+.k-thing, .k-avatar { position: absolute; width: 0; height: 0; pointer-events: none; }
+.k-avatar img { position: absolute; left: 0; top: 0; image-rendering: pixelated; }
+.k-t { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); display: grid; place-items: center; }
+.k-t > img { grid-area: 1 / 1; image-rendering: pixelated; }
+.k-on { grid-area: 1 / 1; display: flex; flex-wrap: wrap; justify-content: center; max-width: 40px; transform: translateY(-15%); }
+.k-on.jar { transform: translateY(-40%); }
+.k-cut { display: flex; }
+.k-cut img:last-child { margin-left: -2px; margin-top: 3px; }
+.k-held { position: absolute; transform: translateX(0); }
+.k-held .k-t { filter: drop-shadow(0 2px 0 #0003); }
+.k-name { position: absolute; left: 0; top: 4px; transform: translateX(-50%); white-space: nowrap; font-size: 10px; background: #fff9; border: 1px solid var(--ink); padding: 0 4px; border-radius: 4px; }
+.k-bubble { left: 0; transform: translateX(-50%); white-space: nowrap; max-width: none; font-size: 12px; z-index: 5; }
+.k-count, .k-n { position: absolute; font-size: 11px; font-weight: 800; background: #fffaf0; border: 2px solid var(--ink); border-radius: 999px; padding: 0 4px; transform: translate(-50%, -50%); z-index: 60; pointer-events: none; }
+.k-n { position: absolute; right: -10px; top: -8px; transform: none; }
+.k-q { position: absolute; right: -8px; top: -10px; font-size: 11px; }
+.k-bar { position: absolute; left: 50%; transform: translateX(-50%); background: #0006; border: 1px solid var(--ink); border-radius: 3px; overflow: hidden; }
+.k-bar.inline { position: relative; display: inline-block; left: 0; transform: none; width: 90px; height: 8px; vertical-align: middle; }
+.k-bar i { display: block; height: 100%; }
+.k-heat { position: absolute; left: 50%; transform: translateX(-50%); border: 1px solid var(--ink); border-radius: 3px; background: #0004; }
+.k-heat i { position: absolute; top: 0; bottom: 0; }
+.k-heat i.raw, .k-z.raw { background: #9fb3c4; }
+.k-heat i.ok, .k-z.ok { background: #6cc85a; }
+.k-heat i.over, .k-z.over { background: #f6c64e; }
+.k-heat i.burnt, .k-z.burnt { background: #e8604a; }
+.k-heat b { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1px; background: #fff; border: 1px solid var(--ink); }
+.k-heat em { position: absolute; left: 50%; top: 100%; transform: translateX(-50%); font-style: normal; font-size: 10px; font-weight: 800; white-space: nowrap; background: #fffaf0e8; border-radius: 6px; padding: 0 4px; margin-top: 2px; }
+.k-heat.ok em { background: #d8f5cf; }
+.k-heat.burnt { animation: kburn .5s infinite alternate; }
+@keyframes kburn { to { filter: brightness(1.4); } }
+.k-z { display: inline-block; padding: 0 5px; border-radius: 4px; color: #2a1a1a; font-weight: 700; }
+.k-meal { position: absolute; transform: translate(-50%, -100%); font-weight: 800; font-size: 13px; background: #fffaf0; border: 2px solid var(--ink); border-radius: 999px; padding: 0 8px; z-index: 90; pointer-events: none; }
+.k-bottom { width: 100%; max-width: 1100px; background: #fffaf0; border: 3px solid var(--ink); border-radius: 12px; padding: 6px 10px; }
+.k-hint { font-size: 12px; }
+.k-hint kbd { border: 1px solid var(--ink); border-radius: 4px; padding: 0 3px; background: #fff; font-size: 11px; }
+.k-use { touch-action: manipulation; }
+.k-panel { position: absolute; left: 50%; top: 56px; transform: translateX(-50%); width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 80px); overflow: auto; background: #fffaf0; border: 3px solid var(--ink); border-radius: 14px; padding: 10px 12px; z-index: 100; box-shadow: 0 8px 0 #0004; }
+.k-panel h4 { margin: 0 0 6px; }
+.k-fitem { display: flex; flex-direction: column; gap: 2px; align-items: stretch; }
+.k-fitem .chip { font-size: 11px; padding: 1px 4px; }
+.k-put { margin: 8px 0; padding: 8px; border: 2px dashed #c8b49a; border-radius: 10px; }
+.k-recipes { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 4px; }
+.k-recipes li { display: flex; gap: 8px; align-items: center; padding: 4px 6px; border-radius: 8px; background: #f4ece0; }
+.k-recipes li.ready { background: #e2f5d8; }
+.k-recipes .k-dish { font-size: 24px; }
+.k-recipes .needs { display: block; font-size: 13px; }
+.k-recipes .needs .missing { opacity: .4; }
+.k-can { margin-left: auto; font-weight: 700; color: #3a8a3a; }

@@ -1,12 +1,8 @@
 // Khu vui chơi: các trò hai người, đồng bộ bằng sự kiện realtime ('game').
 // Mỗi máy tự chạy cùng một luật trên cùng một chuỗi nước đi nên hai bên luôn khớp nhau.
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import * as api from '../lib/api';
-import { content, item } from '../lib/content';
 import { seeded } from '../lib/rng';
-import { toast } from '../lib/toast';
 import type { GameId } from '../lib/world';
-import { notify } from '../lib/realtime';
 import { Sheet } from './Sheet';
 import { nameOf, reward, useGameChannel, type GP, type Msg, type Props } from './gameKit';
 import { Castle, Dance, FishRace, Focus, Puzzle, Quiz } from './Games2';
@@ -25,7 +21,6 @@ export function GameSheet(p: Props) {
       {p.game === 'rps' && <Rps {...p} them={them} />}
       {p.game === 'memory' && <Memory {...p} them={them} />}
       {p.game === 'draw' && <Draw {...p} them={them} />}
-      {p.game === 'cook' && <Cook {...p} them={them} />}
       {p.game === 'quiz' && <Quiz {...p} them={them} />}
       {p.game === 'fishrace' && <FishRace {...p} them={them} />}
       {p.game === 'puzzle' && <Puzzle {...p} them={them} />}
@@ -378,135 +373,6 @@ function Draw(p: GP) {
         {!st.winner && (!st.drawer || st.solved) && myTurnNext && <button className="btn" onClick={draw}>✏️ {st.round ? 'Tới lượt mình vẽ' : 'Mình vẽ trước'}</button>}
         <button className="btn small ghost" onClick={() => send('match', { target: st.target, topic: st.topic })}>🔄 Ván mới</button>
       </div>
-    </div>
-  );
-}
-
-// ───────── Nấu ăn cùng nhau: mỗi người làm một công đoạn, thay phiên nhau ─────────
-
-type StepKind = 'chop' | 'stir' | 'heat' | 'pick';
-interface CookStep { a: StepKind; label: string; pick?: string[] }
-const COOK: { dish: string; steps: CookStep[] }[] = [
-  { dish: 'kimchi_stew', steps: [{ a: 'chop', label: '🔪 Thái kimchi và đậu phụ' }, { a: 'heat', label: '🔥 Canh lửa sôi vừa' }, { a: 'stir', label: '🥄 Khuấy nồi canh' }, { a: 'pick', label: '🧂 Nêm cho đậm đà', pick: ['🌶️', '🍯', '🍋'] }, { a: 'heat', label: '🍲 Tắt bếp đúng lúc' }] },
-  { dish: 'tteokbokki', steps: [{ a: 'chop', label: '🔪 Cắt bánh gạo và chả cá' }, { a: 'pick', label: '🌶️ Cho sốt gochujang', pick: ['🌶️', '🧈', '🍫'] }, { a: 'stir', label: '🥢 Đảo đều cho sệt' }, { a: 'heat', label: '🔥 Rim lửa nhỏ' }] },
-  { dish: 'bibimbap', steps: [{ a: 'chop', label: '🥕 Thái rau củ sợi' }, { a: 'heat', label: '🍳 Ốp trứng lòng đào' }, { a: 'pick', label: '🍚 Xếp topping lên cơm', pick: ['🥚', '🍓', '🍦'] }, { a: 'stir', label: '🥄 Trộn đều với tương ớt' }] },
-  { dish: 'strawberry_cake', steps: [{ a: 'stir', label: '🥣 Đánh bông trứng và bột' }, { a: 'heat', label: '♨️ Nướng bánh vừa chín' }, { a: 'chop', label: '🍓 Bổ dâu tây' }, { a: 'pick', label: '🎂 Phủ lớp kem', pick: ['🍦', '🧂', '🧄'] }] },
-  { dish: 'noodles', steps: [{ a: 'heat', label: '🔥 Đun sôi nước dùng' }, { a: 'chop', label: '🧅 Thái hành lá' }, { a: 'stir', label: '🍜 Trụng mì cho tơi' }, { a: 'pick', label: '🥚 Thêm topping', pick: ['🥚', '🍫', '🍬'] }] },
-  { dish: 'pumpkin_pie', steps: [{ a: 'chop', label: '🎃 Cắt bí đỏ' }, { a: 'stir', label: '🥣 Nghiền bí với sữa' }, { a: 'pick', label: '🫙 Rắc gia vị', pick: ['🍯', '🌶️', '🧄'] }, { a: 'heat', label: '♨️ Nướng vàng mặt' }] },
-];
-const ACTION_HINT: Record<StepKind, string> = { chop: 'Bấm thật nhanh 10 lần!', stir: 'Bấm luân phiên ⟲ ⟳ 8 lần!', heat: 'Dừng kim ở vùng xanh!', pick: 'Chọn đúng nguyên liệu!' };
-
-interface CookState { r: number; first: string; step: number; scores: number[]; tick: number }
-function Cook(p: GP) {
-  const [st, dispatch] = useReducer((s: CookState, m: Msg): CookState => {
-    if (m.t === 'new') return { r: m.r, first: m.first, step: 0, scores: [], tick: 0 };
-    if (m.t === 'tick') return m.i === s.step ? { ...s, tick: m.n } : s;
-    if (m.t === 'done') return m.i === s.step ? { ...s, step: s.step + 1, scores: [...s.scores, m.score], tick: 0 } : s;
-    return s;
-  }, { r: -1, first: '', step: 0, scores: [], tick: 0 });
-  const send = useGameChannel('cook', p.me.id, dispatch);
-  const recipe = st.r >= 0 ? COOK[st.r] : null;
-  const finished = !!recipe && st.step >= recipe.steps.length;
-  const actor = (i: number) => (i % 2 === 0 ? st.first : st.first === p.me.id ? p.them : p.me.id);
-  const stars = recipe ? st.scores.reduce((a, b) => a + b, 0) / recipe.steps.length : 0;
-
-  useEffect(() => {
-    if (!finished || !recipe) return;
-    api.claim(`cook:${p.date}`, [{ id: recipe.dish, n: 1 }]).then(ok => {
-      if (ok) { toast(`🍽️ Món ${item(recipe.dish).icon} ${item(recipe.dish).name} đã vào túi — mang ra nhà hàng ăn cùng nhau nhé!`); notify('inventory', 'collection'); }
-    }, console.error);
-    api.grantCoins(`coins:cook:${p.date}`, content.economy.cook).then(ok => ok && (toast(`🪙 Nấu ngon quá: +${content.economy.cook} xu`), notify('profiles')), console.error);
-  }, [finished]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (!recipe) {
-    return (
-      <div className="gamebox">
-        <p className="game-status">Hai bạn cùng nấu một món: mỗi người làm một công đoạn, thay phiên nhau. Nấu xong món đầu tiên mỗi ngày được mang món đó về túi.</p>
-        <button className="btn" onClick={() => send('new', { r: Math.floor(Math.random() * COOK.length), first: p.me.id })}>🍳 Vào bếp — bạn làm công đoạn đầu</button>
-      </div>
-    );
-  }
-  const step = recipe.steps[st.step];
-  const mine = !finished && actor(st.step) === p.me.id;
-
-  return (
-    <div className="gamebox cook">
-      <p className="game-status">{item(recipe.dish).icon} {item(recipe.dish).name}</p>
-      <ol className="cook-steps">
-        {recipe.steps.map((x, i) => (
-          <li key={i} className={i < st.step ? 'done' : i === st.step ? 'now' : ''}>
-            {x.label} <small>· {actor(i) === p.me.id ? 'Bạn' : nameOf(p, p.them)}</small> {i < st.step && <b>{'⭐'.repeat(st.scores[i])}</b>}
-          </li>
-        ))}
-      </ol>
-      {finished ? (
-        <>
-          <p className="game-big">{stars >= 2.6 ? '😋 Ngon tuyệt cú mèo!' : stars >= 1.8 ? '🙂 Ngon lắm nha!' : '😅 Hơi khét… nhưng nấu cùng nhau là vui rồi!'}</p>
-          <p className="game-status">{'⭐'.repeat(Math.round(stars))} · {stars.toFixed(1)} sao</p>
-          <button className="btn small" onClick={() => send('new', { r: (st.r + 1) % COOK.length, first: st.first === p.me.id ? p.them || p.me.id : p.me.id })}>🍳 Nấu món khác</button>
-        </>
-      ) : mine ? (
-        <CookStepPlay key={`${st.r}-${st.step}`} step={step} seed={`${st.r}-${st.step}`}
-          onTick={n => send('tick', { i: st.step, n })} onDone={score => send('done', { i: st.step, score })} />
-      ) : (
-        <p className="game-status">👀 {nameOf(p, actor(st.step))} đang {step.label.slice(2).toLowerCase()}… {st.tick > 0 && `(${st.tick})`}</p>
-      )}
-    </div>
-  );
-}
-
-function CookStepPlay({ step, seed, onTick, onDone }: { step: CookStep; seed: string; onTick: (n: number) => void; onDone: (score: number) => void }) {
-  const t0 = useRef(Date.now());
-  const [n, setN] = useState(0);
-  const [last, setLast] = useState<'l' | 'r' | null>(null);
-  const [needle, setNeedle] = useState(0);
-  const done = useRef(false);
-  const finish = (score: number) => { if (!done.current) { done.current = true; onDone(score); } };
-  const bySpeed = (ms: number, a: number, b: number) => (ms < a ? 3 : ms < b ? 2 : 1);
-  useEffect(() => {
-    if (step.a !== 'heat') return;
-    let raf = 0;
-    const loop = () => { setNeedle((Math.sin((Date.now() - t0.current) / 380) + 1) / 2); raf = requestAnimationFrame(loop); };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [step.a]);
-  const options = useMemo(() => {
-    if (!step.pick) return [];
-    const r = seeded(seed);
-    return [...step.pick].sort(() => r() - 0.5);
-  }, [step.pick, seed]);
-
-  const tap = (side?: 'l' | 'r') => {
-    if (step.a === 'stir' && side === last) return;
-    setLast(side ?? null);
-    const k = n + 1;
-    setN(k);
-    onTick(k);
-    const need = step.a === 'chop' ? 10 : 8;
-    if (k >= need) finish(bySpeed(Date.now() - t0.current, step.a === 'chop' ? 2600 : 3200, 4800));
-  };
-  return (
-    <div className="cook-play">
-      <p className="game-status">Tới lượt bạn: <b>{step.label}</b> — {ACTION_HINT[step.a]}</p>
-      {step.a === 'chop' && <button className="btn cook-big" onClick={() => tap()}>🔪 Thái! ({n}/10)</button>}
-      {step.a === 'stir' && (
-        <div className="row center">
-          <button className="btn cook-big" disabled={last === 'l'} onClick={() => tap('l')}>⟲</button>
-          <span className="game-status">{n}/8</span>
-          <button className="btn cook-big" disabled={last === 'r'} onClick={() => tap('r')}>⟳</button>
-        </div>
-      )}
-      {step.a === 'heat' && (
-        <>
-          <div className="heat-gauge"><b /><i style={{ left: `${needle * 100}%` }} /></div>
-          <button className="btn cook-big" onClick={() => { const d = Math.abs(needle - 0.7); finish(d < 0.06 ? 3 : d < 0.14 ? 2 : 1); }}>✋ Dừng!</button>
-        </>
-      )}
-      {step.a === 'pick' && (
-        <div className="row center">
-          {options.map(o => <button key={o} className="btn cook-big" onClick={() => finish(o === step.pick![0] ? bySpeed(Date.now() - t0.current, 2500, 5000) : 1)}>{o}</button>)}
-        </div>
-      )}
     </div>
   );
 }

@@ -9,7 +9,7 @@ drop policy if exists "cặp đôi xóa file" on storage.objects;
 delete from storage.objects where bucket_id = 'memories';
 delete from storage.buckets where id = 'memories';
 drop table if exists
-  public.kids, public.fest_decor, public.special_days, public.pets, public.capsules, public.photos, public.farm, public.garden, public.meetup, public.wishes, public.question_answers, public.guests,
+  public.fridge, public.kids, public.fest_decor, public.special_days, public.pets, public.capsules, public.photos, public.farm, public.garden, public.meetup, public.wishes, public.question_answers, public.guests,
   public.notes, public.checkins, public.claims, public.collection, public.inventory,
   public.decor, public.devices, public.profiles, public.couples
   cascade;
@@ -25,6 +25,7 @@ drop function if exists
   public.farm_plant(int, text), public.farm_water(int, date), public.farm_fertilize(int),
   public.farm_harvest(int, int), public.farm_clear(int),
   public.place_decor2(text, text, int, int, int), public.move_decor2(uuid, int, int, int),
+  public.fridge_put(jsonb), public.fridge_take(text, int), public.fridge_use(jsonb),
   public.set_anniversary(date), public.my_capsules(), public.open_capsule(uuid),
   public.pet_adopt(text, text), public.pet_care(int, boolean), public.pet_rename(text),
   public.kid_plan(date), public.kid_name(uuid, text, text), public.kid_care(uuid, text, int), public.kid_milestone(uuid, text),

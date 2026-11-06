@@ -3024,6 +3024,101 @@
       "id": "photo_frame",
       "price": 20,
       "cat": "decor"
+    },
+    {
+      "id": "fish_goby",
+      "price": 40,
+      "cat": "food"
+    },
+    {
+      "id": "rice",
+      "price": 15,
+      "cat": "food"
+    },
+    {
+      "id": "shrimp",
+      "price": 40,
+      "cat": "food"
+    },
+    {
+      "id": "potato",
+      "price": 15,
+      "cat": "food"
+    },
+    {
+      "id": "tomato",
+      "price": 22,
+      "cat": "food"
+    },
+    {
+      "id": "carrot",
+      "price": 15,
+      "cat": "food"
+    },
+    {
+      "id": "corn",
+      "price": 22,
+      "cat": "food"
+    },
+    {
+      "id": "strawberry",
+      "price": 25,
+      "cat": "food"
+    },
+    {
+      "id": "coconut",
+      "price": 25,
+      "cat": "food"
+    },
+    {
+      "id": "squid",
+      "price": 45,
+      "cat": "food"
+    },
+    {
+      "id": "lobster",
+      "price": 90,
+      "cat": "food"
+    },
+    {
+      "id": "cabbage",
+      "price": 22,
+      "cat": "food"
+    },
+    {
+      "id": "chili",
+      "price": 22,
+      "cat": "food"
+    },
+    {
+      "id": "grape",
+      "price": 25,
+      "cat": "food"
+    },
+    {
+      "id": "watermelon",
+      "price": 30,
+      "cat": "food"
+    },
+    {
+      "id": "squash",
+      "price": 22,
+      "cat": "food"
+    },
+    {
+      "id": "garlic",
+      "price": 22,
+      "cat": "food"
+    },
+    {
+      "id": "eggplant",
+      "price": 22,
+      "cat": "food"
+    },
+    {
+      "id": "peach_fruit",
+      "price": 28,
+      "cat": "food"
     }
   ],
   "dinner": {
