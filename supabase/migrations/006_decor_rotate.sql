@@ -1,4 +1,4 @@
--- Resort hai bờ — 006: xoay đồ trang trí (0 = hướng gốc, 1 = quay sang hướng kia)
+-- Happy Resort — 006: xoay đồ trang trí (0 = hướng gốc, 1 = quay sang hướng kia)
 
 alter table public.decor add column rot int not null default 0 check (rot in (0, 1));
 

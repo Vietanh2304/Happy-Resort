@@ -1,4 +1,4 @@
--- Resort hai bờ — 009: trạng thái "đang làm gì", tin nhắn thoại, ảnh album lưu ở Storage
+-- Happy Resort — 009: trạng thái "đang làm gì", tin nhắn thoại, ảnh album lưu ở Storage
 
 -- ───────── Trạng thái ─────────
 alter table public.profiles add column status text check (char_length(status) <= 40);

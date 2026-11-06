@@ -5,7 +5,7 @@ export function Splash({ children }: { children: ReactNode }) {
     <div className="splash">
       <div className="splash-card">
         <div className="splash-logo">🏝️ 🌊 🏝️</div>
-        <h1>Resort hai bờ</h1>
+        <h1>Happy Resort</h1>
         {children}
       </div>
     </div>

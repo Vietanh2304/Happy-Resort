@@ -1,4 +1,4 @@
-# 🏝️ Resort hai bờ
+# 🏝️ Happy Resort
 
 Game pixel nhỏ, ấm áp cho hai người yêu xa. Hai nhân vật cùng sống trong một làng ven biển: có căn nhà gỗ chung, cửa hàng, rạp phim, nhà hàng và bãi biển. Bầu trời trong game theo thời tiết và giờ thật nơi mỗi người đang ở. Cửa sổ nhà gỗ nhìn ra trời bên người kia.
 
@@ -44,7 +44,7 @@ Game pixel nhỏ, ấm áp cho hai người yêu xa. Hai nhân vật cùng sốn
 Cần Node.js 18 trở lên.
 
 ```bash
-cd resort-hai-bo
+cd Happy-Resort
 cp .env.example .env      # điền VITE_SUPABASE_URL và VITE_SUPABASE_ANON_KEY
 npm install
 npm run dev               # http://localhost:5173
@@ -55,7 +55,7 @@ npm test                  # unit test phần luật chơi
 
 ## 3. Deploy lên Vercel
 
-1. Import repo lên Vercel, đặt **Root Directory** là `resort-hai-bo`. Framework sẽ tự nhận là Vite.
+1. Import repo `Happy-Resort` lên Vercel (Root Directory để trống). Framework sẽ tự nhận là Vite.
 2. Thêm Environment Variables `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY`.
 3. Deploy. Chia sẻ màn hình, camera, mic và ghi âm cần HTTPS; Vercel đã có sẵn.
 

@@ -1,4 +1,4 @@
--- Resort hai bờ — 008: em bé của hai bạn (cò mang tới khi cả hai cùng muốn), chăm bé lớn dần theo ngày thật
+-- Happy Resort — 008: em bé của hai bạn (cò mang tới khi cả hai cùng muốn), chăm bé lớn dần theo ngày thật
 
 create table public.kids (
   id         uuid primary key default gen_random_uuid(),

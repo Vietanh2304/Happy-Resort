@@ -1,4 +1,4 @@
--- Xóa toàn bộ dữ liệu và schema của Resort hai bờ để chạy lại migrations từ đầu.
+-- Xóa toàn bộ dữ liệu và schema của Happy Resort để chạy lại migrations từ đầu.
 -- CHỈ dùng khi đã lỡ chạy bản SQL cũ (bản đăng nhập bằng email). Mọi dữ liệu game sẽ mất.
 
 drop trigger if exists on_auth_user_created on auth.users;

@@ -31,7 +31,7 @@ export function PhotoSheet({ me, shot, scene, place, onClose, onRetake }: { me: 
           if (await act(() => api.addPhoto(me, scene, caption.trim(), url))) { notify('photos'); toast('📔 Đã cất vào album chung'); onClose(); }
           setBusy(false);
         }}>💾 Lưu vào album</button>
-        <button className="btn ghost" onClick={() => download(url, `resort-hai-bo-${Date.now()}.jpg`)}>⬇️ Tải về máy</button>
+        <button className="btn ghost" onClick={() => download(url, `happy-resort-${Date.now()}.jpg`)}>⬇️ Tải về máy</button>
         <button className="btn ghost" onClick={onRetake}>🔄 Chụp lại</button>
       </div>
     </Sheet>
@@ -60,7 +60,7 @@ export function AlbumSheet({ photos, me, partner, onClose, onShoot }: { photos: 
           <img src={open.data} className="photo-preview" alt={open.caption} />
           <p className="muted small-note">Chụp bởi {who(open.taken_by)} · {new Date(open.created_at).toLocaleString('vi-VN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
           <div className="row wrap">
-            <button className="btn" onClick={() => download(open.data, `resort-hai-bo-${open.created_at.slice(0, 10)}.jpg`)}>⬇️ Tải về</button>
+            <button className="btn" onClick={() => download(open.data, `happy-resort-${open.created_at.slice(0, 10)}.jpg`)}>⬇️ Tải về</button>
             <button className="btn ghost" onClick={async () => {
               if (!confirm('Xóa tấm ảnh này khỏi album chung?')) return;
               if (await act(() => api.deletePhoto(open))) { notify('photos'); setOpen(null); }

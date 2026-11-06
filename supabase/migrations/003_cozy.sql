@@ -1,4 +1,4 @@
--- Resort hai bờ — 003: nhân vật, vườn, nấu ăn, tặng quà
+-- Happy Resort — 003: nhân vật, vườn, nấu ăn, tặng quà
 
 -- Nhân vật pixel: {"skin": 0, "hair": 1, "hairColor": 2, "shirt": 3}
 alter table public.profiles add column avatar jsonb not null default '{}';
