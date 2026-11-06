@@ -53,11 +53,17 @@ npm test                  # unit test phần luật chơi
 
 Để thử một mình: mở game ở hai trình duyệt (hoặc thêm một cửa sổ ẩn danh). Một bên tạo resort, bên kia vào bằng mã resort với tên khác.
 
-## 3. Deploy lên Vercel
+## 3. Đưa lên mạng (GitHub Pages, miễn phí)
 
-1. Import repo `Happy-Resort` lên Vercel (Root Directory để trống). Framework sẽ tự nhận là Vite.
-2. Thêm Environment Variables `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY`.
-3. Deploy. Chia sẻ màn hình, camera, mic và ghi âm cần HTTPS; Vercel đã có sẵn.
+Repo đã có sẵn `.github/workflows/pages.yml`: mỗi lần đẩy code lên nhánh `main`, GitHub tự chạy test, build và đưa game lên `https://<tên-github>.github.io/Happy-Resort/`.
+
+Chỉ cần làm một lần:
+1. Repo → **Settings → Pages** → mục **Source** chọn **GitHub Actions**.
+2. Repo → **Settings → Secrets and variables → Actions** → **New repository secret**, thêm 2 khóa (copy từ file `.env`):
+   `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY`. (Có TURN thì thêm `VITE_TURN_URL`, `VITE_TURN_USERNAME`, `VITE_TURN_CREDENTIAL`.)
+3. Vào tab **Actions** → **Deploy GitHub Pages** → **Run workflow** (hoặc đẩy một commit bất kỳ). Khoảng 1–2 phút là xong.
+
+Link có HTTPS nên mic, cam, chia sẻ màn hình, ghi âm và cài app lên điện thoại đều dùng được.
 
 ## 4. Cài lên điện thoại như một app
 

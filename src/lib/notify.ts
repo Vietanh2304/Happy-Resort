@@ -14,7 +14,7 @@ export async function enableNotify(on: boolean) {
 /** Hiện thông báo — chỉ khi người chơi không nhìn vào game */
 export async function ping(title: string, body: string, tag = title) {
   if (!notifyOn() || document.visibilityState === 'visible') return;
-  const opts: NotificationOptions = { body, tag, icon: '/icon-192.png', badge: '/icon-192.png' };
+  const opts: NotificationOptions = { body, tag, icon: `${import.meta.env.BASE_URL}icon-192.png`, badge: `${import.meta.env.BASE_URL}icon-192.png` };
   try {
     const reg = await navigator.serviceWorker?.getRegistration();
     if (reg) await reg.showNotification(title, opts);
@@ -23,7 +23,7 @@ export async function ping(title: string, body: string, tag = title) {
 }
 
 export function registerSW() {
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
 }
 
 // Cài game ra màn hình chính (Android/Chrome/Edge). iPhone: Safari → Chia sẻ → Thêm vào MH chính.
