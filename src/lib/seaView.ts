@@ -27,7 +27,7 @@ export const SEA_SPOTS: { id: SeaSpot; name: string; flag: string; note: string 
 
 export const LOUNGE = {
   horizon: 58,      // đường chân trời
-  shore: 108,       // mép nước vỗ vào cát
+  shore: 97,        // mép nước vỗ vào cát (chừa dải cát trước ghế để viết tên)
   chairs: [{ x: 70 }, { x: 122 }],
   chairTop: 118,    // mép trên lưng ghế (ghế neo ở đáy cảnh, cao 26)
   table: { x: 96, y: 128 },
@@ -48,7 +48,7 @@ function ell(p: Pen, cx: number, cy: number, rx: number, ry: number, c: string) 
 
 /** Nền: trời, đảo xa, biển (đậm ngoài khơi → xanh ngọc gần bờ), bãi cát */
 export function loungeBackground(phase: Phase, spot: SeaSpot = 'home') {
-  return makeSprite(`lounge:v5:${phase}:${spot}`, 192, 144, p => {
+  return makeSprite(`lounge:v6:${phase}:${spot}`, 192, 144, p => {
     const { horizon, shore } = LOUNGE;
     const [top, low] = SKY[phase];
     for (let y = 0; y < horizon; y++) {
@@ -203,7 +203,7 @@ function landmarks(p: Pen, spot: SeaSpot, phase: Phase, rand: () => number) {
       peak(14, H, 26, 9, far(shade('#3a6a3a')), 0.55); peak(178, H, 28, 11, far(shade('#356a3a')), 0.5);
       const white = mix(WATER.whitehaven.shallow, '#ffffff', 0.45);
       for (let k = 0; k < 3; k++) {
-        const y0 = H + 22 + k * 8;
+        const y0 = H + 18 + k * 6;
         for (let x = 0; x < 192; x++) { const y = Math.round(y0 + Math.sin(x / (20 + k * 4) + k * 1.7) * (2 + k)); if ((x + k * 13) % 80 < 44) p.px(x, y, shade(white)); }
       }
       break;

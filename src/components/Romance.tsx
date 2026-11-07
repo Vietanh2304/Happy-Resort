@@ -92,7 +92,7 @@ export function Romance({ phase, mine, theirs, meName, themName }: { phase: Phas
 
       {/* Chữ viết trên cát: mờ dần, gần hết giờ thì sóng tràn lên xóa */}
       {sand && sandAge < SAND_MS && (
-        <div className={`sand-writing ${sandAge > SAND_MS - 15_000 ? 'washing' : ''}`} style={{ left: 158 * s, top: (shore + 4) * s, fontSize: Math.max(10, (sand.text.length > 12 ? 5.5 - Math.min(2, (sand.text.length - 12) * 0.2) : 6.5) * s) }}>
+        <div className={`sand-writing ${sandAge > SAND_MS - 15_000 ? 'washing' : ''}`} style={{ left: 96 * s, top: (shore + 1.5) * s, fontSize: Math.max(10, (sand.text.length > 14 ? 6 - Math.min(2, (sand.text.length - 14) * 0.2) : 7) * s) }}>
           {sand.text}
         </div>
       )}
