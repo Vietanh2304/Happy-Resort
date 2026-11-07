@@ -1428,3 +1428,17 @@ textarea { resize: vertical; }
 .dive-torch { position: absolute; top: 0; height: 60px; width: 150px; pointer-events: none; background: radial-gradient(ellipse at 0 50%, #fffbe0aa, #fffbe033 40%, transparent 70%); mix-blend-mode: screen; clip-path: polygon(0 45%, 100% 0, 100% 100%, 0 55%); translate: 0 -50%; animation: torch 3s ease-in-out infinite; }
 .dive-torch.left { transform: scaleX(-1); transform-origin: 0 50%; }
 @keyframes torch { 0%, 100% { rotate: -4deg; } 50% { rotate: 4deg; } }
+
+/* tay vươn ra nắm tay nhau giữa hai ghế */
+.hold-arm { position: absolute; z-index: 132; border: 1px solid #3b2d3f; border-radius: 2px; pointer-events: none; box-sizing: border-box; }
+.hold-arm i { position: absolute; top: 50%; translate: 0 -50%; border: 1px solid #3b2d3f; border-radius: 45%; box-sizing: border-box; }
+.hold-arm.l { transform-origin: 0 50%; }
+.hold-arm.l i { right: -2px; }
+.hold-arm.r { transform-origin: 100% 50%; }
+.hold-arm.r i { left: -2px; }
+.hold-arm.reach { animation: arm-reach 1.6s ease-in-out infinite; }
+@keyframes arm-reach { 0% { transform: scaleX(.2); } 30%, 100% { transform: scaleX(.85); } 55% { transform: scaleX(.85) translateY(-1px); } 75% { transform: scaleX(.85) translateY(1px); } }
+.hold-arm.held { animation: arm-in .7s ease-out, arm-sway 3s ease-in-out .7s infinite; }
+@keyframes arm-in { from { transform: scaleX(.3); } to { transform: scaleX(1); } }
+@keyframes arm-sway { 0%, 100% { translate: 0 0; } 50% { translate: 0 1.5px; } }
+.hold-glow { position: absolute; z-index: 131; translate: -50% -50%; border-radius: 50%; background: radial-gradient(#ff9ac8aa, transparent 70%); pointer-events: none; animation: sl-twinkle 2s ease-in-out infinite; }

@@ -10,7 +10,7 @@ import { gullSprite, LOUNGE } from '../lib/seaView';
 import { lotusSprite } from '../lib/seaGlam';
 import { planeSprite } from '../lib/skydive';
 import type { LiveState } from '../lib/useLive';
-import { Spr, Tag, useScale } from './Stage';
+import { Spr, useScale } from './Stage';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
 export const SAND_MS = 3 * 60_000;           // chữ trên cát còn chừng này rồi sóng xóa mất
@@ -21,7 +21,9 @@ export const releaseLantern = (x: number) => window.dispatchEvent(new CustomEven
 
 interface Lantern { key: number; x: number; mine: boolean }
 
-export function Romance({ phase, mine, theirs, meName, themName }: { phase: Phase; mine: LiveState; theirs: LiveState | null; meName: string; themName: string | null }) {
+export function Romance({ phase, mine, theirs, meName, themName, mySkin, theirSkin, firstSeat }: {
+  phase: Phase; mine: LiveState; theirs: LiveState | null; meName: string; themName: string | null; mySkin: string; theirSkin: string; firstSeat: boolean;
+}) {
   const s = useScale();
   const night = phase === 'night', dusk = phase === 'sunset' || phase === 'dawn';
   const lit = night || phase === 'sunset';
@@ -49,7 +51,6 @@ export function Romance({ phase, mine, theirs, meName, themName }: { phase: Phas
   // const sandAge = sand ? now - sand.at : Infinity;
 
   const holding = mine.act === 'hold' && theirs?.act === 'hold';
-  const reaching = !holding && (mine.act === 'hold' || theirs?.act === 'hold');
   const plane = planeSprite();
   const gull = gullSprite(0), gull2 = gullSprite(1);
 
@@ -107,8 +108,18 @@ export function Romance({ phase, mine, theirs, meName, themName }: { phase: Phas
 
       {/* Nắm tay: cả hai cùng nắm thì tim bay lên giữa hai ghế */}
       {holding && <div className="hold-hearts" style={{ left: 96 * s, top: (LOUNGE.chairTop - 6) * s }}>{['💗', '💕', '💞', '💗'].map((h, i) => <span key={i} style={{ animationDelay: `${i * 0.8}s`, left: (i % 2 ? 3 : -3) * s }}>{h}</span>)}</div>}
-      {holding && <Tag x={96} y={LOUNGE.chairTop + 3} className="label hold-tag">🤝</Tag>}
-      {reaching && <Tag x={96} y={LOUNGE.chairTop + 3} className="label">🤚 …</Tag>}
+      {/* Cánh tay vươn ra từ mép ghế: một người thì đưa tay chờ, cả hai thì hai bàn tay nắm lấy nhau giữa hai ghế */}
+      {[{ live: mine, skin: mySkin, seat: firstSeat ? 0 : 1 }, ...(theirs ? [{ live: theirs, skin: theirSkin, seat: firstSeat ? 1 : 0 }] : [])]
+        .filter(a => a.live.act === 'hold').map(a => {
+          const left = a.seat === 0, from = left ? 84 : 108;
+          return (
+            <div key={a.seat} className={`hold-arm ${left ? 'l' : 'r'} ${holding ? 'held' : 'reach'}`}
+              style={{ left: (left ? from : 96) * s, top: (LOUNGE.chairTop + 1) * s, width: 12 * s, height: 2.2 * s, background: a.skin }}>
+              <i style={{ width: 3.2 * s, height: 3.2 * s, background: a.skin }} />
+            </div>
+          );
+        })}
+      {holding && <i className="hold-glow" style={{ left: 96 * s, top: (LOUNGE.chairTop + 2) * s, width: 14 * s, height: 14 * s }} />}
     </>
   );
 }

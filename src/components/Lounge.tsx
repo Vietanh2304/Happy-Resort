@@ -11,6 +11,7 @@ import { avatarPx } from './Avatar';
 import { Spr, Tag, useScale } from './Stage';
 import { SeaLife } from './SeaLife';
 import { Romance } from './Romance';
+import { SKINS } from '../lib/chibi';
 import { SeaGlam } from './SeaGlam';
 import type { SeaSpot } from '../lib/seaView';
 
@@ -53,7 +54,8 @@ export function LoungeContent({ phase, hour, minute, me, them, firstSeat, spot, 
       </div>
       <SeaGlam phase={phase} sky={sky} />
       <SeaLife phase={phase} spot={spot} />
-      <Romance phase={phase} mine={me.live} theirs={them?.live ?? null} meName={me.name} themName={them?.name ?? null} />
+      <Romance phase={phase} mine={me.live} theirs={them?.live ?? null} meName={me.name} themName={them?.name ?? null} firstSeat={firstSeat}
+        mySkin={SKINS[me.look.skin ?? 0] ?? SKINS[0]} theirSkin={SKINS[them?.look.skin ?? 0] ?? SKINS[0]} />
       <Spr sprite={sailboatSprite()} x={0} y={horizon + 6} z={2} className="sail-drift" />
       {spot !== 'navagio' && spot !== 'seychelles' && <Spr sprite={palmSprite(1)} x={190} y={126} className="palm-sway" />}
       <Spr sprite={beachBarSprite()} x={LOUNGE.bar.x} y={LOUNGE.bar.y} title="🥥 Quầy bar dừa — gọi nước, hải sản" onClick={onBar} />
