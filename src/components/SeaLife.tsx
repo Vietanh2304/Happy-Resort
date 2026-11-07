@@ -2,7 +2,7 @@
 // và vài thứ riêng của từng nơi (cáp treo chạy, người lướt sóng, thuyền buồm trôi). Toàn bộ là CSS chạy sẵn, không tốn JS.
 import type { CSSProperties } from 'react';
 import type { Phase } from '../lib/content';
-import { cableCarSprite, cableY, crabSprite, dolphinSprite, gullSprite, LOUNGE, sailboatSprite, sugarY, surferSprite, type SeaSpot } from '../lib/seaView';
+import { crabSprite, dolphinSprite, gullSprite, LOUNGE, type SeaSpot } from '../lib/seaView';
 import { cloudSprite } from '../lib/sprites';
 import { useScale } from './Stage';
 
@@ -19,8 +19,6 @@ function Gull({ y, dur, delay, s, flip }: { y: number; dur: number; delay: numbe
   );
 }
 
-/** Đường đi (CSS offset-path) qua các điểm, tính theo pixel màn hình */
-const pathOf = (pts: [number, number][], s: number) => `path('M ${pts.map(([x, y]) => `${(x * s).toFixed(1)} ${(y * s).toFixed(1)}`).join(' L ')}')`;
 
 export function SeaLife({ phase, spot, beach = false }: { phase: Phase; spot: SeaSpot; beach?: boolean }) {
   const s = useScale();
@@ -62,23 +60,6 @@ export function SeaLife({ phase, spot, beach = false }: { phase: Phase; spot: Se
         </div>
       )}
 
-      {/* Riêng từng nơi */}
-      {!beach && spot === 'phuquoc' && [0, -9].map(d => {
-        const c = cableCarSprite(d ? '#5aa8e0' : '#e8604a');
-        return <img key={d} src={c.url} alt="" className="sl-cable" style={{ width: c.w * s, height: c.h * s, offsetPath: pathOf(Array.from({ length: 16 }, (_, i) => [i * 10, cableY(i * 10) + 1] as [number, number]), s), animationDuration: '18s', animationDelay: `${d}s` }} />;
-      })}
-      {!beach && spot === 'copacabana' && (() => {
-        const c = cableCarSprite('#f6c64e');
-        return <img src={c.url} alt="" className="sl-cable" style={{ width: c.w * s, height: c.h * s, offsetPath: pathOf(Array.from({ length: 9 }, (_, i) => [64 - i * 4.25, sugarY(64 - i * 4.25) + 1] as [number, number]), s), animationDuration: '12s' }} />;
-      })()}
-      {!beach && (spot === 'waikiki' || spot === 'copacabana' || spot === 'home') && (() => {
-        const sf = surferSprite();
-        return <img src={sf.url} alt="" className="sl-surfer" style={v({ top: (shore - 20) * s, width: sf.w * s, height: sf.h * s, '--w': `${120 * s}px`, left: 30 * s })} />;
-      })()}
-      {!beach && (spot === 'boracay' || spot === 'maldives' || spot === 'whitehaven') && (() => {
-        const b = sailboatSprite();
-        return <img src={b.url} alt="" className="sl-boat" style={v({ top: (horizon + 14) * s, width: b.w * s, height: b.h * s, '--w': `${220 * s}px` })} />;
-      })()}
     </div>
   );
 }

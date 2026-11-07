@@ -302,7 +302,7 @@ function SceneContent(p: WorldProps) {
 
       {scene === 'lounge' && (
         <LoungeContent phase={phase} hour={p.myView.time.hour} minute={p.myView.time.minute} firstSeat={p.firstSeat} spot={p.seaSpot ?? 'home'} onBar={() => p.onBar?.()}
-          me={{ look: myDress.look, live: live.mine, bubble: live.bubbles.me }}
+          me={{ look: myDress.look, live: live.mine, bubble: live.bubbles.me, name: me.display_name }}
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
 

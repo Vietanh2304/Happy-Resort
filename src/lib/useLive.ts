@@ -30,7 +30,8 @@ export interface LiveState {
   duck?: boolean;          // thả vịt cao su vào bồn tắm
   sea?: SeaSpot;           // đang ngắm biển ở đâu (ghế ngắm biển)
   seaAt?: number;
-  jump?: Jump | null;      // đang nhảy dù: pha + mốc thời gian (bãi nhảy dù)
+  jump?: Jump | null;
+  sand?: { text: string; at: number } | null;   // chữ viết trên cát ở ghế ngắm biển      // đang nhảy dù: pha + mốc thời gian (bãi nhảy dù)
 }
 export interface ChatLine { from: 'me' | 'partner'; text: string; at: number }
 

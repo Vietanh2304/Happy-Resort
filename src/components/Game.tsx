@@ -834,7 +834,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <SkyPanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} onLeave={() => enter('town', TOWN.fountain)} />
       ) : scene === 'lounge' ? (
         <div className="room-bar">
-          <LoungePanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} spot={seaSpot}
+          <LoungePanel live={live} meName={me.display_name} partnerHere={!!partnerHere} partnerName={partnerName} spot={seaSpot}
             onSpot={sea => live.update({ sea, seaAt: Date.now() })} menu={barMenu} onMenu={setBarMenu} onDive={() => enter('reef')} />
           <button className="btn small ghost leave" onClick={() => { live.update({ act: null, drink: null, dish: null }); enter('beach', { x: BEACH.loungers[0].x, y: BEACH.loungers[0].y + 6 }); }}>🚶 Về bãi biển</button>
         </div>

@@ -10,6 +10,8 @@ import type { LiveState } from '../lib/useLive';
 import { avatarPx } from './Avatar';
 import { Spr, Tag, useScale } from './Stage';
 import { SeaLife } from './SeaLife';
+import { Romance } from './Romance';
+import { SeaGlam } from './SeaGlam';
 import type { SeaSpot } from '../lib/seaView';
 
 /** Món ở quầy bar dừa (tên → biểu tượng) */
@@ -17,7 +19,7 @@ export const BAR_ICON = (name: string | null | undefined) => content.beachBar.fl
 
 interface Props {
   phase: Phase; hour: number; minute: number;
-  me: { look: Profile['avatar']; live: LiveState; bubble?: string };
+  me: { look: Profile['avatar']; live: LiveState; bubble?: string; name: string };
   them: { look: Profile['avatar']; live: LiveState; bubble?: string; name: string } | null;
   firstSeat: boolean;
   spot: SeaSpot;
@@ -45,11 +47,13 @@ export function LoungeContent({ phase, hour, minute, me, them, firstSeat, spot, 
         </div>
       )}
       {/* Sóng: các lớp bọt chạy vào bờ, mép nước vỗ lên cát */}
-      <div className="lounge-waves" style={{ top: (shore - 22) * s, height: 30 * s }}>
+      <div className={`lounge-waves ${phase === 'night' ? 'glow' : ''}`} style={{ top: (shore - 22) * s, height: 30 * s }}>
         {[0, 1, 2].map(i => <i key={i} style={{ animationDelay: `${i * 1.7}s` }} />)}
         <b />
       </div>
+      <SeaGlam phase={phase} sky={sky} />
       <SeaLife phase={phase} spot={spot} />
+      <Romance phase={phase} mine={me.live} theirs={them?.live ?? null} meName={me.name} themName={them?.name ?? null} />
       <Spr sprite={sailboatSprite()} x={0} y={horizon + 6} z={2} className="sail-drift" />
       {spot !== 'navagio' && spot !== 'seychelles' && <Spr sprite={palmSprite(1)} x={182} y={124} className="palm-sway" />}
       <Spr sprite={beachBarSprite()} x={LOUNGE.bar.x} y={LOUNGE.bar.y} title="🥥 Quầy bar dừa — gọi nước, hải sản" onClick={onBar} />

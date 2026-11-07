@@ -9,6 +9,8 @@ import type { HillSky } from '../lib/townSprites';
 import type { Live } from '../lib/useLive';
 import { RIDE_MS } from '../lib/world';
 import { SEA_SPOTS, type SeaSpot } from '../lib/seaView';
+import { releaseLantern } from './Romance';
+import { sendEvent } from '../lib/realtime';
 import { Sheet } from './Sheet';
 
 export function Chat({ live, placeholder }: { live: Live; placeholder: string }) {
@@ -144,8 +146,8 @@ export function CampPanel({ live, partnerHere, partnerName, date, claimed, quest
 
 // ───────── Ghế dài ngắm biển ─────────
 
-export function LoungePanel({ live, partnerHere, partnerName, spot, onSpot, menu, onMenu, onDive }: {
-  live: Live; partnerHere: boolean; partnerName: string; spot: SeaSpot; onSpot: (s: SeaSpot) => void; menu: boolean; onMenu: (open: boolean) => void; onDive: () => void;
+export function LoungePanel({ live, meName, partnerHere, partnerName, spot, onSpot, menu, onMenu, onDive }: {
+  live: Live; meName: string; partnerHere: boolean; partnerName: string; spot: SeaSpot; onSpot: (s: SeaSpot) => void; menu: boolean; onMenu: (open: boolean) => void; onDive: () => void;
 }) {
   const [cat, setCat] = useState(0);
   const swimming = live.mine.act === 'swim';
@@ -163,6 +165,11 @@ export function LoungePanel({ live, partnerHere, partnerName, spot, onSpot, menu
         <button className="btn small ghost" onClick={() => { live.update({ act: swimming ? null : 'swim' }); live.say(swimming ? '⛱️ Lên nằm nghỉ chút' : '🌊 Xuống tắm biển nào!'); }}>
           {swimming ? '⛱️ Lên ghế nằm' : '🌊 Xuống tắm biển'}
         </button>
+        <button className={`btn small ${live.mine.act === 'hold' ? '' : 'ghost'}`} disabled={swimming} onClick={() => { const on = live.mine.act !== 'hold'; live.update({ act: on ? 'hold' : null }); if (on) live.say(partnerHere && live.theirs?.act === 'hold' ? '🤝💗' : '🤚 Nắm tay mình nha'); }}>
+          🤝 {live.mine.act === 'hold' ? 'Đang nắm tay' : 'Nắm tay'}
+        </button>
+        <button className="btn small ghost" onClick={() => { live.update({ sand: { text: `${meName} ♥ ${partnerName}`, at: Date.now() } }); live.say('✍️ Viết tên hai đứa lên cát nè'); }}>✍️ Viết lên cát</button>
+        <button className="btn small ghost" onClick={() => { const x = 50 + Math.round(Math.random() * 90); releaseLantern(x); sendEvent('sea-lantern', { x }); live.say('🏮 Thả một chiếc đèn hoa đăng, ước…'); }}>🏮 Thả đèn hoa đăng</button>
         <button className="btn small ghost" onClick={() => live.say('🥂 Cụng ly nào!')}>🥂</button>
         <button className="btn small ghost" onClick={() => live.say('😎 Nắng đẹp ghê')}>😎</button>
         <button className="btn small ghost" onClick={() => live.say('🥰')}>🥰</button>
