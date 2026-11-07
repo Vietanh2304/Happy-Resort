@@ -85,14 +85,14 @@ export function Romance({ phase, mine, theirs, meName, themName }: { phase: Phas
       )}
       {/* Đuốc tiki + nến trên bàn */}
       {lit && <>
-        <div className="tiki" style={{ left: 172 * s, top: 104 * s, width: 3 * s, height: 24 * s, zIndex: 125 }}><b style={{ width: 5 * s, height: 7 * s }} /></div>
+        <div className="tiki" style={{ left: 187 * s, top: 104 * s, width: 3 * s, height: 24 * s, zIndex: 125 }}><b style={{ width: 5 * s, height: 7 * s }} /></div>
         <Spr sprite={emojiSprite('🕯️', 6)} x={LOUNGE.table.x + 5} y={LOUNGE.table.y + 1} z={133} />
         <i className="candle-glow" style={{ left: (LOUNGE.table.x + 5) * s, top: (LOUNGE.table.y - 6) * s, width: 24 * s, height: 24 * s }} />
       </>}
 
       {/* Chữ viết trên cát: mờ dần, gần hết giờ thì sóng tràn lên xóa */}
       {sand && sandAge < SAND_MS && (
-        <div className={`sand-writing ${sandAge > SAND_MS - 15_000 ? 'washing' : ''}`} style={{ left: 96 * s, top: (shore - 11) * s, fontSize: Math.max(12, 6.5 * s) }}>
+        <div className={`sand-writing ${sandAge > SAND_MS - 15_000 ? 'washing' : ''}`} style={{ left: 158 * s, top: (shore + 4) * s, fontSize: Math.max(10, (sand.text.length > 12 ? 5.5 - Math.min(2, (sand.text.length - 12) * 0.2) : 6.5) * s) }}>
           {sand.text}
         </div>
       )}

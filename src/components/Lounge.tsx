@@ -55,7 +55,7 @@ export function LoungeContent({ phase, hour, minute, me, them, firstSeat, spot, 
       <SeaLife phase={phase} spot={spot} />
       <Romance phase={phase} mine={me.live} theirs={them?.live ?? null} meName={me.name} themName={them?.name ?? null} />
       <Spr sprite={sailboatSprite()} x={0} y={horizon + 6} z={2} className="sail-drift" />
-      {spot !== 'navagio' && spot !== 'seychelles' && <Spr sprite={palmSprite(1)} x={182} y={124} className="palm-sway" />}
+      {spot !== 'navagio' && spot !== 'seychelles' && <Spr sprite={palmSprite(1)} x={190} y={126} className="palm-sway" />}
       <Spr sprite={beachBarSprite()} x={LOUNGE.bar.x} y={LOUNGE.bar.y} title="🥥 Quầy bar dừa — gọi nước, hải sản" onClick={onBar} />
       <Tag x={LOUNGE.bar.x} y={LOUNGE.bar.y - 52} className="label" onClick={onBar}>🥥 Bar dừa</Tag>
 
