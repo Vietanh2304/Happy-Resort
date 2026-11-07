@@ -2,7 +2,7 @@
 // Tọa độ là pixel logic của từng cảnh (trước khi phóng to).
 import { HH, HW } from './iso';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky';
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school';
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -35,6 +35,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   lounge: { name: 'Ghế ngắm biển', icon: '⛱️', w: 192, h: 144, outdoor: true, spawn: { x: 70, y: 136 } },
   beach: { name: 'Bãi biển', icon: '🏖️', w: 192, h: 144, outdoor: true, walk: { x0: 6, x1: 186, y0: 50, y1: 121 }, spawn: { x: 96, y: 56 } },
   reef: { name: 'Lặn ngắm san hô', icon: '🤿', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 26, y1: 134 }, spawn: { x: 96, y: 40 } },
+  school: { name: 'Trường học', icon: '🏫', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 112, y1: 140 }, spawn: { x: 96, y: 138 } },
   sky: { name: 'Bãi nhảy dù', icon: '🪂', w: 192, h: 144, outdoor: true, spawn: { x: 96, y: 118 } },
   hill: { name: 'Đồi ngắm cảnh', icon: '⛰️', w: 192, h: 144, outdoor: true, spawn: { x: 86, y: 124 } },
   farm: { name: 'Nông trại', icon: '🌾', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 58, y1: 188 }, spawn: { x: 128, y: 182 } },
@@ -73,7 +74,7 @@ export const TOWN = {
   twin: { x: 104, y: 160 },         // bãi cỏ trống bên trái đài phun nước
   guestSpots: [{ x: 160, y: 172 }, { x: 230, y: 150 }],
   trees: [
-    ['pine', 330, 90], ['round1', 376, 94], ['cherry', 22, 152], ['round0', 62, 142],
+    ['pine', 330, 90], ['round1', 376, 94],
     ['pine', 138, 150], ['cherry', 252, 152], ['round2', 300, 140],
     ['pine', 290, 286], ['round1', 372, 284],
   ] as [string, number, number][],

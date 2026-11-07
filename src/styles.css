@@ -1442,3 +1442,19 @@ textarea { resize: vertical; }
 @keyframes arm-in { from { transform: scaleX(.3); } to { transform: scaleX(1); } }
 @keyframes arm-sway { 0%, 100% { translate: 0 0; } 50% { translate: 0 1.5px; } }
 .hold-glow { position: absolute; z-index: 131; translate: -50% -50%; border-radius: 50%; background: radial-gradient(#ff9ac8aa, transparent 70%); pointer-events: none; animation: sl-twinkle 2s ease-in-out infinite; }
+
+.call-net { position: absolute; left: 4px; right: 4px; top: 50%; translate: 0 -50%; font-style: normal; font-size: 11px; line-height: 1.25; text-align: center; color: #fff; background: #000a; border-radius: 6px; padding: 3px 4px; pointer-events: none; }
+.call-net.failed, .call-net.disconnected { background: #b8304acc; }
+
+/* ───── Trường học ───── */
+.chalk { position: absolute; z-index: 3; translate: -50% 0; display: flex; flex-direction: column; align-items: center; gap: 2px; color: #f4f8f0; font-family: 'Segoe Print', 'Comic Sans MS', cursive; text-shadow: 0 0 2px #ffffff66; pointer-events: none; text-align: center; }
+.chalk small { font-size: .7em; opacity: .85; }
+.chalk b { font-weight: 700; letter-spacing: .04em; }
+.class-clock { position: absolute; z-index: 3; translate: -50% 0; background: #fffaf0; border: 2px solid #8a5a3c; border-radius: 8px; padding: 0 4px; pointer-events: none; }
+.study { animation: study 2.4s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes study { 0%, 100% { rotate: 0deg; } 40% { rotate: -3deg; } 60% { rotate: 2deg; translate: 0 1px; } }
+.school-kid { align-items: center; gap: 6px; margin: 2px 0; }
+.hw-q { margin: 8px 0; }
+.hw-q .chip.right { outline: 2px solid #5ab85a; }
+.hw-q .chip.wrong { background: #f6c0c8; }
+.hw-score { font-weight: 700; text-align: center; margin: 8px 0; }

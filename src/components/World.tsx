@@ -37,6 +37,8 @@ import { SeaLife } from './SeaLife';
 import { ReefContent } from './Reef';
 import { SkyContent } from './Skydive';
 import { reefBackground } from '../lib/reef';
+import { atSchool, classroomSprite, SCHOOL, schoolSprite } from '../lib/school';
+import { SchoolContent } from './School';
 import { beachSetSprite, loungeBackground, type SeaSpot } from '../lib/seaView';
 import { liveStatus } from './SeedSheet';
 
@@ -154,6 +156,7 @@ export function World(props: WorldProps) {
     lounge: () => loungeBackground(myView.phase, props.seaSpot ?? 'home'),
     reef: () => reefBackground(myView.phase),
     sky: () => undefined,
+    school: classroomSprite,
     hill: () => hillBackground(props.hillSky),
     house: () => roomBackground('house'),
     bedroom: () => roomBackground('bedroom'),
@@ -309,6 +312,12 @@ function SceneContent(p: WorldProps) {
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
 
+      {scene === 'school' && (
+        <>
+          <SchoolContent kids={p.kids} me={me} partner={partner} when={p.myView.time} walking={[live.mine.walkKid, theirs?.walkKid]} onKid={id => on.kid(id)} />
+          <Hot x={82} y={140} w={28} h={4} title="Ra ngoài" onClick={() => enter('town', SCHOOL.door)} />
+        </>
+      )}
       {scene === 'reef' && <ReefContent phase={phase} go={go} onSee={id => p.onSee?.(id)} chestOpen={!!p.chestOpen} onChest={() => p.onChest?.()} />}
       {scene === 'sky' && (
         <SkyContent phase={phase} firstSeat={p.firstSeat}
@@ -488,6 +497,8 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       <Tag x={16} y={30} className="label">⛺ Cắm trại{theirs?.scene === 'camp' ? ' 💗' : ''}</Tag>
       <Hot x={4} y={0} w={24} h={48} title="⛺ Đi theo lối mòn tới bãi cắm trại" onClick={() => go(TOWN.toCamp, () => enter('camp'))} />
       {p.theme && <FestTown {...p} theme={p.theme} />}
+      <Spr sprite={schoolSprite()} x={SCHOOL.x} y={SCHOOL.y} title="🏫 Trường học của các bé" onClick={() => go(SCHOOL.door, () => enter('school'))} />
+      <Tag x={SCHOOL.x} y={SCHOOL.y - 52} className="label" onClick={() => go(SCHOOL.door, () => enter('school'))}>🏫 Trường học{theirs?.scene === 'school' ? ' 💗' : ''}</Tag>
       <Spr sprite={telescopeSprite()} x={TOWN.twin.x} y={TOWN.twin.y} title="🔭 Đài quan sát hai bờ" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))} />
       <Tag x={TOWN.twin.x} y={TOWN.twin.y - 24} className="label" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))}>🔭{theirs?.scene === 'twin' ? ' 💗' : ''}</Tag>
       {p.meetupLeft !== null && p.meetupLeft >= 0 && <div className="plane-fly"><span>✈️</span><b>{p.meetupLeft === 0 ? '💞 Hôm nay gặp nhau rồi!' : `Còn ${p.meetupLeft} ngày nữa gặp nhau 💕`}</b></div>}
@@ -934,7 +945,7 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
           {sad && <Tag x={c.x} y={c.y - 22} className="hint">🍼?</Tag>}
         </div>,
       );
-    } else if (stage !== 'baby' && scene === 'house') {
+    } else if (stage !== 'baby' && scene === 'house' && !atSchool(k, today, p.myView.time.hour, p.myView.time.minute)) {
       out.push(<KidAtHome key={k.id} idx={homeIdx++} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} sad={sad} onClick={() => p.on.kid(k.id)} name={k.name} />);
     }
   }

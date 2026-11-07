@@ -11,6 +11,7 @@ export function useCall(me: Profile, partner: Profile | null) {
   const [mic, setMic] = useState(false);
   const [cam, setCam] = useState(false);
   const [remoteState, setRemoteState] = useState<CallState>({ mic: false, cam: false });
+  const [net, setNet] = useState<RTCPeerConnectionState>('new');
   const link = useRef<CallLink | null>(null);
   const micTrack = useRef<MediaStreamTrack | null>(null);
   const camTrack = useRef<MediaStreamTrack | null>(null);
@@ -31,7 +32,7 @@ export function useCall(me: Profile, partner: Profile | null) {
 
   useEffect(() => {
     if (!partner) return;
-    const l = new CallLink(me.id > partner.id, (stream, st) => { setRemote(stream); setRemoteState(st); });
+    const l = new CallLink(me.id > partner.id, (stream, st, n) => { setRemote(stream); setRemoteState(st); setNet(n); });
     link.current = l;
     l.setTrack('audio', micTrack.current);
     l.setTrack('video', camTrack.current);
@@ -77,7 +78,7 @@ export function useCall(me: Profile, partner: Profile | null) {
   const remoteVideo = !!remote && remoteState.cam && remote.getVideoTracks().some(live);
   const partnerTalking = !!remote && remoteState.mic && remote.getAudioTracks().some(live);
   return {
-    mic, cam, local, remote, remoteVideo, partnerTalking,
+    mic, cam, local, remote, remoteVideo, partnerTalking, net,
     toggleMic: () => toggle('audio'),
     toggleCam: () => toggle('video'),
     hangUp: () => { micTrack.current?.stop(); camTrack.current?.stop(); micTrack.current = camTrack.current = null; push(); },

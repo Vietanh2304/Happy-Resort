@@ -32,6 +32,11 @@ export function CallTiles({ call, partnerName, hidden }: { call: Call; partnerNa
         <div className="call-tile them" onClick={() => setBig(b => !b)} title="Chạm để phóng to / thu nhỏ">
           <StreamVideo stream={call.remote} muted />
           <span>{partnerName}</span>
+          {call.net !== 'connected' && (
+            <em className={`call-net ${call.net}`}>
+              {call.net === 'failed' || call.net === 'disconnected' ? '⚠️ Mạng chặn kết nối — cần máy chủ TURN' : '⏳ Đang nối hình…'}
+            </em>
+          )}
         </div>
       )}
       {call.cam && call.local && !hideMe && (

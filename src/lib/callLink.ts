@@ -25,7 +25,7 @@ export class CallLink {
   private off: (() => void)[] = [];
   private iceTimer: ReturnType<typeof setTimeout> | undefined;
 
-  constructor(private polite: boolean, private onRemote: (stream: MediaStream | null, state: CallState) => void) {
+  constructor(private polite: boolean, private onRemote: (stream: MediaStream | null, state: CallState, net: RTCPeerConnectionState) => void) {
     this.off.push(onEvent('call-hello', d => this.hello(d)));
     this.off.push(onEvent('call-sig', d => void this.signal(d)));
     this.off.push(onEvent('call-state', d => { if (d.from === this.peer) { this.remoteState = { mic: !!d.mic, cam: !!d.cam }; this.emit(); } }));
@@ -35,7 +35,7 @@ export class CallLink {
   }
 
   private state(): CallState { return { mic: !!this.tracks.audio, cam: !!this.tracks.video }; }
-  private emit() { this.onRemote(this.remote, this.remoteState); }
+  private emit() { this.onRemote(this.remote, this.remoteState, this.pc?.connectionState ?? 'new'); }
   private sayHello(reply: boolean) { sendEvent('call-hello', { sid: this.sid, reply, ...this.state() }); }
   private send(data: object) { if (this.peer) sendEvent('call-sig', { from: this.sid, to: this.peer, ...data }); }
 
@@ -65,6 +65,7 @@ export class CallLink {
     pc.onnegotiationneeded = () => { if (this.paired) void this.negotiate(); };
     pc.onconnectionstatechange = () => {
       clearTimeout(this.iceTimer);
+      this.emit();
       // Mạng chập chờn: thử nối lại đường truyền (không phải làm lại cả cuộc gọi)
       if (pc.connectionState === 'failed') pc.restartIce();
       else if (pc.connectionState === 'disconnected') this.iceTimer = setTimeout(() => pc.connectionState === 'disconnected' && pc.restartIce(), 4000);

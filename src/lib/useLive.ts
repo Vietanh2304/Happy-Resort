@@ -31,7 +31,9 @@ export interface LiveState {
   sea?: SeaSpot;           // đang ngắm biển ở đâu (ghế ngắm biển)
   seaAt?: number;
   jump?: Jump | null;
-  sand?: { text: string; at: number } | null;   // chữ viết trên cát ở ghế ngắm biển      // đang nhảy dù: pha + mốc thời gian (bãi nhảy dù)
+  sand?: { text: string; at: number } | null;
+  /** Lúc thao tác thật gần nhất của phiên này (mở game ở 2 nơi: tab bỏ quên gửi nhắc lại trạng thái cũ thì bị bỏ qua) */
+  t?: number;   // chữ viết trên cát ở ghế ngắm biển      // đang nhảy dù: pha + mốc thời gian (bãi nhảy dù)
 }
 export interface ChatLine { from: 'me' | 'partner'; text: string; at: number }
 
@@ -39,7 +41,7 @@ const START: LiveState = { scene: 'town', pos: SCENES.town.spawn, act: null, dis
 const BUBBLE_MS = 5000;
 
 export function useLive(partnerOnline: boolean) {
-  const [mine, setMine] = useState<LiveState>(START);
+  const [mine, setMine] = useState<LiveState>(() => ({ ...START, t: Date.now() }));
   const [theirs, setTheirs] = useState<LiveState | null>(null);
   const [bubbles, setBubbles] = useState<{ me?: string; partner?: string }>({});
   const [chat, setChat] = useState<ChatLine[]>([]);
@@ -56,15 +58,19 @@ export function useLive(partnerOnline: boolean) {
 
   // Lần đầu nghe thấy người ấy (họ vừa vào, hoặc tin chào của mình bị lạc): gửi lại trạng thái của mình ngay
   const heardRef = useRef(false);
+  const theirT = useRef(0);
   useEffect(() => onEvent('live', (s: LiveState) => {
     if (!heardRef.current) { heardRef.current = true; sendEvent('live', mineRef.current, 'live'); }
+    // Chỉ nhận trạng thái mới nhất: tab cũ (mở game ở nơi khác rồi bỏ quên) nhắc lại vị trí cũ thì bỏ qua
+    if ((s.t ?? 0) < theirT.current) return;
+    theirT.current = s.t ?? 0;
     setTheirs(s);
   }), []);
   useEffect(() => onEvent('say', ({ text }: { text: string }) => { showBubble('partner', text); void ping('💬 Người ấy nhắn', text, 'say'); }), [showBubble]);
   // Người ấy vừa online: gửi trạng thái hiện tại của mình; offline thì ẩn nhân vật của họ
   useEffect(() => {
     if (partnerOnline) sendEvent('live', mineRef.current, 'live');
-    else { setTheirs(null); heardRef.current = false; }
+    else { setTheirs(null); heardRef.current = false; theirT.current = 0; }
   }, [partnerOnline]);
   // Nối lại kênh sau khi rớt: gửi lại vị trí của mình; thỉnh thoảng nhắc lại phòng khi người ấy lỡ tin
   useEffect(() => onEvent('link-up', () => sendEvent('live', mineRef.current, 'live')), []);
@@ -75,7 +81,7 @@ export function useLive(partnerOnline: boolean) {
   }, [partnerOnline]);
 
   const update = useCallback((patch: Partial<LiveState>) => {
-    const next = { ...mineRef.current, ...patch };
+    const next = { ...mineRef.current, ...patch, t: Date.now() };
     mineRef.current = next;
     setMine(next);
     sendEvent('live', next, 'live');

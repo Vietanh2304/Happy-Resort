@@ -28,6 +28,8 @@ import { kidMood } from '../lib/kids';
 import { AlbumSheet, BookSheet, CalendarSheet, FestTray, PetSheet, PhotoSheet } from './Love';
 import { ReefPanel } from './Reef';
 import { SkyPanel } from './Skydive';
+import { SchoolPanel } from './School';
+import { atSchool, SCHOOL } from '../lib/school';
 import { logName } from '../lib/reef';
 import { CafePanel, LoungePanel, CampPanel, WheelPanel } from './Places';
 import { PLANE_NOTES, Postcard, type TwinPlane } from './Twin';
@@ -431,7 +433,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Người ấy vừa vào rạp/nhà hàng → rủ mình
   const theirScene = theirs?.scene;
   useEffect(() => {
-    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky'].includes(theirScene) && theirScene !== scene) {
+    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky', 'school'].includes(theirScene) && theirScene !== scene) {
       toast(`${SCENES[theirScene].icon} ${partnerName} đang đợi bạn ở ${SCENES[theirScene].name}`);
     }
   }, [theirScene]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -616,6 +618,12 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
 
   // ───── Em bé ─────
   const expecting = kids.find(k => k.born_on > myTime.date);
+  // Ngày đầu tiên đi học: ghé trường đúng lúc bé đang học thì ghi vào kỷ niệm
+  const firstDay = scene === 'school' ? kids.find(k => k.name && atSchool(k, myTime.date, myTime.hour, myTime.minute) && !k.milestones.includes('school')) : undefined;
+  useEffect(() => {
+    if (!firstDay) return;
+    api.kidMilestone(firstDay.id, 'school').then(ok => { if (ok) { toast(`🌟 Mốc đáng nhớ: 🏫 Ngày đầu tiên đi học của bé ${firstDay.name}!`); notify('kids'); } }, console.error);
+  }, [firstDay?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const unnamed = kids.find(k => !k.name && k.born_on <= myTime.date);
   useEffect(() => {
     if (unnamed) setSheet(sh => sh ?? { kind: 'kidname', id: unnamed.id });
@@ -718,6 +726,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         {!partner && couple && <span>Mã resort: <b className="code">{couple.invite_code}</b></span>}
         <CallButtons call={call} partnerName={partnerName} partnerMic={!!theirs?.mic} partnerCam={!!theirs?.cam} />
         {call.remote && <RemoteAudio stream={call.remote} />}
+        {unnamed && <button className="chip glow ping" onClick={() => setSheet({ kind: 'kidname', id: unnamed.id })}>🐦 Đón bé về · đặt tên</button>}
         {/* Trên điện thoại gom phần còn lại vào nút ☰ cho gọn */}
         <button className={`chip hud-toggle ${fests.length || combos.length || expecting ? 'ping' : ''}`} onClick={() => setHudOpen(v => !v)} aria-label="Thêm">{hudOpen ? '✕' : '☰'}</button>
         <span className={`hud-more ${hudOpen ? 'open' : ''}`} onClick={e => { if ((e.target as HTMLElement).closest('button:not([data-keep])')) setHudOpen(false); }}>
@@ -776,7 +785,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
             festRemove,
             pet: () => setSheet({ kind: 'pet' }),
             bed: d => setSheet({ kind: 'bed', bed: d.id }),
-            kid: id => setSheet({ kind: 'kid', id }),
+            kid: id => setSheet(kids.find(k => k.id === id && !k.name) ? { kind: 'kidname', id } : { kind: 'kid', id }),
             postcard: (city, i, name) => setSheet({ kind: 'postcard', city, i, name }),
             games: () => setSheet({ kind: 'games' }),
             counter: () => setSheet({ kind: 'shop' }),
@@ -828,6 +837,9 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           </div>
           <button className="btn small ghost leave" onClick={() => enter('town', { x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 })}>🚪 Ra ngoài</button>
         </div>
+      ) : scene === 'school' ? (
+        <SchoolPanel live={live} kids={kids} when={myTime} partnerHere={!!partnerHere} partnerName={partnerName} onLeave={() => enter('town', SCHOOL.door)}
+          onPickup={k => { enter('town', SCHOOL.door); live.update({ walkKid: k.id }); toast(`🎒 Đón bé ${k.name} tan học — bé nắm tay đi về cùng bạn`); }} />
       ) : scene === 'reef' ? (
         <ReefPanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} seen={reefSeen} onLeave={() => enter('lounge')} />
       ) : scene === 'sky' ? (
