@@ -43,10 +43,12 @@ interface Props {
   duo?: { side: 'L' | 'R'; together: boolean };
   /** Đang lặn: nằm ngang bơi, đeo bình dưỡng khí, thở ra bong bóng */
   swim?: boolean;
+  /** Lặn đêm: rọi đèn pin về phía trước */
+  torch?: boolean;
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -115,6 +117,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
           <img src={tank.url} alt="" draggable={false} style={{ width: tank.w * ps, height: tank.h * ps, left: 1 * ps, top: 9 * ps }} />
           <img src={sw.url} alt={name ?? ''} draggable={false} style={{ width: W, height: H }} />
         </span>
+        {torch && <i className={`dive-torch ${shown.left ? 'left' : ''}`} style={{ left: shown.left ? -H * 0.4 : H * 0.4, top: -H * 0.25 }} />}
         <span className="dive-breath" style={{ left: (shown.left ? -H * 0.55 : H * 0.45), top: -H * 0.25 - 40 }}><i /><i /><i /></span>
         {name && <span className="avatar-name" style={{ top: 2 * s }}>{name}</span>}
         {bubble && <span className="speech" style={{ bottom: H * 0.5 + 6 }}>{bubble}</span>}

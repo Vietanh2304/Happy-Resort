@@ -63,3 +63,14 @@ export const yachtSprite = (night: boolean) => makeSprite(`yacht:${night}`, 30, 
   for (let x = 4; x < 27; x += 3) p.px(x, 7, night ? '#ffe08a' : '#8aa8c8');
   if (night) { p.px(15, 0, '#ff8aa8'); }
 }, mix('#3a3448', '#000000', 0.2));
+
+/** Đèn hoa đăng hình hoa sen có ngọn nến (của mình: hồng, của người ấy: vàng cam) */
+export const lotusSprite = (mine: boolean) => makeSprite(`lotus:${mine}`, 14, 11, p => {
+  const a = mine ? '#f590b8' : '#f6b05a', b = mine ? '#ffd0e4' : '#ffe0a0', d = mine ? '#d8608a' : '#d8883a';
+  p.rect(5, 0, 1, 2, '#fff6a8'); p.px(5, 0, '#ffffff'); p.px(6, 1, '#ffb030');            // ngọn lửa
+  p.rect(5, 2, 2, 3, '#fffaf0');                                                            // nến
+  for (const [x, w] of [[1, 3], [10, 3]] as const) for (let y = 4; y < 8; y++) p.rect(x + (y - 4) * (x < 5 ? 0 : 0), y, w, 1, y === 4 ? b : a);
+  for (const x of [3, 8]) for (let y = 3; y < 8; y++) p.rect(x, y, 3, 1, y === 3 ? b : a);
+  p.rect(0, 7, 14, 2, d); p.rect(1, 9, 12, 1, '#3a8a44'); p.rect(0, 8, 14, 1, a);
+  ell(p, 6.5, 6, 2.5, 1.5, b);
+}, '#5a2a3a');

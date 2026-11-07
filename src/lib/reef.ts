@@ -8,6 +8,7 @@ export const REEF = {
   anemone: { x: 58, y: 116 },         // hải quỳ có cá hề
   chest: { x: 156, y: 130 },          // rương báu nửa vùi trong cát
   eel: { x: 24, y: 104 },             // hang cá chình trong khối đá
+  clam: { x: 126, y: 134 },           // sò khổng lồ có ngọc
 };
 
 function ell(p: Pen, cx: number, cy: number, rx: number, ry: number, c: string) {
@@ -18,17 +19,17 @@ function ell(p: Pen, cx: number, cy: number, rx: number, ry: number, c: string) 
 }
 
 const WATER: Record<Phase, [string, string]> = {
-  day: ['#5ad6f2', '#0a3a7a'],
+  day: ['#7ae8fa', '#0a4a8a'],
   dawn: ['#7ac8e8', '#123a72'],
   sunset: ['#e8a890', '#1a2a6a'],
-  night: ['#12306a', '#020a24'],
+  night: ['#16387a', '#030c2c'],
 };
 
 /** Nền dưới nước: mặt nước lấp lánh phía trên, rạn xa mờ, đáy cát gợn, đá và san hô */
 export function reefBackground(phase: Phase) {
-  return makeSprite(`reef:v1:${phase}`, 192, 144, p => {
+  return makeSprite(`reef:v2:${phase}`, 192, 144, p => {
     const [top, deep] = WATER[phase], night = phase === 'night';
-    const dim = (c: string) => (night ? mix(c, '#0a1838', 0.55) : c);
+    const dim = (c: string) => (night ? mix(c, '#0a1838', 0.42) : c);
     const rand = seeded('reef');
     for (let y = 0; y < 144; y++) {
       const c = mix(top, deep, Math.min(1, (y / 130) ** 0.9));
@@ -83,6 +84,19 @@ export function reefBackground(phase: Phase) {
     const { x: ax, y: ay } = REEF.anemone;
     ell(p, ax, ay, 8, 3, dim('#c84a7a'));
     for (let i = -7; i <= 7; i += 2) for (let k = 0; k < 7; k++) p.px(ax + i + Math.round(Math.sin(k * 0.8 + i) * 1.2), ay - 2 - k, dim(k > 4 ? '#ffd0e8' : '#f088c0'));
+    // ── Vườn san hô thêm: dày và rực rỡ hơn ──
+    for (const [cx, cy, r, c] of [[150, 124, 6, '#ff7ab0'], [30, 126, 7, '#b07af0'], [186, 126, 5, '#7ae0c0'], [62, 128, 5, '#f6c64e']] as const) {
+      ell(p, cx, cy - r * 0.6, r, r * 0.7, dim(c)); ell(p, cx - r * 0.3, cy - r * 0.9, r * 0.45, r * 0.3, dim(mix(c, '#ffffff', 0.35)));
+    }
+    branch(168, 124, 7, -Math.PI / 2 - 0.3, '#ff5a9a', 3); branch(42, 124, 6, -Math.PI / 2 + 0.3, '#5ae0f0', 2);
+    branch(134, 124, 5, -Math.PI / 2, '#c87af0', 2); branch(88, 124, 5, -Math.PI / 2 - 0.2, '#ff8a5a', 2);
+    // cỏ biển + hải quỳ nhỏ lốm đốm
+    for (let i = 0; i < 26; i++) { const x = Math.floor(rand() * 192), h = 3 + Math.floor(rand() * 5); for (let k = 0; k < h; k++) p.px(x + (k % 2), REEF.sand + 2 - k, dim(i % 3 ? '#4aa85a' : '#6ac86a')); }
+    for (let i = 0; i < 10; i++) { const x = Math.floor(rand() * 180) + 6, y = REEF.sand + 3 + Math.floor(rand() * 10); p.rect(x - 1, y, 3, 1, dim(['#ff8ac0', '#8af0ff', '#ffd84a'][i % 3])); p.px(x, y - 1, dim('#ffffff')); }
+    // sò khổng lồ (vỏ dưới nằm trên cát; vỏ trên + ngọc vẽ riêng để mở/khép)
+    const { x: kx, y: ky } = REEF.clam;
+    ell(p, kx, ky, 9, 3, dim('#7a6ab0')); for (let x = kx - 8; x <= kx + 8; x += 3) p.rect(x, ky - 1, 1, 3, dim('#5a4a90'));
+    ell(p, kx, ky - 1, 7, 1.5, dim('#3ae0e0'));
     // sao biển + vỏ ốc trên cát
     for (const [x, y, c] of [[70, 132, '#ff7a5a'], [128, 138, '#f6c64e']] as const) { p.rect(x - 2, y, 5, 1, dim(c)); p.rect(x, y - 2, 1, 5, dim(c)); p.px(x - 1, y + 1, dim(c)); p.px(x + 1, y + 1, dim(c)); }
     for (const [x, y] of [[44, 136], [100, 140], [186, 132]]) { p.rect(x, y, 3, 2, dim('#ffe0e8')); p.px(x + 1, y - 1, dim('#ffe0e8')); }
@@ -135,7 +149,7 @@ export const CREATURES: Creature[] = [
   { id: 'parrot', name: 'Cá vẹt', icon: '🐟', fact: 'Gặm san hô rồi "thải" ra cát trắng — nhiều bãi cát trắng có công của nó!', move: 'swim', y: 88, speed: 14,
     sprite: () => fish('parrot', 15, 8, '#3ac8a0', '#8ae8c8', '#e85a9a', p => { p.rect(11, 3, 3, 2, '#f6a0c8'); p.rect(4, 2, 5, 1, '#2a9a7a'); }) },
   { id: 'school', name: 'Đàn cá cơm bạc', icon: '🐟', fact: 'Bơi thành đàn hàng nghìn con, cùng đổi hướng một lúc để làm rối kẻ săn mồi.', move: 'swim', y: 34, speed: 28, school: 9,
-    sprite: () => fish('anchovy', 6, 3, '#c8d8e8', '#ffffff', '#a8b8c8') },
+    sprite: () => makeSprite('fish:anchovy2', 8, 3, p => { p.rect(2, 0, 5, 1, '#8aa8c8'); p.rect(1, 1, 7, 1, '#e8f0f8'); p.rect(2, 2, 5, 1, '#c8d8e8'); p.px(0, 0, '#a8b8c8'); p.px(0, 2, '#a8b8c8'); p.px(6, 1, '#1a1428'); }, null) },
   { id: 'turtle', name: 'Rùa biển', icon: '🐢', fact: 'Có thể sống hơn 80 năm và nhớ đường về đúng bãi biển nơi mình nở ra.', move: 'swim', y: 46, speed: 7,
     sprite: () => makeSprite('turtle', 22, 12, p => {
       ell(p, 10, 6, 7, 4.5, '#7a6a3a'); for (const [x, y] of [[7, 4], [11, 4], [9, 7], [13, 7], [6, 7]]) p.rect(x, y, 2, 2, '#9a8a4a');
@@ -183,7 +197,29 @@ export const CORALS: Touchable[] = [
   { id: 'sponge', name: 'Bọt biển ống', icon: '🧽', fact: 'Một trong những động vật cổ nhất Trái Đất — không có não, không có cơ.', x: 108, y: 114, w: 12, h: 14 },
   { id: 'table', name: 'San hô bàn', icon: '🪸', fact: 'Tán phẳng rộng như cái bàn, che nắng cho cá nhỏ trú bên dưới.', x: 146, y: 106, w: 28, h: 10 },
   { id: 'star', name: 'Sao biển', icon: '⭐', fact: 'Không có máu, mất một cánh thì mọc lại cánh mới.', x: 70, y: 132, w: 10, h: 8 },
+  { id: 'clam', name: 'Sò tai tượng', icon: '🦪', fact: 'Loài sò lớn nhất thế giới, nặng tới 200kg, sống hơn 100 năm — có tảo cộng sinh làm vỏ sáng màu.', x: REEF.clam.x, y: REEF.clam.y - 3, w: 20, h: 10 },
   { id: 'kelp', name: 'Tảo bẹ', icon: '🌿', fact: 'Có loài mọc tới nửa mét mỗi ngày, thành cả "rừng" dưới biển.', x: 48, y: 108, w: 10, h: 26 },
 ];
 export const LOG_TOTAL = CREATURES.length + CORALS.length;
 export const logName = (id: string) => CREATURES.find(c => c.id === id) ?? CORALS.find(c => c.id === id);
+
+/** Vỏ trên của sò tai tượng (mở/khép bằng CSS) */
+export const clamLidSprite = () => makeSprite('clam-lid', 18, 6, p => {
+  ell(p, 9, 4, 9, 3, '#8a7ac8'); for (let x = 1; x <= 17; x += 3) p.rect(x, 2, 1, 4, '#6a5aa8'); p.rect(2, 5, 14, 1, '#3ae0e0');
+});
+/** Cá mập voi: khổng lồ, đốm trắng, bơi chậm ở xa */
+export const whaleSharkSprite = () => makeSprite('whaleshark', 70, 22, p => {
+  for (let x = 6; x < 66; x++) { const t = (x - 6) / 60, r = Math.max(1.5, Math.sin(Math.PI * Math.min(1, t * 1.05 + 0.05)) * 8); p.rect(x, Math.round(11 - r), 1, Math.round(r * 2), '#3a5a8a'); p.rect(x, Math.round(11 + r * 0.3), 1, Math.max(1, Math.round(r * 0.7)), '#8aa8c8'); }
+  for (let i = 0; i < 40; i++) { const x = 10 + ((i * 37) % 52), y = 5 + ((i * 13) % 7); p.px(x, y, '#d8e8f8'); }
+  p.rect(30, 1, 6, 4, '#3a5a8a'); p.rect(0, 2, 7, 6, '#3a5a8a'); p.rect(0, 13, 6, 6, '#3a5a8a'); p.rect(60, 12, 6, 2, '#2a3a5a'); p.px(58, 8, '#1a1428');
+}, '#1a2a4a');
+
+/** Thêm đông vui: mỗi loài vài con ở độ sâu/tốc độ khác nhau (sổ lặn vẫn tính theo loài) */
+export const POPULATION: { id: string; y: number; speed?: number; x?: number; nightOnly?: boolean }[] = [
+  { id: 'school', y: 58, speed: 24 }, { id: 'school', y: 96, speed: 20 },
+  { id: 'tang', y: 82, speed: 18 }, { id: 'tang', y: 40, speed: 26 },
+  { id: 'butterfly', y: 104, speed: 14 }, { id: 'angel', y: 30, speed: 10 },
+  { id: 'parrot', y: 60, speed: 12 }, { id: 'clown', y: REEF.anemone.y - 6, x: REEF.anemone.x + 5 },
+  { id: 'jelly', y: 64, x: 40 }, { id: 'jelly', y: 30, x: 110, nightOnly: true }, { id: 'jelly', y: 54, x: 176, nightOnly: true },
+  { id: 'seahorse', y: 100, x: 168 },
+];

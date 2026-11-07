@@ -7,13 +7,14 @@ import type { Phase } from '../lib/content';
 import { onEvent } from '../lib/realtime';
 import { emojiSprite } from '../lib/pixel';
 import { gullSprite, LOUNGE } from '../lib/seaView';
+import { lotusSprite } from '../lib/seaGlam';
 import { planeSprite } from '../lib/skydive';
 import type { LiveState } from '../lib/useLive';
 import { Spr, Tag, useScale } from './Stage';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
 export const SAND_MS = 3 * 60_000;           // chữ trên cát còn chừng này rồi sóng xóa mất
-const LANTERN_MS = 26_000;
+const LANTERN_MS = 40_000;
 
 /** Bấm "thả đèn hoa đăng" ở bảng điều khiển → cảnh hiện đèn (người ấy nhận qua realtime) */
 export const releaseLantern = (x: number) => window.dispatchEvent(new CustomEvent('hy:lantern', { detail: { x, mine: true } }));
@@ -91,15 +92,15 @@ export function Romance({ phase, mine, theirs, meName, themName }: { phase: Phas
 
       {/* Chữ viết trên cát: mờ dần, gần hết giờ thì sóng tràn lên xóa */}
       {sand && sandAge < SAND_MS && (
-        <div className={`sand-writing ${sandAge > SAND_MS - 15_000 ? 'washing' : ''}`} style={{ left: 96 * s, top: (shore - 3) * s, fontSize: Math.max(13, 8 * s) }}>
+        <div className={`sand-writing ${sandAge > SAND_MS - 15_000 ? 'washing' : ''}`} style={{ left: 96 * s, top: (shore - 11) * s, fontSize: Math.max(12, 6.5 * s) }}>
           {sand.text}
         </div>
       )}
 
       {/* Đèn hoa đăng trôi từ bờ ra khơi */}
       {lanterns.map(l => (
-        <div key={l.key} className={`sea-lantern ${l.mine ? 'mine' : ''}`} style={v({ left: l.x * s, top: (shore - 4) * s, '--rise': `${-(shore - horizon - 6) * s}px`, '--drift': `${(96 - l.x) * 0.4 * s}px`, animationDuration: `${LANTERN_MS}ms` })}>
-          <i style={{ width: 8 * s, height: 6 * s }} /><b style={{ width: 4 * s, height: 3 * s }} />
+        <div key={l.key} className={`sea-lantern ${l.mine ? 'mine' : ''}`} style={v({ left: l.x * s, top: (shore - 2) * s, '--rise': `${-(shore - horizon - 4) * s}px`, '--drift': `${(96 - l.x) * 0.4 * s}px`, animationDuration: `${LANTERN_MS}ms` })}>
+          <b style={{ width: 22 * s, height: 8 * s }} /><img src={lotusSprite(l.mine).url} alt="" style={{ width: 16 * s, height: 13 * s }} />
         </div>
       ))}
 

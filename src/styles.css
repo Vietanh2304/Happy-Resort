@@ -1352,10 +1352,11 @@ textarea { resize: vertical; }
 @keyframes sand-in { from { opacity: 0; letter-spacing: -.2em; } to { opacity: 1; } }
 @keyframes sand-wash { 0% { opacity: 1; filter: blur(0); } 100% { opacity: 0; filter: blur(3px); } }
 .sea-lantern { position: absolute; z-index: 62; pointer-events: none; animation: lantern-float 26s ease-out forwards; }
-.sea-lantern i { position: absolute; translate: -50% -100%; background: linear-gradient(#ffe08a, #ff8a4a); border-radius: 30% 30% 15% 15%; box-shadow: 0 0 10px 4px #ffb04aaa, 0 8px 8px -2px #ffb04a66; animation: sl-twinkle 2s ease-in-out infinite; }
-.sea-lantern b { position: absolute; translate: -50% 40%; border-radius: 50%; background: #ffd88a55; filter: blur(2px); }
-.sea-lantern.mine i { background: linear-gradient(#ffd0e0, #f07aa0); box-shadow: 0 0 10px 4px #ff8ab0aa, 0 8px 8px -2px #ff8ab066; }
-@keyframes lantern-float { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 5% { opacity: 1; } 100% { transform: translate(var(--drift), var(--rise)) scale(.25); opacity: 0; } }
+.sea-lantern img { position: absolute; translate: -50% -100%; image-rendering: pixelated; filter: drop-shadow(0 0 4px #ffd88a) drop-shadow(0 0 8px #ffb04a88); animation: lantern-bob 2.4s ease-in-out infinite; }
+.sea-lantern.mine img { filter: drop-shadow(0 0 4px #ffc0d8) drop-shadow(0 0 8px #ff8ab088); }
+.sea-lantern b { position: absolute; translate: -50% -10%; border-radius: 50%; background: radial-gradient(#ffd88a88, transparent 70%); animation: sl-twinkle 2s ease-in-out infinite; }
+@keyframes lantern-bob { 0%, 100% { rotate: -4deg; } 50% { rotate: 4deg; translate: -50% -110%; } }
+@keyframes lantern-float { 0% { transform: translate(0, 0) scale(1); opacity: 0; } 4% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translate(var(--drift), var(--rise)) scale(.3); opacity: 0; } }
 .hold-hearts { position: absolute; z-index: 140; pointer-events: none; }
 .hold-hearts span { position: absolute; translate: -50% 0; font-size: 16px; opacity: 0; animation: heart-up 3.2s ease-out infinite; }
 @keyframes heart-up { 0% { opacity: 0; transform: translateY(0) scale(.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-60px) scale(1.2); } }
@@ -1406,3 +1407,24 @@ textarea { resize: vertical; }
 .lounge-grade.dawn { background: radial-gradient(ellipse 75% 70% at 50% 45%, transparent 55%, #3a2a5a44 100%), linear-gradient(#ffc0d018, transparent); }
 .lounge-grade.night { background: radial-gradient(ellipse 75% 70% at 50% 45%, transparent 50%, #05081a88 100%); }
 .lounge-grade.day { background: radial-gradient(ellipse 80% 75% at 50% 45%, transparent 65%, #1a305028 100%), linear-gradient(#fff6c80c, transparent 50%); }
+
+/* ───── Lặn biển lộng lẫy ───── */
+.bait-ball { position: absolute; translate: -50% -50%; cursor: pointer; }
+.bait-ball i { position: absolute; left: 50%; top: 50%; background: linear-gradient(90deg, #a8b8c8, #ffffff); border-radius: 50%; box-shadow: 0 0 2px #ffffffaa; transform: rotate(var(--a)) translateX(var(--r)) rotate(90deg); animation: baitball 6s linear infinite; }
+@keyframes baitball { from { rotate: 0deg; } to { rotate: 360deg; } }
+.bait-ball:hover { filter: brightness(1.3); }
+.whale-shark { position: absolute; left: 0; z-index: 2; pointer-events: none; opacity: .55; animation: whale 80s linear infinite; animation-delay: -10s; }
+.whale-shark img { image-rendering: pixelated; animation: rf-wiggle 5s ease-in-out infinite; }
+@keyframes whale { 0% { transform: translateX(var(--w)) scaleX(-1); } 40% { transform: translateX(-90px) scaleX(-1); } 40.1%, 100% { transform: translateX(-90px) scaleX(-1); opacity: 0; } }
+.coral-neon { position: absolute; z-index: 6; translate: -50% -50%; pointer-events: none; border-radius: 50%; background: radial-gradient(currentColor, transparent 65%); opacity: .45; mix-blend-mode: screen; animation: neon 3.4s ease-in-out infinite; }
+@keyframes neon { 0%, 100% { opacity: .25; scale: .9; } 50% { opacity: .6; scale: 1.05; } }
+.clam { position: absolute; pointer-events: none; }
+.clam img { position: absolute; left: 0; top: 0; translate: -50% -60%; image-rendering: pixelated; transform-origin: 50% 100%; animation: clam 7s ease-in-out infinite; }
+@keyframes clam { 0%, 30%, 100% { transform: rotateX(0deg) translateY(0); } 45%, 85% { transform: translateY(-35%) rotate(-6deg); } }
+.clam-pearl { position: absolute; translate: -50% -50%; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff, #e8e0ff 50%, #b8a8e8); box-shadow: 0 0 6px 2px #fff6ffcc; animation: sl-twinkle 1.8s ease-in-out infinite; }
+.reef-rays i { animation-duration: 6s; }
+.reef-rays { opacity: 1; }
+/* đèn pin của thợ lặn ban đêm */
+.dive-torch { position: absolute; top: 0; height: 60px; width: 150px; pointer-events: none; background: radial-gradient(ellipse at 0 50%, #fffbe0aa, #fffbe033 40%, transparent 70%); mix-blend-mode: screen; clip-path: polygon(0 45%, 100% 0, 100% 100%, 0 55%); translate: 0 -50%; animation: torch 3s ease-in-out infinite; }
+.dive-torch.left { transform: scaleX(-1); transform-origin: 0 50%; }
+@keyframes torch { 0%, 100% { rotate: -4deg; } 50% { rotate: 4deg; } }

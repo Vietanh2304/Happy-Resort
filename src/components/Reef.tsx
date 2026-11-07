@@ -3,7 +3,7 @@
 // rồi chạm thật: lấp lánh tỏa ra, cá giật mình vụt đi, san hô phát sáng; ghi tên vào "Sổ lặn".
 import { useRef, useState, type CSSProperties } from 'react';
 import type { Phase } from '../lib/content';
-import { chestSprite, CORALS, CREATURES, kelpSprite, LOG_TOTAL, logName, REEF, type Creature } from '../lib/reef';
+import { chestSprite, clamLidSprite, CORALS, creature, CREATURES, kelpSprite, LOG_TOTAL, logName, POPULATION, REEF, whaleSharkSprite, type Creature } from '../lib/reef';
 import type { Live } from '../lib/useLive';
 import type { Pt } from '../lib/world';
 import { Chat, status } from './Places';
@@ -85,6 +85,27 @@ export function ReefContent({ phase, go, onSee, chestOpen, onChest }: {
           onClick={e => { e.stopPropagation(); touch(c.id, { x: c.x, y: c.y }, true); }} />
       ))}
       {CREATURES.map((c, i) => <Swimmer key={c.id} c={c} s={s} i={i} onTouch={(id, at) => touch(id, at)} night={night} startled={startled === c.id} />)}
+      {POPULATION.filter(e => !e.nightOnly || night).map((e, i) => {
+        const base = creature(e.id)!;
+        return <Swimmer key={`pop${i}`} c={{ ...base, y: e.y, x: e.x ?? base.x, speed: e.speed ?? base.speed }} s={s} i={i + 3} onTouch={(id, at) => touch(id, at)} night={night} startled={startled === e.id} />;
+      })}
+      {/* Đàn cá xoáy tròn (bait ball) — chạm vào thì tính là đàn cá cơm */}
+      <div className="bait-ball" style={{ left: 150 * s, top: 70 * s, width: 30 * s, height: 22 * s, zIndex: 70 }} onClick={e => { e.stopPropagation(); touch('school', { x: 150, y: 70 }); }}>
+        {Array.from({ length: 18 }, (_, i) => <i key={i} style={v({ '--a': `${(i / 18) * 360}deg`, '--r': `${(7 + (i % 3) * 3.5) * s}px`, animationDuration: `${5 + (i % 3)}s`, width: 4 * s, height: 1.5 * s })} />)}
+      </div>
+      {/* Cá mập voi khổng lồ thỉnh thoảng lướt qua phía xa */}
+      <div className="whale-shark" title="Cá mập voi" style={v({ top: 18 * s, '--w': `${300 * s}px` })}>
+        <img src={whaleSharkSprite().url} alt="Cá mập voi" style={{ width: 72 * s, height: 24 * s }} />
+      </div>
+      {/* Ban đêm: san hô phát sáng neon */}
+      {night && CORALS.filter(c => c.id !== 'kelp' && c.id !== 'star').map((c, i) => (
+        <i key={`neon${i}`} className="coral-neon" style={{ left: c.x * s, top: c.y * s, width: c.w * 1.6 * s, height: c.h * 1.6 * s, color: ['#ff5ad0', '#5af0ff', '#b07aff', '#7aff9a', '#ffd84a'][i % 5], animationDelay: `${-i * 0.7}s` }} />
+      ))}
+      {/* Sò tai tượng: mở khép, có viên ngọc lấp lánh bên trong */}
+      <div className="clam" style={{ left: REEF.clam.x * s, top: (REEF.clam.y - 3) * s, zIndex: REEF.clam.y }}>
+        <i className="clam-pearl" style={{ width: 3 * s, height: 3 * s }} />
+        <img src={clamLidSprite().url} alt="" style={{ width: 20 * s, height: 8 * s }} />
+      </div>
       {sparks.map(k => (
         <div key={k.key} className="reef-spark" style={{ left: k.x * s, top: k.y * s }}>
           {Array.from({ length: 8 }, (_, i) => <i key={i} style={v({ '--a': `${i * 45}deg` })} />)}
