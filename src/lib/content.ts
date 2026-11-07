@@ -75,6 +75,7 @@ export interface Content {
   emotes: string[];
   petKit: Gift[];
   cafe: { cat: string; items: { name: string; icon: string }[] }[];
+  beachBar: { cat: string; items: { name: string; icon: string }[] }[];
   books: { title: string; icon: string; pages: string[] }[];
   campfire: string[];
 }

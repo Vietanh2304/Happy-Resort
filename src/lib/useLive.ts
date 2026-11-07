@@ -6,6 +6,7 @@ import { ping } from './notify';
 import type { BathWater } from './interiors';
 import type { HillSky } from './townSprites';
 import { SCENES, type SceneId } from './world';
+import type { SeaSpot } from './seaView';
 
 export interface LiveState {
   scene: SceneId;
@@ -26,6 +27,8 @@ export interface LiveState {
   bed?: string | null;    // đang nằm trên giường nào (act = 'sleep' | 'intimate')
   walkKid?: string | null; // đang dắt bé nào đi chơi
   duck?: boolean;          // thả vịt cao su vào bồn tắm
+  sea?: SeaSpot;           // đang ngắm biển ở đâu (ghế ngắm biển)
+  seaAt?: number;
 }
 export interface ChatLine { from: 'me' | 'partner'; text: string; at: number }
 
@@ -85,7 +88,7 @@ export function useLive(partnerOnline: boolean) {
 export type Live = ReturnType<typeof useLive>;
 
 /** Lựa chọn chung của hai người: ai chọn sau thì cả hai cùng theo */
-export function shared<K extends 'sky' | 'bath' | 'cinema'>(mine: LiveState, theirs: LiveState | null, key: K): LiveState[K] {
-  const at = (key + 'At') as 'skyAt' | 'bathAt' | 'cinemaAt';
-  return theirs && theirs[at] > mine[at] ? theirs[key] : mine[key];
+export function shared<K extends 'sky' | 'bath' | 'cinema' | 'sea'>(mine: LiveState, theirs: LiveState | null, key: K): LiveState[K] {
+  const at = (key + 'At') as 'skyAt' | 'bathAt' | 'cinemaAt' | 'seaAt';
+  return theirs && (theirs[at] ?? 0) > (mine[at] ?? 0) ? theirs[key] : mine[key];
 }

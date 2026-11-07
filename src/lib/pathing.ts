@@ -51,6 +51,7 @@ function outdoorShapes(scene: SceneId, decor: Decor[]): Shape[] {
     rect(TOWN.mailbox.x - 3, TOWN.mailbox.y - 6, TOWN.mailbox.x + 3, TOWN.mailbox.y - 1);
     rect(TOWN.toArcade.x - 21, TOWN.toArcade.y - 30, TOWN.toArcade.x + 21, TOWN.toArcade.y - 6);
     rect(TOWN.twin.x - 6, TOWN.twin.y - 6, TOWN.twin.x + 6, TOWN.twin.y);
+    rect(TOWN.wheel.x - 16, TOWN.wheel.y - 24, TOWN.wheel.x + 16, TOWN.wheel.y - 2);   // chân đu quay
     // Hàng rào cây quanh vườn hoa (chừa lối vào phía trên)
     const g = GARDEN, gx1 = g.x + g.cols * g.cw, gy1 = g.y + g.rows * g.ch;
     rect(g.x - 10, g.y - 10, g.x + 72, g.y - 3); rect(114, g.y - 10, gx1 + 10, g.y - 3);
@@ -59,8 +60,8 @@ function outdoorShapes(scene: SceneId, decor: Decor[]): Shape[] {
     grid(GARDEN, 'garden');
   }
   if (scene === 'beach') {
-    rect(BEACH.wheel.x - 26, BEACH.wheel.y - 22, BEACH.wheel.x + 26, BEACH.wheel.y - 2);
     trunk(180, 62); trunk(134, 64);
+    for (const l of BEACH.loungers) rect(l.x - 8, l.y - 16, l.x + 8, l.y - 1);
   }
   if (scene === 'farm') {
     trunk(236, 88); trunk(16, 96); trunk(244, 150);

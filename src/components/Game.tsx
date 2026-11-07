@@ -26,7 +26,7 @@ import { findPath } from '../lib/pathing';
 import { ping } from '../lib/notify';
 import { kidMood } from '../lib/kids';
 import { AlbumSheet, BookSheet, CalendarSheet, FestTray, PetSheet, PhotoSheet } from './Love';
-import { CafePanel, CampPanel, WheelPanel } from './Places';
+import { CafePanel, LoungePanel, CampPanel, WheelPanel } from './Places';
 import { PLANE_NOTES, Postcard, type TwinPlane } from './Twin';
 import { FishMeter, type Zone } from './FishMeter';
 import { DanceBar } from './Disco';
@@ -428,7 +428,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Người ấy vừa vào rạp/nhà hàng → rủ mình
   const theirScene = theirs?.scene;
   useEffect(() => {
-    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill'].includes(theirScene) && theirScene !== scene) {
+    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge'].includes(theirScene) && theirScene !== scene) {
       toast(`${SCENES[theirScene].icon} ${partnerName} đang đợi bạn ở ${SCENES[theirScene].name}`);
     }
   }, [theirScene]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -640,6 +640,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // ───── Đồi ngắm cảnh: ai chọn trời sau thì cả hai cùng ngắm ─────
   const skyChoice = shared(live.mine, partnerHere ? theirs : null, 'sky');
   const bathWater = shared(live.mine, partnerHere ? theirs : null, 'bath');
+  const seaSpot = shared(live.mine, partnerHere ? theirs : null, 'sea') ?? 'home';
+  const [barMenu, setBarMenu] = useState(false);
   const cinemaMode = shared(live.mine, partnerHere ? theirs : null, 'cinema');
   const PHASE_SKY = { dawn: 'dawn', day: 'day', sunset: 'sunset', night: 'night' } as const;
   const hillSky: HillSky = skyChoice === 'real' ? PHASE_SKY[myView.phase] : skyChoice;
@@ -666,7 +668,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const plantedAt = (x: number, y: number) => farm.some(r => r.cell === farmCell(x, y));
   const editor = useDecorEditor(inventory, { island: editing ? editIsland : null, decor, blocked: editIsland === 'farm' ? plantedAt : undefined });
   useEffect(() => {
-    music.setMood(live.mine.act === 'intimate' ? 'love' : live.mine.act === 'sleep' ? 'night' : scene === 'cafe' ? 'cafe' : scene === 'camp' ? 'camp' : ['hill', 'bathroom', 'restaurant', 'wheel'].includes(scene) || theme === 'romantic' ? 'love' : myView.phase === 'night' || myView.phase === 'sunset' ? 'night' : 'day');
+    music.setMood(live.mine.act === 'intimate' ? 'love' : live.mine.act === 'sleep' ? 'night' : scene === 'cafe' ? 'cafe' : scene === 'camp' ? 'camp' : scene === 'beach' || scene === 'lounge' ? 'sea' : ['hill', 'bathroom', 'restaurant', 'wheel'].includes(scene) || theme === 'romantic' ? 'love' : myView.phase === 'night' || myView.phase === 'sunset' ? 'night' : 'day');
   }, [myView.phase, scene, theme, live.mine.act]);
   const capsulesReady = capsules.filter(c => c.to_id === me.id && !c.opened_at && c.body !== null).length;
   const unread = notes.filter(n => n.to_id === me.id && !n.read_at).length + capsulesReady;
@@ -731,7 +733,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <World
           scene={scene} me={me} partner={partner} myView={myView} realView={realView} partnerView={partnerView}
           live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
-          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
+          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} onBar={() => setBarMenu(true)} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
           farm={farm} guests={activeGuests} pickups={pickups} fishing={fishing} combos={combos}
           daysTogether={bridge.planks}
@@ -805,6 +807,12 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           </div>
           <button className="btn small ghost leave" onClick={() => enter('town', { x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 })}>🚪 Ra ngoài</button>
         </div>
+      ) : scene === 'lounge' ? (
+        <div className="room-bar">
+          <LoungePanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} spot={seaSpot}
+            onSpot={sea => live.update({ sea, seaAt: Date.now() })} menu={barMenu} onMenu={setBarMenu} />
+          <button className="btn small ghost leave" onClick={() => { live.update({ act: null, drink: null, dish: null }); enter('beach', { x: BEACH.loungers[0].x, y: BEACH.loungers[0].y + 6 }); }}>🚶 Về bãi biển</button>
+        </div>
       ) : scene === 'cafe' || scene === 'wheel' || scene === 'camp' ? (
         <div className="room-bar">
           {scene === 'cafe' && <CafePanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} onBooks={() => setSheet({ kind: 'book' })} />}
@@ -815,7 +823,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
               onStart={() => { if (Date.now() - ride > RIDE_MS) live.update({ ride: Date.now() }); }} onKiss={kiss} />
           )}
           {scene === 'camp' && <CampPanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} date={myTime.date} claimed={claimed} question={campQ === null ? null : content.campfire[campQ]} onAsk={askCamp} onHeat={setCampHeat} />}
-          <button className="btn small ghost leave" onClick={() => (scene === 'cafe' ? enter('town', TOWN.cafe.door) : scene === 'wheel' ? enter('beach', BEACH.wheel.stand) : enter('town', { x: 16, y: 62 }))}>🚪 Ra ngoài</button>
+          <button className="btn small ghost leave" onClick={() => (scene === 'cafe' ? enter('town', TOWN.cafe.door) : scene === 'wheel' ? enter('town', TOWN.wheel.stand) : enter('town', { x: 16, y: 62 }))}>🚪 Ra ngoài</button>
         </div>
       ) : scene === 'hill' ? (
         <HillPanel

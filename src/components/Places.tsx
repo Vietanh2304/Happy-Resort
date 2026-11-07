@@ -8,6 +8,7 @@ import { toast } from '../lib/toast';
 import type { HillSky } from '../lib/townSprites';
 import type { Live } from '../lib/useLive';
 import { RIDE_MS } from '../lib/world';
+import { SEA_SPOTS, type SeaSpot } from '../lib/seaView';
 import { Sheet } from './Sheet';
 
 function Chat({ live, placeholder }: { live: Live; placeholder: string }) {
@@ -137,6 +138,48 @@ export function CampPanel({ live, partnerHere, partnerName, date, claimed, quest
       </div>
       {heat !== null && <p className="muted small-note">Rút ra khi thanh vào vùng vàng ✨ — sớm quá thì sống, trễ quá thì cháy.</p>}
       <Chat live={live} placeholder="Kể chuyện bên đống lửa…" />
+    </div>
+  );
+}
+
+// ───────── Ghế dài ngắm biển ─────────
+
+export function LoungePanel({ live, partnerHere, partnerName, spot, onSpot, menu, onMenu }: {
+  live: Live; partnerHere: boolean; partnerName: string; spot: SeaSpot; onSpot: (s: SeaSpot) => void; menu: boolean; onMenu: (open: boolean) => void;
+}) {
+  const [cat, setCat] = useState(0);
+  const swimming = live.mine.act === 'swim';
+  const here = SEA_SPOTS.find(x => x.id === spot) ?? SEA_SPOTS[0];
+  return (
+    <div className="room-panel">
+      {status(partnerHere, partnerName, `Nằm dưới dù đợi ${partnerName} ra biển cùng nhé ⛱️`)}
+      <div className="sky-chips">
+        {SEA_SPOTS.map(x => <button key={x.id} className={`chip ${spot === x.id ? 'active' : ''}`} onClick={() => onSpot(x.id)} title={x.note}>{x.flag} {x.name}</button>)}
+      </div>
+      <p className="muted small-note">📍 {here.flag} {here.name} — {here.note}</p>
+      <div className="row wrap">
+        <button className="btn small" onClick={() => onMenu(true)}>🥥 Gọi đồ ở quầy bar</button>
+        <button className="btn small ghost" onClick={() => { live.update({ act: swimming ? null : 'swim' }); live.say(swimming ? '⛱️ Lên nằm nghỉ chút' : '🌊 Xuống tắm biển nào!'); }}>
+          {swimming ? '⛱️ Lên ghế nằm' : '🌊 Xuống tắm biển'}
+        </button>
+        <button className="btn small ghost" onClick={() => live.say('🥂 Cụng ly nào!')}>🥂</button>
+        <button className="btn small ghost" onClick={() => live.say('😎 Nắng đẹp ghê')}>😎</button>
+        <button className="btn small ghost" onClick={() => live.say('🥰')}>🥰</button>
+      </div>
+      <Chat live={live} placeholder="Nói gì đó bên tiếng sóng…" />
+      {menu && (
+        <Sheet title="🥥 Quầy bar dừa" onClose={() => onMenu(false)}>
+          <div className="tabs scroll">{content.beachBar.map((c, i) => <button key={c.cat} className={cat === i ? 'active' : ''} onClick={() => setCat(i)}>{c.cat}</button>)}</div>
+          <div className="bag-grid">
+            {content.beachBar[cat].items.map(f => (
+              <button key={f.name} className="bag-item" onClick={() => { live.update(cat === 1 ? { dish: f.name } : { drink: f.name }); live.say(`${f.icon} ${f.name} cho mình nhé!`); onMenu(false); }}>
+                <img src={emojiSprite(f.icon).url} className="px-img" alt="" /><small>{f.name}</small>
+              </button>
+            ))}
+          </div>
+          <p className="muted small-note">Đồ gọi được mang ra bàn nhỏ giữa hai ghế.</p>
+        </Sheet>
+      )}
     </div>
   );
 }

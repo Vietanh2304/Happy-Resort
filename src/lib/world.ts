@@ -2,7 +2,7 @@
 // Tọa độ là pixel logic của từng cảnh (trước khi phóng to).
 import { HH, HW } from './iso';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco';
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge';
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -32,6 +32,7 @@ export function wallSlot(row: number, i: number, z = 25): Pt {
 
 export const SCENES: Record<SceneId, SceneDef> = {
   town: { name: 'Làng', icon: '🏘️', w: 384, h: 288, outdoor: true, walk: { x0: 6, x1: 378, y0: 54, y1: 284 }, spawn: { x: 192, y: 124 } },
+  lounge: { name: 'Ghế ngắm biển', icon: '⛱️', w: 192, h: 144, outdoor: true, spawn: { x: 70, y: 136 } },
   beach: { name: 'Bãi biển', icon: '🏖️', w: 192, h: 144, outdoor: true, walk: { x0: 6, x1: 186, y0: 50, y1: 121 }, spawn: { x: 96, y: 56 } },
   hill: { name: 'Đồi ngắm cảnh', icon: '⛰️', w: 192, h: 144, outdoor: true, spawn: { x: 86, y: 124 } },
   farm: { name: 'Nông trại', icon: '🌾', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 58, y1: 188 }, spawn: { x: 128, y: 182 } },
@@ -71,12 +72,14 @@ export const TOWN = {
   guestSpots: [{ x: 160, y: 172 }, { x: 230, y: 150 }],
   trees: [
     ['pine', 330, 90], ['round1', 376, 94], ['cherry', 22, 152], ['round0', 62, 142],
-    ['pine', 138, 150], ['cherry', 252, 152], ['round2', 300, 140], ['pine', 372, 156], ['round0', 344, 166],
-    ['cherry', 376, 204], ['pine', 290, 286], ['round1', 372, 284],
+    ['pine', 138, 150], ['cherry', 252, 152], ['round2', 300, 140],
+    ['pine', 290, 286], ['round1', 372, 284],
   ] as [string, number, number][],
   bushes: [[100, 94, 0], [178, 94, 1], [254, 94, 3], [328, 100, 4], [120, 132, 2], [278, 166, 0], [226, 266, 1]] as [number, number, number][],
   lamps: [[34, 122], [122, 122], [170, 122], [262, 122], [330, 122], [196, 284]] as [number, number][],
   benches: [[168, 202], [226, 200]] as [number, number][],
+  // Vòng đu quay khổng lồ (dời từ bãi biển vào làng): góc phải, cạnh lều khu vui chơi
+  wheel: { x: 352, y: 196, stand: { x: 352, y: 208 } },
 };
 
 /** Ruộng nông trại: trồng ở ô nào tùy thích (ô = y * cols + x), đồ trang trí cũng đặt trên lưới này */
@@ -106,7 +109,8 @@ export const BEACH = {
   toTown: { x: 96, y: 50 },
   dock: { x: 168, y: 142, stand: { x: 176, y: 121 } },
   bobber: { x: 150, y: 136 },
-  wheel: { x: 42, y: 78, stand: { x: 44, y: 84 } },
+  // Dù che nắng + ghế dài (chỗ vòng đu quay cũ): chạm vào ghế → nằm ngắm biển
+  loungers: [{ x: 20, y: 84 }, { x: 62, y: 88 }, { x: 40, y: 112 }],
 };
 
 export const HOUSE = {

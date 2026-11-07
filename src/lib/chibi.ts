@@ -105,7 +105,7 @@ interface Outfit {
   bottom: Bottom; bot: string; hem?: number; legs?: string; shoes: string;
   deco?: (P: HiPen, v: View, y: number) => void;
 }
-function outfitOf(o: number, C: string, S: string): Outfit {
+function outfitOf(o: number, C: string, S: string, girl = false): Outfit {
   const Cd = mix(C, '#2a2030', 0.25), Cl = mix(C, '#ffffff', 0.45), W = '#fffaf0';
   switch (o) {
     case 1: return { top: C, sleeve: 'puff', bottom: 'skirt', bot: C, hem: 44, shoes: '#e86a7a', deco: (P, v, y) => { if (v !== 'back') P.rect(13, y + 25, 6, 2, W); for (let x = 9; x < 23; x += 3) P.px(x, 43, W); } };
@@ -125,6 +125,24 @@ function outfitOf(o: number, C: string, S: string): Outfit {
     case 15: return { top: W, sleeve: 'long', topEnd: 44, bottom: 'skirt', bot: W, hem: 44, shoes: '#f7b8cc', deco: (P, v, y) => { P.rect(10, y + 34, 12, 2, C); if (v === 'front') { P.line(14, y + 24, 17, y + 33, 1, '#e8e0e8'); P.rect(18, y + 36, 2, 4, C); } } };
     case 16: return { top: C, sleeve: 'long', bottom: 'pants', bot: Cd, shoes: W, deco: (P, v, y) => { if (v !== 'back') P.rect(16, y + 25, 1, 11, Cl); P.rect(10, y + 26, 1, 8, W); P.rect(21, y + 26, 1, 8, W); } };
     case 17: return { top: C, sleeve: 'puff', bottom: 'gown', bot: Cl, hem: 51, shoes: '#f6c64e', deco: (P, _v, y) => { P.rect(10, y + 35, 12, 1, '#f6c64e'); for (const [x, yy] of [[9, 44], [14, 47], [21, 42], [23, 48], [11, 39], [18, 40]]) P.px(x, yy, '#ffffff'); } };
+    // Đồ bơi: nam quần đùi cởi trần, nữ bikini hai mảnh (màu theo màu áo đang chọn), dép tông
+    case 18: {
+      const Sd = mix(S, '#c07060', 0.28), Cs = mix(C, '#ffffff', 0.5);
+      return girl
+        ? { top: S, sleeve: 'none', bottom: 'shorts', bot: C, legs: S, shoes: '#f59ab3', deco: (P, v, y) => {
+          if (v === 'front') { P.rect(11, y + 27, 4, 3, C); P.rect(17, y + 27, 4, 3, C); P.px(16, y + 28, C); P.px(12, y + 25, C); P.px(19, y + 25, C); P.px(12, y + 27, Cs); P.px(18, y + 27, Cs); }
+          else if (v === 'back') P.rect(10, y + 28, 12, 2, C);
+          else P.rect(14, y + 27, 6, 3, C);
+          P.rect(10, 36, 12, 3, C); P.rect(10, 36, 12, 1, Cs);
+          if (v === 'front') P.px(16, y + 33, Sd);
+        } }
+        : { top: S, sleeve: 'none', bottom: 'shorts', bot: C, legs: S, shoes: '#5aa8e0', deco: (P, v, y) => {
+          if (v === 'front') { P.px(13, y + 29, Sd); P.px(18, y + 29, Sd); P.px(16, y + 33, Sd); }
+          P.rect(10, 35, 12, 6, C); P.rect(10, 35, 12, 1, Cs);
+          if (v !== 'back') { P.rect(v === 'side' ? 19 : 10, 37, 1, 4, Cs); if (v === 'front') P.rect(21, 37, 1, 4, Cs); }
+          P.rect(15, 41, 2, 1, mix(C, '#2a2030', 0.25));
+        } };
+    }
     default: return { top: C, sleeve: 'short', bottom: 'pants', bot: '#6a7aa8', shoes: '#7a4e3a', deco: (P, v, y) => { if (v === 'front') P.rect(13, y + 25, 6, 1, Cl); } };
   }
 }
@@ -195,7 +213,7 @@ function draw(P: HiPen, a: Args) {
   const { S, H, C, hairIx, out, acc, glasses, pose, view, step, hold } = a;
   const Sd = mix(S, '#c07060', 0.28), Hd = mix(H, '#2a1a1a', 0.3), Hl = mix(H, '#ffffff', 0.32);
   const hair = HAIRS[hairIx];
-  const o = outfitOf(out, C, S);
+  const o = outfitOf(out, C, S, a.girl);
   const sit = pose === 'sit' || pose === 'actsit';
   const bob = pose === 'walk' && step % 2 === 1 ? -1 : 0;   // nhịp giữa hai bước: người nhổm lên
   const y = bob;                                            // độ lệch phần thân trên

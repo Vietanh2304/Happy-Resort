@@ -1,7 +1,7 @@
 // Nhạc nền lo-fi chill tự sinh bằng Web Audio (không dùng file nhạc, không lo bản quyền):
 // hợp âm piano điện ấm, giai điệu ngũ cung thưa thớt có tiếng vang, trống nhẹ, tiếng đĩa than lạo xạo.
 
-export type Mood = 'day' | 'night' | 'love' | 'cafe' | 'camp';
+export type Mood = 'day' | 'night' | 'love' | 'cafe' | 'camp' | 'sea';
 
 const PROG: Record<Mood, number[][]> = {
   day: [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59]],      // Fmaj7 Em7 Dm7 Cmaj7
@@ -9,6 +9,7 @@ const PROG: Record<Mood, number[][]> = {
   love: [[48, 52, 55, 59], [45, 48, 52, 55], [53, 57, 60, 64], [55, 59, 62, 64]],     // Cmaj7 Am7 Fmaj7 G6 — vòng hợp âm "tình yêu"
   cafe: [[50, 53, 57, 60, 64], [43, 53, 59, 64], [48, 52, 55, 59, 62], [45, 55, 61, 64]], // Dm9 G13 Cmaj9 A7 — jazz quán cà phê
   camp: [[43, 47, 50, 55, 59], [38, 45, 50, 54, 57], [40, 47, 52, 55, 59], [36, 43, 48, 52, 55]], // G D Em C — ghi-ta bên lửa trại
+  sea: [[50, 54, 57, 61], [47, 50, 54, 57], [43, 47, 50, 54], [45, 49, 52, 57]],                  // Dmaj7 Bm7 Gmaj7 A — nghỉ dưỡng bên biển
 };
 const LOVE_MELODY = [76, 74, 72, 74, 76, 79, 76, 74, 72, 69, 72, 74, 76, 72, 74, 72];
 const PENTA = [72, 74, 76, 79, 81, 84];
@@ -23,6 +24,7 @@ class Lofi {
   private echo!: DelayNode;
   private noise!: AudioBuffer;
   private crackle: AudioBufferSourceNode | null = null;
+  private wind: { src: AudioBufferSourceNode; lfo: OscillatorNode } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private nextBeat = 0;
   private beat = 0;
@@ -148,6 +150,48 @@ class Lofi {
     src.stop(t + len + 0.02);
   }
 
+  /** Một con sóng: tiếng ầm dâng lên rồi rút (ồn trắng qua lọc thấp quét lên xuống) + tiếng bọt xì */
+  private wave(t: number, big: number) {
+    const ctx = this.ctx!;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise; src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(260, t);
+    f.frequency.linearRampToValueAtTime(900 + big * 500, t + 1.6);
+    f.frequency.exponentialRampToValueAtTime(220, t + 4.6);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.16 + big * 0.08, t + 1.5);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 4.8);
+    src.connect(f).connect(g).connect(this.tone);
+    src.start(t, Math.random() * 1.5); src.stop(t + 5);
+    this.hiss(t + 1.3, 3200, 'highpass', 0.05 + big * 0.03, 1.6);
+  }
+
+  /** Gió biển: ồn trắng lọc dải, to nhỏ chậm rãi */
+  private startWind() {
+    if (this.wind || !this.ctx) return;
+    const ctx = this.ctx;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise; src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 520; f.Q.value = 0.7;
+    const g = ctx.createGain(); g.gain.value = 0.035;
+    const lfo = ctx.createOscillator(), depth = ctx.createGain();
+    lfo.frequency.value = 0.07; depth.gain.value = 0.028;
+    lfo.connect(depth).connect(g.gain);
+    src.connect(f).connect(g).connect(this.tone);
+    src.start(); lfo.start();
+    this.wind = { src, lfo };
+  }
+  private stopWind() {
+    if (!this.wind) return;
+    const { src, lfo } = this.wind;
+    this.wind = null;
+    try { src.stop(); lfo.stop(); } catch { /* đã dừng */ }
+  }
+
   private schedule() {
     const ctx = this.ctx!;
     while (this.nextBeat < ctx.currentTime + 0.6) {
@@ -159,6 +203,15 @@ class Lofi {
         for (const half of [0, 0.5]) { const i = pat[(inBar * 2 + half * 2) % pat.length]; this.pluck(chord[i % chord.length] + (i > 2 ? 12 : 0), t + half * BEAT + (half ? 0.05 : 0)); }
         if (inBar === 0) this.pluck(chord[0] - 12, t, 0.07);
         if (Math.random() < 0.3) this.hiss(t + Math.random() * BEAT, 4800, 'bandpass', 0.012, 0.08);
+        this.nextBeat += BEAT;
+        this.beat++;
+        continue;
+      }
+      if (this.mood === 'sea') {
+        // Biển: hợp âm đệm nhẹ, chuông lác đác, không trống; sóng vỗ ~5 giây một lần
+        if (inBar === 0) { chord.forEach((m, i) => this.keys(m, t + i * 0.03, BEAT * 4, 0.032)); this.keys(chord[0] - 12, t, BEAT * 4, 0.045); }
+        if (Math.random() < 0.18) this.bell(PENTA[Math.floor(Math.random() * PENTA.length)] - 12 + 2, t + BEAT * 0.5);
+        if (b % 6 === 0) this.wave(t + Math.random() * 0.4, Math.random());
         this.nextBeat += BEAT;
         this.beat++;
         continue;
@@ -206,6 +259,7 @@ class Lofi {
     this.master.gain.cancelScheduledValues(ctx.currentTime);
     this.master.gain.linearRampToValueAtTime(this.vol * 0.9, ctx.currentTime + 1.5);
     this.startCrackle();
+    if (this.mood === 'sea') this.startWind();
     this.timer = setInterval(() => this.schedule(), 120);
     this.playing = true;
   }
@@ -219,6 +273,9 @@ class Lofi {
     this.timer = null;
     const c = this.crackle;
     setTimeout(() => c?.stop(), 700);
+    const w = this.wind;
+    this.wind = null;
+    setTimeout(() => { try { w?.src.stop(); w?.lfo.stop(); } catch { /* đã dừng */ } }, 700);
     this.crackle = null;
     this.playing = false;
   }
@@ -238,6 +295,7 @@ class Lofi {
 
   setMood(m: Mood) {
     this.mood = m;
+    if (m === 'sea' && this.playing) this.startWind(); else if (m !== 'sea') this.stopWind();
     if (this.ctx) this.tone.frequency.setTargetAtTime(m === 'night' || m === 'camp' ? 1800 : m === 'love' || m === 'cafe' ? 2000 : 2400, this.ctx.currentTime, 1);
   }
 }

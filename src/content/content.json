@@ -3763,5 +3763,81 @@
     "Bạn thích được người ấy gọi bằng biệt danh gì nhất?",
     "Nơi nào ở thành phố của bạn mà bạn muốn dẫn người ấy tới đầu tiên?",
     "Nếu tối nay là đêm cuối cùng của năm, bạn sẽ ước gì cho hai đứa?"
+  ],
+  "beachBar": [
+    {
+      "cat": "🥥 Đồ uống",
+      "items": [
+        {
+          "name": "Nước dừa tươi",
+          "icon": "🥥"
+        },
+        {
+          "name": "Sinh tố xoài",
+          "icon": "🥭"
+        },
+        {
+          "name": "Nước ép dưa hấu",
+          "icon": "🍉"
+        },
+        {
+          "name": "Trà đào cam sả",
+          "icon": "🍑"
+        },
+        {
+          "name": "Cocktail nhiệt đới",
+          "icon": "🍹"
+        },
+        {
+          "name": "Bia lạnh",
+          "icon": "🍺"
+        },
+        {
+          "name": "Nước chanh bạc hà",
+          "icon": "🍋"
+        },
+        {
+          "name": "Kem dừa",
+          "icon": "🍨"
+        }
+      ]
+    },
+    {
+      "cat": "🦐 Hải sản nướng",
+      "items": [
+        {
+          "name": "Tôm nướng muối ớt",
+          "icon": "🍤"
+        },
+        {
+          "name": "Mực nướng sa tế",
+          "icon": "🦑"
+        },
+        {
+          "name": "Cua rang me",
+          "icon": "🦀"
+        },
+        {
+          "name": "Hàu nướng mỡ hành",
+          "icon": "🦪"
+        },
+        {
+          "name": "Ốc hương xào bơ tỏi",
+          "icon": "🐚"
+        },
+        {
+          "name": "Cá nướng giấy bạc",
+          "icon": "🐟"
+        },
+        {
+          "name": "Tôm hùm nướng phô mai",
+          "icon": "🦞"
+        },
+        {
+          "name": "Bánh mì hải sản",
+          "icon": "🥖"
+        }
+      ]
+    }
   ]
 }
