@@ -45,10 +45,12 @@ interface Props {
   swim?: boolean;
   /** Lặn đêm: rọi đèn pin về phía trước */
   torch?: boolean;
+  /** Cảnh cận (khoang đu quay, nhà hàng…): vẽ nhân vật to hơn cho đúng tỉ lệ với đồ đạc */
+  zoom?: number;
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -104,7 +106,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
     : pair ? (pair.f === 'side' ? characterSprite(look, 'idle', undefined, 'side') : characterSprite(look, 'act', undefined, 'front', pair.f))
     : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : view, step);
   const ax = sprite.ax ?? sprite.w / 2;
-  const ps = avatarPx(s);
+  const ps = avatarPx(s * (zoom ?? 1));
   if (swim) {
     // Bơi: thân nằm ngang (xoay 75°), bình dưỡng khí trên lưng, bong bóng thở nổi lên từ đầu
     const sw = characterSprite(look, 'walk', undefined, 'side', step), tank = tankSprite();

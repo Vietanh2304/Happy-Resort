@@ -47,7 +47,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   restaurant: { name: 'Nhà hàng', icon: '🕯️', w: 192, h: 144, outdoor: false, spawn: { x: 70, y: 118 } },
   disco: { name: 'Sàn khiêu vũ', icon: '💃', w: 192, h: 144, outdoor: false, spawn: { x: 76, y: 122 } },
   cafe: { name: 'Cà phê sách', icon: '☕', w: 192, h: 144, outdoor: false, spawn: { x: 70, y: 119 } },
-  wheel: { name: 'Vòng đu quay', icon: '🎡', w: 192, h: 144, outdoor: false, spawn: { x: 50, y: 108 } },
+  wheel: { name: 'Vòng đu quay', icon: '🎡', w: 192, h: 144, outdoor: false, spawn: { x: 48, y: 117 } },
   camp: { name: 'Bãi cắm trại', icon: '⛺', w: 192, h: 144, outdoor: true, spawn: { x: 72, y: 120 } },
   twin: { name: 'Đài quan sát hai bờ', icon: '🔭', w: 192, h: 144, outdoor: false, spawn: { x: 86, y: 128 } },
 };
@@ -156,11 +156,11 @@ export const SEATS: Partial<Record<SceneId, [Pt & { left: boolean }, Pt & { left
   restaurant: [{ x: 70, y: 119, left: false }, { x: 122, y: 119, left: true }],
   hill: [{ x: 88, y: 125, left: false }, { x: 104, y: 125, left: true }],
   cafe: [{ x: 70, y: 119, left: false }, { x: 122, y: 119, left: true }],
-  wheel: [{ x: 50, y: 108, left: false }, { x: 142, y: 108, left: true }],
+  wheel: [{ x: 48, y: 117, left: false }, { x: 144, y: 117, left: true }],
   camp: [{ x: 70, y: 118, left: false }, { x: 122, y: 118, left: true }],
   twin: [{ x: 86, y: 129, left: false }, { x: 106, y: 129, left: true }],
   // Đứng sát nhau vừa một cánh tay để nắm tay khiêu vũ
-  disco: [{ x: 89, y: 124, left: false }, { x: 104, y: 124, left: true }],
+  disco: [{ x: 88, y: 124, left: false }, { x: 105, y: 124, left: true }],
 };
 
 export function clampTo(box: Box, p: Pt): Pt {
