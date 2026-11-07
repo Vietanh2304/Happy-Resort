@@ -9,6 +9,8 @@ import { characterSprite, palmSprite } from '../lib/sprites';
 import type { LiveState } from '../lib/useLive';
 import { avatarPx } from './Avatar';
 import { Spr, Tag, useScale } from './Stage';
+import { SeaLife } from './SeaLife';
+import type { SeaSpot } from '../lib/seaView';
 
 /** Món ở quầy bar dừa (tên → biểu tượng) */
 export const BAR_ICON = (name: string | null | undefined) => content.beachBar.flatMap(c => c.items).find(i => i.name === name)?.icon;
@@ -18,10 +20,11 @@ interface Props {
   me: { look: Profile['avatar']; live: LiveState; bubble?: string };
   them: { look: Profile['avatar']; live: LiveState; bubble?: string; name: string } | null;
   firstSeat: boolean;
+  spot: SeaSpot;
   onBar: () => void;
 }
 
-export function LoungeContent({ phase, hour, minute, me, them, firstSeat, onBar }: Props) {
+export function LoungeContent({ phase, hour, minute, me, them, firstSeat, spot, onBar }: Props) {
   const s = useScale();
   const ps = avatarPx(s);
   const sky = celestial(hour, minute);
@@ -46,8 +49,9 @@ export function LoungeContent({ phase, hour, minute, me, them, firstSeat, onBar 
         {[0, 1, 2].map(i => <i key={i} style={{ animationDelay: `${i * 1.7}s` }} />)}
         <b />
       </div>
+      <SeaLife phase={phase} spot={spot} />
       <Spr sprite={sailboatSprite()} x={0} y={horizon + 6} z={2} className="sail-drift" />
-      <Spr sprite={palmSprite(1)} x={182} y={124} />
+      {spot !== 'navagio' && spot !== 'seychelles' && <Spr sprite={palmSprite(1)} x={182} y={124} className="palm-sway" />}
       <Spr sprite={beachBarSprite()} x={LOUNGE.bar.x} y={LOUNGE.bar.y} title="🥥 Quầy bar dừa — gọi nước, hải sản" onClick={onBar} />
       <Tag x={LOUNGE.bar.x} y={LOUNGE.bar.y - 52} className="label" onClick={onBar}>🥥 Bar dừa</Tag>
 

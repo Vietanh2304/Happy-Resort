@@ -2,7 +2,7 @@
 // Tọa độ là pixel logic của từng cảnh (trước khi phóng to).
 import { HH, HW } from './iso';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge';
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky';
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -34,6 +34,8 @@ export const SCENES: Record<SceneId, SceneDef> = {
   town: { name: 'Làng', icon: '🏘️', w: 384, h: 288, outdoor: true, walk: { x0: 6, x1: 378, y0: 54, y1: 284 }, spawn: { x: 192, y: 124 } },
   lounge: { name: 'Ghế ngắm biển', icon: '⛱️', w: 192, h: 144, outdoor: true, spawn: { x: 70, y: 136 } },
   beach: { name: 'Bãi biển', icon: '🏖️', w: 192, h: 144, outdoor: true, walk: { x0: 6, x1: 186, y0: 50, y1: 121 }, spawn: { x: 96, y: 56 } },
+  reef: { name: 'Lặn ngắm san hô', icon: '🤿', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 26, y1: 134 }, spawn: { x: 96, y: 40 } },
+  sky: { name: 'Bãi nhảy dù', icon: '🪂', w: 192, h: 144, outdoor: true, spawn: { x: 96, y: 118 } },
   hill: { name: 'Đồi ngắm cảnh', icon: '⛰️', w: 192, h: 144, outdoor: true, spawn: { x: 86, y: 124 } },
   farm: { name: 'Nông trại', icon: '🌾', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 58, y1: 188 }, spawn: { x: 128, y: 182 } },
   arcade: { name: 'Khu vui chơi', icon: '🎮', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 92, y1: 140 }, spawn: { x: 96, y: 136 } },

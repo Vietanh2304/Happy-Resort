@@ -572,3 +572,32 @@ export function discoRoom() {
     p.rect(0, 86, 192, 1, '#e8c46a');
   }, null);
 }
+
+/** Đu quay tách lớp để quay thật: khung chân + quầy vé (đứng yên) */
+export function ferrisFrameSprite() {
+  return makeSprite('ferris-frame:v1', 72, 92, p => {
+    const cx = 36, cy = 36;
+    for (let y = cy; y < 90; y++) { const k = (y - cy) / (90 - cy); p.rect(cx - 2 - k * 20, y, 3, 1, '#d8d0e0'); p.rect(cx - 1 + k * 20, y, 3, 1, '#c0b8cc'); }
+    p.rect(cx - 26, 88, 52, 3, '#a8a0b8');
+    p.rect(cx - 8, 80, 16, 9, '#f59ab3'); p.rect(cx - 9, 78, 18, 3, '#ffffff'); p.rect(cx - 4, 83, 8, 4, '#fff1a8');
+  }, '#6a5a7a');
+}
+/** Vành + nan hoa + đèn (phần quay) — tâm ở giữa ảnh */
+export function ferrisRimSprite() {
+  return makeSprite('ferris-rim:v1', 70, 70, p => {
+    const cx = 35, cy = 35, R = 32;
+    for (let a = 0; a < 360; a += 1) { const r = (a * Math.PI) / 180; p.px(cx + Math.cos(r) * R, cy + Math.sin(r) * R, '#ffffff'); p.px(cx + Math.cos(r) * (R - 3), cy + Math.sin(r) * (R - 3), '#f2d0e0'); }
+    for (let i = 0; i < 16; i++) { const r = (i / 16) * Math.PI * 2; for (let t = 4; t < R; t += 1) p.px(cx + Math.cos(r) * t, cy + Math.sin(r) * t, i % 2 ? '#f2d0e0' : '#ffffff'); }
+    ellipse(p, cx, cy, 4, 4, '#f59ab3'); ellipse(p, cx, cy, 2, 2, '#fff1a8');
+    for (let i = 0; i < 24; i++) { const r = (i / 24) * Math.PI * 2; p.px(cx + Math.cos(r) * (R + 1), cy + Math.sin(r) * (R + 1), i % 2 ? '#fff1a8' : '#ffc6dc'); }
+  }, '#6a5a7a');
+}
+const CABIN_COLORS = ['#f59ab3', '#f6c64e', '#8db8ef', '#a5d470', '#b7a6e8', '#f7a98a', '#7cc8b4', '#e86a7a'];
+/** Một khoang treo (móc ở giữa mép trên) */
+export function ferrisCabinSprite(i: number) {
+  const c = CABIN_COLORS[i % CABIN_COLORS.length];
+  return makeSprite(`ferris-cab:${c}`, 9, 9, p => {
+    p.rect(4, 0, 1, 2, '#8a8098');
+    p.rect(0, 2, 9, 7, c); p.rect(1, 3, 7, 3, '#e8f6ff'); p.rect(0, 2, 9, 1, mix(c, '#ffffff', 0.4));
+  }, '#6a5a7a');
+}

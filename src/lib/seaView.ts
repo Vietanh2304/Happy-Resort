@@ -6,7 +6,8 @@ import { seeded } from './rng';
 import { SEA, SKY } from './sky';
 
 /** Các nơi ngắm biển (vẽ lại nét đặc trưng của từng nơi trên đường chân trời) */
-export type SeaSpot = 'home' | 'halong' | 'jeju' | 'kenting' | 'santorini' | 'maldives' | 'borabora';
+export type SeaSpot = 'home' | 'halong' | 'jeju' | 'kenting' | 'santorini' | 'maldives' | 'borabora'
+  | 'phuquoc' | 'whitehaven' | 'navagio' | 'copacabana' | 'waikiki' | 'seychelles' | 'boracay';
 export const SEA_SPOTS: { id: SeaSpot; name: string; flag: string; note: string }[] = [
   { id: 'home', name: 'Biển làng mình', flag: '🏝️', note: 'Đảo dừa nhỏ ngoài khơi' },
   { id: 'halong', name: 'Vịnh Hạ Long', flag: '🇻🇳', note: 'Núi đá vôi nhấp nhô, thuyền buồm đỏ' },
@@ -15,6 +16,13 @@ export const SEA_SPOTS: { id: SeaSpot; name: string; flag: string; note: string 
   { id: 'santorini', name: 'Santorini', flag: '🇬🇷', note: 'Vách đá nhà trắng mái vòm xanh' },
   { id: 'maldives', name: 'Maldives', flag: '🇲🇻', note: 'Nhà gỗ trên mặt nước xanh ngọc' },
   { id: 'borabora', name: 'Bora Bora', flag: '🇵🇫', note: 'Núi Otemanu giữa phá xanh' },
+  { id: 'phuquoc', name: 'Phú Quốc', flag: '🇻🇳', note: 'Cầu Hôn hai nửa sắp chạm nhau, cáp treo vượt biển ra Hòn Thơm' },
+  { id: 'whitehaven', name: 'Whitehaven', flag: '🇦🇺', note: 'Cát trắng tinh, dải cát xoáy giữa nước ngọc (Úc)' },
+  { id: 'navagio', name: 'Vịnh Xác Tàu Navagio', flag: '🇬🇷', note: 'Vách đá trắng dựng đứng, xác tàu trên bãi cát' },
+  { id: 'copacabana', name: 'Copacabana', flag: '🇧🇷', note: 'Núi Đường Phèn, cáp treo, vỉa hè sóng đen trắng (Rio)' },
+  { id: 'waikiki', name: 'Waikiki', flag: '🇺🇸', note: 'Núi Diamond Head, dân lướt sóng (Hawaii)' },
+  { id: 'seychelles', name: "Anse Source d'Argent", flag: '🇸🇨', note: 'Những tảng đá granite hồng khổng lồ (Seychelles)' },
+  { id: 'boracay', name: 'Boracay', flag: '🇵🇭', note: 'Bãi Cát Trắng, thuyền buồm paraw sặc sỡ' },
 ];
 
 export const LOUNGE = {
@@ -27,6 +35,10 @@ export const LOUNGE = {
   bar: { x: 24, y: 120 },
 };
 
+/** Dây cáp treo ra Hòn Thơm (Phú Quốc) và lên núi Đường Phèn (Rio): độ cao theo x */
+export const cableY = (x: number) => Math.round(LOUNGE.horizon - 30 + (x / 150) * 22 + Math.sin((x / 150) * Math.PI) * 6);
+export const sugarY = (x: number) => Math.round(LOUNGE.horizon - 34 + ((x - 30) / 34) * 20 + Math.sin(((x - 30) / 34) * Math.PI) * 3);
+
 function ell(p: Pen, cx: number, cy: number, rx: number, ry: number, c: string) {
   for (let y = Math.ceil(cy - ry); y <= Math.floor(cy + ry); y++) {
     const w = rx * Math.sqrt(Math.max(0, 1 - ((y - cy) / ry) ** 2));
@@ -36,7 +48,7 @@ function ell(p: Pen, cx: number, cy: number, rx: number, ry: number, c: string) 
 
 /** Nền: trời, đảo xa, biển (đậm ngoài khơi → xanh ngọc gần bờ), bãi cát */
 export function loungeBackground(phase: Phase, spot: SeaSpot = 'home') {
-  return makeSprite(`lounge:v2:${phase}:${spot}`, 192, 144, p => {
+  return makeSprite(`lounge:v4:${phase}:${spot}`, 192, 144, p => {
     const { horizon, shore } = LOUNGE;
     const [top, low] = SKY[phase];
     for (let y = 0; y < horizon; y++) {
@@ -74,6 +86,7 @@ export function loungeBackground(phase: Phase, spot: SeaSpot = 'home') {
     for (let i = 0; i < 160; i++) p.px(Math.floor(rand() * 192), shore + 5 + Math.floor(rand() * 34), rand() < 0.5 ? mix(sand, '#a0602a', 0.2) : mix(sand, '#ffffff', 0.5));
     for (const [x, y] of [[150, 126], [40, 134], [176, 138]]) { p.rect(x, y, 3, 2, '#ffd6e0'); p.px(x + 1, y - 1, '#ffd6e0'); }   // vỏ sò
     p.px(60, 140, '#ff8a6a'); p.px(59, 141, '#ff8a6a'); p.px(61, 141, '#ff8a6a'); p.px(60, 141, '#ffb090');                   // sao biển
+    if (spot === 'copacabana') for (let x = 0; x < 192; x++) for (let y = 138; y < 144; y++) p.px(x, y, (Math.round(y + Math.sin(x / 4) * 2.2) % 4 < 2) ? (phase === 'night' ? '#3a3448' : '#2a2a2a') : (phase === 'night' ? '#a8a4c0' : '#f4f0e8'));
     if (spot === 'jeju') for (const [x, y, r] of [[8, 112, 7], [182, 114, 9], [168, 110, 4]]) { ell(p, x, y, r, r * 0.55, '#3a3640'); ell(p, x - 1, y - 1, r * 0.6, r * 0.3, '#5a5660'); }   // đá bazan đen
   }, null);
 }
@@ -86,6 +99,13 @@ const WATER: Record<SeaSpot, { deep: string; shallow: string; sand: string }> = 
   santorini: { deep: '#0a3a9a', shallow: '#3a8ad8', sand: '#9a8a80' },
   maldives: { deep: '#1a8ac8', shallow: '#9af4ec', sand: '#fff8ec' },
   borabora: { deep: '#1478b8', shallow: '#8af0e0', sand: '#fff2d8' },
+  phuquoc: { deep: '#1a6ab0', shallow: '#78dcd0', sand: '#fbe6bc' },
+  whitehaven: { deep: '#1478c8', shallow: '#8cf4f0', sand: '#fdfcf6' },
+  navagio: { deep: '#0a62b8', shallow: '#48e8f2', sand: '#f2ede2' },
+  copacabana: { deep: '#14589a', shallow: '#6ac8d8', sand: '#f2d8a8' },
+  waikiki: { deep: '#1462b0', shallow: '#6ad8e0', sand: '#f0d6a0' },
+  seychelles: { deep: '#1a7ab8', shallow: '#a0f0e4', sand: '#fff6e6' },
+  boracay: { deep: '#1a72c0', shallow: '#90ecec', sand: '#fffbf2' },
 };
 
 /** Nét đặc trưng của từng nơi trên đường chân trời (xa thì nhạt, đêm thì tối) */
@@ -172,6 +192,94 @@ function landmarks(p: Pen, spot: SeaSpot, phase: Phase, rand: () => number) {
       for (let i = 0; i < 5; i++) { const x = 56 + i * 9; p.rect(x, H + 4, 7, 4, shade('#e8c88a')); for (let r = 0; r < 3; r++) p.rect(x - 1 + r, H + 1 + r, 9 - r * 2, 1, shade('#c8a050')); p.rect(x + 3, H + 8, 1, 3, shade('#8a5a3c')); }
       break;
     }
+    case 'phuquoc': {
+      // Hòn Thơm xa, cáp treo vượt biển (cabin chạy bằng CSS), Cầu Hôn: hai nửa vòm cầu vươn ra gần chạm nhau
+      ell(p, 160, H, 22, 4, far(shade('#4a7a5a'))); peak(160, H, 18, 8, far(shade('#5a8a5a')), 0.6);
+      ell(p, 120, H, 9, 2, far(shade('#5a8a5a')));
+      for (let x = 0; x < 150; x++) p.px(x, cableY(x), shade('#5a5a6a'));
+      for (const x of [40, 100]) { const y = cableY(x); p.rect(x - 1, y, 2, H - y + 2, shade('#9aa0b0')); p.rect(x - 2, y, 4, 1, shade('#6a7080')); }
+      const deck = shade('#e8dcc8'), rail = shade('#c8a070'), pier = shade('#8a7a6a');
+      for (const side of [0, 1]) {
+        for (let i = 0; i <= 74; i++) {
+          const x = side ? 172 - i : 20 + i, y = Math.round(H + 16 - Math.sin((i / 74) * (Math.PI / 2)) * 9);
+          p.rect(x, y, 1, 2, deck); p.px(x, y - 2, rail);
+          if (i % 12 === 0) p.rect(x, y + 2, 1, H + 20 - y, pier);
+        }
+      }
+      if (night) for (let i = 0; i < 74; i += 6) for (const x of [20 + i, 172 - i]) p.px(x, Math.round(H + 14 - Math.sin((i / 74) * (Math.PI / 2)) * 9) - 1, '#fff1a8');
+      break;
+    }
+    case 'whitehaven': {
+      // Đồi rừng xanh hai bên, dải cát trắng xoáy uốn lượn giữa nước nông xanh ngọc
+      peak(16, H, 34, 14, shade('#3a6a3a'), 0.55); peak(176, H, 38, 18, shade('#356a3a'), 0.5); peak(120, H, 20, 6, far(shade('#4a7a4a')), 0.6);
+      const white = mix(WATER.whitehaven.shallow, '#ffffff', 0.7);
+      for (let k = 0; k < 4; k++) {
+        const y0 = H + 18 + k * 7;
+        for (let x = 0; x < 192; x++) { const y = Math.round(y0 + Math.sin(x / (18 + k * 4) + k * 1.7) * (3 + k)); if ((x + k * 13) % 70 < 48) p.rect(x, y, 1, 2 + (k >> 1), shade(k % 2 ? white : mix(white, '#ffffff', 0.5))); }
+      }
+      break;
+    }
+    case 'navagio': {
+      // Vách đá vôi trắng dựng đứng ôm vịnh hai bên, bụi cây trên đỉnh; xác tàu gỉ nằm trên cát ở mép nước
+      const cliff = shade('#ece2d0'), cliffD = shade('#cbbca4');
+      for (let y = 0; y < 72; y++) {
+        const wl = Math.round(46 - y * 0.32 + Math.sin(y * 0.5) * 2), wr = Math.round(40 - y * 0.25 + Math.cos(y * 0.6) * 2);
+        p.rect(0, H - 34 + y, wl, 1, y % 7 === 3 ? cliffD : cliff); p.rect(wl - 3, H - 34 + y, 3, 1, cliffD);
+        p.rect(192 - wr, H - 30 + y, wr, 1, y % 6 === 2 ? cliffD : cliff); p.rect(192 - wr, H - 30 + y, 2, 1, cliffD);
+      }
+      for (let x = 0; x < 46; x += 2) p.rect(x, H - 36 + (x % 3), 2, 2, shade('#6a8a4a'));
+      for (let x = 152; x < 192; x += 2) p.rect(x, H - 32 + (x % 3), 2, 2, shade('#6a8a4a'));
+      const rust = shade('#a8603a'), rustD = shade('#7a4028');
+      for (let i = 0; i < 9; i++) p.rect(110 + i, 106 - i, 40 - i * 2, 1, i < 2 ? rustD : rust);
+      p.rect(116, 92, 10, 6, shade('#d8d0c4')); p.rect(117, 93, 2, 2, rustD); p.rect(121, 93, 2, 2, rustD);
+      p.rect(130, 86, 2, 12, rustD); p.rect(138, 90, 1, 8, rustD);
+      break;
+    }
+    case 'copacabana': {
+      // Núi Đường Phèn (Pão de Açúcar) bên trái + núi Urca nhỏ, dây cáp treo; tượng Chúa trên núi Corcovado xa
+      peak(160, H, 30, 26, far(shade('#4a6a5a')), 0.7);
+      p.rect(160, H - 31, 1, 5, far(shade('#f2f0e8'))); p.rect(158, H - 30, 5, 1, far(shade('#f2f0e8')));
+      const rock = shade('#5a6a5a'), rockL = shade('#7a8a6a');
+      for (let y = 0; y < 34; y++) { const half = Math.round(4 + 10 * Math.sqrt(y / 34)); p.rect(30 - half, H - 34 + y, half * 2, 1, y < 3 ? rockL : rock); p.px(30 - half + 2, H - 34 + y, mix(rock, '#ffffff', 0.15)); }
+      for (let y = 0; y < 14; y++) { const half = Math.round(5 + 9 * Math.sqrt(y / 14)); p.rect(64 - half, H - 14 + y, half * 2, 1, y < 2 ? rockL : rock); }
+      for (let x = 30; x <= 64; x++) p.px(x, sugarY(x), shade('#3a3a4a'));
+      for (let i = 0; i < 18; i++) { const x = 100 + i * 5, h = 4 + ((i * 7) % 6); p.rect(x, H - h + 1, 4, h, shade(i % 2 ? '#e8e0d0' : '#d0c8bc')); if (night) p.px(x + 1, H - h + 2, '#fff1a8'); }
+      break;
+    }
+    case 'waikiki': {
+      // Núi lửa Diamond Head: sườn dài răng cưa bên phải; khách sạn cao tầng dọc bờ; thuyền độc mộc
+      const dh = shade('#7a7a5a'), dhD = shade('#5a5a44');
+      for (let x = 100; x < 192; x++) { const t = (x - 100) / 92, h = Math.max(1, Math.round(6 + Math.sin(t * Math.PI * 0.9) * 18 + Math.sin(x * 0.9) * 1.5 - (t > 0.7 ? (t - 0.7) * 30 : 0))); p.rect(x, H - h, 1, h, (x % 5 === 0) ? dhD : dh); }
+      for (let i = 0; i < 10; i++) { const x = 4 + i * 9, h = 8 + ((i * 5) % 9); p.rect(x, H - h + 2, 7, h, shade(i % 2 ? '#f0ece4' : '#d8e0e8')); for (let yy = H - h + 4; yy < H; yy += 3) p.rect(x + 1, yy, 5, 1, night ? '#ffe08a' : shade('#8aa8c8')); }
+      p.rect(70, H + 12, 14, 2, shade('#8a5a3c')); p.rect(72, H + 9, 10, 1, shade('#c8a070')); p.rect(76, H + 9, 1, 3, shade('#c8a070'));
+      break;
+    }
+    case 'seychelles': {
+      // Tảng đá granite hồng xám khổng lồ, tròn trịa, có vệt xói dọc; dừa nghiêng ra biển
+      const boulder = (cx: number, by: number, rx: number, ry: number) => {
+        const c = shade('#b89a8a'), d = shade('#8a6a64'), l = shade('#d8bcae');
+        ell(p, cx, by - ry, rx, ry, c); ell(p, cx - rx * 0.25, by - ry * 1.35, rx * 0.55, ry * 0.45, l);
+        for (let x = Math.round(cx - rx + 3); x < cx + rx - 2; x += 4) for (let y = Math.round(by - ry * 0.9); y < by - 1; y++) if (((x * 7 + y) % 5) < 2 && ((x - cx) / rx) ** 2 + ((y - (by - ry)) / ry) ** 2 < 0.8) p.px(x, y, d);
+        p.rect(Math.round(cx - rx + 2), by - 2, Math.round(rx * 2 - 4), 2, d);
+      };
+      boulder(18, 110, 22, 22); boulder(52, 108, 13, 11); boulder(176, 110, 20, 26); boulder(150, 106, 10, 8); boulder(98, H + 6, 6, 4);
+      for (const [x0, y0, dir] of [[30, 66, 1], [168, 62, -1]] as const) {
+        for (let i = 0; i < 26; i++) p.rect(x0 + Math.round(dir * i * i * 0.025), y0 + i, 2, 1, shade('#8a6a4a'));
+        for (const [dx, dy] of [[-7, 2], [-5, -2], [0, -4], [5, -2], [7, 2]]) line(x0, y0, x0 + dx, y0 + dy + 2, shade('#3a8a3a'));
+      }
+      break;
+    }
+    case 'boracay': {
+      // Núi Luho xa bên phải, Willy's Rock (mỏm đá có tượng trắng) giữa nước nông; thuyền paraw buồm sặc sỡ
+      peak(170, H, 30, 12, far(shade('#4a7a4a')), 0.55);
+      ell(p, 44, 92, 9, 6, shade('#5a5048')); ell(p, 42, 89, 5, 4, shade('#6a6058')); p.rect(43, 80, 2, 6, shade('#fffaf0')); p.rect(42, 79, 4, 1, shade('#fffaf0')); p.px(43, 77, shade('#5aa8e0'));
+      for (const [x, y, c] of [[90, H + 8, '#e8604a'], [126, H + 4, '#f6c64e'], [150, H + 12, '#5aa8e0']] as const) {
+        p.rect(x - 6, y + 7, 14, 2, shade('#fffaf0')); p.rect(x - 9, y + 9, 20, 1, shade('#8a5a3c'));
+        for (let k = 0; k < 7; k++) p.rect(x - Math.round(k * 0.7), y + k, Math.round(k * 0.7) + 4, 1, shade(c));
+        p.rect(x + 1, y - 1, 1, 9, shade('#8a5a3c'));
+      }
+      break;
+    }
   }
 }
 
@@ -251,3 +359,31 @@ export const beachSetSprite = (i: number) => {
     p.px(27, 9, '#8a5a3c');
   });
 };
+
+/** Hải âu (2 khung: cánh lên/xuống) */
+export const gullSprite = (f: number) => makeSprite(`gull:${f}`, 9, 4, p => {
+  if (f) { p.rect(0, 2, 3, 1, '#ffffff'); p.rect(3, 1, 3, 1, '#ffffff'); p.rect(6, 2, 3, 1, '#ffffff'); p.px(4, 2, '#f6c64e'); }
+  else { p.rect(0, 0, 2, 1, '#ffffff'); p.rect(2, 1, 2, 1, '#ffffff'); p.rect(5, 1, 2, 1, '#ffffff'); p.rect(7, 0, 2, 1, '#ffffff'); p.rect(4, 2, 1, 1, '#e8e8f0'); }
+}, '#5a6070');
+/** Cá heo đang nhảy (đầu bên phải) */
+export const dolphinSprite = () => makeSprite('dolphin', 16, 8, p => {
+  for (let x = 0; x < 13; x++) { const h = Math.round(Math.sin((x / 13) * Math.PI) * 3) + 1; p.rect(x + 1, 4 - h, 1, h * 2, x > 9 ? '#8aa0b8' : '#6a8aa8'); p.px(x + 1, 4 + h - 1, '#c8d8e8'); }
+  p.rect(13, 3, 3, 2, '#6a8aa8'); p.px(15, 4, '#c8d8e8'); p.px(11, 2, '#2a2438');
+  p.rect(6, 0, 2, 2, '#5a7a98'); p.rect(0, 2, 2, 1, '#5a7a98'); p.rect(0, 5, 2, 1, '#5a7a98');
+}, '#3a4a68');
+/** Cua đỏ bò ngang (2 khung chân) */
+export const crabSprite = (f: number) => makeSprite(`crab:${f}`, 9, 6, p => {
+  p.rect(2, 2, 5, 3, '#e8604a'); p.rect(3, 1, 3, 1, '#ff8a6a'); p.px(3, 0, '#2a2438'); p.px(5, 0, '#2a2438');
+  p.rect(0, 1, 2, 2, '#e8604a'); p.rect(7, 1, 2, 2, '#e8604a');
+  for (const x of [2, 4, 6]) p.px(x + (f ? 1 : 0) - 1, 5, '#c8483a');
+}, '#7a2a24');
+/** Người lướt sóng trên ván */
+export const surferSprite = () => makeSprite('surfer', 10, 10, p => {
+  p.rect(0, 8, 10, 2, '#f6c64e'); p.rect(1, 8, 8, 1, '#ffe08a');
+  p.rect(4, 1, 2, 2, '#e8b890'); p.rect(4, 3, 2, 3, '#e8604a'); p.rect(3, 6, 1, 2, '#3a5a9a'); p.rect(6, 6, 1, 2, '#3a5a9a');
+  p.rect(2, 3, 2, 1, '#e8b890'); p.rect(6, 4, 2, 1, '#e8b890');
+});
+/** Cabin cáp treo nhỏ */
+export const cableCarSprite = (c = '#e8604a') => makeSprite(`cablecar:${c}`, 5, 6, p => {
+  p.rect(2, 0, 1, 2, '#3a3a4a'); p.rect(0, 2, 5, 4, c); p.rect(1, 3, 3, 1, '#e8f6ff');
+}, null);

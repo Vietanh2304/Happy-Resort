@@ -26,6 +26,9 @@ import { findPath } from '../lib/pathing';
 import { ping } from '../lib/notify';
 import { kidMood } from '../lib/kids';
 import { AlbumSheet, BookSheet, CalendarSheet, FestTray, PetSheet, PhotoSheet } from './Love';
+import { ReefPanel } from './Reef';
+import { SkyPanel } from './Skydive';
+import { logName } from '../lib/reef';
 import { CafePanel, LoungePanel, CampPanel, WheelPanel } from './Places';
 import { PLANE_NOTES, Postcard, type TwinPlane } from './Twin';
 import { FishMeter, type Zone } from './FishMeter';
@@ -198,7 +201,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     route.current = [];
     setEditing(false);
     editor.setSelection(null);
-    live.update({ scene: target, pos: at ?? SCENES[target].spawn, act: null, dish: null });
+    live.update({ scene: target, pos: at ?? SCENES[target].spawn, act: null, dish: null, jump: null });
   }
 
   async function run(f: () => Promise<unknown>) {
@@ -428,7 +431,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Người ấy vừa vào rạp/nhà hàng → rủ mình
   const theirScene = theirs?.scene;
   useEffect(() => {
-    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge'].includes(theirScene) && theirScene !== scene) {
+    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky'].includes(theirScene) && theirScene !== scene) {
       toast(`${SCENES[theirScene].icon} ${partnerName} đang đợi bạn ở ${SCENES[theirScene].name}`);
     }
   }, [theirScene]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -642,6 +645,24 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const bathWater = shared(live.mine, partnerHere ? theirs : null, 'bath');
   const seaSpot = shared(live.mine, partnerHere ? theirs : null, 'sea') ?? 'home';
   const [barMenu, setBarMenu] = useState(false);
+  // Lặn biển: sổ lặn (những loài đã chạm, lưu trên máy) + rương báu mỗi ngày một viên ngọc trai
+  const [reefSeen, setReefSeen] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('hy:reef') ?? '[]'); } catch { return []; } });
+  const seeReef = (id: string) => {
+    const c = logName(id);
+    if (!c) return;
+    live.say(`${c.icon} ${c.name}!`);
+    toast(`${c.icon} ${c.name} — ${c.fact}`);
+    if (!reefSeen.includes(id)) {
+      const next = [...reefSeen, id];
+      setReefSeen(next);
+      try { localStorage.setItem('hy:reef', JSON.stringify(next)); } catch { /* bộ nhớ bị chặn */ }
+    }
+  };
+  const chestKey = `reef-chest:${myTime.date}`;
+  const openChest = () => run(async () => {
+    if (claimed.includes(chestKey)) { toast('💎 Rương hôm nay mở rồi — mai quay lại nhé'); return; }
+    if (await api.claim(chestKey, [{ id: 'pearl', n: 1 }])) { live.say('💎 Tìm được ngọc trai!'); toast('💎 Rương báu có một viên Ngọc trai — đã vào túi!'); notify('claims', 'inventory', 'collection'); }
+  });
   const cinemaMode = shared(live.mine, partnerHere ? theirs : null, 'cinema');
   const PHASE_SKY = { dawn: 'dawn', day: 'day', sunset: 'sunset', night: 'night' } as const;
   const hillSky: HillSky = skyChoice === 'real' ? PHASE_SKY[myView.phase] : skyChoice;
@@ -668,7 +689,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const plantedAt = (x: number, y: number) => farm.some(r => r.cell === farmCell(x, y));
   const editor = useDecorEditor(inventory, { island: editing ? editIsland : null, decor, blocked: editIsland === 'farm' ? plantedAt : undefined });
   useEffect(() => {
-    music.setMood(live.mine.act === 'intimate' ? 'love' : live.mine.act === 'sleep' ? 'night' : scene === 'cafe' ? 'cafe' : scene === 'camp' ? 'camp' : scene === 'beach' || scene === 'lounge' ? 'sea' : ['hill', 'bathroom', 'restaurant', 'wheel'].includes(scene) || theme === 'romantic' ? 'love' : myView.phase === 'night' || myView.phase === 'sunset' ? 'night' : 'day');
+    music.setMood(live.mine.act === 'intimate' ? 'love' : live.mine.act === 'sleep' ? 'night' : scene === 'cafe' ? 'cafe' : scene === 'camp' ? 'camp' : scene === 'beach' || scene === 'lounge' ? 'sea' : scene === 'reef' ? 'deep' : scene === 'sky' ? 'sky' : ['hill', 'bathroom', 'restaurant', 'wheel'].includes(scene) || theme === 'romantic' ? 'love' : myView.phase === 'night' || myView.phase === 'sunset' ? 'night' : 'day');
   }, [myView.phase, scene, theme, live.mine.act]);
   const capsulesReady = capsules.filter(c => c.to_id === me.id && !c.opened_at && c.body !== null).length;
   const unread = notes.filter(n => n.to_id === me.id && !n.read_at).length + capsulesReady;
@@ -733,7 +754,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <World
           scene={scene} me={me} partner={partner} myView={myView} realView={realView} partnerView={partnerView}
           live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
-          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} onBar={() => setBarMenu(true)} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
+          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
           farm={farm} guests={activeGuests} pickups={pickups} fishing={fishing} combos={combos}
           daysTogether={bridge.planks}
@@ -807,10 +828,14 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           </div>
           <button className="btn small ghost leave" onClick={() => enter('town', { x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 })}>🚪 Ra ngoài</button>
         </div>
+      ) : scene === 'reef' ? (
+        <ReefPanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} seen={reefSeen} onLeave={() => enter('lounge')} />
+      ) : scene === 'sky' ? (
+        <SkyPanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} onLeave={() => enter('town', TOWN.fountain)} />
       ) : scene === 'lounge' ? (
         <div className="room-bar">
           <LoungePanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} spot={seaSpot}
-            onSpot={sea => live.update({ sea, seaAt: Date.now() })} menu={barMenu} onMenu={setBarMenu} />
+            onSpot={sea => live.update({ sea, seaAt: Date.now() })} menu={barMenu} onMenu={setBarMenu} onDive={() => enter('reef')} />
           <button className="btn small ghost leave" onClick={() => { live.update({ act: null, drink: null, dish: null }); enter('beach', { x: BEACH.loungers[0].x, y: BEACH.loungers[0].y + 6 }); }}>🚶 Về bãi biển</button>
         </div>
       ) : scene === 'cafe' || scene === 'wheel' || scene === 'camp' ? (

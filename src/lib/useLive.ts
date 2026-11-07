@@ -7,6 +7,7 @@ import type { BathWater } from './interiors';
 import type { HillSky } from './townSprites';
 import { SCENES, type SceneId } from './world';
 import type { SeaSpot } from './seaView';
+import type { Jump } from './skydive';
 
 export interface LiveState {
   scene: SceneId;
@@ -29,6 +30,7 @@ export interface LiveState {
   duck?: boolean;          // thả vịt cao su vào bồn tắm
   sea?: SeaSpot;           // đang ngắm biển ở đâu (ghế ngắm biển)
   seaAt?: number;
+  jump?: Jump | null;      // đang nhảy dù: pha + mốc thời gian (bãi nhảy dù)
 }
 export interface ChatLine { from: 'me' | 'partner'; text: string; at: number }
 

@@ -1178,3 +1178,149 @@ textarea { resize: vertical; }
 .swim-ripple { position: absolute; left: 0; top: 0; border: 2px solid #ffffffcc; border-radius: 50%; animation: ripple 2.6s ease-out infinite; }
 @keyframes ripple { from { transform: scale(.7); opacity: .9; } to { transform: scale(1.5); opacity: 0; } }
 .swimmer .speech, .lounger-rider .speech { position: absolute; left: 0; transform: translateX(-50%); }
+
+/* ───── Đu quay quay thật ───── */
+.ferris { position: absolute; cursor: pointer; }
+.ferris img { position: absolute; left: 0; top: 0; image-rendering: pixelated; pointer-events: none; }
+.ferris:hover { filter: brightness(1.08) drop-shadow(0 0 2px #fff); }
+.ferris-rot { position: absolute; animation: ferris-spin 60s linear infinite; transform-origin: 50% 50%; }
+.ferris-arm { position: absolute; width: 0; height: 0; }
+.ferris-arm img.ferris-cab { left: 0; top: 0; transform-origin: 50% 0; animation: ferris-spin 60s linear infinite reverse; }
+.ferris-cab.ours { filter: drop-shadow(0 0 2px #ff7aa8); }
+@keyframes ferris-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ferris-rot, .ferris-arm img.ferris-cab { animation-duration: 240s !important; } }
+
+/* ───── Biển sống động ───── */
+.sealife { position: absolute; inset: 0; z-index: 4; pointer-events: none; overflow: hidden; }
+.sealife img { position: absolute; image-rendering: pixelated; }
+.sl-cloud { left: 0; animation: sl-across 90s linear infinite; }
+@keyframes sl-across { from { transform: translateX(-60px); } to { transform: translateX(var(--w)); } }
+.gull { position: absolute; left: 0; animation: sl-across 30s linear infinite; }
+.gull.back { animation-direction: reverse; }
+.gull.back img { transform: scaleX(-1); }
+.gull img, .sl-crab img { position: absolute; left: 0; top: 0; }
+.gull img.f2, .sl-crab img.f2 { animation: sl-flap .5s steps(1) infinite; }
+.gull img:not(.f2), .sl-crab img:not(.f2) { animation: sl-flap .5s steps(1) infinite reverse; }
+@keyframes sl-flap { 0% { opacity: 1; } 50% { opacity: 0; } }
+.sl-star { position: absolute; background: #fffbe0; border-radius: 50%; animation: sl-twinkle 3.6s ease-in-out infinite; box-shadow: 0 0 3px #fff; }
+@keyframes sl-twinkle { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+.sl-meteor { position: absolute; height: 2px; background: linear-gradient(90deg, #fff, #fff0); transform: rotate(-24deg); opacity: 0; animation: sl-meteor 11s ease-in infinite 3s; border-radius: 2px; }
+@keyframes sl-meteor { 0%, 88% { opacity: 0; translate: 0 0; } 90% { opacity: 1; } 97% { opacity: 0; translate: var(--d) calc(var(--d) * -0.45); } 100% { opacity: 0; } }
+.sl-dolphin { position: absolute; animation: sl-jump 13s ease-in-out infinite; opacity: 0; }
+.sl-dolphin img { position: relative; }
+.sl-splash { position: absolute; left: 50%; top: 100%; translate: -50% 0; border: 2px solid #ffffffcc; border-radius: 50%; opacity: 0; animation: sl-splash 13s ease-out infinite; animation-delay: inherit; }
+@keyframes sl-jump {
+  0%, 74% { opacity: 0; transform: translate(0, calc(var(--s) * 6px)) rotate(-40deg); }
+  76% { opacity: 1; transform: translate(0, calc(var(--s) * 4px)) rotate(-40deg); }
+  82% { opacity: 1; transform: translate(calc(var(--s) * 12px), calc(var(--s) * -9px)) rotate(0deg); }
+  88% { opacity: 1; transform: translate(calc(var(--s) * 24px), calc(var(--s) * 4px)) rotate(45deg); }
+  90%, 100% { opacity: 0; transform: translate(calc(var(--s) * 26px), calc(var(--s) * 7px)) rotate(50deg); }
+}
+@keyframes sl-splash { 0%, 75% { opacity: 0; scale: .3; } 77% { opacity: 1; } 84% { opacity: 0; scale: 1.4; } 87% { opacity: 1; scale: .3; } 95%, 100% { opacity: 0; scale: 1.5; } }
+.sl-crab { position: absolute; width: 10px; animation: sl-crab 16s ease-in-out infinite; }
+@keyframes sl-crab { 0%, 10% { transform: translateX(0); } 45%, 55% { transform: translateX(var(--w)); } 90%, 100% { transform: translateX(0); } }
+.sl-cable { offset-rotate: 0deg; animation: sl-cable 18s ease-in-out infinite alternate; left: 0; top: 0; offset-anchor: 50% 0; }
+@keyframes sl-cable { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+.sl-surfer { animation: sl-surf 9s ease-in-out infinite; opacity: 0; }
+@keyframes sl-surf { 0% { opacity: 0; transform: translate(0, 0); } 10% { opacity: 1; } 50% { transform: translate(calc(var(--w) * .5), 6px) rotate(-6deg); } 85% { opacity: 1; transform: translate(var(--w), 12px) rotate(4deg); } 95%, 100% { opacity: 0; transform: translate(var(--w), 18px); } }
+.sl-boat { left: 0; animation: sl-across 120s linear infinite; animation-delay: -40s; }
+.palm-sway { transform-origin: 50% 100%; animation: palm-sway 5s ease-in-out infinite; }
+@keyframes palm-sway { 0%, 100% { rotate: -1.5deg; } 50% { rotate: 2deg; } }
+
+/* ───── Lặn biển ngắm san hô ───── */
+.reef-rays { position: absolute; inset: 0; z-index: 2; pointer-events: none; overflow: hidden; mix-blend-mode: screen; }
+.reef-rays i { position: absolute; top: -10%; width: 9%; height: 100%; background: linear-gradient(#fffbe0aa, #fffbe000 85%); transform: skewX(-14deg); transform-origin: top; animation: rays 7s ease-in-out infinite; }
+.reef-rays.sunset i { background: linear-gradient(#ffc8a088, #ffc8a000 80%); }
+@keyframes rays { 0%, 100% { opacity: .25; translate: 0 0; } 50% { opacity: .7; translate: 6% 0; } }
+.reef-plankton { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.reef-plankton i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #8af8ff; box-shadow: 0 0 6px 2px #5af0ffaa; animation: sl-twinkle 2.8s ease-in-out infinite; }
+.kelp-sway { transform-origin: 50% 100%; animation: kelp 3.6s ease-in-out infinite; }
+@keyframes kelp { 0%, 100% { transform: skewX(-6deg); } 50% { transform: skewX(6deg); } }
+.reef-bubbles { position: absolute; width: 8px; margin-top: 0; pointer-events: none; z-index: 4; translate: 0 -100%; }
+.reef-bubbles i { position: absolute; bottom: 0; left: 0; border: 1px solid #ffffffcc; border-radius: 50%; background: #ffffff33; animation: rbubble 4.5s ease-in infinite; }
+@keyframes rbubble { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: 1; } 50% { transform: translate(3px, -45%) ; } 90% { opacity: .8; } 100% { transform: translate(-2px, -95%); opacity: 0; } }
+.rf-swim { position: absolute; left: 0; cursor: pointer; animation: rf-across 18s linear infinite; }
+.rf-swim.back { animation-direction: reverse; }
+.rf-swim.back .rf-body { transform: scaleX(-1); }
+.rf-body { position: relative; animation: rf-wiggle 2.4s ease-in-out infinite; }
+.rf-swim img, .rf-hover img, .rf-drift img, .rf-peek img, .rf-still img { position: absolute; image-rendering: pixelated; left: 0; top: 0; }
+.rf-body img { position: absolute; }
+.rf-swim .rf-body { width: 30px; height: 20px; }
+@keyframes rf-across { from { transform: translateX(-40px); } to { transform: translateX(var(--w)); } }
+@keyframes rf-wiggle { 0%, 100% { translate: 0 0; } 50% { translate: 0 4px; } }
+.rf-hover, .rf-drift, .rf-peek, .rf-still { position: absolute; cursor: pointer; }
+.rf-hover { animation: rf-hover 3.2s ease-in-out infinite; }
+@keyframes rf-hover { 0%, 100% { translate: -3px 0; } 25% { translate: 0 -2px; } 50% { translate: 3px 0; scale: -1 1; } 75% { translate: 0 2px; scale: -1 1; } }
+.rf-drift { animation: rf-drift 5s ease-in-out infinite; }
+@keyframes rf-drift { 0%, 100% { translate: 0 0; } 40% { translate: 0 -10px; } 60% { translate: 0 -11px; } }
+.rf-drift.glow img { filter: drop-shadow(0 0 4px #ff9af0) brightness(1.2); }
+.rf-peek { animation: rf-peek 9s ease-in-out infinite; }
+@keyframes rf-peek { 0%, 30%, 100% { translate: -6px 0; opacity: 0; } 40%, 80% { translate: 4px 0; opacity: 1; } }
+.twinkle-soft { animation: twinkle-soft 2s ease-in-out infinite; }
+@keyframes twinkle-soft { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.3) drop-shadow(0 0 3px #fff6a8); } }
+.reef-log { display: flex; flex-wrap: wrap; gap: 4px; margin: 4px 0; }
+.reef-log .chip { font-size: 11px; padding: 1px 6px; }
+.reef-log .chip.locked { opacity: .5; }
+/* Nhân vật bơi (lặn): nằm ngang, đạp chân, bong bóng thở */
+.avatar .diver { position: absolute; display: block; animation: diverbob 2.6s ease-in-out infinite; }
+.avatar .diver img { position: absolute; left: 0; top: 0; }
+@keyframes diverbob { 0%, 100% { translate: 0 0; } 50% { translate: 0 3px; } }
+.dive-breath { position: absolute; width: 10px; height: 40px; pointer-events: none; }
+.dive-breath i { position: absolute; bottom: 0; left: 0; width: 4px; height: 4px; border: 1px solid #ffffffdd; border-radius: 50%; animation: rbubble 2.2s ease-in infinite; }
+.dive-breath i:nth-child(2) { animation-delay: -.7s; left: 3px; width: 3px; height: 3px; }
+.dive-breath i:nth-child(3) { animation-delay: -1.4s; width: 5px; height: 5px; }
+/* lung linh: ánh sáng gợn trên cát, hạt lấp lánh trôi, chạm vào sinh vật */
+.reef-caustics { position: absolute; left: 0; width: 100%; height: 30%; z-index: 3; pointer-events: none; mix-blend-mode: screen; opacity: .55;
+  background: radial-gradient(ellipse 14% 7% at 20% 40%, #ffffffaa, transparent 70%), radial-gradient(ellipse 10% 6% at 55% 70%, #ffffff99, transparent 70%),
+    radial-gradient(ellipse 12% 5% at 80% 30%, #ffffffaa, transparent 70%), radial-gradient(ellipse 9% 6% at 38% 85%, #ffffff88, transparent 70%);
+  background-size: 50% 100%; animation: caustics 6s ease-in-out infinite alternate; }
+.reef-caustics.night { opacity: .18; }
+@keyframes caustics { from { background-position: 0 0, 30% 0, 60% 0, 90% 0; } to { background-position: 40% 0, 0 0, 100% 0, 50% 0; } }
+.reef-motes { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.reef-motes i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fffbe0; box-shadow: 0 0 4px 1px #fff6c8aa; animation: mote 7s ease-in-out infinite; }
+.reef-motes i.n { background: #8af8ff; box-shadow: 0 0 6px 2px #5af0ffaa; }
+@keyframes mote { 0%, 100% { opacity: 0; translate: 0 0; } 30%, 70% { opacity: 1; } 50% { translate: 6px -14px; } }
+.reef-touch { position: absolute; z-index: 6; background: transparent; border: 0; padding: 0; cursor: pointer; border-radius: 40%; }
+.reef-touch:hover { box-shadow: 0 0 8px 2px #ffffff66 inset; }
+.reef-touch.lit { animation: coral-lit 2.2s ease-out; }
+@keyframes coral-lit { 0% { box-shadow: 0 0 0 0 #fff6a8; background: #fff6a855; } 40% { box-shadow: 0 0 22px 10px #fff6a8aa; background: #ffd0f040; } 100% { box-shadow: 0 0 0 0 #fff6a800; background: transparent; } }
+.reef-spark { position: absolute; z-index: 300; pointer-events: none; }
+.reef-spark i { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; background: #fffbe0; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: spark-out 1.2s ease-out forwards; rotate: var(--a); }
+@keyframes spark-out { from { transform: translateY(0) scale(1.4); opacity: 1; } to { transform: translateY(-34px) scale(.3); opacity: 0; } }
+.reef-spark b { position: absolute; left: 0; top: 0; translate: -50% -50%; font-size: 20px; animation: spark-icon 1.5s ease-out forwards; }
+@keyframes spark-icon { 0% { scale: .4; opacity: 0; } 25% { scale: 1.3; opacity: 1; } 100% { scale: 1; opacity: 0; translate: -50% -180%; } }
+.startled .rf-body, .rf-hover.startled img, .rf-drift.startled img, .rf-peek.startled img { animation: startle 1.2s ease-out; }
+@keyframes startle { 0% { translate: 0 0; } 20% { translate: 0 -6px; filter: brightness(1.6) drop-shadow(0 0 4px #fff); } 100% { translate: 0 0; } }
+
+/* ───── Bãi nhảy dù ───── */
+.skyzone { position: absolute; inset: 0; overflow: hidden; }
+.skyzone img { position: absolute; image-rendering: pixelated; pointer-events: none; }
+.sky-stars { position: absolute; inset: 0; background-image: radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent), radial-gradient(1.5px 1.5px at 38% 8%, #fff, transparent), radial-gradient(1px 1px at 62% 26%, #fff, transparent), radial-gradient(1.5px 1.5px at 84% 12%, #fffbe0, transparent), radial-gradient(1px 1px at 24% 44%, #fff, transparent), radial-gradient(1px 1px at 72% 52%, #fff, transparent), radial-gradient(1.5px 1.5px at 92% 38%, #fff, transparent); }
+.sky-earth { position: absolute; left: 0; bottom: 0; width: 100%; background: repeating-linear-gradient(90deg, #6aa85a 0 18%, #8ac86a 18% 31%, #c8b870 31% 38%, #5a9a5a 38% 55%, #4a8ac0 55% 58%, #7ab860 58% 80%, #a8c878 80% 100%); filter: blur(.5px) saturate(.8); border-top: 2px solid #ffffff55; box-shadow: 0 -10px 18px #c8e8ff88; }
+.skyzone.night .sky-earth { filter: brightness(.35) saturate(.6); }
+.sky-cloud { transition: none; }
+.sky-plane.flying { animation: planebob 2.4s ease-in-out infinite; }
+@keyframes planebob { 0%, 100% { translate: 0 0; } 50% { translate: 0 2px; } }
+.sky-prop { position: absolute; background: #ffffff88; border-radius: 40%; animation: prop .12s linear infinite; }
+@keyframes prop { 50% { scale: 1 .2; } }
+.sky-wind { position: absolute; inset: 0; z-index: 45; pointer-events: none; }
+.sky-wind i { position: absolute; width: 1px; height: 30px; background: linear-gradient(#ffffff00, #ffffffcc, #ffffff00); }
+.sky-wind.fall i { animation: windup .45s linear infinite; top: 100%; }
+.sky-wind.climb i { width: 30px; height: 1px; background: linear-gradient(90deg, #ffffff00, #ffffffaa, #ffffff00); animation: windleft .6s linear infinite; left: 100% !important; top: 50%; }
+.sky-wind.climb i:nth-child(odd) { top: 30%; } .sky-wind.climb i:nth-child(3n) { top: 70%; }
+@keyframes windup { to { transform: translateY(-140vh); } }
+@keyframes windleft { to { transform: translateX(-110vw); } }
+.sky-free, .sky-chute, .sky-stand { position: absolute; }
+.sky-free img, .sky-chute img, .sky-stand img { position: relative; display: block; }
+.sky-free { animation: freefall .5s ease-in-out infinite alternate; }
+.sky-free.them { animation-delay: -.25s; }
+@keyframes freefall { from { rotate: -6deg; translate: -1px 0; } to { rotate: 6deg; translate: 1px 1px; } }
+.sky-chute { transform-origin: 0 0; animation: chute-sway 3.2s ease-in-out infinite; }
+.sky-chute.them { animation-delay: -1.1s; }
+.sky-chute .canopy { transition: transform .3s ease-out; }
+@keyframes chute-sway { 0%, 100% { rotate: -9deg; } 50% { rotate: 9deg; } }
+.sky-free .speech, .sky-chute .speech, .sky-stand .speech { position: absolute; left: 0; transform: translateX(-50%); }
+.sky-alt { position: absolute; right: 6px; top: 6px; z-index: 70; background: #fffaf0e8; border: 2px solid var(--ink); border-radius: 10px; padding: 2px 8px; display: flex; flex-direction: column; align-items: flex-end; font-size: 11px; line-height: 1.25; }
+.sky-alt b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.sky-steer-row { align-items: center; justify-content: space-between; }
+.sky-steer { touch-action: none; user-select: none; min-width: 96px; }

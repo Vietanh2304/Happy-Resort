@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import type { Hold } from '../lib/props';
 import { characterSprite, type AvatarLook, type View } from '../lib/sprites';
 import { umbrellaSprite } from '../lib/places';
+import { makeSprite } from '../lib/pixel';
+
+/** Bình dưỡng khí vàng đeo sau lưng khi lặn */
+const tankSprite = () => makeSprite('dive-tank', 4, 10, p => { p.rect(0, 1, 4, 9, '#f6c64e'); p.rect(1, 0, 2, 1, '#8a8098'); p.rect(0, 3, 4, 1, '#c8a020'); p.rect(1, 2, 1, 7, '#ffe08a'); });
 import { useScale } from './Stage';
 import { actFrame, actMs, type Act } from '../lib/acts';
 
@@ -37,10 +41,12 @@ interface Props {
   act?: Act | null;
   /** Khiêu vũ đôi: đứng bên trái/phải của cặp; together = người ấy cũng đang ở sàn */
   duo?: { side: 'L' | 'R'; together: boolean };
+  /** Đang lặn: nằm ngang bơi, đeo bình dưỡng khí, thở ra bong bóng */
+  swim?: boolean;
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -67,10 +73,10 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
   }, [x, y]);
 
   useEffect(() => {
-    if (!moving) return;
-    const t = setInterval(() => setStep(v => (v + 1) % 4), 130);
+    if (!moving && !swim) return;
+    const t = setInterval(() => setStep(v => (v + 1) % 4), moving ? 130 : 320);   // lặn: đứng yên vẫn đạp chân nhẹ
     return () => { clearInterval(t); setStep(0); };
-  }, [moving]);
+  }, [moving, swim]);
   // Đứng yên một lúc thì quay mặt ra phía trước
   useEffect(() => {
     if (moving || view === 'front') return;
@@ -97,6 +103,24 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
     : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : view, step);
   const ax = sprite.ax ?? sprite.w / 2;
   const ps = avatarPx(s);
+  if (swim) {
+    // Bơi: thân nằm ngang (xoay 75°), bình dưỡng khí trên lưng, bong bóng thở nổi lên từ đầu
+    const sw = characterSprite(look, 'walk', undefined, 'side', step), tank = tankSprite();
+    const W = sw.w * ps, H = sw.h * ps, rot = `${shown.left ? 'scaleX(-1) ' : ''}rotate(75deg)`;
+    return (
+      <div className={`avatar ${onClick ? 'tappable' : ''}`}
+        style={{ left: shown.x * s, top: shown.y * s, zIndex: Math.round(shown.y) + 1, transition: `left ${shown.ms}ms linear, top ${shown.ms}ms linear` }}
+        onClick={onClick && (e => { e.stopPropagation(); onClick(); })}>
+        <span className="diver" style={{ width: W, height: H, left: -W / 2, top: -H * 0.75, transform: rot }}>
+          <img src={tank.url} alt="" draggable={false} style={{ width: tank.w * ps, height: tank.h * ps, left: 1 * ps, top: 9 * ps }} />
+          <img src={sw.url} alt={name ?? ''} draggable={false} style={{ width: W, height: H }} />
+        </span>
+        <span className="dive-breath" style={{ left: (shown.left ? -H * 0.55 : H * 0.45), top: -H * 0.25 - 40 }}><i /><i /><i /></span>
+        {name && <span className="avatar-name" style={{ top: 2 * s }}>{name}</span>}
+        {bubble && <span className="speech" style={{ bottom: H * 0.5 + 6 }}>{bubble}</span>}
+      </div>
+    );
+  }
   return (
     <div
       className={`avatar ${onClick ? 'tappable' : ''}`}

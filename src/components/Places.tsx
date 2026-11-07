@@ -11,7 +11,7 @@ import { RIDE_MS } from '../lib/world';
 import { SEA_SPOTS, type SeaSpot } from '../lib/seaView';
 import { Sheet } from './Sheet';
 
-function Chat({ live, placeholder }: { live: Live; placeholder: string }) {
+export function Chat({ live, placeholder }: { live: Live; placeholder: string }) {
   const [text, setText] = useState('');
   return (
     <>
@@ -23,7 +23,7 @@ function Chat({ live, placeholder }: { live: Live; placeholder: string }) {
     </>
   );
 }
-const status = (here: boolean, name: string, wait: string) => <p className="muted small-note">{here ? `💗 ${name} đang ở đây cùng bạn` : wait}</p>;
+export const status = (here: boolean, name: string, wait: string) => <p className="muted small-note">{here ? `💗 ${name} đang ở đây cùng bạn` : wait}</p>;
 
 // ───────── Quán cà phê sách ─────────
 
@@ -144,8 +144,8 @@ export function CampPanel({ live, partnerHere, partnerName, date, claimed, quest
 
 // ───────── Ghế dài ngắm biển ─────────
 
-export function LoungePanel({ live, partnerHere, partnerName, spot, onSpot, menu, onMenu }: {
-  live: Live; partnerHere: boolean; partnerName: string; spot: SeaSpot; onSpot: (s: SeaSpot) => void; menu: boolean; onMenu: (open: boolean) => void;
+export function LoungePanel({ live, partnerHere, partnerName, spot, onSpot, menu, onMenu, onDive }: {
+  live: Live; partnerHere: boolean; partnerName: string; spot: SeaSpot; onSpot: (s: SeaSpot) => void; menu: boolean; onMenu: (open: boolean) => void; onDive: () => void;
 }) {
   const [cat, setCat] = useState(0);
   const swimming = live.mine.act === 'swim';
@@ -159,6 +159,7 @@ export function LoungePanel({ live, partnerHere, partnerName, spot, onSpot, menu
       <p className="muted small-note">📍 {here.flag} {here.name} — {here.note}</p>
       <div className="row wrap">
         <button className="btn small" onClick={() => onMenu(true)}>🥥 Gọi đồ ở quầy bar</button>
+        <button className="btn small" onClick={onDive}>🤿 Lặn ngắm san hô</button>
         <button className="btn small ghost" onClick={() => { live.update({ act: swimming ? null : 'swim' }); live.say(swimming ? '⛱️ Lên nằm nghỉ chút' : '🌊 Xuống tắm biển nào!'); }}>
           {swimming ? '⛱️ Lên ghế nằm' : '🌊 Xuống tắm biển'}
         </button>
