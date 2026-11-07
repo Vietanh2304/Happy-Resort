@@ -1120,7 +1120,7 @@ textarea { resize: vertical; }
 @keyframes duohugR { 50% { translate: -3px 0; transform: rotate(-6deg); } }
 
 /* Mượt: máy không giữ trạng thái thì trượt giữa các lần cập nhật (~10 lần/giây) */
-.k-avatar.them { transition: left .11s linear, top .11s linear; }
+.k-avatar.them { transition: left .15s linear, top .15s linear; }
 .k-board.smooth { transition: transform .11s linear; }
-.k-board.smooth .boat { transition: left .11s linear, top .11s linear, transform .11s linear; }
-.bad-player.them { transition: left .09s linear; }
+.k-board.smooth .boat { transition: left .16s linear, top .16s linear, transform .16s linear; }
+.bad-player.them { transition: left .14s linear; }

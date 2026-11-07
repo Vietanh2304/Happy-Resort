@@ -180,7 +180,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
       const o = posRef.current;
       if (p.x !== o.x || p.y !== o.y || p.f !== o.f || p.mv !== o.mv) {
         posRef.current = p; setPos(p);
-        if (t - sentAt.current > 90 || !mv) { sentAt.current = t; send('pos', p); }
+        if (t - sentAt.current > 140 || !mv) { sentAt.current = t; send('pos', p); }
       } else if (t - sentAt.current > 1500) { sentAt.current = t; send('pos', p); }
       raf = requestAnimationFrame(loop);
     };

@@ -61,7 +61,7 @@ export function Badminton({ me, partner, date, onLeave }: PlayProps) {
     if (d) {
       const [lo, hi] = left ? [0.8, NET_X - 0.7] : [NET_X + 0.7, COURT - 0.8];
       myX.current = Math.max(lo, Math.min(hi, myX.current + d * SPEED * dt));
-      if (tt - lastSent.current > 80) { lastSent.current = tt; send('x', { x: myX.current }); }
+      if (tt - lastSent.current > 130) { lastSent.current = tt; send('x', { x: myX.current }); }
       force(v => v + 1);
     }
     // Phân xử: cầu của người ấy rơi bên sân mình mà mình chưa đỡ → mất điểm

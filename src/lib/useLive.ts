@@ -52,14 +52,14 @@ export function useLive(partnerOnline: boolean) {
   useEffect(() => onEvent('say', ({ text }: { text: string }) => { showBubble('partner', text); void ping('💬 Người ấy nhắn', text, 'say'); }), [showBubble]);
   // Người ấy vừa online: gửi trạng thái hiện tại của mình; offline thì ẩn nhân vật của họ
   useEffect(() => {
-    if (partnerOnline) sendEvent('live', mineRef.current);
+    if (partnerOnline) sendEvent('live', mineRef.current, 'live');
     else setTheirs(null);
   }, [partnerOnline]);
   // Nối lại kênh sau khi rớt: gửi lại vị trí của mình; thỉnh thoảng nhắc lại phòng khi người ấy lỡ tin
-  useEffect(() => onEvent('link-up', () => sendEvent('live', mineRef.current)), []);
+  useEffect(() => onEvent('link-up', () => sendEvent('live', mineRef.current, 'live')), []);
   useEffect(() => {
     if (!partnerOnline) return;
-    const t = setInterval(() => sendEvent('live', mineRef.current), 20000);
+    const t = setInterval(() => sendEvent('live', mineRef.current, 'live'), 8000);
     return () => clearInterval(t);
   }, [partnerOnline]);
 
@@ -67,7 +67,7 @@ export function useLive(partnerOnline: boolean) {
     const next = { ...mineRef.current, ...patch };
     mineRef.current = next;
     setMine(next);
-    sendEvent('live', next);
+    sendEvent('live', next, 'live');
   }, []);
 
   const say = useCallback((text: string) => {

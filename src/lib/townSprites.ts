@@ -428,7 +428,7 @@ export function mailboxSprite() {
 
 /** Phòng búp bê: hai bức tường, sàn gỗ hình thoi, đồ cố định (bếp, cửa, khung cửa sổ) */
 export function roomBackground(kind: 'house' | 'bedroom' | 'bath') {
-  return makeSprite(`room:v2:${kind}`, 192, 144, p => {
+  return makeSprite(`room:v3:${kind}`, 192, 144, p => {
     const { ox, oy, n, wallH } = ROOM;
     const q = isoPen(p, ox, oy);
     p.rect(0, 0, 192, 144, kind === 'house' ? '#fbecd6' : '#fbe4ea');
@@ -539,8 +539,8 @@ export function roomBackground(kind: 'house' | 'bedroom' | 'bath') {
       { const [x, y] = q.pt(0.1, 0.8, 18); p.rect(x, y, 1, 4, '#a8a8b8'); }
       for (const g of [1.6, 2.4]) { const [x, y] = q.pt(0.45, g, 14); ellipse(p, x, y, 3, 1.5, '#3a3a4a'); ellipse(p, x, y, 1.5, 0.8, '#ec8080'); }
       for (const g of [0.5, 1.5, 2.5]) { const [x, y] = q.pt(0.9, g, 8); p.rect(x - 1, y, 3, 1, '#f6c64e'); }
-      q.box(0, 3.05, 0, 0.9, 1, 30, shade('#a8dcc8'));                  // tủ lạnh bạc hà
-      { const [x, y] = q.pt(0.9, 3.5, 20); p.rect(x, y, 1, 6, '#ffffff'); }
+      q.box(0, 3.05, 0, 0.9, 1, 24, shade('#a8dcc8'));                  // tủ lạnh bạc hà (ngang tầm người)
+      { const [x, y] = q.pt(0.9, 3.5, 16); p.rect(x, y, 1, 5, '#ffffff'); }
       // Kệ treo có hũ gia vị
       q.poly([q.pt(0, 0.2, 30), q.pt(0, 2.8, 30), q.pt(0, 2.8, 28), q.pt(0, 0.2, 28)], '#a06a48');
       for (let i = 0; i < 5; i++) { const [x, y] = q.pt(0, 0.5 + i * 0.5, 30); p.rect(x - 1, y - 4, 3, 4, FLOWERS[i]); }

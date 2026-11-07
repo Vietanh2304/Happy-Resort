@@ -10,13 +10,17 @@ import type { GameId } from '../lib/world';
 export type Msg = { g: GameId; t: string; by: string; [k: string]: any };
 
 /** Gửi một nước đi cho cả hai máy (máy mình cũng nhận ngay) */
+/** Loại tin chỉ cần bản mới nhất */
+const COALESCE = new Set(['pos', 'here', 'x', 'b', 'st', 'sync', 'state']);
+
 export function useGameChannel(g: GameId, me: string, onMsg: (m: Msg) => void) {
   const ref = useRef(onMsg);
   ref.current = onMsg;
   useEffect(() => onEvent('game', (m: Msg) => m.g === g && ref.current(m)), [g]);
   return (t: string, data: object = {}) => {
     const m = { g, t, by: me, ...data } as Msg;
-    sendEvent('game', m);
+    // Vị trí / ảnh chụp trạng thái: bản mới thay bản cũ đang chờ gửi
+    sendEvent('game', m, COALESCE.has(t) ? `game:${g}:${t}` : undefined);
     ref.current(m);
   };
 }

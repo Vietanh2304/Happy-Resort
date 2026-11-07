@@ -15,7 +15,7 @@ export function DecorTray({ island, inventory, editor, onDone }: Props) {
   const { selection, ghost } = editor;
   const fits = (id: string) => {
     const p = placeOf(id);
-    return island === 'garden' || island === 'farm' ? p === 'garden' || p === 'any' : p !== 'garden';
+    return island === 'garden' || island === 'farm' ? p === 'garden' || p === 'any' || p === 'hang' : p !== 'garden';
   };
   const decorItems = inventory.filter(r => item(r.item_id).kind === 'decor' && r.qty > 0 && fits(r.item_id));
   const name = ghost ? item(ghost.itemId).name : selection?.kind === 'item' ? item(selection.itemId).name : '';

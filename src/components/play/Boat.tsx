@@ -64,7 +64,7 @@ export function Boat({ me, partner, date, onLeave }: PlayProps) {
     const over = r.over || Date.now() - r.at >= ROUND_MS || got.length === map.loot.length;
     boatRef.current = b; setBoat(b);
     if (got !== r.got || over !== r.over) setRun({ ...r, got, over });
-    if (t - lastSend.current > 100 || over !== r.over || got !== r.got) { lastSend.current = t; send('b', { b, got, over, seed: r.seed, el: Date.now() - r.at }); }
+    if (t - lastSend.current > 150 || over !== r.over || got !== r.got) { lastSend.current = t; send('b', { b, got, over, seed: r.seed, el: Date.now() - r.at }); }
   }, [now]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Kết thúc: đồ nhặt được vào túi mỗi người

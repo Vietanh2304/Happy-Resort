@@ -5,7 +5,8 @@ import { EXTRA_ART } from './appliances';
 import { HOLIDAY_ART } from './holiday';
 import { makeSprite, mix, type Pen, type Sprite } from './pixel';
 
-export type Place = 'floor' | 'wall' | 'garden' | 'any';
+// hang: treo được — đặt trên sàn, ngoài vườn, hoặc treo lên tường
+export type Place = 'floor' | 'wall' | 'garden' | 'any' | 'hang';
 export interface Art {
   place: Place;
   size?: [number, number];   // số ô chiếm (theo gx, theo gy); mặc định 1×1
@@ -129,7 +130,7 @@ const bookshelf = () => isoSprite('bookshelf', 2, 1, 36, q => {
     const [sx, sy] = q.pt(0.15, 0.7, z), [ex] = q.pt(1.85, 0.7, z);
     q.poly([q.pt(0.15, 0.7, z), q.pt(1.85, 0.7, z), q.pt(1.85, 0.7, z - 1), q.pt(0.15, 0.7, z - 1)], WOOD);
     for (let x = sx + 1, i = z; x < ex - 1; x += 2, i++) {
-      const h = 5 + ((i * 7) % 3);
+      const h = Math.max(3, Math.round((5 + ((i * 7) % 3)) * q.k));
       const y = sy + Math.round((x - sx) * 0.5);
       q.rect(x, y - h, 2, h, cols[(i * 3) % cols.length]);
     }
@@ -346,7 +347,19 @@ function xy(p: [number, number]): [number, number] {
 }
 
 /** Nơi một món được đặt: đồ không vẽ tay (emoji) đặt được trên sàn và ngoài vườn */
-export const placeOf = (itemId: string): Place => ART[itemId]?.place ?? 'any';
+/** Đồ không vẽ tay nhưng treo được lên tường */
+const HANGABLE = new Set(['lantern', 'chime', 'guitar', 'photo_frame', 'den_ca_chep', 'bong_bay_tim']);
+export const placeOf = (itemId: string): Place => (HANGABLE.has(itemId) ? 'hang' : ART[itemId]?.place ?? 'any');
+
+/**
+ * Cỡ (px) cho đồ vẽ từ emoji, theo kích thước thật so với nhân vật cao ~24 px
+ * (ấm trà, nến, radio chỉ cỡ cái đầu; đàn guitar cao tới ngực).
+ */
+const EMOJI_PX: Record<string, number> = {
+  teapot: 8, candle: 7, radio: 9, books: 8, lantern: 10, chime: 9, guitar: 15, photo_frame: 9, gift_box: 9,
+  sandcastle: 10, fishing: 14, cactus: 10, flower: 9, pet_bed: 12, pet_toy: 7, pet_ball: 6, pet_food: 7, pet_treat: 6,
+};
+export const emojiPx = (itemId: string) => EMOJI_PX[itemId] ?? 10;
 export const sizeOf = (itemId: string): [number, number] => ART[itemId]?.size ?? [1, 1];
 
 /** Chăn đắp phủ lên người đang nằm (cùng khung với giường để đặt trùng vị trí) */

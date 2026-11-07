@@ -82,7 +82,7 @@ export const typing = (e: KeyboardEvent) => e.target instanceof HTMLInputElement
 
 /**
  * Đi lại trên bản đồ ô: phím WASD/mũi tên, hoặc walkTo(x, y) để tự tìm đường (chạm màn hình).
- * Gửi vị trí qua onMove (đã giới hạn ~10 lần/giây).
+ * Gửi vị trí qua onMove (đã giới hạn ~7 lần/giây).
  */
 export function useWalker(start: Pos, free: (x: number, y: number) => boolean, opts: { speed?: number; enabled?: () => boolean; onMove?: (p: Pos) => void; onArrive?: () => void } = {}) {
   const [pos, setPos] = useState(start);
@@ -128,7 +128,7 @@ export function useWalker(start: Pos, free: (x: number, y: number) => boolean, o
       const c = ref.current;
       if (p.x !== c.x || p.y !== c.y || p.f !== c.f || p.mv !== c.mv) {
         ref.current = p; setPos(p);
-        if (t - sent > 90 || !mv) { sent = t; o.current.onMove?.(p); }
+        if (t - sent > 140 || !mv) { sent = t; o.current.onMove?.(p); }
       } else if (t - sent > 1500) { sent = t; o.current.onMove?.(p); }
       raf = requestAnimationFrame(loop);
     };
