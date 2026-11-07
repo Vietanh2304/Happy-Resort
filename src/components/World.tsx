@@ -479,6 +479,8 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       <Spr sprite={cafeBuildingSprite(dark)} x={TOWN.cafe.x} y={TOWN.cafe.y} title="☕ Quán cà phê sách" onClick={() => go(TOWN.cafe.door, () => enter('cafe'))} />
       {dark && <Glow x={TOWN.cafe.x} y={TOWN.cafe.y - 20} r={26} />}
       <Tag x={TOWN.cafe.x} y={TOWN.cafe.y - 68} className="label">☕ Cà phê sách{theirs?.scene === 'cafe' ? ' 💗' : ''}</Tag>
+      <Spr sprite={signSprite()} x={TOWN.toSky.x} y={TOWN.toSky.y} title="🪂 Bãi nhảy dù — lên máy bay nhảy dù" onClick={() => go({ x: TOWN.toSky.x - 8, y: TOWN.toSky.y + 6 }, () => enter('sky'))} />
+      <Tag x={TOWN.toSky.x} y={TOWN.toSky.y - 16} className="label" onClick={() => go({ x: TOWN.toSky.x - 8, y: TOWN.toSky.y + 6 }, () => enter('sky'))}>🪂 Nhảy dù{theirs?.scene === 'sky' ? ' 💗' : ''}</Tag>
       <Spr sprite={signSprite()} x={34} y={64} title="⛺ Bãi cắm trại" onClick={() => go(TOWN.toCamp, () => enter('camp'))} />
       <Tag x={16} y={30} className="label">⛺ Cắm trại{theirs?.scene === 'camp' ? ' 💗' : ''}</Tag>
       <Hot x={4} y={0} w={24} h={48} title="⛺ Đi theo lối mòn tới bãi cắm trại" onClick={() => go(TOWN.toCamp, () => enter('camp'))} />

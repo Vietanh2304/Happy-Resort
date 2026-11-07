@@ -82,6 +82,7 @@ export const TOWN = {
   benches: [[168, 202], [226, 200]] as [number, number][],
   // Vòng đu quay khổng lồ (dời từ bãi biển vào làng): góc phải, cạnh lều khu vui chơi
   wheel: { x: 352, y: 196, stand: { x: 352, y: 208 } },
+  toSky: { x: 372, y: 238 },       // biển chỉ đường ra bãi nhảy dù (dưới đu quay)
 };
 
 /** Ruộng nông trại: trồng ở ô nào tùy thích (ô = y * cols + x), đồ trang trí cũng đặt trên lưới này */
