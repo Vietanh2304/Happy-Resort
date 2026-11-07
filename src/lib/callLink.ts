@@ -24,10 +24,13 @@ export class CallLink {
   private remoteState: CallState = { mic: false, cam: false };
   private off: (() => void)[] = [];
   private iceTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Tin bắt tay xử lý lần lượt (không chạy song song); địa chỉ tới trước lời mời thì giữ lại, nạp sau */
+  private queue: Promise<void> = Promise.resolve();
+  private early: RTCIceCandidateInit[] = [];
 
   constructor(private polite: boolean, private onRemote: (stream: MediaStream | null, state: CallState, net: RTCPeerConnectionState) => void) {
     this.off.push(onEvent('call-hello', d => this.hello(d)));
-    this.off.push(onEvent('call-sig', d => void this.signal(d)));
+    this.off.push(onEvent('call-sig', d => { this.queue = this.queue.then(() => this.signal(d)); }));
     this.off.push(onEvent('call-state', d => { if (d.from === this.peer) { this.remoteState = { mic: !!d.mic, cam: !!d.cam }; this.emit(); } }));
     this.fresh();
     this.sayHello(false);
@@ -46,6 +49,7 @@ export class CallLink {
     this.sid = rid();
     this.paired = false;
     this.makingOffer = this.ignoreOffer = false;
+    this.early = [];
     const pc = new RTCPeerConnection({ iceServers: ICE });
     this.pc = pc;
     this.tx = null;
@@ -120,6 +124,8 @@ export class CallLink {
         this.ignoreOffer = !this.polite && collision;
         if (this.ignoreOffer) return;
         await pc.setRemoteDescription(description);
+        // Nạp các địa chỉ đã tới sớm (trước đây bị trình duyệt từ chối và mất luôn → hai máy không tìm thấy nhau)
+        for (const c of this.early.splice(0)) await pc.addIceCandidate(c).catch(e => console.warn('call ice (early)', e));
         if (description.type === 'offer' && !this.tx) {
           const ts = pc.getTransceivers();
           const pick = (k: Kind) => ts.find(t => t.receiver.track.kind === k);
@@ -131,6 +137,7 @@ export class CallLink {
           this.send({ description: pc.localDescription });
         }
       } else if (candidate) {
+        if (!pc.remoteDescription) { this.early.push(candidate); return; }
         await pc.addIceCandidate(candidate).catch(e => { if (!this.ignoreOffer) console.warn('call ice', e); });
       }
     } catch (e) {

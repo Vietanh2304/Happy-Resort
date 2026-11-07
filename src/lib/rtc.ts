@@ -8,7 +8,7 @@ import { onEvent, sendEvent } from './realtime';
 const env = import.meta.env;
 const TURN = (env.VITE_TURN_URL as string | undefined)?.split(',').map(u => u.trim()).filter(Boolean) ?? [];
 export const ICE: RTCIceServer[] = [
-  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
   ...(TURN.length ? [{ urls: TURN, username: (env.VITE_TURN_USERNAME as string)?.trim(), credential: (env.VITE_TURN_CREDENTIAL as string)?.trim() }] : []),
 ];
 
@@ -21,6 +21,9 @@ export class RtcRoom {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private wantHello = false;
   private wantReply = false;
+  /** Tin bắt tay xử lý lần lượt; địa chỉ tới trước lời mời thì giữ lại, nạp sau */
+  private queue: Promise<void> = Promise.resolve();
+  private early: RTCIceCandidateInit[] = [];
 
   constructor(
     private room: string,
@@ -28,7 +31,7 @@ export class RtcRoom {
     private onRemote: (stream: MediaStream | null) => void,
     private onLocal: (stream: MediaStream | null) => void,
   ) {
-    this.off.push(onEvent('rtc', d => d.room === room && this.signal(d)));
+    this.off.push(onEvent('rtc', d => { if (d.room === room) this.queue = this.queue.then(() => this.signal(d)); }));
     // Ai vào phòng sau thì chào; cả hai cùng làm lại kết nối để bên đang có hình gửi lại
     this.off.push(onEvent('rtc-hello', d => {
       if (d.room !== room) return;
@@ -60,6 +63,7 @@ export class RtcRoom {
 
   private reset() {
     this.pc?.close();
+    this.early = [];
     const pc = new RTCPeerConnection({ iceServers: ICE });
     this.pc = pc;
     this.onRemote(null);
@@ -88,11 +92,13 @@ export class RtcRoom {
         this.ignoreOffer = !this.polite && collision;
         if (this.ignoreOffer) return;
         await pc.setRemoteDescription(description);
+        for (const c of this.early.splice(0)) await pc.addIceCandidate(c).catch(e => console.warn('rtc ice (early)', e));
         if (description.type === 'offer') {
           await pc.setLocalDescription();
           this.send({ description: pc.localDescription });
         }
       } else if (candidate) {
+        if (!pc.remoteDescription) { this.early.push(candidate); return; }
         await pc.addIceCandidate(candidate).catch(e => { if (!this.ignoreOffer) console.warn('rtc ice', e); });
       }
     } catch (e) {
