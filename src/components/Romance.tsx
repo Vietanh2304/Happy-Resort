@@ -42,11 +42,11 @@ export function Romance({ phase, mine, theirs, meName, themName }: { phase: Phas
     return () => { window.removeEventListener('hy:lantern', local); off?.(); };
   }, []);
 
-  // Chữ viết trên cát: lấy lần viết mới nhất của hai người
-  const sand = [mine.sand, theirs?.sand].filter(Boolean).sort((a, b) => b!.at - a!.at)[0];
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 5000); return () => clearInterval(t); }, []);
-  const sandAge = sand ? now - sand.at : Infinity;
+  // TẠM TẮT — chữ viết trên cát: lấy lần viết mới nhất của hai người
+  // const sand = [mine.sand, theirs?.sand].filter(Boolean).sort((a, b) => b!.at - a!.at)[0];
+  // const [now, setNow] = useState(Date.now());
+  // useEffect(() => { const t = setInterval(() => setNow(Date.now()), 5000); return () => clearInterval(t); }, []);
+  // const sandAge = sand ? now - sand.at : Infinity;
 
   const holding = mine.act === 'hold' && theirs?.act === 'hold';
   const reaching = !holding && (mine.act === 'hold' || theirs?.act === 'hold');
@@ -90,12 +90,13 @@ export function Romance({ phase, mine, theirs, meName, themName }: { phase: Phas
         <i className="candle-glow" style={{ left: (LOUNGE.table.x + 5) * s, top: (LOUNGE.table.y - 6) * s, width: 24 * s, height: 24 * s }} />
       </>}
 
-      {/* Chữ viết trên cát: mờ dần, gần hết giờ thì sóng tràn lên xóa */}
-      {sand && sandAge < SAND_MS && (
+      {/* TẠM TẮT — chữ viết trên cát (mở lại cùng nút "Viết lên cát" trong Places.tsx)
+            {sand && sandAge < SAND_MS && (
         <div className={`sand-writing ${sandAge > SAND_MS - 15_000 ? 'washing' : ''}`} style={{ left: 96 * s, top: (shore + 1.5) * s, fontSize: Math.max(10, (sand.text.length > 14 ? 6 - Math.min(2, (sand.text.length - 14) * 0.2) : 7) * s) }}>
           {sand.text}
         </div>
       )}
+      */}
 
       {/* Đèn hoa đăng trôi từ bờ ra khơi */}
       {lanterns.map(l => (

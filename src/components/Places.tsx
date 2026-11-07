@@ -168,7 +168,8 @@ export function LoungePanel({ live, meName, partnerHere, partnerName, spot, onSp
         <button className={`btn small ${live.mine.act === 'hold' ? '' : 'ghost'}`} disabled={swimming} onClick={() => { const on = live.mine.act !== 'hold'; live.update({ act: on ? 'hold' : null }); if (on) live.say(partnerHere && live.theirs?.act === 'hold' ? '🤝💗' : '🤚 Nắm tay mình nha'); }}>
           🤝 {live.mine.act === 'hold' ? 'Đang nắm tay' : 'Nắm tay'}
         </button>
-        <button className="btn small ghost" onClick={() => { live.update({ sand: { text: `${meName} ♥ ${partnerName}`, at: Date.now() } }); live.say('✍️ Viết tên hai đứa lên cát nè'); }}>✍️ Viết lên cát</button>
+        {/* TẠM TẮT — viết tên lên cát (mở lại: bỏ comment dòng dưới + khối hiển thị trong Romance.tsx)
+        <button className="btn small ghost" onClick={() => { live.update({ sand: { text: `${meName} ♥ ${partnerName}`, at: Date.now() } }); live.say('✍️ Viết tên hai đứa lên cát nè'); }}>✍️ Viết lên cát</button> */}
         <button className="btn small ghost" onClick={() => { const x = 50 + Math.round(Math.random() * 90); releaseLantern(x); sendEvent('sea-lantern', { x }); live.say('🏮 Thả một chiếc đèn hoa đăng, ước…'); }}>🏮 Thả đèn hoa đăng</button>
         <button className="btn small ghost" onClick={() => live.say('🥂 Cụng ly nào!')}>🥂</button>
         <button className="btn small ghost" onClick={() => live.say('😎 Nắng đẹp ghê')}>😎</button>
