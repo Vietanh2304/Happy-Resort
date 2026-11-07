@@ -189,3 +189,38 @@ export function DPad({ hold }: { hold: (d: Dir, on: boolean) => void }) {
   );
   return <div className="dpad">{b('u', '▲')}{b('l', '◀')}{b('r', '▶')}{b('d', '▼')}</div>;
 }
+
+/**
+ * Nhân vật người ấy đi mượt: tin vị trí tới ~7 lần/giây và không đều, nên không nhảy thẳng tới vị trí mới
+ * (giật) mà bước đều về phía đó với tốc độ đi thật; đang đi thì nhích trước một chút theo hướng mặt
+ * để không khựng giữa hai tin. Xa quá (dịch chuyển, vào trận mới) thì hiện ngay tại chỗ.
+ * selfDrive: tự vẽ lại từng khung hình (cho màn không có useFrame, ví dụ phòng bếp).
+ */
+export function useGlide<P extends { x: number; y: number; f?: Dir; mv?: boolean }>(target: P | null, speed: number, selfDrive = false): P | null {
+  const st = useRef<{ x: number; y: number; t: number; tgt: P | null; at: number } | null>(null);
+  const [, force] = useState(0);
+  const tgtRef = useRef(target); tgtRef.current = target;
+  const settled = () => { const s = st.current, g = tgtRef.current; return !s || !g || (!g.mv && Math.abs(s.x - g.x) < 1e-3 && Math.abs(s.y - g.y) < 1e-3); };
+  useEffect(() => {
+    if (!selfDrive) return;
+    let raf = 0;
+    const loop = () => { if (!settled()) force(v => v + 1); raf = requestAnimationFrame(loop); };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [selfDrive]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!target) { st.current = null; return null; }
+  const now = performance.now();
+  let s = st.current;
+  if (!s) { s = st.current = { x: target.x, y: target.y, t: now, tgt: target, at: now }; return target; }
+  if (s.tgt !== target) { s.tgt = target; s.at = now; }
+  const dt = Math.min(0.1, Math.max(0, (now - s.t) / 1000)); s.t = now;
+  let gx = target.x, gy = target.y;
+  if (target.mv && target.f) {
+    const lead = Math.min(0.15, (now - s.at) / 1000) * speed;
+    gx += DV[target.f][0] * lead; gy += DV[target.f][1] * lead;
+  }
+  const ex = gx - s.x, ey = gy - s.y, d = Math.hypot(ex, ey);
+  if (d > 3) { s.x = gx; s.y = gy; }
+  else if (d > 1e-3) { const m = Math.min(d, Math.max(speed * 1.15, d * 7) * dt); s.x += (ex / d) * m; s.y += (ey / d) * m; }
+  return { ...target, x: s.x, y: s.y, mv: !!target.mv || d > 0.05 };
+}

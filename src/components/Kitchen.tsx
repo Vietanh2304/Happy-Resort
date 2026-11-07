@@ -15,6 +15,7 @@ import { notify } from '../lib/realtime';
 import { characterSprite, type View } from '../lib/sprites';
 import { toast, toastError } from '../lib/toast';
 import { reward, useGameChannel, type Msg } from './gameKit';
+import { useGlide } from './play/kit';
 import { actFrame, type Act } from '../lib/acts';
 
 const T = 16;              // cỡ ô (pixel logic)
@@ -37,6 +38,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
   const lastHost = useRef(Date.now());
   const ready = useRef(false);             // đã nhận trạng thái bếp (để không phát lại thưởng/thông báo cũ)
   const [theirPos, setTheirPos] = useState<Pos | null>(null);
+  const theirShown = useGlide(theirPos, SPEED, true);
   const start: Pos = me.id < them ? { x: 2.5, y: 1.5, f: 'd', mv: false } : { x: 6.5, y: 6.5, f: 'd', mv: false };
   const [pos, setPos] = useState<Pos>(start);
   const posRef = useRef(pos);
@@ -337,7 +339,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
           </div>
         ) : null))}
         {avatar('me', me.avatar, pos, mySeat, hand, undefined)}
-        {theirPos && partner && avatar('them', partner.avatar, theirPos, theirSeat, room.hands[them] ?? null, partner.display_name)}
+        {theirShown && partner && avatar('them', partner.avatar, theirShown, theirSeat, room.hands[them] ?? null, partner.display_name)}
         {room.meal && <div className="k-meal" style={{ left: 10 * T * s, top: 4.2 * T * s }}>😋 {Math.ceil((room.meal.until - hostNow) / 1000)}s</div>}
       </div>
       </div>

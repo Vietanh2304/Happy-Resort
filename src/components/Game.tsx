@@ -58,6 +58,7 @@ import { ShopSheet } from './ShopSheet';
 import { WishSheet } from './WishSheet';
 import { World, type Lantern, type View } from './World';
 import { CallButtons, CallTiles, EnterGate, RemoteAudio } from './Call';
+import { ChatDock } from './ChatDock';
 
 type SheetState =
   | { kind: 'games' | 'mail' | 'settings' | 'question' | 'collection' | 'meetup' | 'wish' | 'bag' | 'shop' | 'map' | 'avatar' | 'emote' | 'guestbook' | 'album' | 'calendar' | 'pet' | 'book' | 'photo' }
@@ -88,6 +89,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const [decor, reloadDecor, decorLoaded] = useSynced('decor', api.loadDecor, [] as api.Decor[]);
   const [inventory] = useSynced('inventory', () => api.loadInventory(me.id), [] as api.InvRow[]);
   const [notes] = useSynced('notes', api.loadNotes, [] as api.Note[]);
+  // Tin nhắn chung; null = chưa chạy migration 012 (bảng messages chưa có)
+  const [messages, , messagesReady] = useSynced('chat', () => api.loadMessages().catch(e => { if (/messages|schema cache|does not exist/i.test(String(e?.message ?? e))) return null; throw e; }), [] as api.Message[] | null);
   const [bridge, reloadBridge] = useSynced('checkins', () => api.loadBridge(myTime.date), { planks: 0, todayIds: [] as string[] }, [myTime.date]);
   const [claimed] = useSynced('claims', () => api.loadClaimsOn(me.id, myTime.date), [] as string[], [myTime.date]);
   const [owned] = useSynced('collection', () => api.loadCollection(me.id), new Set<string>());
@@ -929,6 +932,14 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'wish' && <WishSheet onSave={saveWish} onClose={close} />}
       {sheet?.kind === 'guestbook' && <GuestbookSheet title="📒 Sổ khách của làng" guests={guests} onClose={close} />}
       <CallTiles call={call} partnerName={partnerName} hidden={scene === 'restaurant'} />
+      <ChatDock me={me} partnerName={partnerName} messages={messages} ready={messagesReady}
+        onSend={async text => {
+          // Bong bóng trên đầu nhân vật + báo người ấy ngay; lưu lại để offline vẫn đọc được
+          live.say(text);
+          if (messages === null) return true;
+          try { await api.sendMessage(me, text); notify('chat'); return true; } catch (e) { toastError(e); return false; }
+        }}
+        onDelete={m => api.deleteMessage(m.id).then(() => notify('chat'), toastError)} />
       {count && <div className="photo-count"><b>{count.n}</b><span>{count.by === 'me' ? '📸 Tạo dáng nào!' : `📸 ${partnerName} đang chụp — cười lên nào!`}</span></div>}
       {flash && <div className="photo-flash" />}
       {gate && <EnterGate name={me.display_name} greeting={fests[0]?.greet} onEnter={() => { music.unlock(); setGate(false); }} />}

@@ -1,8 +1,8 @@
 // Gọi nhau suốt lúc chơi, giống cuộc gọi meeting: nút Mic và nút Cam bật/tắt riêng.
-// Một kết nối WebRTC riêng ('call'); hình và tiếng đi thẳng giữa hai máy.
+// Một kết nối WebRTC riêng cho cả buổi (xem callLink.ts); hình và tiếng đi thẳng giữa hai máy.
 import { useEffect, useRef, useState } from 'react';
 import type { Profile } from './api';
-import { RtcRoom } from './rtc';
+import { CallLink, type CallState } from './callLink';
 import { toast } from './toast';
 
 export function useCall(me: Profile, partner: Profile | null) {
@@ -10,7 +10,8 @@ export function useCall(me: Profile, partner: Profile | null) {
   const [local, setLocal] = useState<MediaStream | null>(null);
   const [mic, setMic] = useState(false);
   const [cam, setCam] = useState(false);
-  const rtc = useRef<RtcRoom | null>(null);
+  const [remoteState, setRemoteState] = useState<CallState>({ mic: false, cam: false });
+  const link = useRef<CallLink | null>(null);
   const micTrack = useRef<MediaStreamTrack | null>(null);
   const camTrack = useRef<MediaStreamTrack | null>(null);
 
@@ -24,16 +25,17 @@ export function useCall(me: Profile, partner: Profile | null) {
     setLocal(s);
     setMic(!!micTrack.current);
     setCam(!!camTrack.current);
-    rtc.current?.update(s);
+    link.current?.setTrack('audio', micTrack.current);
+    link.current?.setTrack('video', camTrack.current);
   }
 
   useEffect(() => {
     if (!partner) return;
-    const r = new RtcRoom('call', me.id > partner.id, setRemote, () => {});
-    rtc.current = r;
-    const s = current();
-    if (s) r.update(s);
-    return () => { r.close(); rtc.current = null; setRemote(null); };
+    const l = new CallLink(me.id > partner.id, (stream, st) => { setRemote(stream); setRemoteState(st); });
+    link.current = l;
+    l.setTrack('audio', micTrack.current);
+    l.setTrack('video', camTrack.current);
+    return () => { l.close(); link.current = null; setRemote(null); setRemoteState({ mic: false, cam: false }); };
   }, [me.id, partner?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Rời game: tắt hết thiết bị
@@ -71,8 +73,9 @@ export function useCall(me: Profile, partner: Profile | null) {
   }
 
   const live = (t: MediaStreamTrack) => t.readyState === 'live';
-  const remoteVideo = !!remote && remote.getVideoTracks().some(live);
-  const partnerTalking = !!remote && remote.getAudioTracks().some(live);
+  // Đường hình/tiếng luôn mở sẵn; người ấy có đang bật cam/mic hay không thì họ báo qua call-state
+  const remoteVideo = !!remote && remoteState.cam && remote.getVideoTracks().some(live);
+  const partnerTalking = !!remote && remoteState.mic && remote.getAudioTracks().some(live);
   return {
     mic, cam, local, remote, remoteVideo, partnerTalking,
     toggleMic: () => toggle('audio'),

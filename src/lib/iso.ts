@@ -87,7 +87,7 @@ export function isoPen(pen: Pen, ox: number, oy: number, k = 1): IsoPen {
 export const HEIGHT_K: Record<string, number> = {
   wardrobe: 0.72, fridge: 0.74, bookshelf: 0.75, floor_lamp: 0.76, coat_rack: 0.78, standing_fan: 0.75,
   bed: 0.72, 'bed-quilt': 0.72, dresser: 0.78, piano: 0.8, tv: 0.8, aquarium: 0.8, potted_plant: 0.78,
-  chair: 0.8, desk: 0.8, dining_table: 0.82, armchair: 0.85, sofa: 0.85, kitchen_counter: 0.85, washer: 0.85,
+  chair: 0.6, desk: 0.68, dining_table: 0.62, armchair: 0.7, sofa: 0.78, kitchen_counter: 0.85, washer: 0.85,
   microwave: 0.85, stove: 0.88, teddy: 0.8, nightstand: 0.85, record_player: 0.85,
 };
 

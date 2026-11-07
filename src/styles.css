@@ -1120,7 +1120,36 @@ textarea { resize: vertical; }
 @keyframes duohugR { 50% { translate: -3px 0; transform: rotate(-6deg); } }
 
 /* Mượt: máy không giữ trạng thái thì trượt giữa các lần cập nhật (~10 lần/giây) */
-.k-avatar.them { transition: left .15s linear, top .15s linear; }
+.k-avatar.them { transition: none; } /* đã trượt mượt bằng useGlide */
 .k-board.smooth { transition: transform .11s linear; }
 .k-board.smooth .boat { transition: left .16s linear, top .16s linear, transform .16s linear; }
-.bad-player.them { transition: left .14s linear; }
+.bad-player.them { transition: none; }
+/* Chỗ cầu sắp rơi: vệt bóng nhấp nháy trên sân */
+.bad-land { position: absolute; height: 6px; margin-top: -3px; border-radius: 50%; background: #3b2d3f55; box-shadow: 0 0 0 2px #fff6; animation: badland .5s ease-in-out infinite alternate; pointer-events: none; }
+@keyframes badland { to { opacity: .45; transform: scaleX(.8); } }
+
+/* ───────── Khung chat chung ───────── */
+.chat-fab { position: fixed; z-index: 9500; right: 10px; bottom: calc(80px + env(safe-area-inset-bottom)); width: 46px; height: 46px; border-radius: 50%; border: 3px solid var(--ink); background: var(--paper); font-size: 22px; box-shadow: 0 3px 0 var(--ink); cursor: pointer; }
+.chat-fab .badge { position: absolute; top: -6px; right: -6px; }
+.chat-fab .badge.dot { width: 10px; height: 10px; min-width: 0; padding: 0; }
+.chat-fab.ping { animation: chatping 1.4s ease-in-out infinite; }
+@keyframes chatping { 50% { transform: scale(1.12); } }
+.chat-dock { position: fixed; z-index: 9500; right: 10px; bottom: calc(134px + env(safe-area-inset-bottom)); width: min(360px, calc(100vw - 20px)); height: min(58vh, 460px); display: flex; flex-direction: column; background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; box-shadow: 0 4px 0 var(--ink); overflow: hidden; color: var(--ink); }
+.chat-tabs { display: flex; gap: 4px; padding: 6px; border-bottom: 2px solid var(--ink); background: var(--paper-2); }
+.chat-tabs button { flex: 1; border: 2px solid transparent; background: none; border-radius: 8px; padding: 4px 6px; font-size: 13px; cursor: pointer; color: var(--ink); }
+.chat-tabs button.active { border-color: var(--ink); background: var(--paper); font-weight: 700; }
+.chat-tabs .chat-x { flex: 0 0 auto; }
+.chat-list { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 5px; }
+.chat-empty { text-align: center; margin: auto 0; font-size: 13px; }
+.chat-day { align-self: center; font-size: 11px; color: var(--muted); padding: 2px 8px; border-radius: 999px; background: var(--paper-2); margin: 4px 0; }
+.chat-msg { max-width: 80%; display: flex; flex-direction: column; padding: 5px 9px; border-radius: 12px; border: 2px solid var(--ink); font-size: 14px; word-break: break-word; }
+.chat-msg small, .chat-notice small { font-size: 10px; opacity: .6; }
+.chat-msg.me { align-self: flex-end; background: #ffd9e4; border-bottom-right-radius: 3px; }
+.chat-msg.me small { align-self: flex-end; }
+.chat-msg.them { align-self: flex-start; background: #dff0ff; border-bottom-left-radius: 3px; }
+.chat-notice { display: flex; flex-direction: column; padding: 5px 8px; border-radius: 8px; background: var(--paper-2); font-size: 13px; }
+.chat-notice.new { box-shadow: inset 3px 0 0 #f08aa6; }
+.chat-quick { display: flex; gap: 4px; overflow-x: auto; padding: 4px 6px 0; flex: 0 0 auto; }
+.chat-quick .chip { white-space: nowrap; font-size: 12px; }
+.chat-input { display: flex; gap: 6px; padding: 6px; }
+.chat-input input { flex: 1; min-width: 0; }

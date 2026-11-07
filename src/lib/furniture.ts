@@ -348,7 +348,7 @@ function xy(p: [number, number]): [number, number] {
 
 /** Nơi một món được đặt: đồ không vẽ tay (emoji) đặt được trên sàn và ngoài vườn */
 /** Đồ không vẽ tay nhưng treo được lên tường */
-const HANGABLE = new Set(['lantern', 'chime', 'guitar', 'photo_frame', 'den_ca_chep', 'bong_bay_tim']);
+const HANGABLE = new Set(['lantern', 'chime', 'guitar', 'photo_frame', 'den_ca_chep', 'bong_bay_tim', 'kite', 'star_lantern', 'kid_card', 'peach']);
 export const placeOf = (itemId: string): Place => (HANGABLE.has(itemId) ? 'hang' : ART[itemId]?.place ?? 'any');
 
 /**
@@ -356,10 +356,17 @@ export const placeOf = (itemId: string): Place => (HANGABLE.has(itemId) ? 'hang'
  * (ấm trà, nến, radio chỉ cỡ cái đầu; đàn guitar cao tới ngực).
  */
 const EMOJI_PX: Record<string, number> = {
-  teapot: 8, candle: 7, radio: 9, books: 8, lantern: 10, chime: 9, guitar: 15, photo_frame: 9, gift_box: 9,
-  sandcastle: 10, fishing: 14, cactus: 10, flower: 9, pet_bed: 12, pet_toy: 7, pet_ball: 6, pet_food: 7, pet_treat: 6,
+  // đồ nhỏ cầm tay
+  teapot: 8, candle: 7, radio: 9, books: 8, mushroom: 8, pet_toy: 7, pet_ball: 6, kid_card: 8, firefly_jar: 9, whale_pearl: 9,
+  flower: 9, chime: 9, photo_frame: 9, gift_box: 9, bucket: 9, lotus: 10, moon_flower: 10, bouquet: 10, lantern: 10,
+  rainbow_shard: 10, stardust: 10, keepsake: 10, pumpkin: 11,
+  // đồ vừa (tới đầu gối / thắt lưng)
+  sandcastle: 12, cactus: 12, driftwood: 12, ice_lantern: 12, star_lantern: 12, coral: 12, pet_bed: 12,
+  campfire: 14, fishing: 14, kite: 14, fern: 14, guitar: 15, lost_umbrella: 16,
+  // đồ to (ngang hoặc cao hơn người)
+  peach: 18, trident: 18, snowman: 20, canoe: 22, umbrella: 24, tent: 26, xmas_tree: 26, palm: 30, hut: 30,
 };
-export const emojiPx = (itemId: string) => EMOJI_PX[itemId] ?? 10;
+export const emojiPx = (itemId: string) => EMOJI_PX[itemId] ?? 12;
 export const sizeOf = (itemId: string): [number, number] => ART[itemId]?.size ?? [1, 1];
 
 /** Chăn đắp phủ lên người đang nằm (cùng khung với giường để đặt trùng vị trí) */

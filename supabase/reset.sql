@@ -9,7 +9,7 @@ drop policy if exists "cặp đôi xóa file" on storage.objects;
 delete from storage.objects where bucket_id = 'memories';
 delete from storage.buckets where id = 'memories';
 drop table if exists
-  public.fridge, public.kids, public.fest_decor, public.special_days, public.pets, public.capsules, public.photos, public.farm, public.garden, public.meetup, public.wishes, public.question_answers, public.guests,
+  public.messages, public.fridge, public.kids, public.fest_decor, public.special_days, public.pets, public.capsules, public.photos, public.farm, public.garden, public.meetup, public.wishes, public.question_answers, public.guests,
   public.notes, public.checkins, public.claims, public.collection, public.inventory,
   public.decor, public.devices, public.profiles, public.couples
   cascade;

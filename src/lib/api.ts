@@ -155,6 +155,15 @@ export const clearPlot = (me: Profile, plot: number) =>
   run(supabase.from('garden').delete().eq('user_id', me.id).eq('plot', plot));
 
 export const sendGift = (itemId: string, body: string) => run(supabase.rpc('send_gift', { p_item: itemId, p_body: body }));
+// ───────── Khung chat chung ─────────
+export interface Message { id: string; from_id: string; body: string; created_at: string }
+/** 200 tin gần nhất, cũ → mới */
+export const loadMessages = async () =>
+  (await run<Message[]>(supabase.from('messages').select('id, from_id, body, created_at').order('created_at', { ascending: false }).limit(200))).reverse();
+export const sendMessage = (me: Profile, body: string) =>
+  run(supabase.from('messages').insert({ couple_id: me.couple_id, from_id: me.id, body }));
+export const deleteMessage = (id: string) => run(supabase.from('messages').delete().eq('id', id));
+
 // ───────── Tủ lạnh chung trong bếp ─────────
 export const loadFridge = () => run<InvRow[]>(supabase.from('fridge').select('item_id, qty').gt('qty', 0));
 export const fridgePut = (items: Gift[]) => run(supabase.rpc('fridge_put', { p_items: items }));

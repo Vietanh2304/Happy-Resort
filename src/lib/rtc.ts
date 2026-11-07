@@ -7,7 +7,7 @@ import { onEvent, sendEvent } from './realtime';
 // điền VITE_TURN_URL / VITE_TURN_USERNAME / VITE_TURN_CREDENTIAL trong .env (nhiều URL cách nhau dấu phẩy).
 const env = import.meta.env;
 const TURN = (env.VITE_TURN_URL as string | undefined)?.split(',').map(u => u.trim()).filter(Boolean) ?? [];
-const ICE: RTCIceServer[] = [
+export const ICE: RTCIceServer[] = [
   { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] },
   ...(TURN.length ? [{ urls: TURN, username: (env.VITE_TURN_USERNAME as string)?.trim(), credential: (env.VITE_TURN_CREDENTIAL as string)?.trim() }] : []),
 ];

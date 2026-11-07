@@ -48,12 +48,17 @@ export function useLive(partnerOnline: boolean) {
     timers.current[who] = setTimeout(() => setBubbles(b => ({ ...b, [who]: undefined })), BUBBLE_MS);
   }, []);
 
-  useEffect(() => onEvent('live', (s: LiveState) => setTheirs(s)), []);
+  // Lần đầu nghe thấy người ấy (họ vừa vào, hoặc tin chào của mình bị lạc): gửi lại trạng thái của mình ngay
+  const heardRef = useRef(false);
+  useEffect(() => onEvent('live', (s: LiveState) => {
+    if (!heardRef.current) { heardRef.current = true; sendEvent('live', mineRef.current, 'live'); }
+    setTheirs(s);
+  }), []);
   useEffect(() => onEvent('say', ({ text }: { text: string }) => { showBubble('partner', text); void ping('💬 Người ấy nhắn', text, 'say'); }), [showBubble]);
   // Người ấy vừa online: gửi trạng thái hiện tại của mình; offline thì ẩn nhân vật của họ
   useEffect(() => {
     if (partnerOnline) sendEvent('live', mineRef.current, 'live');
-    else setTheirs(null);
+    else { setTheirs(null); heardRef.current = false; }
   }, [partnerOnline]);
   // Nối lại kênh sau khi rớt: gửi lại vị trí của mình; thỉnh thoảng nhắc lại phòng khi người ấy lỡ tin
   useEffect(() => onEvent('link-up', () => sendEvent('live', mineRef.current, 'live')), []);

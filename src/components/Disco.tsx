@@ -5,7 +5,8 @@ import * as api from '../lib/api';
 import { seeded } from '../lib/rng';
 import { reward, useGameChannel, type Msg } from './gameKit';
 
-export const BEATS = 32, BEAT_MS = 900, WINDOW = 260, AHEAD = 4200;
+// Nhịp chậm, mũi tên chạy thong thả cho dễ bấm (điện thoại cũng kịp)
+export const BEATS = 32, BEAT_MS = 1200, WINDOW = 340, AHEAD = 6500;
 const DIRS = [{ k: 'ArrowLeft', icon: '⬅️' }, { k: 'ArrowUp', icon: '⬆️' }, { k: 'ArrowDown', icon: '⬇️' }, { k: 'ArrowRight', icon: '➡️' }];
 /** Động tác ứng với mũi tên và nhịp (mỗi mũi tên có 2 kiểu cho đỡ nhàm) */
 export const moveOf = (d: number, k: number) => (d * 2 + (k % 2)) % 8;
@@ -56,7 +57,7 @@ export function DanceBar({ me, them, themName, date, onMove, onLeave }: {
   };
   const pressRef = useRef(press); pressRef.current = press;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { const d = DIRS.findIndex(x => x.k === e.key); if (d >= 0) { e.preventDefault(); pressRef.current(d); } };
+    const onKey = (e: KeyboardEvent) => { if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return; const d = DIRS.findIndex(x => x.k === e.key); if (d >= 0) { e.preventDefault(); pressRef.current(d); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);

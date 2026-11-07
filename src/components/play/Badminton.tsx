@@ -1,14 +1,14 @@
 // 🏸 Cầu lông: sân nhìn ngang, mỗi người một nửa sân (id nhỏ hơn bên trái). Di chuyển trái/phải, bấm "Đánh"
 // khi quả cầu tới gần. Cầu rơi bên sân ai thì máy người đó phân xử (đỡ được hay mất điểm).
 // Hai kiểu chơi: đối kháng (chạm 11 điểm) hoặc giữ cầu (đếm số lần đánh qua lại).
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { canHit, COURT, landT, landX, NET_X, plan, posAt, type Shot } from '../../lib/badminton';
 import { characterSprite } from '../../lib/sprites';
 import { makeSprite } from '../../lib/pixel';
 import { shuttleSprite } from '../../lib/playSprites';
 import { cloudSprite } from '../../lib/sprites';
 import { reward } from '../gameKit';
-import { PlayScreen, typing, useFrame, usePeer, useViewport, type PlayProps } from './kit';
+import { PlayScreen, typing, useFrame, useGlide, usePeer, useViewport, type PlayProps } from './kit';
 
 const WIN = 11, SPEED = 7;
 type Mode = 'versus' | 'coop';
@@ -48,6 +48,8 @@ export function Badminton({ me, partner, date, onLeave }: PlayProps) {
   useEffect(() => { if (game?.over || (game?.mode === 'coop' && game.best >= 10)) reward('badminton', date); }, [game?.over, game?.best]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const now = useFrame();
+  const theirTarget = useMemo(() => ({ x: theirX, y: 0 }), [theirX]);
+  const theirShownX = useGlide(theirTarget, SPEED)?.x ?? theirX;
   const t = shot ? (now - shot.at) / 1000 : 0;
   const cock = shot ? posAt(shot, t) : null;
 
@@ -159,9 +161,10 @@ export function Badminton({ me, partner, date, onLeave }: PlayProps) {
       <div className="k-view bad-court" style={{ width: W, height: H }}>
         <img className="k-bg" src={court.url} alt="" draggable={false} style={{ width: W, height: H }} />
         {[[18, 6], [96, 3], [132, 10]].map(([x, y], i) => { const c = cloudSprite(false); return <img key={i} className="bad-cloud" src={c.url} alt="" style={{ left: x * k, top: y * k, width: c.w * k, height: c.h * k, animationDelay: `${-i * 9}s` }} />; })}
+        {shot && cock && cock.y > 0.05 && <span className="bad-land" style={{ left: X(landX(shot)), top: ground, width: 2.2 * u, marginLeft: -1.1 * u }} />}
         {player(me.avatar, myX.current, me.id, left)}
-        {partner && here && player(partner.avatar, theirX, them, !left, name)}
-        {[cock, serving && game.serve === me.id ? { x: myX.current + dir * 0.6, y: 1.2 } : null, serving && game.serve === them ? { x: theirX - dir * 0.6, y: 1.2 } : null].map((c, i) => c && (
+        {partner && here && player(partner.avatar, theirShownX, them, !left, name)}
+        {[cock, serving && game.serve === me.id ? { x: myX.current + dir * 0.6, y: 1.2 } : null, serving && game.serve === them ? { x: theirShownX - dir * 0.6, y: 1.2 } : null].map((c, i) => c && (
           <img key={i} className="bad-cock" src={shuttle.url} alt="" style={{ left: X(c.x), top: Y(c.y), width: shuttle.w * k, height: shuttle.h * k, }} />
         ))}
         {game?.last !== undefined && game?.last !== null && !shot && game.mode === 'versus' && <span className="bad-pt">{game.last === me.id ? '🎉 Điểm cho bạn!' : `Điểm cho ${name}`}</span>}

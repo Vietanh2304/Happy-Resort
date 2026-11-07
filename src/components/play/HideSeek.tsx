@@ -6,7 +6,7 @@ import { barrelSprite, crateSprite, haystackSprite, houseSprite, leafSprite } fr
 import { bushSprite, pineSprite } from '../../lib/townSprites';
 import type { Act } from '../../lib/acts';
 import { reward } from '../gameKit';
-import { Chibi, DPad, PlayScreen, typing, useFrame, usePeer, useViewport, useWalker, type PlayProps, type Pos } from './kit';
+import { Chibi, DPad, PlayScreen, typing, useFrame, useGlide, usePeer, useViewport, useWalker, type PlayProps, type Pos } from './kit';
 
 const T = 16;
 const MAP = [
@@ -72,6 +72,7 @@ export function HideSeek({ me, partner, date, onLeave }: PlayProps) {
   }, () => send('pos', walker.ref.current));
 
   const now = useFrame();
+  const theirShown = useGlide(theirPos, 4.4);
   const t = round ? now - round.at : 0;
   const amHider = round?.hider === me.id;
   const phase = !round ? 'lobby' : round.result ? 'done' : t < HIDE_MS ? 'hide' : t < HIDE_MS + SEEK_MS ? 'seek' : 'end';
@@ -186,7 +187,7 @@ export function HideSeek({ me, partner, date, onLeave }: PlayProps) {
         })()}
         {!hiding && !(round?.result && amHider) && <Chibi look={me.avatar} p={walker.pos} tile={tile} s={s} act={acts.me} />}
         {hiding && <div className="hide-me" style={{ left: (SPOTS[mySpot!][0] + 0.5) * tile, top: SPOTS[mySpot!][1] * tile, fontSize: tile * 0.5 }}>👀</div>}
-        {showThem && !(round?.result && round.hider === them) && <Chibi look={partner!.avatar} p={theirPos!} tile={tile} s={s} name={name} className="them" act={acts.them} />}
+        {showThem && !(round?.result && round.hider === them) && <Chibi look={partner!.avatar} p={theirShown ?? theirPos!} tile={tile} s={s} name={name} className="them" act={acts.them} />}
         {blind && <div className="hide-blind"><span>🙈</span><b>{Math.ceil((HIDE_MS - t) / 1000)}</b><small>{name} đang đi trốn…</small></div>}
       </div>
     </PlayScreen>

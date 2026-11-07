@@ -63,7 +63,7 @@ export function FishMeter({ onResult, speed = 0.9, greenW = 12, timeoutMs = 6000
   };
   const pressRef = useRef(press); pressRef.current = press;
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.code === 'Space' || e.key === 'Enter') { e.preventDefault(); pressRef.current(); } };
+    const k = (e: KeyboardEvent) => { if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return; if (e.code === 'Space' || e.key === 'Enter') { e.preventDefault(); pressRef.current(); } };
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
   }, []);

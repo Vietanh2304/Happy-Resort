@@ -6,7 +6,7 @@ import { beachUmbrellaSprite, dropSprite, sandcastleSprite, snowballSprite, snow
 import { pineSprite } from '../../lib/townSprites';
 import type { Act } from '../../lib/acts';
 import { reward } from '../gameKit';
-import { Chibi, DPad, PlayScreen, typing, useFrame, usePeer, useViewport, useWalker, type PlayProps, type Pos } from './kit';
+import { Chibi, DPad, PlayScreen, typing, useFrame, useGlide, usePeer, useViewport, useWalker, type PlayProps, type Pos } from './kit';
 
 const T = 16, COLS = 16, ROWS = 10;
 const MAP = [
@@ -59,6 +59,7 @@ export function Snowball({ me, partner, date, onLeave, theme = 'water' }: PlayPr
   }, () => { const r = roundRef.current; if (r) send('sync', { elapsed: Date.now() - r.at, hits: r.hits }); send('pos', walker.ref.current); });
 
   const now = useFrame();
+  const theirShown = useGlide(theirPos, 4.2);
   const elapsed = round ? now - round.at : 0;
   const myHits = round?.hits[me.id] ?? 0, theirHits = round?.hits[them] ?? 0;
   const over = !!round && (myHits >= WIN || theirHits >= WIN || elapsed >= ROUND_MS);
@@ -155,7 +156,7 @@ export function Snowball({ me, partner, date, onLeave, theme = 'water' }: PlayPr
         }))}
         <Chibi look={me.avatar} p={walker.pos} tile={tile} s={s} act={acts.me} tint={wet(me.id) ? (snow ? 'brightness(1.2) drop-shadow(0 0 3px #ffffff)' : 'saturate(0.75) brightness(1.05) drop-shadow(0 0 3px #5aa8e0)') : undefined}
           held={!snow ? <img className="snow-gun" src={waterGunSprite().url} alt="" style={{ width: 12 * s, height: 8 * s }} /> : undefined} bubble={wet(me.id) ? (snow ? '❄️ Á lạnh!' : '💦 Ướt rồi!') : null} />
-        {theirPos && partner && <Chibi look={partner.avatar} p={theirPos} tile={tile} s={s} name={partner.display_name} className="them" act={acts.them}
+        {theirShown && partner && <Chibi look={partner.avatar} p={theirShown} tile={tile} s={s} name={partner.display_name} className="them" act={acts.them}
           tint={wet(them) ? (snow ? 'brightness(1.2) drop-shadow(0 0 3px #ffffff)' : 'saturate(0.75) brightness(1.05) drop-shadow(0 0 3px #5aa8e0)') : undefined}
           held={!snow ? <img className="snow-gun" src={waterGunSprite().url} alt="" style={{ width: 12 * s, height: 8 * s }} /> : undefined} bubble={wet(them) ? (snow ? '❄️ Trúng rồi!' : '💦 Ướt nhẹp!') : null} />}
         {shots.map(sh => {
