@@ -55,10 +55,10 @@ export function CityContent({ go, onOffice, onHome, onStall, night }: { go: (to:
       {/* Xe cộ hai chiều */}
       <div className="city-traffic" style={{ top: 134 * s, height: 42 * s }}>
         {cars.map((c, i) => {
-          const sp = carSprite(c), back = i % 2 === 1;
-          return <img key={i} src={sp.url} alt="" className={`city-car ${back ? 'back' : ''}`} style={v({ top: (back ? 4 : 22) * s, width: sp.w * s, height: sp.h * s, '--w': `${290 * s}px`, animationDuration: `${7 + (i % 3) * 2}s`, animationDelay: `${-i * 2.3}s` })} />;
+          const sp = carSprite(c), back = i % 2 === 1, K = 1.4;   // xe con thấp hơn người một chút (nhân vật cao ~22 đơn vị)
+          return <img key={i} src={sp.url} alt="" className={`city-car ${back ? 'back' : ''}`} style={v({ top: (back ? 2 : 22) * s, width: sp.w * K * s, height: sp.h * K * s, '--w': `${310 * s}px`, animationDuration: `${7 + (i % 3) * 2}s`, animationDelay: `${-i * 2.3}s` })} />;
         })}
-        <img src={busSprite().url} alt="" className="city-car bus" style={v({ top: 18 * s, width: 48 * s, height: 18 * s, '--w': `${300 * s}px`, animationDuration: '14s', animationDelay: '-5s' })} />
+        <img src={busSprite().url} alt="" className="city-car bus" style={v({ top: 6 * s, width: 82 * s, height: 31 * s, '--w': `${340 * s}px`, animationDuration: '14s', animationDelay: '-5s' })} />
       </div>
       {Array.from({ length: 8 }, (_, i) => <Walker key={i} i={i} />)}
       {night && <div className="city-night" />}

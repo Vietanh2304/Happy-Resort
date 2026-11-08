@@ -3,7 +3,7 @@ import { BATH_WATERS, type BathWater } from '../lib/interiors';
 import type { Live } from '../lib/useLive';
 
 /** Bảng dưới cảnh phòng tắm: chọn nước tắm (cả hai cùng thấy), vào/ra bồn, nhắn tin */
-export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName, onEnter, onLeaveTub, onLeaveRoom, onSplash, onToilet }: {
+export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName, onEnter, onLeaveTub, onLeaveRoom, onSplash, onToilet, onWash }: {
   water: BathWater;
   live: Live;
   partnerHere: boolean;
@@ -14,6 +14,7 @@ export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName,
   onLeaveRoom: () => void;
   onSplash: () => void;
   onToilet: (kind: 'pee' | 'poop') => void;
+  onWash: () => void;
 }) {
   const [text, setText] = useState('');
   const inTub = live.mine.act === 'bath';
@@ -38,6 +39,7 @@ export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName,
           <button className="btn small ghost" onClick={() => live.say('😌')}>😌</button>
           <button className="btn small ghost" disabled={inTub} onClick={() => onToilet('pee')}>🚽 Đi tè</button>
           <button className="btn small ghost" disabled={inTub} onClick={() => onToilet('poop')}>💩 Đi nặng</button>
+          <button className="btn small ghost" disabled={inTub} onClick={onWash}>🧼 Rửa tay</button>
         </div>
         <ul className="chat-log">
           {live.chat.slice(-3).map(c => <li key={c.at} className={c.from}>{c.text}</li>)}

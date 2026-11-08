@@ -30,6 +30,7 @@ import {
   ARCADE, BATH, BEACH, RIDE_MS, BUILDINGS, FARM, GARDEN, HOUSE, ROOM, SCENES, SEATS, SHOP, TOWN, WALL_L, WALL_R, RESERVED, farmCell, roomGrid, roomPt, walkTarget, wallSlot,
   type GameId, type Pt, type SceneId,
   SIT_ACTS,
+  BACK_ACTS,
 } from '../lib/world';
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
@@ -462,13 +463,13 @@ function SceneContent(p: WorldProps) {
       <KidLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />
       {!myBed && scene !== 'lounge' && scene !== 'sky' && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
-        x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left}
+        x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')}
         sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
       {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
-          x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left}
+          x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')}
           sitting={sitting || !!theirTub || SIT_ACTS.includes(theirs.act ?? '')} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : p.couple ? { side: p.couple.mySide === 'L' ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
         />
       )}

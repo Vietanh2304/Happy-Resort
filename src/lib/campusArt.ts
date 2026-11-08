@@ -153,9 +153,14 @@ export function gymBackground(night: boolean) {
 /** Tấm đệm nhảy xanh */
 export const matSprite = () => makeSprite('gym-mat', 30, 8, p => { p.rect(0, 2, 30, 6, '#5aa8e0'); p.rect(0, 2, 30, 1, '#8ad0f0'); for (let x = 7; x < 30; x += 8) p.rect(x, 2, 1, 6, '#3a88c0'); });
 
-/** Bồn cầu sứ trắng (phòng tắm) */
-export const toiletSprite = () => makeSprite('toilet:v1', 14, 18, p => {
-  p.rect(1, 0, 8, 9, '#f4f6fa'); p.rect(1, 0, 8, 1, '#ffffff'); p.rect(2, 2, 6, 1, '#d8dce6'); p.px(7, 1, '#a8b0c0');
-  ellipse(p, 7, 11, 6, 3.4, '#e8ecf2'); ellipse(p, 7, 10.6, 4.6, 2.4, '#ffffff'); ellipse(p, 7, 10.8, 3, 1.4, '#a8d8f0');
-  p.rect(4, 13, 6, 5, '#e8ecf2'); p.rect(4, 17, 6, 1, '#c8ccd8');
+/** Bồn cầu sứ trắng (phòng tắm): két nước áp tường trái, bệ ngồi quay ra giữa phòng theo góc nhìn isometric */
+export const toiletSprite = () => makeSprite('toilet:v2', 18, 20, p => {
+  for (let i = 0; i < 9; i++) p.rect(1 + Math.floor(i / 2), 1 + i, 1, 0, '#000');
+  // két nước (mặt nghiêng theo tường trái)
+  for (let y = 0; y < 10; y++) p.rect(1, y + Math.floor(1 / 2), 6, 1, y === 0 ? '#ffffff' : y < 3 ? '#f4f6fa' : '#e8ecf2');
+  for (let x = 1; x < 7; x++) p.px(x, Math.floor((x - 1) / 2) + 10, '#c8ccd8');
+  p.rect(3, 2, 2, 1, '#a8b0c0');
+  // bệ ngồi hình bầu dục, kéo chéo xuống phải
+  ellipse(p, 10, 13, 6.5, 3.6, '#e8ecf2'); ellipse(p, 10, 12.6, 5.2, 2.6, '#ffffff'); ellipse(p, 10.5, 12.8, 3.2, 1.5, '#a8d8f0');
+  p.rect(7, 15, 7, 4, '#e8ecf2'); p.rect(7, 18, 7, 1, '#c8ccd8'); p.rect(13, 15, 1, 3, '#d8dce6');
 });

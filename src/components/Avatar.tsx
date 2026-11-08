@@ -47,10 +47,12 @@ interface Props {
   torch?: boolean;
   /** Cảnh cận (khoang đu quay, nhà hàng…): vẽ nhân vật to hơn cho đúng tỉ lệ với đồ đạc */
   zoom?: number;
+  /** Đứng quay lưng (đi tè, rửa tay) */
+  faceBack?: boolean;
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom, faceBack }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -104,7 +106,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
   const pair = duo && !moving && !sitting ? duoPose(duo, dancing ? dance!.m : null) : null;
   const sprite = af !== null ? characterSprite(look, sitting ? 'actsit' : 'act', undefined, 'front', af)
     : pair ? (pair.f === 'side' ? characterSprite(look, 'idle', undefined, 'side') : characterSprite(look, 'act', undefined, 'front', pair.f))
-    : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : view, step);
+    : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : faceBack && !moving ? 'back' : view, step);
   const ax = sprite.ax ?? sprite.w / 2;
   const ps = avatarPx(s * (zoom ?? 1));
   if (swim) {

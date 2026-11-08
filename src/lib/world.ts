@@ -137,7 +137,8 @@ export const BATH = {
   stand: roomPt(4, 4.7),
   toBath: roomPt(6.8, 0.4),      // cửa phòng ngủ → phòng tắm (tường phải)
   toilet: roomPt(0.6, 5.5),      // bồn cầu sát tường trái
-  toiletStand: roomPt(1.6, 5.5),
+  toiletStand: roomPt(1.7, 5.5),
+  sink: roomPt(1.15, 2.2),        // đứng trước bồn rửa mặt (cạnh gương)
 };
 
 /** Ô chỉ cấm đặt đồ nhưng vẫn đi qua được (thảm cửa, lối vào phòng tắm) */
@@ -188,3 +189,5 @@ export function walkTarget(scene: SceneId, p: Pt): Pt | null {
 
 /** Động tác ngồi (ghế ngoài sân trường, bồn cầu) */
 export const SIT_ACTS = ['sit', 'poop', 'peesit'];
+/** Động tác đứng quay lưng (đi tè, rửa tay) */
+export const BACK_ACTS = ['pee', 'wash'];
