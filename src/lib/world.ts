@@ -138,7 +138,9 @@ export const BATH = {
   toBath: roomPt(6.8, 0.4),      // cửa phòng ngủ → phòng tắm (tường phải)
   toilet: roomPt(0.6, 5.5),      // bồn cầu sát tường trái
   toiletStand: roomPt(1.7, 5.5),
-  sink: roomPt(1.15, 2.2),        // đứng trước bồn rửa mặt (cạnh gương)
+  peeStand: { x: roomPt(1.7, 5.5).x - 6, y: roomPt(1.7, 5.5).y - 2 },   // nam đứng sát, che miệng bồn cầu
+  sink: roomPt(1.2, 4.75),       // đứng trước bồn rửa tay nhỏ gắn tường trái (cạnh bồn cầu)
+  basin: roomPt(0.05, 4.3, 12),        // đứng trước bồn rửa mặt (cạnh gương)
 };
 
 /** Ô chỉ cấm đặt đồ nhưng vẫn đi qua được (thảm cửa, lối vào phòng tắm) */

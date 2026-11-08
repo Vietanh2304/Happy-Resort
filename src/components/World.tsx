@@ -42,7 +42,7 @@ import { reefBackground } from '../lib/reef';
 import { SWIMMERS } from '../lib/critters';
 import { Follower, Wanderer } from './Wander';
 import { atSchool, classroomSprite, SCHOOL, type StallId } from '../lib/school';
-import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite } from '../lib/campusArt';
+import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite, basinSprite } from '../lib/campusArt';
 import { CampusContent } from './Campus';
 import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
@@ -1175,6 +1175,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
       {scene === 'bathroom' && <BathContent {...p} />}
       {scene === 'bathroom' && (
         <>
+          <Spr sprite={basinSprite()} x={BATH.basin.x + 4} y={BATH.basin.y} z={Math.round(BATH.basin.y) + 12} title="🧼 Bồn rửa tay" />
           <Spr sprite={toiletSprite()} x={BATH.toilet.x} y={BATH.toilet.y + 4} z={Math.round(BATH.toilet.y) - 1} title="🚽 Bồn cầu" />
           {['pee', 'peesit', 'poop'].some(a => a === p.live.mine.act || (p.partnerHere && a === p.live.theirs?.act)) && <Tag x={BATH.toilet.x + 4} y={BATH.toilet.y - 36} className="label">🚪 Đang bận…</Tag>}
         </>

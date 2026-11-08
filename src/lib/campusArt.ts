@@ -164,3 +164,12 @@ export const toiletSprite = () => makeSprite('toilet:v2', 18, 20, p => {
   ellipse(p, 10, 13, 6.5, 3.6, '#e8ecf2'); ellipse(p, 10, 12.6, 5.2, 2.6, '#ffffff'); ellipse(p, 10.5, 12.8, 3.2, 1.5, '#a8d8f0');
   p.rect(7, 15, 7, 4, '#e8ecf2'); p.rect(7, 18, 7, 1, '#c8ccd8'); p.rect(13, 15, 1, 3, '#d8dce6');
 });
+
+/** Bồn rửa tay nhỏ gắn tường (nghiêng theo tường trái) + vòi nước + xà phòng */
+export const basinSprite = () => makeSprite('basin:v1', 12, 12, p => {
+  for (let x = 0; x < 12; x++) p.rect(x, Math.floor(x / 2), 1, 4, x < 2 ? '#d8dce6' : '#f4f6fa');
+  ellipse(p, 6.5, 5.5, 4, 1.6, '#a8d8f0');
+  p.rect(2, 1, 1, 3, '#c8c8d8'); p.rect(2, 1, 3, 1, '#c8c8d8');
+  for (let x = 1; x < 12; x++) p.px(x, Math.floor(x / 2) + 4, '#c8ccd8');
+  p.rect(5, 8, 2, 4, '#e8ecf2'); p.rect(9, 3, 2, 2, '#f59ab3');
+});

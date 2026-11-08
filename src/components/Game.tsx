@@ -810,10 +810,10 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const liveNow = useRef(live);
   liveNow.current = live;
   // Rửa tay ở bồn rửa mặt (đứng quay lưng, xà phòng + nước)
-  const washHands = () => {
-    live.update({ pos: BATH.sink, act: 'wash' }); live.say('🧼💦');
+  const washHands = () => go(BATH.sink, () => {
+    live.update({ act: 'wash' }); live.say('🧼💦');
     setTimeout(() => { if (liveNow.current.mine.act === 'wash') { live.update({ act: null }); live.say('✨'); toast('🧼 Tay sạch thơm rồi!'); } }, 4500);
-  };
+  });
   const exit = !editing && !fishing && !inBed && !festIcon ? EXITS[scene] : undefined;
   // Nhà thể chất: ném bóng rổ (vui thôi, đôi khi vào rổ)
   const shoot3 = () => { const ok = Math.random() < 0.45; live.say(ok ? '🏀 Vàoooo! 🎉' : '🏀 Ối, trượt rồi 😅'); };
@@ -929,7 +929,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onToilet={kind => {
             const sit = kind === 'poop' || me.avatar.gender !== 'm';     // nam tè đứng, nữ tè ngồi, đi nặng thì cùng ngồi
             go(BATH.toiletStand, () => {
-              live.update({ act: kind === 'poop' ? 'poop' : sit ? 'peesit' : 'pee', pos: sit ? BATH.toilet : BATH.toiletStand });
+              live.update({ act: kind === 'poop' ? 'poop' : sit ? 'peesit' : 'pee', pos: sit ? BATH.toilet : BATH.peeStand });
               live.say(kind === 'poop' ? '💩' : '💧');
               setTimeout(() => { if (['pee', 'peesit', 'poop'].includes(liveNow.current.mine.act ?? '')) { live.update({ act: null, pos: BATH.toiletStand }); toast('🚽 Xong! Ra bồn rửa tay nào 🧼'); setTimeout(washHands, 400); } }, kind === 'poop' ? 6000 : 3500);
             });
