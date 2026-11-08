@@ -114,15 +114,32 @@ export function catchFishQ(userId: string, date: string, cast: number, shore: Sh
 
 export interface Plot { plot?: number; crop_id: string; water_days: number; last_watered: string | null }
 
-export function cropDays(cropId: string) {
-  return content.garden.crops.find(c => c.id === cropId)?.days ?? 3;
+// Cây lớn theo giờ thật kể từ lúc gieo (mỗi "ngày" trong danh sách cây = 6 tiếng), và phải được tưới:
+// cây nhanh (≤ 3) tưới 1 lần là đủ, cây lâu (4–5) cần tưới 2 ngày khác nhau. Vd cà rốt 12 tiếng, đào 30 tiếng.
+export const GROW_H = 6;
+const cropBase = (cropId: string) => content.garden.crops.find(c => c.id === cropId)?.days ?? 3;
+export const cropHours = (cropId: string) => cropBase(cropId) * GROW_H;
+export const waterNeed = (cropId: string) => (cropBase(cropId) >= 4 ? 2 : 1);
+/** Giữ tên cũ cho chỗ cần "số lần tưới" */
+export const cropDays = waterNeed;
+/** Phần trăm lớn (0..1) theo thời gian; chưa tưới lần nào thì hạt chưa nảy mầm */
+export function growth(p: Plot & { planted_at?: string }, now = Date.now()) {
+  if (!p.water_days) return 0;
+  const h = p.planted_at ? (now - Date.parse(p.planted_at)) / 3.6e6 : Infinity;
+  return Math.min(1, h / cropHours(p.crop_id), p.water_days / waterNeed(p.crop_id) >= 1 ? 1 : 0.95);
 }
-export function plotStage(p: Plot): 'seed' | 'sprout' | 'ripe' {
-  if (p.water_days >= cropDays(p.crop_id)) return 'ripe';
+export function plotStage(p: Plot & { planted_at?: string }, now = Date.now()): 'seed' | 'sprout' | 'ripe' {
+  if (p.water_days >= waterNeed(p.crop_id) && growth(p, now) >= 1) return 'ripe';
   return p.water_days === 0 ? 'seed' : 'sprout';
 }
-export function needsWater(p: Plot, today: string) {
-  return plotStage(p) !== 'ripe' && p.last_watered !== today;
+export function needsWater(p: Plot & { planted_at?: string }, today: string) {
+  return plotStage(p) !== 'ripe' && p.water_days < waterNeed(p.crop_id) && p.last_watered !== today;
+}
+/** Còn bao lâu nữa thì chín (chữ cho người đọc) */
+export function ripeIn(p: Plot & { planted_at?: string }, now = Date.now()) {
+  if (!p.planted_at) return '';
+  const left = Math.max(0, Date.parse(p.planted_at) + cropHours(p.crop_id) * 3.6e6 - now) / 3.6e6;
+  return left >= 1 ? `khoảng ${Math.ceil(left)} tiếng nữa` : `khoảng ${Math.max(1, Math.ceil(left * 60))} phút nữa`;
 }
 
 /** Món nấu được từ túi đồ hiện tại */
@@ -133,5 +150,5 @@ export function canCook(needs: { id: string; n: number }[], inventory: { item_id
 /** Giá bán một món cho hũ xu chung (đồ hiếm được giá gấp đôi) */
 export function sellPrice(itemId: string) {
   const it = item(itemId);
-  return content.economy.sell[it.kind] * (it.rarity === 'rare' ? 2 : 1);
+  return it.price ?? (content.economy.sell[it.kind] ?? 20) * (it.rarity === 'rare' ? 2 : 1);
 }

@@ -11,7 +11,7 @@ export const H = 120;
 
 // ───────── Nhân vật ─────────
 
-export interface AvatarLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: "m" | "f"; glasses?: number }
+export interface AvatarLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: "m" | "f"; glasses?: number; design?: import("./ranch").Design | null }
 export { SKINS, HAIR_COLORS, SHIRTS } from './chibi';
 export const HAIR_STYLES = ['Tóc ngắn', 'Tóc dài', 'Búi tó', 'Tóc xù', 'Hai bím', 'Đuôi ngựa', 'Tóc bob', 'Mái lệch', 'Tóc vuốt', 'Xoăn dài', 'Tóc tém', 'Hai búi'];
 export const GLASSES = ['Không', 'Kính tròn', 'Kính vuông', 'Kính râm', 'Kính tim'];

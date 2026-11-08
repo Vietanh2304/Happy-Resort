@@ -2,7 +2,7 @@
 // Tọa độ là pixel logic của từng cảnh (trước khi phóng to).
 import { HH, HW } from './iso';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school';
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'ranch' | 'office' | 'city';
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -35,6 +35,9 @@ export const SCENES: Record<SceneId, SceneDef> = {
   lounge: { name: 'Ghế ngắm biển', icon: '⛱️', w: 192, h: 144, outdoor: true, spawn: { x: 70, y: 136 } },
   beach: { name: 'Bãi biển', icon: '🏖️', w: 192, h: 144, outdoor: true, walk: { x0: 6, x1: 186, y0: 50, y1: 121 }, spawn: { x: 96, y: 56 } },
   reef: { name: 'Lặn ngắm san hô', icon: '🤿', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 26, y1: 134 }, spawn: { x: 96, y: 40 } },
+  city: { name: 'Thành phố (đi làm)', icon: '🌆', w: 256, h: 192, outdoor: true, walk: { x0: 8, x1: 248, y0: 106, y1: 128 }, spawn: { x: 222, y: 120 } },
+  office: { name: 'Công ty', icon: '🏢', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 112, y1: 140 }, spawn: { x: 96, y: 138 } },
+  ranch: { name: 'Trang trại chăn nuôi', icon: '🐄', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 44, y1: 188 }, spawn: { x: 128, y: 178 } },
   school: { name: 'Trường học', icon: '🏫', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 112, y1: 140 }, spawn: { x: 96, y: 138 } },
   sky: { name: 'Bãi nhảy dù', icon: '🪂', w: 192, h: 144, outdoor: true, spawn: { x: 96, y: 118 } },
   hill: { name: 'Đồi ngắm cảnh', icon: '⛰️', w: 192, h: 144, outdoor: true, spawn: { x: 86, y: 124 } },
@@ -72,7 +75,7 @@ export const TOWN = {
   cafe: { x: 250, y: 274, door: { x: 250, y: 280 } },
   toCamp: { x: 16, y: 58 },
   twin: { x: 104, y: 160 },         // bãi cỏ trống bên trái đài phun nước
-  guestSpots: [{ x: 160, y: 172 }, { x: 230, y: 150 }],
+  guestSpots: [{ x: 160, y: 172 }, { x: 232, y: 148 }, { x: 118, y: 184 }, { x: 264, y: 182 }, { x: 196, y: 196 }, { x: 172, y: 130 }],
   trees: [
     ['pine', 330, 90], ['round1', 376, 94],
     ['pine', 138, 150], ['cherry', 252, 152], ['round2', 300, 140],
@@ -83,7 +86,8 @@ export const TOWN = {
   benches: [[168, 202], [226, 200]] as [number, number][],
   // Vòng đu quay khổng lồ (dời từ bãi biển vào làng): góc phải, cạnh lều khu vui chơi
   wheel: { x: 352, y: 196, stand: { x: 352, y: 208 } },
-  toSky: { x: 372, y: 238 },       // biển chỉ đường ra bãi nhảy dù (dưới đu quay)
+  toSky: { x: 372, y: 238 },
+  bus: { x: 16, y: 128 },          // trạm xe buýt ra thành phố (đi làm)       // biển chỉ đường ra bãi nhảy dù (dưới đu quay)
 };
 
 /** Ruộng nông trại: trồng ở ô nào tùy thích (ô = y * cols + x), đồ trang trí cũng đặt trên lưới này */
@@ -91,7 +95,7 @@ export const FARM = { x: 32, y: 62, cw: 16, ch: 14, cols: 12, rows: 8, exit: { x
 export const farmCell = (x: number, y: number) => y * FARM.cols + x;
 
 /** Khu vui chơi: mỗi trạm một trò */
-export type GameId = 'caro' | 'rps' | 'memory' | 'draw' | 'cook' | 'quiz' | 'fishrace' | 'puzzle' | 'dance' | 'castle' | 'focus' | 'golf' | 'snow' | 'boat' | 'badminton' | 'hide' | 'cards';
+export type GameId = 'caro' | 'rps' | 'memory' | 'draw' | 'cook' | 'quiz' | 'fishrace' | 'puzzle' | 'dance' | 'castle' | 'focus' | 'golf' | 'snow' | 'boat' | 'hide' | 'cards';
 export const ARCADE: { game: GameId; name: string; icon: string; hot: Box; stand: Pt }[] = [
   { game: 'draw', name: 'Vẽ đoán', icon: '🎨', hot: { x0: 14, x1: 50, y0: 32, y1: 88 }, stand: { x: 32, y: 96 } },
   { game: 'rps', name: 'Oẳn tù tì', icon: '✊', hot: { x0: 80, x1: 112, y0: 26, y1: 88 }, stand: { x: 96, y: 96 } },

@@ -1,6 +1,6 @@
 import type { FarmRow } from '../lib/api';
 import { content, item } from '../lib/content';
-import { cropDays, needsWater } from '../lib/game';
+import { cropDays, cropHours, growth, needsWater, plotStage, ripeIn } from '../lib/game';
 import { emojiSprite } from '../lib/pixel';
 import { Sheet } from './Sheet';
 
@@ -43,16 +43,17 @@ export function PlotSheet({ row, today, fertilizer, onWater, onFertilize, onHarv
   onClose: () => void;
 }) {
   const it = item(row.crop_id);
-  const days = cropDays(row.crop_id);
-  const ripe = row.water_days >= days;
+  const need = cropDays(row.crop_id);
+  const ripe = plotStage(row) === 'ripe';
   const thirsty = needsWater(row, today);
+  const g = growth(row);
   return (
     <Sheet title={`${it.icon} ${it.name}`} onClose={onClose}>
-      <div className="grow-bar"><i style={{ width: `${Math.min(100, (row.water_days / days) * 100)}%` }} /></div>
+      <div className="grow-bar"><i style={{ width: `${Math.round(g * 100)}%` }} /></div>
       <p className="muted">
-        {ripe ? '✨ Đã chín, thu hoạch thôi!' : `Đã tưới ${row.water_days}/${days} ngày.`}
+        {ripe ? '✨ Đã chín, thu hoạch thôi!' : row.water_days === 0 ? `Tưới nước để hạt nảy mầm (chín sau ${cropHours(row.crop_id)} tiếng).` : `Đã tưới ${row.water_days}/${need} lần · chín ${ripeIn(row)}.`}
         {row.fertilized ? ' 🧪 Đã bón phân — thu hoạch gấp đôi.' : ''}
-        {!ripe && !thirsty ? ' Hôm nay tưới rồi, mai quay lại nhé.' : ''}
+        {!ripe && !thirsty && row.water_days < need ? ' Hôm nay tưới rồi, mai tưới thêm lần nữa nhé.' : ''}
       </p>
       <div className="row wrap">
         {ripe && <button className="btn" onClick={onHarvest}>🧺 Thu hoạch</button>}

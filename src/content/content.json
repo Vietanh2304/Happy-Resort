@@ -1261,6 +1261,173 @@
       "name": "Tất Noel",
       "icon": "🧦",
       "kind": "decor"
+    },
+    {
+      "id": "egg",
+      "name": "Trứng gà",
+      "icon": "🥚",
+      "kind": "goods",
+      "price": 20
+    },
+    {
+      "id": "duck_egg",
+      "name": "Trứng vịt",
+      "icon": "🥚",
+      "kind": "goods",
+      "price": 26
+    },
+    {
+      "id": "milk",
+      "name": "Sữa bò",
+      "icon": "🥛",
+      "kind": "goods",
+      "price": 30
+    },
+    {
+      "id": "goat_milk",
+      "name": "Sữa dê",
+      "icon": "🍼",
+      "kind": "goods",
+      "price": 34
+    },
+    {
+      "id": "wool",
+      "name": "Lông cừu",
+      "icon": "☁️",
+      "kind": "goods",
+      "price": 40
+    },
+    {
+      "id": "cocoon",
+      "name": "Kén tằm",
+      "icon": "🐛",
+      "kind": "goods",
+      "price": 22
+    },
+    {
+      "id": "honey",
+      "name": "Mật ong",
+      "icon": "🍯",
+      "kind": "goods",
+      "price": 45
+    },
+    {
+      "id": "feed",
+      "name": "Bao cám",
+      "icon": "🌾",
+      "kind": "goods",
+      "price": 5
+    },
+    {
+      "id": "cheese",
+      "name": "Phô mai",
+      "icon": "🧀",
+      "kind": "dish",
+      "price": 90
+    },
+    {
+      "id": "butter",
+      "name": "Bơ",
+      "icon": "🧈",
+      "kind": "dish",
+      "price": 80
+    },
+    {
+      "id": "yogurt",
+      "name": "Sữa chua mật ong",
+      "icon": "🥣",
+      "kind": "dish",
+      "price": 70
+    },
+    {
+      "id": "goat_cheese",
+      "name": "Phô mai dê",
+      "icon": "🧀",
+      "kind": "dish",
+      "price": 110
+    },
+    {
+      "id": "fried_egg",
+      "name": "Trứng ốp la",
+      "icon": "🍳",
+      "kind": "dish",
+      "price": 45
+    },
+    {
+      "id": "omelette",
+      "name": "Trứng cuộn phô mai",
+      "icon": "🍳",
+      "kind": "dish",
+      "price": 150
+    },
+    {
+      "id": "flan",
+      "name": "Bánh flan",
+      "icon": "🍮",
+      "kind": "dish",
+      "price": 70
+    },
+    {
+      "id": "egg_tart",
+      "name": "Bánh tart trứng",
+      "icon": "🥧",
+      "kind": "dish",
+      "price": 110
+    },
+    {
+      "id": "salted_egg",
+      "name": "Trứng muối",
+      "icon": "🥚",
+      "kind": "dish",
+      "price": 60
+    },
+    {
+      "id": "pancake",
+      "name": "Bánh pancake mật ong",
+      "icon": "🥞",
+      "kind": "dish",
+      "price": 95
+    },
+    {
+      "id": "sponge_cake",
+      "name": "Bánh bông lan",
+      "icon": "🍰",
+      "kind": "dish",
+      "price": 190
+    },
+    {
+      "id": "strawberry_milk",
+      "name": "Sữa dâu",
+      "icon": "🍓",
+      "kind": "dish",
+      "price": 60
+    },
+    {
+      "id": "honey_tea",
+      "name": "Trà mật ong oải hương",
+      "icon": "🍵",
+      "kind": "dish",
+      "price": 85
+    },
+    {
+      "id": "yarn",
+      "name": "Cuộn len",
+      "icon": "🧶",
+      "kind": "goods",
+      "price": 100
+    },
+    {
+      "id": "silk",
+      "name": "Tấm lụa",
+      "icon": "🧵",
+      "kind": "goods",
+      "price": 90
+    },
+    {
+      "id": "certificate",
+      "name": "Giấy khen của bé",
+      "icon": "🏅",
+      "kind": "decor"
     }
   ],
   "animals": [
@@ -2611,7 +2778,8 @@
       "fish": 25,
       "crop": 18,
       "dish": 60,
-      "decor": 30
+      "decor": 30,
+      "goods": 30
     },
     "welcome": 1500,
     "daily": 150,

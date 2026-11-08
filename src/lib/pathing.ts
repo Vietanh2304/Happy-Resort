@@ -51,6 +51,7 @@ function outdoorShapes(scene: SceneId, decor: Decor[]): Shape[] {
     ell(330, 240, 46, 28);
     rect(TOWN.mailbox.x - 3, TOWN.mailbox.y - 6, TOWN.mailbox.x + 3, TOWN.mailbox.y - 1);
     rect(TOWN.toArcade.x - 21, TOWN.toArcade.y - 30, TOWN.toArcade.x + 21, TOWN.toArcade.y - 6);
+    rect(TOWN.bus.x - 4, TOWN.bus.y - 4, TOWN.bus.x + 4, TOWN.bus.y);   // trạm xe buýt
     rect(SCHOOL.x - 24, SCHOOL.y - 30, SCHOOL.x + 24, SCHOOL.y - 2);   // trường học
     rect(TOWN.twin.x - 6, TOWN.twin.y - 6, TOWN.twin.x + 6, TOWN.twin.y);
     rect(TOWN.wheel.x - 16, TOWN.wheel.y - 24, TOWN.wheel.x + 16, TOWN.wheel.y - 2);   // chân đu quay

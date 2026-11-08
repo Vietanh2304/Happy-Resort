@@ -263,6 +263,27 @@ export const removeFestDecor = (id: string) => run(supabase.from('fest_decor').d
 // Em bé
 export type CareKind = 'feed' | 'clean' | 'sleep' | 'play';
 export interface Kid { id: string; name: string; gender: 'm' | 'f' | null; born_on: string; love: number; fed_at: string | null; bathed_at: string | null; slept_at: string | null; played_at: string | null; milestones: string[]; created_at: string }
+// ───── Chăn nuôi, xưởng may, công ty, điểm học (013_life.sql) ─────
+/** Bảng chưa tạo (chưa chạy SQL 013) thì trả về rỗng thay vì báo lỗi */
+const soft = <T,>(p: Promise<T>, empty: T) => p.catch(e => { if (/relation|does not exist|schema cache|404/i.test(String((e as Error)?.message ?? e))) return empty; throw e; });
+export interface Animal { id: string; couple_id: string; kind: string; name: string; fed_at: string | null; collected_at: string | null; bought_by: string | null; created_at: string }
+export const loadRanch = () => soft(run<Animal[]>(supabase.from('ranch').select('*').order('created_at')), [] as Animal[]);
+export const ranchBuy = (kind: string, price: number, name = '') => run<string>(supabase.rpc('ranch_buy', { p_kind: kind, p_price: price, p_name: name }));
+export const ranchFeed = (id: string) => run(supabase.rpc('ranch_feed', { p_id: id }));
+export const ranchCollect = (id: string, item: string, n: number, hours: number) => run<boolean>(supabase.rpc('ranch_collect', { p_id: id, p_item: item, p_n: n, p_hours: hours }));
+export const ranchSell = (id: string, price: number) => run(supabase.rpc('ranch_sell', { p_id: id, p_price: price }));
+export interface OutfitRow { id: string; couple_id: string; user_id: string; name: string; spec: import('./ranch').Design; created_at: string }
+export const loadOutfits = () => soft(run<OutfitRow[]>(supabase.from('outfits').select('*').order('created_at')), [] as OutfitRow[]);
+export const outfitMake = (name: string, spec: object, take: Gift[]) => run<string>(supabase.rpc('outfit_make', { p_name: name, p_spec: spec, p_take: take }));
+export const outfitSell = (id: string, price: number) => run(supabase.rpc('outfit_sell', { p_id: id, p_price: price }));
+export interface JobRow { user_id: string; couple_id: string; data: import('./work').JobData; updated_at: string }
+export const loadJobs = () => soft(run<JobRow[]>(supabase.from('jobs').select('*')), [] as JobRow[]);
+export const saveJob = (me: Profile, data: object) => run(supabase.from('jobs').upsert({ user_id: me.id, couple_id: me.couple_id, data, updated_at: new Date().toISOString() }));
+export interface Score { id: string; kid_id: string; day: string; subject: string; score: number; by_user: string | null; created_at: string }
+export const loadScores = () => soft(run<Score[]>(supabase.from('kid_scores').select('*').order('day')), [] as Score[]);
+export const addScore = (me: Profile, kidId: string, day: string, subject: string, score: number) =>
+  run(supabase.from('kid_scores').insert({ couple_id: me.couple_id, kid_id: kidId, day, subject, score, by_user: me.id }));
+
 export const loadKids = () => run<Kid[]>(supabase.from('kids').select('*').order('created_at'));
 export const planKid = (due: string) => run<string>(supabase.rpc('kid_plan', { p_due: due }));
 export const nameKid = (id: string, name: string, gender: 'm' | 'f') => run(supabase.rpc('kid_name', { p_id: id, p_name: name, p_gender: gender }));

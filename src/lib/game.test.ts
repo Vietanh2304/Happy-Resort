@@ -121,14 +121,20 @@ describe('câu cá, vườn, nấu ăn', () => {
     expect(caught.has('fish_clown')).toBe(false);  // cá hề chỉ ban ngày
     expect(caught.has('lobster')).toBe(false);     // tôm hùm cần mưa/tuyết
   });
-  it('cây lớn theo số ngày tưới', () => {
-    const p = { plot: 0, crop_id: 'carrot', water_days: 0, last_watered: null };
-    expect(plotStage(p)).toBe('seed');
-    expect(plotStage({ ...p, water_days: 1 })).toBe('sprout');
-    expect(plotStage({ ...p, water_days: 2 })).toBe('ripe');
-    expect(needsWater({ ...p, water_days: 1, last_watered: '2026-11-05' }, '2026-11-05')).toBe(false);
-    expect(needsWater({ ...p, water_days: 1, last_watered: '2026-11-04' }, '2026-11-05')).toBe(true);
-    expect(needsWater({ ...p, water_days: 2, last_watered: '2026-11-04' }, '2026-11-05')).toBe(false);
+  it('cây lớn theo giờ thật + phải được tưới', () => {
+    const now = Date.parse('2026-11-08T12:00:00Z');
+    const ago = (h: number) => new Date(now - h * 3.6e6).toISOString();
+    const p = { plot: 0, crop_id: 'carrot', water_days: 0, last_watered: null, planted_at: ago(1) };   // cà rốt: 12 tiếng, tưới 1 lần
+    expect(plotStage(p, now)).toBe('seed');
+    expect(plotStage({ ...p, water_days: 1 }, now)).toBe('sprout');                    // tưới rồi nhưng mới 1 tiếng
+    expect(plotStage({ ...p, water_days: 1, planted_at: ago(13) }, now)).toBe('ripe');
+    expect(plotStage({ ...p, planted_at: ago(13) }, now)).toBe('seed');                // chưa tưới thì không lớn
+    expect(needsWater({ ...p, water_days: 1, last_watered: '2026-11-04' }, '2026-11-05')).toBe(false);   // tưới đủ rồi
+    const s = { ...p, crop_id: 'strawberry' };                                          // dâu: 24 tiếng, tưới 2 ngày
+    expect(needsWater({ ...s, water_days: 1, last_watered: '2026-11-05' }, '2026-11-05')).toBe(false);
+    expect(needsWater({ ...s, water_days: 1, last_watered: '2026-11-04' }, '2026-11-05')).toBe(true);
+    expect(plotStage({ ...s, water_days: 1, planted_at: ago(30) }, now)).toBe('sprout');   // đủ giờ nhưng thiếu 1 lần tưới
+    expect(plotStage({ ...s, water_days: 2, planted_at: ago(30) }, now)).toBe('ripe');
   });
   it('giá bán theo loại, đồ hiếm gấp đôi', () => {
     const sell = content.economy.sell;

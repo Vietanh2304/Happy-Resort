@@ -187,6 +187,7 @@ const DUO: { L: number | 'side'; R: number | 'side'; cls: string }[] = [
   { L: 15, R: 16, cls: 'slide' },     // nắm tay lướt sang
   { L: 19, R: 20, cls: 'clap' },      // đập tay nhau
   { L: 'side', R: 'side', cls: 'hug' }, // ôm nhau
+  { L: 'side', R: 'side', cls: 'kiss' }, // hôn (chỉ dùng ngoài sàn khiêu vũ: m = 8)
 ];
 function duoPose(duo: { side: 'L' | 'R'; together: boolean }, m: number | null): { f: number | 'side'; cls: string } | null {
   if (m === null) return duo.together ? { f: duo.side === 'L' ? 15 : 16, cls: 'hold' } : null;   // đứng nắm tay chờ nhạc

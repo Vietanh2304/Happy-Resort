@@ -11,7 +11,7 @@ import { Cards } from './Cards';
 export const TITLES: Record<GameId, string> = {
   caro: '⭕ Cờ ca-rô', rps: '✊ Oẳn tù tì', memory: '🃏 Lật thẻ tìm cặp', draw: '🎨 Vẽ đoán', cook: '👩‍🍳 Nấu ăn cùng nhau',
   quiz: '💞 Cậu hiểu tớ bao nhiêu', fishrace: '🎣 Câu cá thi', puzzle: '🧩 Ghép tranh cùng nhau', dance: '💃 Khiêu vũ đôi', castle: '🏰 Xây lâu đài cát', focus: '📚 Cùng học / làm việc',
-  golf: '⛳ Golf mini quanh làng', snow: '⛄ Ném tuyết / 💦 Té nước', boat: '🛶 Chèo thuyền đôi', badminton: '🏸 Cầu lông', hide: '🙈 Trốn tìm', cards: '🃏 Sâm & 🤥 Nói dối',
+  golf: '⛳ Golf mini quanh làng', snow: '⛄ Ném tuyết / 💦 Té nước', boat: '🛶 Chèo thuyền đôi', hide: '🙈 Trốn tìm', cards: '🃏 Sâm & 🤥 Nói dối',
 };
 
 export function GameSheet(p: Props) {

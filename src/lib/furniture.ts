@@ -348,7 +348,7 @@ function xy(p: [number, number]): [number, number] {
 
 /** Nơi một món được đặt: đồ không vẽ tay (emoji) đặt được trên sàn và ngoài vườn */
 /** Đồ không vẽ tay nhưng treo được lên tường */
-const HANGABLE = new Set(['lantern', 'chime', 'guitar', 'photo_frame', 'den_ca_chep', 'bong_bay_tim', 'kite', 'star_lantern', 'kid_card', 'peach']);
+const HANGABLE = new Set(['certificate', 'lantern', 'chime', 'guitar', 'photo_frame', 'den_ca_chep', 'bong_bay_tim', 'kite', 'star_lantern', 'kid_card', 'peach']);
 export const placeOf = (itemId: string): Place => (HANGABLE.has(itemId) ? 'hang' : ART[itemId]?.place ?? 'any');
 
 /**

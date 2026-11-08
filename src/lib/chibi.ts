@@ -2,10 +2,11 @@
 // có ba hướng nhìn (trước, sau, nghiêng) và chu kỳ bước chân 4 nhịp.
 // Kích thước logic giữ nguyên 16×26 (+viền) như sprite cũ, nên mọi vị trí trong game không đổi,
 // chỉ ảnh được vẽ ở độ phân giải ×2 cho nét mịn hơn.
+import type { Design } from './ranch';
 import { drawProp, type HoldMode, type PropSpec } from './props';
 import { mix, type Pen, type Sprite } from './pixel';
 
-export interface ChibiLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: 'm' | 'f'; glasses?: number }
+export interface ChibiLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: 'm' | 'f'; glasses?: number; design?: Design | null }
 export type View = 'front' | 'back' | 'side';
 export type Pose = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance' | 'act' | 'actsit';
 /**
@@ -98,6 +99,37 @@ function bangY(b: Bangs, x: number): number {
   }
 }
 
+// ───────── Đồ tự may (xưởng may) ─────────
+/** Bản thiết kế → bộ đồ vẽ được: kiểu áo, tay, quần/váy, độ dài, họa tiết */
+function designOutfit(d: Design): Outfit {
+  const c1 = d.c1, c2 = d.c2, tr = d.trim;
+  const longSkirt = d.length === 'long';
+  const pat = (P: HiPen, x0: number, x1: number, y0: number, y1: number, base: string) => {
+    const a = d.pattern === 'plain' ? null : mix(base, tr === base ? '#ffffff' : tr, 0.85);
+    if (!a) return;
+    for (let yy = y0; yy < y1; yy++) for (let x = x0; x < x1; x++) {
+      const on = d.pattern === 'stripe' ? (yy - y0) % 3 === 0
+        : d.pattern === 'dots' ? (x + (Math.floor(yy / 3) % 2) * 2) % 4 === 0 && yy % 3 === 1
+        : d.pattern === 'check' ? (x % 4 === 0) || ((yy - y0) % 4 === 0)
+        : d.pattern === 'flower' ? ((x * 5 + yy * 3) % 11 === 0)
+        : ((x + yy * 2) % 9 === 0);   // trái tim: chấm nhỏ thưa
+      if (on) P.px(x, yy, a);
+    }
+  };
+  const top = (P: HiPen, y: number, end = 37) => pat(P, 10, 22, y + 25, y + end, c1);
+  switch (d.type) {
+    case 'dress': return { top: c1, sleeve: d.sleeve, bottom: 'gown', bot: c1, hem: longSkirt ? 50 : 45, shoes: d.shoes, deco: (P, v, y) => { top(P, y); pat(P, 9, 23, 38, longSkirt ? 49 : 44, c1); P.rect(10, y + 35, 12, 1, tr); if (v === 'front') P.rect(13, y + 24, 6, 1, tr); } };
+    case 'gown': return { top: c1, sleeve: d.sleeve === 'long' ? 'long' : 'none', bottom: 'gown', bot: c2, hem: 51, shoes: d.shoes, deco: (P, _v, y) => { top(P, y); pat(P, 9, 23, 38, 50, c2); P.rect(10, y + 34, 12, 1, tr); for (const [x, yy] of [[11, 42], [19, 46], [14, 48], [21, 40]]) P.px(x, yy, '#ffffff'); } };
+    case 'skirt': return { top: c1, sleeve: d.sleeve, bottom: longSkirt ? 'gown' : 'skirt', bot: c2, hem: longSkirt ? 48 : 44, shoes: d.shoes, deco: (P, _v, y) => { top(P, y, 35); pat(P, 9, 23, 38, longSkirt ? 47 : 43, c2); P.rect(10, y + 35, 12, 1, tr); } };
+    case 'aodai': return { top: c1, sleeve: 'long', topEnd: 47, bottom: 'pants', bot: c2, shoes: d.shoes, deco: (P, v, y) => { top(P, y, 46); if (v === 'front') { P.rect(15, y + 24, 2, 2, tr); P.line(17, y + 26, 20, y + 30, 1, tr); } } };
+    case 'overall': return { top: c2, sleeve: d.sleeve === 'none' ? 'short' : d.sleeve, bottom: 'pants', bot: c1, shoes: d.shoes, deco: (P, v, y) => { P.rect(11, y + 30, 10, 8, c1); if (v !== 'side') { P.rect(11, y + 25, 2, 6, c1); P.rect(19, y + 25, 2, 6, c1); } pat(P, 11, 21, y + 30, y + 38, c1); if (v === 'front') { P.px(12, y + 30, tr); P.px(19, y + 30, tr); } } };
+    case 'sweater': return { top: c1, sleeve: 'long', bottom: d.length === 'short' ? 'shorts' : 'pants', bot: c2, shoes: d.shoes, deco: (P, _v, y) => { top(P, y); P.rect(10, y + 24, 12, 2, tr); P.rect(10, y + 36, 12, 1, tr); } };
+    case 'hoodie': return { top: c1, sleeve: 'long', bottom: d.length === 'short' ? 'shorts' : 'pants', bot: c2, shoes: d.shoes, deco: (P, v, y) => { top(P, y); if (v === 'front') { P.rect(13, y + 31, 6, 4, mix(c1, '#2a2030', 0.2)); P.px(14, y + 25, tr); P.px(17, y + 25, tr); P.line(14, y + 25, 14, y + 28, 1, tr); P.line(17, y + 25, 17, y + 28, 1, tr); } else P.rect(11, y + 23, 10, 3, mix(c1, '#2a2030', 0.2)); } };
+    case 'shirt': return { top: c1, sleeve: d.sleeve === 'none' ? 'short' : d.sleeve, bottom: d.length === 'short' ? 'shorts' : 'pants', bot: c2, shoes: d.shoes, deco: (P, v, y) => { top(P, y); if (v === 'front') { P.rect(14, y + 25, 4, 1, tr); for (const yy of [28, 31, 34]) P.px(16, y + yy, tr); } } };
+    default: return { top: c1, sleeve: d.sleeve === 'none' ? 'short' : d.sleeve, bottom: d.length === 'short' ? 'shorts' : 'pants', bot: c2, shoes: d.shoes, deco: (P, v, y) => { top(P, y); if (v === 'front') P.rect(13, y + 25, 6, 1, tr); } };
+  }
+}
+
 // ───────── Trang phục ─────────
 type Bottom = 'pants' | 'shorts' | 'skirt' | 'gown';
 interface Outfit {
@@ -161,7 +193,8 @@ export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', s
   const C = SHIRTS[look.shirt ?? 0] ?? SHIRTS[0];
   const hairIx = (look.hair ?? 0) % HAIRS.length, out = look.outfit ?? 0, acc = look.acc ?? 0;
   const glasses = look.glasses ?? (acc === 4 ? 1 : 0), girl = look.gender === 'f';
-  const key = `chibi1:${S}:${H}:${C}:${hairIx}:${out}:${acc}:${glasses}:${girl}:${pose}:${view}:${step}` + (hold ? `:${hold.spec.kind}:${hold.spec.color}:${hold.mode}:${hold.phase}` : '');
+  const design = look.design ?? null;
+  const key = `chibi1:${S}:${H}:${C}:${hairIx}:${out}:${acc}:${glasses}:${girl}:${pose}:${view}:${step}` + (design ? `:d:${JSON.stringify(design)}` : '') + (hold ? `:${hold.spec.kind}:${hold.spec.color}:${hold.mode}:${hold.phase}` : '');
   const hit = cache.get(key);
   if (hit) return hit;
 
@@ -170,7 +203,7 @@ export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', s
   canvas.width = (LW + 2) * K; canvas.height = (LH + 2) * K;
   const ctx = canvas.getContext('2d')!;
   const P = hiPen(ctx, K, K);
-  draw(P, { S, H, C, hairIx, out, acc, glasses, girl, pose, view, step, hold });
+  draw(P, { S, H, C, hairIx, out, acc, glasses, girl, pose, view, step, hold, design });
   outline(ctx, canvas.width, canvas.height, INK);
 
   if (hold) {                                  // đồ cầm tay: vẽ nét thường rồi phóng lên
@@ -207,13 +240,13 @@ function propAt(h: Held): [number, number] {
   return [9, 11];
 }
 
-interface Args { S: string; H: string; C: string; hairIx: number; out: number; acc: number; glasses: number; girl: boolean; pose: Pose; view: View; step: number; hold?: Held }
+interface Args { S: string; H: string; C: string; hairIx: number; out: number; acc: number; glasses: number; girl: boolean; pose: Pose; view: View; step: number; hold?: Held; design?: Design | null }
 
 function draw(P: HiPen, a: Args) {
   const { S, H, C, hairIx, out, acc, glasses, pose, view, step, hold } = a;
   const Sd = mix(S, '#c07060', 0.28), Hd = mix(H, '#2a1a1a', 0.3), Hl = mix(H, '#ffffff', 0.32);
   const hair = HAIRS[hairIx];
-  const o = outfitOf(out, C, S, a.girl);
+  const o = a.design ? designOutfit(a.design) : outfitOf(out, C, S, a.girl);
   const sit = pose === 'sit' || pose === 'actsit';
   const bob = pose === 'walk' && step % 2 === 1 ? -1 : 0;   // nhịp giữa hai bước: người nhổm lên
   const y = bob;                                            // độ lệch phần thân trên

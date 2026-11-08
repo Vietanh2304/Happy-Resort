@@ -1458,3 +1458,89 @@ textarea { resize: vertical; }
 .hw-q .chip.right { outline: 2px solid #5ab85a; }
 .hw-q .chip.wrong { background: #f6c0c8; }
 .hw-score { font-weight: 700; text-align: center; margin: 8px 0; }
+
+/* ───── Rạp phim: YouTube cùng nhau, chiếu video trong máy ───── */
+.yt-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+.yt-frame.full { position: relative; flex: 1; min-height: 0; }
+.cinema-share { display: flex; flex-direction: column; gap: 6px; }
+.yt-link { gap: 6px; }
+.yt-link input { flex: 1; min-width: 0; }
+.yt-controls { display: flex; flex-wrap: wrap; gap: 4px; }
+.file-source { position: fixed; left: -10px; top: -10px; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* Ôm / hôn */
+.avatar img.duo-kiss.duo-L { animation: duokissL .7s ease-out forwards; }
+.avatar img.duo-kiss.duo-R { animation: duokissR .7s ease-out forwards; }
+@keyframes duokissL { to { translate: 2px 0; transform: rotate(9deg); } }
+@keyframes duokissR { to { translate: -2px 0; transform: rotate(-9deg); } }
+.avatar img.duo-hug.duo-L, .avatar img.duo-hug.duo-R { animation-iteration-count: 3; }
+.couple-acts { display: flex; gap: 6px; justify-content: center; width: 100%; margin-bottom: 6px; }
+
+/* Quà mỗi ngày + đố vui */
+.gift-box { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 10px auto; font-size: 64px; background: none; border: 0; cursor: pointer; animation: giftwobble 1.4s ease-in-out infinite; }
+.gift-box small { font-size: 13px; color: var(--ink); }
+@keyframes giftwobble { 0%, 100% { rotate: 0deg; } 20% { rotate: -8deg; } 40% { rotate: 8deg; } 60% { rotate: -4deg; } }
+.gift-open { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.gift-burst { font-size: 56px; animation: giftpop .6s ease-out; }
+.gift-burst img { width: 72px; height: 72px; }
+@keyframes giftpop { 0% { scale: .2; rotate: -30deg; opacity: 0; } 70% { scale: 1.2; } 100% { scale: 1; rotate: 0; opacity: 1; } }
+.center { text-align: center; }
+.ok-tag { font-size: 12px; color: #3a8a3a; font-weight: 700; align-self: center; }
+
+.crit-badge { position: absolute; translate: -50% -110%; font-size: 13px; pointer-events: none; animation: sprbob 1.6s ease-in-out infinite; filter: drop-shadow(0 1px 0 #fff); }
+
+/* ───── Trang trại: chế biến, xưởng may ───── */
+.recipe-list { list-style: none; padding: 0; margin: 6px 0; display: flex; flex-direction: column; gap: 6px; }
+.recipe-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 8px; border: 2px solid #e8d8c8; border-radius: 10px; background: #fffaf0; }
+.recipe-list .r-out { flex: 1 1 140px; }
+.recipe-list .r-in { display: flex; gap: 6px; font-size: 13px; }
+.recipe-list .r-in .lack { color: #c8483a; }
+.tailor { display: flex; flex-direction: column; gap: 4px; }
+.tailor-preview { display: flex; gap: 10px; justify-content: center; align-items: flex-end; background: linear-gradient(#fff6e8, #f6e2c8); border-radius: 12px; padding: 8px; }
+.tailor-preview img { image-rendering: pixelated; }
+.tl-label { margin: 6px 0 0; font-weight: 700; font-size: 13px; }
+.swatches { display: flex; flex-wrap: wrap; gap: 4px; }
+.swatches button { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #3b2d3f33; padding: 0; cursor: pointer; }
+.swatches button.on { outline: 3px solid var(--ink); outline-offset: 1px; }
+.closet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.closet-item { border: 2px solid #e8d8c8; border-radius: 10px; padding: 6px; display: flex; flex-direction: column; gap: 4px; align-items: center; background: #fffaf0; }
+.closet-item.on { border-color: #f07a9a; }
+.closet-item .tailor-preview { padding: 4px; gap: 4px; }
+
+/* ───── Thành phố + công ty ───── */
+.city-traffic { position: absolute; left: 0; width: 100%; z-index: 140; pointer-events: none; overflow: hidden; }
+.city-car { position: absolute; left: 0; image-rendering: pixelated; animation: city-drive 8s linear infinite; }
+.city-car.back { animation-direction: reverse; transform: scaleX(-1); }
+@keyframes city-drive { from { translate: -60px 0; } to { translate: var(--w) 0; } }
+.city-night { position: absolute; inset: 0; z-index: 150; pointer-events: none; background: radial-gradient(ellipse at 50% 40%, transparent 40%, #05081a55 100%); }
+.npc-sit { animation: study 3.2s ease-in-out infinite; }
+.npc-name { font-size: 10px; background: #fffaf0d0; border-radius: 6px; padding: 0 4px; pointer-events: none; }
+.task-list { list-style: none; padding: 0; margin: 6px 0; display: flex; flex-direction: column; gap: 6px; }
+.task-list li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border: 2px solid #e8d8c8; border-radius: 10px; background: #fffaf0; }
+.task-list li.done { opacity: .75; }
+.task-q { font-weight: 700; font-size: 16px; margin: 8px 0 12px; }
+.task-opts { display: flex; flex-direction: column; gap: 8px; }
+.task-opts .right { outline: 3px solid #5ab85a; }
+.task-opts .shake { animation: shake .3s; }
+@keyframes shake { 25% { translate: -4px 0; } 75% { translate: 4px 0; } }
+.task-flash { text-align: center; font-weight: 700; }
+.task-flash.ok { color: #3a8a3a; } .task-flash.no { color: #c8483a; }
+.drama h3 { margin: 6px 0; }
+.drama p { line-height: 1.5; }
+.drama-choice { display: block; width: 100%; text-align: left; margin: 6px 0; white-space: normal; }
+.drama-pick { margin-top: 10px; }
+.drama-out { background: #fff6e0; border-left: 4px solid #f6c64e; padding: 8px 10px; border-radius: 6px; }
+.drama-log p { border-bottom: 1px dashed #e8d8c8; padding-bottom: 6px; }
+
+/* Dạy con học, họp phụ huynh */
+.study-head { display: flex; gap: 10px; align-items: center; margin: 6px 0; }
+.kid-mini { width: 48px; height: 72px; image-rendering: pixelated; }
+.kid-brag { background: #fff0f6; border-radius: 10px; padding: 8px 10px; }
+.score-book { display: flex; flex-wrap: wrap; gap: 4px; }
+.score-book .chip { font-size: 11px; }
+.meeting-chatter p { font-size: 13px; margin: 4px 0; color: #6a5a6a; font-style: italic; }
+
+/* Mùa: hoa xuân đung đưa, nắng hè */
+.bloom { transform-origin: 50% 100%; animation: palm-sway 3s ease-in-out infinite; }
+.summer-sun { position: absolute; inset: 0; z-index: 900; pointer-events: none; overflow: hidden; background: #fff4c01c; }
+.summer-sun i { position: absolute; top: -20%; right: -10%; width: 22%; height: 160%; background: linear-gradient(#fff6c060, #fff6c000 70%); transform: rotate(32deg); transform-origin: top; animation: rays 8s ease-in-out infinite; }

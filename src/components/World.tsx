@@ -9,7 +9,7 @@ import type { TwinPlane } from './Twin';
 import { discoRoom, hotAirBalloonSprite, kiteSprite, happeningOf, seasonOfMonth, LANDMARKS, PIN_AT, type CityKind, cityKind, citySprite, distanceKm, observatoryRoom, telescopeSprite, cafeBuildingSprite, cafeChairSprite, cafeRoom, cafeTableSprite, campBackground, campfireSprite, ferrisCabinSprite, ferrisFrameSprite, ferrisRimSprite, logSeatSprite, petSprite, tentSprite, wheelCabinSprite, wheelPanorama } from '../lib/places';
 import { animal, content, item, type Combo, type Phase, type WeatherType } from '../lib/content';
 import { ART, BED_PILLOWS, bedQuiltSprite, emojiPx } from '../lib/furniture';
-import { cropDays, needsWater, STAR_PERIOD, starVisible, type Pickup } from '../lib/game';
+import { growth, needsWater, plotStage, STAR_PERIOD, starVisible, type Pickup } from '../lib/game';
 import { arcadeRoom, picnicSprite, BATH_WATERS, tubBackSprite, tubFrontSprite, type BathWater, chandelierSprite, dinnerTableSprite, farmBackground, farmGateSprite, gameTentSprite, plantSprite, restaurantRoom, shopRoom, soilSprite, velvetChairSprite } from '../lib/interiors';
 import { emojiSprite, makeSprite, type Sprite } from '../lib/pixel';
 import type { Act } from '../lib/acts';
@@ -37,8 +37,17 @@ import { SeaLife } from './SeaLife';
 import { ReefContent } from './Reef';
 import { SkyContent } from './Skydive';
 import { reefBackground } from '../lib/reef';
+import { SWIMMERS } from '../lib/critters';
+import { Follower, Wanderer } from './Wander';
 import { atSchool, classroomSprite, SCHOOL, schoolSprite } from '../lib/school';
+import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
+import { RanchContent } from './Ranch';
+import { CityContent } from './City';
+import { OfficeContent } from './Work';
+import { cityBackground } from '../lib/cityArt';
+import { officeBackground } from '../lib/officeArt';
+import { ranchBackground } from '../lib/ranchArt';
 import { beachSetSprite, loungeBackground, type SeaSpot } from '../lib/seaView';
 import { liveStatus } from './SeedSheet';
 
@@ -97,6 +106,12 @@ export interface WorldProps {
   onSee?: (id: string) => void;  // lặn: chạm vào một sinh vật/san hô
   chestOpen?: boolean;           // lặn: rương báu hôm nay đã mở
   onChest?: () => void;
+  animals?: import('../lib/api').Animal[];
+  ranch?: { animal: (id: string) => void; shop: () => void; workshop: () => void; tailor: () => void };
+  job?: import('../lib/work').JobData;
+  work?: { desk: () => void; talk: (name: string, line: string) => void };
+  /** Đang ôm / hôn nhau (cả hai cùng thấy): bên trái/phải của mình */
+  couple?: { kind: 'hug' | 'kiss'; at: number; mySide: 'L' | 'R' } | null;
   hillReal: boolean;             // đang chọn "Giờ thật" (theo thời tiết thật)
   bath: BathWater;               // nước tắm đang chọn
   cinemaMode: 'movie' | 'karaoke';
@@ -157,6 +172,9 @@ export function World(props: WorldProps) {
     reef: () => reefBackground(myView.phase),
     sky: () => undefined,
     school: classroomSprite,
+    ranch: () => ranchBackground(myView.phase === 'night'),
+    city: () => cityBackground(myView.phase),
+    office: () => officeBackground(myView.phase === 'night'),
     hill: () => hillBackground(props.hillSky),
     house: () => roomBackground('house'),
     bedroom: () => roomBackground('bedroom'),
@@ -252,7 +270,7 @@ function SceneContent(p: WorldProps) {
   const realSky = scene !== 'hill' || p.hillReal;
   const sitting = ['cinema', 'hill', 'restaurant', 'cafe', 'wheel', 'camp', 'twin'].includes(scene);
   const inTub = (who: typeof live.mine | null) => scene === 'bathroom' && who?.act === 'bath';
-  const bathLook = (look: Profile['avatar']) => ({ ...look, outfit: 15, acc: 12 });
+  const bathLook = (look: Profile['avatar']) => ({ ...look, outfit: 15, acc: 12, design: null });
   const myTub = inTub(live.mine) ? BATH.seats[p.firstSeat ? 0 : 1] : null;
   const theirTub = inTub(theirs) ? BATH.seats[p.firstSeat ? 1 : 0] : null;
   const hillDark = ['night', 'meteor', 'aurora'].includes(p.hillSky);
@@ -273,12 +291,12 @@ function SceneContent(p: WorldProps) {
   // Mặc theo trời chung trong làng: mưa che ô, lạnh quàng khăn, rét mặc áo khoác, nắng nóng đội mũ
   const dress = (look: Profile['avatar'], v: View | null) => {
     const w = v?.weather;
-    if (scene === 'reef') return { look: { ...look, outfit: 18, acc: 0, glasses: 3 }, umbrella: false };
+    if (scene === 'reef') return { look: { ...look, outfit: 18, acc: 0, glasses: 3, design: null }, umbrella: false };
     if (!def.outdoor || !w || (scene === 'hill' && !p.hillReal) || scene === 'sky') return { look, umbrella: false };
     if ((scene === 'beach' || scene === 'lounge') && w.type !== 'rain' && w.type !== 'snow')
-      return { look: { ...look, outfit: 18, acc: 0, glasses: v?.phase === 'night' ? look.glasses ?? 0 : 3 }, umbrella: false };
+      return { look: { ...look, outfit: 18, acc: 0, glasses: v?.phase === 'night' ? look.glasses ?? 0 : 3, design: null }, umbrella: false };
     let l = look;
-    if (w.temp < 3) l = { ...look, outfit: 11, acc: 3 };
+    if (w.temp < 3) l = { ...look, outfit: 11, acc: 3, design: null };
     else if (w.temp < 10) l = { ...look, acc: 10 };
     else if (w.temp >= 30 && w.type === 'clear') l = { ...look, acc: look.acc ? look.acc : 6 };
     return { look: l, umbrella: w.type === 'rain' };
@@ -312,6 +330,20 @@ function SceneContent(p: WorldProps) {
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
 
+      {scene === 'city' && <CityContent go={go} night={phase === 'night'} onOffice={() => enter('office')} onHome={() => enter('town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 })} />}
+      {scene === 'office' && p.job && p.work && (
+        <>
+          <OfficeContent job={p.job} me={me} go={go} onDesk={p.work.desk} onTalk={p.work.talk} />
+          <Hot x={80} y={140} w={32} h={4} title="Ra phố" onClick={() => enter('city', { x: 128, y: 112 })} />
+        </>
+      )}
+      {scene === 'ranch' && p.ranch && (
+        <>
+          <RanchContent animals={p.animals ?? []} go={go} onAnimal={p.ranch.animal} onShop={p.ranch.shop} onWorkshop={p.ranch.workshop} onTailor={p.ranch.tailor} />
+          <Hot x={112} y={182} w={32} h={10} title="Về nông trại" onClick={() => go({ x: 128, y: 186 }, () => enter('farm', { x: 230, y: 180 }))} />
+          <Tag x={128} y={180} className="label">🌾 Về nông trại</Tag>
+        </>
+      )}
       {scene === 'school' && (
         <>
           <SchoolContent kids={p.kids} me={me} partner={partner} when={p.myView.time} walking={[live.mine.walkKid, theirs?.walkKid]} onKid={id => on.kid(id)} />
@@ -420,13 +452,13 @@ function SceneContent(p: WorldProps) {
       {!myBed && scene !== 'lounge' && scene !== 'sky' && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left}
-        sitting={sitting || !!myTub} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
+        sitting={sitting || !!myTub} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
       {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left}
-          sitting={sitting || !!theirTub} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
+          sitting={sitting || !!theirTub} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : p.couple ? { side: p.couple.mySide === 'L' ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
         />
       )}
 
@@ -497,6 +529,8 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       <Tag x={16} y={30} className="label">⛺ Cắm trại{theirs?.scene === 'camp' ? ' 💗' : ''}</Tag>
       <Hot x={4} y={0} w={24} h={48} title="⛺ Đi theo lối mòn tới bãi cắm trại" onClick={() => go(TOWN.toCamp, () => enter('camp'))} />
       {p.theme && <FestTown {...p} theme={p.theme} />}
+      <Spr sprite={busStopSprite()} x={TOWN.bus.x} y={TOWN.bus.y} title="🚌 Trạm xe buýt — lên thành phố đi làm" onClick={() => go({ x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 }, () => enter('city'))} />
+      <Tag x={TOWN.bus.x + 4} y={TOWN.bus.y - 26} className="label" onClick={() => go({ x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 }, () => enter('city'))}>🚌 Đi làm</Tag>
       <Spr sprite={schoolSprite()} x={SCHOOL.x} y={SCHOOL.y} title="🏫 Trường học của các bé" onClick={() => go(SCHOOL.door, () => enter('school'))} />
       <Tag x={SCHOOL.x} y={SCHOOL.y - 52} className="label" onClick={() => go(SCHOOL.door, () => enter('school'))}>🏫 Trường học{theirs?.scene === 'school' ? ' 💗' : ''}</Tag>
       <Spr sprite={telescopeSprite()} x={TOWN.twin.x} y={TOWN.twin.y} title="🔭 Đài quan sát hai bờ" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))} />
@@ -510,11 +544,15 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       {p.guests.map((g, i) => {
         const a = animal(g.animal_id);
         const spot = TOWN.guestSpots[i % TOWN.guestSpots.length];
-        return a && <Spr key={g.id} sprite={emojiSprite(a.icon)} x={spot.x} y={spot.y} className="bob" title={a.name} onClick={() => go({ x: spot.x - 12, y: spot.y }, () => on.guest(g))} />;
+        const swim = SWIMMERS.has(g.animal_id);
+        const home = swim ? { x: TOWN.fountain.x + (i % 2 ? 8 : -8), y: TOWN.fountain.y + 3 } : spot;
+        return a && <Wanderer key={g.id} id={g.animal_id} home={home} r={swim ? 6 : 16} name={a.name} onClick={at => go({ x: at.x - 12, y: at.y + (swim ? 14 : 0) }, () => on.guest(g))} />;
       })}
 
       {!dark && season !== 'winter' && <Butterflies />}
-      {!dark && !p.theme && <SeasonFall season={season} />}
+      {!dark && !p.theme && <SeasonFall season={season} snowing={p.myView.weather?.type === 'snow'} />}
+      {season === 'spring' && <SpringBlooms />}
+      {season === 'summer' && !dark && p.myView.weather?.type === 'clear' && <div className="summer-sun">{[0, 1, 2, 3, 4, 5].map(i => <i key={i} style={{ right: `${i * 18 - 6}%`, width: `${12 + (i % 3) * 5}%`, animationDelay: `${-i * 1.3}s` }} />)}</div>}
       {p.myView.phase === 'night' && <Fireflies n={12} area={[286, 206, 90, 60]} />}
     </>
   );
@@ -571,10 +609,9 @@ function GridCells(p: WorldProps & { grid: Grid; label: string; planted?: (x: nu
 // ───────── Nông trại ─────────
 
 function farmStage(r: FarmRow): 'seed' | 'sprout' | 'grow' | 'ripe' {
-  const days = cropDays(r.crop_id);
-  if (r.water_days >= days) return 'ripe';
-  if (r.water_days === 0) return 'seed';
-  return r.water_days * 2 >= days ? 'grow' : 'sprout';
+  const st = plotStage(r);
+  if (st !== 'sprout') return st;
+  return growth(r) >= 0.5 ? 'grow' : 'sprout';
 }
 
 function FarmContent(p: WorldProps) {
@@ -602,6 +639,7 @@ function FarmContent(p: WorldProps) {
       {editing && <GridCells {...p} grid={FARM} label="Ô ruộng" planted={(x, y) => p.farm.some(r => r.cell === farmCell(x, y))} />}
       <Spr sprite={treeSprite(1)} x={236} y={88} /><Spr sprite={cherrySprite()} x={16} y={96} /><Spr sprite={pineSprite()} x={244} y={150} />
       {!editing && <Hot x={112} y={178} w={32} h={14} title="Về làng" onClick={() => go(FARM.exit, () => enter('town', TOWN.toFarm))} />}
+      {!editing && <Tag x={232} y={170} className="label" onClick={() => go({ x: 232, y: 184 }, () => enter('ranch'))}>🐄 Trang trại chăn nuôi</Tag>}
       <Tag x={128} y={176} className="label">🏘️ Về làng</Tag>
       {!dark && <Butterflies />}
     </>
@@ -969,43 +1007,19 @@ function KidAtHome({ idx, sprite, walk, sad, onClick, name }: { idx: number; spr
 }
 
 /** Nhân vật nhỏ đi theo (bé, xe đẩy): trễ một nhịp, có bước chân */
-function Follower({ sprite, walk, x, y, title, onClick }: { sprite: Sprite; walk?: Sprite; x: number; y: number; title: string; onClick: () => void }) {
-  const s = useScale();
-  const [shown, setShown] = useState({ x, y, ms: 0, left: false });
-  const [moving, setMoving] = useState(false);
-  const [step, setStep] = useState(false);
-  const cur = useRef(shown);
-  cur.current = shown;
-  useEffect(() => {
-    const c = cur.current, dist = Math.hypot(x - c.x, y - c.y);
-    if (dist < 0.5) return;
-    const ms = (dist / 45) * 1000;
-    const t0 = setTimeout(() => { setShown({ x, y, ms, left: x < c.x }); setMoving(true); }, 300);
-    const t1 = setTimeout(() => setMoving(false), ms + 310);
-    return () => { clearTimeout(t0); clearTimeout(t1); };
-  }, [x, y]);
-  useEffect(() => {
-    if (!moving) return;
-    const t = setInterval(() => setStep(v => !v), 170);
-    return () => clearInterval(t);
-  }, [moving]);
-  const sp = moving && step && walk ? walk : sprite;
-  return (
-    <img src={sp.url} alt={title} title={title} draggable={false} className="spr tappable"
-      onClick={e => { e.stopPropagation(); onClick(); }}
-      style={{
-        left: Math.round((shown.x - sp.w / 2) * s), top: Math.round((shown.y - sp.h) * s), width: sp.w * s, height: sp.h * s,
-        zIndex: Math.round(shown.y) + 2, transform: shown.left ? 'scaleX(-1)' : undefined,
-        transition: `left ${shown.ms}ms linear, top ${shown.ms}ms linear`,
-      }} />
-  );
-}
 
 // ───────── Mùa & điều bất ngờ mỗi ngày ─────────
 
-function SeasonFall({ season }: { season: ReturnType<typeof seasonOfMonth> }) {
+/** Mùa xuân: khóm hoa nở rải rác trên bãi cỏ trong làng */
+const BLOOMS: [number, number, string][] = [[30, 140, '🌷'], [88, 150, '🌼'], [150, 136, '🌷'], [250, 140, '🌸'], [276, 190, '🌼'], [214, 230, '🌷'], [120, 214, '🌼'], [340, 262, '🌸'], [60, 262, '🌷'], [186, 120, '🌼']];
+function SpringBlooms() {
+  return <>{BLOOMS.map(([x, y, e], i) => <Spr key={i} sprite={emojiSprite(e, 8)} x={x} y={y} className="bloom" style={{ animationDelay: `${-i * 0.6}s` } as CSSProperties} />)}</>;
+}
+
+function SeasonFall({ season, snowing }: { season: ReturnType<typeof seasonOfMonth>; snowing: boolean }) {
   if (season === 'spring') return <Petals />;
   if (season === 'summer') return null;
+  if (season === 'winter' && !snowing) return null;   // mùa đông: chỉ khi trời đang có tuyết mới có bông tuyết rơi
   const items = season === 'autumn' ? ['🍂', '🍁', '🍂'] : ['❄', '❅', '❆'];
   return (
     <div className={`fest-fall season-fall ${season}`} aria-hidden>

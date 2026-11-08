@@ -9,9 +9,9 @@ const BLOCK_MS = 3 * 3600_000;
 
 const POOL: Record<Season, { type: WeatherType; w: number }[]> = {
   spring: [{ type: 'clear', w: 45 }, { type: 'cloudy', w: 30 }, { type: 'rain', w: 20 }, { type: 'fog', w: 5 }],
-  summer: [{ type: 'clear', w: 45 }, { type: 'cloudy', w: 20 }, { type: 'rain', w: 35 }],
+  summer: [{ type: 'clear', w: 58 }, { type: 'cloudy', w: 14 }, { type: 'rain', w: 28 }],
   autumn: [{ type: 'clear', w: 55 }, { type: 'cloudy', w: 25 }, { type: 'rain', w: 12 }, { type: 'fog', w: 8 }],
-  winter: [{ type: 'clear', w: 40 }, { type: 'cloudy', w: 25 }, { type: 'snow', w: 30 }, { type: 'fog', w: 5 }],
+  winter: [{ type: 'clear', w: 36 }, { type: 'cloudy', w: 22 }, { type: 'snow', w: 30 }, { type: 'rain', w: 7 }, { type: 'fog', w: 5 }],
 };
 /** Khoảng nhiệt độ theo mùa [thấp, cao] */
 const TEMP: Record<Season, [number, number]> = {

@@ -8,6 +8,7 @@ import type { HillSky } from './townSprites';
 import { SCENES, type SceneId } from './world';
 import type { SeaSpot } from './seaView';
 import type { Jump } from './skydive';
+import type { YtState } from '../components/YouTubeTogether';
 
 export interface LiveState {
   scene: SceneId;
@@ -30,10 +31,12 @@ export interface LiveState {
   duck?: boolean;          // thả vịt cao su vào bồn tắm
   sea?: SeaSpot;           // đang ngắm biển ở đâu (ghế ngắm biển)
   seaAt?: number;
-  jump?: Jump | null;
-  sand?: { text: string; at: number } | null;
+  jump?: Jump | null;      // đang nhảy dù: pha + mốc thời gian (bãi nhảy dù)
+  sand?: { text: string; at: number } | null;   // chữ viết trên cát ở ghế ngắm biển (đang tạm tắt)
+  yt?: YtState | null;     // xem YouTube cùng nhau ở rạp phim
+  ytAt?: number;
   /** Lúc thao tác thật gần nhất của phiên này (mở game ở 2 nơi: tab bỏ quên gửi nhắc lại trạng thái cũ thì bị bỏ qua) */
-  t?: number;   // chữ viết trên cát ở ghế ngắm biển      // đang nhảy dù: pha + mốc thời gian (bãi nhảy dù)
+  t?: number;
 }
 export interface ChatLine { from: 'me' | 'partner'; text: string; at: number }
 
@@ -97,7 +100,7 @@ export function useLive(partnerOnline: boolean) {
 export type Live = ReturnType<typeof useLive>;
 
 /** Lựa chọn chung của hai người: ai chọn sau thì cả hai cùng theo */
-export function shared<K extends 'sky' | 'bath' | 'cinema' | 'sea'>(mine: LiveState, theirs: LiveState | null, key: K): LiveState[K] {
-  const at = (key + 'At') as 'skyAt' | 'bathAt' | 'cinemaAt' | 'seaAt';
+export function shared<K extends 'sky' | 'bath' | 'cinema' | 'sea' | 'yt'>(mine: LiveState, theirs: LiveState | null, key: K): LiveState[K] {
+  const at = (key + 'At') as 'skyAt' | 'bathAt' | 'cinemaAt' | 'seaAt' | 'ytAt';
   return theirs && (theirs[at] ?? 0) > (mine[at] ?? 0) ? theirs[key] : mine[key];
 }

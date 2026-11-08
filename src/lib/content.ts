@@ -8,7 +8,9 @@ export interface Item {
   id: string;
   name: string;
   icon: string;
-  kind: 'decor' | 'trinket' | 'fish' | 'crop' | 'dish';
+  kind: 'decor' | 'trinket' | 'fish' | 'crop' | 'dish' | 'goods';
+  /** Giá bán riêng (nếu có), không thì theo loại */
+  price?: number;
   rarity?: 'rare';
 }
 export interface Weighted { id: string; w: number }

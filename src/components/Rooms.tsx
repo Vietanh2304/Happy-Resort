@@ -1,4 +1,5 @@
 // Rạp phim (chia sẻ màn hình) và nhà hàng (dọn món, camera) — phần hình trong cảnh + bảng điều khiển bên dưới.
+import { YouTubeTogether, YtControls, ytId, type YtState } from './YouTubeTogether';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as api from '../lib/api';
@@ -34,14 +35,30 @@ export function useRtc(room: string | null, me: api.Profile, partner: api.Profil
     };
   }, [room, me.id, partner?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function start(kind: 'screen' | 'camera') {
+  const fileVideo = useRef<HTMLVideoElement | null>(null);
+  async function start(kind: 'screen' | 'camera' | 'file', opt: { audio?: boolean; file?: File } = {}) {
     const md = navigator.mediaDevices;
     if (!md) return toastError(new Error('Trình duyệt chặn chia sẻ vì trang không chạy qua https (hoặc localhost). Mở bằng link https đã deploy nhé.'));
     try {
       let stream: MediaStream;
-      if (kind === 'screen') {
+      if (kind === 'file') {
+        // Chiếu video có sẵn trong máy (điện thoại Android, máy tính): phát file rồi lấy luồng hình + tiếng của nó
+        const v = document.createElement('video');
+        v.src = URL.createObjectURL(opt.file!);
+        v.playsInline = true;
+        v.className = 'file-source';
+        document.body.appendChild(v);
+        await v.play();
+        const cap = (v as HTMLVideoElement & { captureStream?: () => MediaStream; mozCaptureStream?: () => MediaStream });
+        const s = cap.captureStream?.() ?? cap.mozCaptureStream?.();
+        if (!s) { v.remove(); throw new Error('Trình duyệt này chưa chiếu được video trong máy — thử Chrome trên Android/máy tính, hoặc dùng "Xem YouTube cùng nhau".'); }
+        fileVideo.current?.remove();
+        fileVideo.current = v;
+        v.onended = () => stop();
+        stream = s;
+      } else if (kind === 'screen') {
         try {
-          stream = await md.getDisplayMedia({ video: true, audio: true });
+          stream = await md.getDisplayMedia({ video: true, audio: opt.audio !== false });
         } catch (e) {
           // Một số trình duyệt (Safari, Firefox) không cho lấy tiếng khi chia sẻ màn hình → thử lại chỉ hình
           if ((e as Error).name === 'NotAllowedError' || (e as Error).name === 'AbortError') throw e;
@@ -63,6 +80,7 @@ export function useRtc(room: string | null, me: api.Profile, partner: api.Profil
     }
   }
   function stop() {
+    if (fileVideo.current) { fileVideo.current.pause(); URL.revokeObjectURL(fileVideo.current.src); fileVideo.current.remove(); fileVideo.current = null; }
     if (rtc.current) rtc.current.stop();
     else { localRef.current?.getTracks().forEach(t => t.stop()); setLocal(null); }
   }
@@ -78,7 +96,7 @@ export function StreamVideo({ stream, muted, className }: { stream: MediaStream;
 
 /** Màn hình rạp phim (vẽ trong cảnh): phóng to trong rạp, hoặc xem toàn màn hình kèm thả cảm xúc */
 const REACTS = ['❤️', '😂', '😱', '😭', '🥰', '🍿'];
-export function CinemaScreen({ rtc, mode, bubbles, onReact }: { rtc: Rtc; mode: 'movie' | 'karaoke'; bubbles: { me?: string; partner?: string }; onReact: (e: string) => void }) {
+export function CinemaScreen({ rtc, mode, bubbles, onReact, yt, onYt }: { rtc: Rtc; mode: 'movie' | 'karaoke'; bubbles: { me?: string; partner?: string }; onReact: (e: string) => void; yt: YtState | null; onYt: (v: YtState | null) => void }) {
   const s = useScale();
   const screen = rtc.remote ?? rtc.local;
   const [big, setBig] = useState(false);
@@ -102,11 +120,11 @@ export function CinemaScreen({ rtc, mode, bubbles, onReact }: { rtc: Rtc; mode: 
   }, [full]);
 
   const box = big ? { left: 2 * s, top: 2 * s, width: 156 * s, height: 88 * s } : { left: 14 * s, top: 8 * s, width: 132 * s, height: 66 * s };
-  const hint = mode === 'karaoke' ? 'Mở video karaoke rồi bấm “Chia sẻ màn hình” để hát cùng nhau 🎤' : 'Bấm “Chia sẻ màn hình” để chiếu phim lên đây 🍿';
+  const hint = mode === 'karaoke' ? 'Dán link karaoke YouTube hoặc chia sẻ màn hình để hát cùng nhau 🎤' : 'Xem YouTube cùng nhau, chiếu video trong máy, hoặc chia sẻ màn hình 🍿';
   return (
     <>
       <div className={`cinema-screen ${mode} ${big ? 'big' : ''}`} style={box}>
-        {screen && !full ? <StreamVideo stream={screen} muted={!rtc.remote} className="screen-video" /> : !full && <p className="screen-hint">{hint}</p>}
+        {yt && !full ? <YouTubeTogether yt={yt} onChange={onYt} /> : screen && !full ? <StreamVideo stream={screen} muted={!rtc.remote} className="screen-video" /> : !full && <p className="screen-hint">{hint}</p>}
         {full && <p className="screen-hint">📺 Đang xem toàn màn hình</p>}
         <div className="screen-tools">
           <button title={big ? 'Thu nhỏ' : 'Phóng to trong rạp'} onClick={e => { e.stopPropagation(); setBig(b => !b); }}>{big ? '🔽' : '🔍'}</button>
@@ -115,7 +133,7 @@ export function CinemaScreen({ rtc, mode, bubbles, onReact }: { rtc: Rtc; mode: 
       </div>
       {full && createPortal(
         <div className="cinema-full" ref={fsRef}>
-          {screen ? <StreamVideo stream={screen} muted={!rtc.remote} className="screen-video" /> : <p className="screen-hint">{hint}</p>}
+          {yt ? <YouTubeTogether yt={yt} onChange={onYt} className="full" /> : screen ? <StreamVideo stream={screen} muted={!rtc.remote} className="screen-video" /> : <p className="screen-hint">{hint}</p>}
           <div className="cinema-full-bubbles">
             {bubbles.partner && <span className="them">{bubbles.partner}</span>}
             {bubbles.me && <span className="me">{bubbles.me}</span>}
@@ -153,7 +171,9 @@ export function DinnerTiles({ remote, local, firstSeat }: { remote: MediaStream 
 }
 
 /** Bảng điều khiển dưới cảnh khi đang ở rạp phim / nhà hàng */
-export function RoomPanel({ scene, rtc, call, live, inventory, partnerHere, partnerName, cinemaMode }: {
+export function RoomPanel({ scene, rtc, call, live, inventory, partnerHere, partnerName, cinemaMode, yt, onYt }: {
+  yt?: YtState | null;
+  onYt?: (v: YtState | null) => void;
   scene: 'cinema' | 'restaurant';
   cinemaMode: 'movie' | 'karaoke';
   rtc: Rtc;
@@ -166,6 +186,10 @@ export function RoomPanel({ scene, rtc, call, live, inventory, partnerHere, part
   const [text, setText] = useState('');
   const [menu, setMenu] = useState(false);
   const canShare = typeof navigator.mediaDevices?.getDisplayMedia === 'function' || !window.isSecureContext;
+  const canFile = typeof (HTMLVideoElement.prototype as HTMLVideoElement & { captureStream?: unknown }).captureStream === 'function';
+  const [withAudio, setWithAudio] = useState(true);
+  const [link, setLink] = useState('');
+  const fileInput = useRef<HTMLInputElement>(null);
   const canCam = typeof navigator.mediaDevices?.getUserMedia === 'function';
   const dishes = inventory.filter(r => item(r.item_id).kind === 'dish');
 
@@ -191,12 +215,24 @@ export function RoomPanel({ scene, rtc, call, live, inventory, partnerHere, part
         </div>
       )}
       {scene === 'cinema' ? (
-        <div className="row wrap">
-          {canShare
-            ? (rtc.local
+        <div className="cinema-share">
+          {yt ? <YtControls yt={yt} onChange={v => onYt?.(v)} /> : (
+            <form className="row yt-link" onSubmit={e => { e.preventDefault(); const id = ytId(link); if (!id) return toast('▶️ Dán link YouTube (vd: https://youtu.be/…)'); rtc.local && rtc.stop(); onYt?.({ id, playing: true, pos: 0, at: Date.now() }); setLink(''); live.say('▶️ Mở YouTube xem cùng nè!'); }}>
+              <input value={link} onChange={e => setLink(e.target.value)} placeholder="Dán link YouTube để xem cùng…" />
+              <button className="btn small">▶️ Xem cùng</button>
+            </form>
+          )}
+          <div className="row wrap">
+            {rtc.local
               ? <button className="btn small ghost" onClick={rtc.stop}>⏹ Dừng chia sẻ</button>
-              : <button className="btn small" onClick={() => rtc.start('screen')}>🖥️ Chia sẻ màn hình (có tiếng)</button>)
-            : <span className="muted small-note">Điện thoại không chia sẻ màn hình được (trình duyệt không hỗ trợ) — hãy chia sẻ từ máy tính, còn trên điện thoại vẫn xem được.</span>}
+              : <>
+                {canShare && <button className="btn small" onClick={() => { onYt?.(null); void rtc.start('screen', { audio: withAudio }); }}>🖥️ Chia sẻ màn hình</button>}
+                {canShare && <button className={`chip ${withAudio ? 'active' : ''}`} onClick={() => setWithAudio(v => !v)} title="Chia sẻ cả tiếng của tab/màn hình">{withAudio ? '🔊 Kèm tiếng' : '🔇 Không tiếng'}</button>}
+                {canFile && <button className="btn small ghost" onClick={() => fileInput.current?.click()}>📁 Chiếu video trong máy</button>}
+                <input ref={fileInput} type="file" accept="video/*" hidden onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) { onYt?.(null); void rtc.start('file', { file: f }); } }} />
+              </>}
+          </div>
+          {!canShare && <p className="muted small-note">📱 Điện thoại không chia sẻ màn hình được (trình duyệt không cho) — dùng ▶️ YouTube cùng nhau{canFile ? ' hoặc 📁 chiếu video trong máy' : ''} nhé.</p>}
         </div>
       ) : (
         <div className="row wrap">

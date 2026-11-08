@@ -22,5 +22,11 @@ export function onToast(fn: Listener) {
 /** Hiện lỗi thân thiện thay vì để văng */
 export function toastError(e: unknown) {
   console.error(e);
-  toast('😿 ' + (e instanceof Error ? e.message : 'Có lỗi, thử lại nhé'));
+  const msg = e instanceof Error ? e.message : String(e ?? '');
+  // Chưa chạy SQL mới trên Supabase: báo rõ cần chạy file nào
+  if (/ranch|outfit|jobs|kid_scores/i.test(msg) && /does not exist|schema cache|Could not find/i.test(msg)) {
+    toast('🛠️ Tính năng mới cần chạy file SQL 013_life.sql trên Supabase (SQL Editor) trước nhé!');
+    return;
+  }
+  toast('😿 ' + (msg || 'Có lỗi, thử lại nhé'));
 }
