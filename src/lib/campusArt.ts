@@ -165,3 +165,9 @@ export const toiletSprite = () => makeSprite('toilet:v2', 18, 20, p => {
   p.rect(7, 15, 7, 4, '#e8ecf2'); p.rect(7, 18, 7, 1, '#c8ccd8'); p.rect(13, 15, 1, 3, '#d8dce6');
 });
 
+
+/** Ghế đôn bọc nệm hồng trước bàn trang điểm */
+export const stoolSprite = () => makeSprite('vanity-stool', 12, 10, p => {
+  p.rect(3, 5, 1, 5, '#d8b088'); p.rect(8, 5, 1, 5, '#d8b088');
+  ellipse(p, 6, 4, 5.5, 2.6, '#f59ab3'); ellipse(p, 6, 3.4, 4.5, 1.8, '#f8b8cc'); p.px(4, 3, '#ffffff');
+});

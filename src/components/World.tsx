@@ -31,6 +31,8 @@ import {
   type GameId, type Pt, type SceneId,
   SIT_ACTS,
   BACK_ACTS,
+  SINK_ACTS,
+  vanitySeat,
 } from '../lib/world';
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
@@ -42,7 +44,7 @@ import { reefBackground } from '../lib/reef';
 import { SWIMMERS } from '../lib/critters';
 import { Follower, Wanderer } from './Wander';
 import { atSchool, classroomSprite, SCHOOL, type StallId } from '../lib/school';
-import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite } from '../lib/campusArt';
+import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite, stoolSprite } from '../lib/campusArt';
 import { CampusContent } from './Campus';
 import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
@@ -157,6 +159,7 @@ export interface WorldProps {
     pet: () => void;
     bed: (d: Decor) => void;
     kid: (id: string) => void;
+    makeup: (seat: Pt) => void;
     postcard: (city: CityKind, i: number, name: string) => void;
     games: () => void;
   };
@@ -464,13 +467,13 @@ function SceneContent(p: WorldProps) {
       {!myBed && scene !== 'lounge' && scene !== 'sky' && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')}
-        sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
+        sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : SINK_ACTS.includes(live.mine.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
       {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')}
-          sitting={sitting || !!theirTub || SIT_ACTS.includes(theirs.act ?? '')} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : p.couple ? { side: p.couple.mySide === 'L' ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
+          sitting={sitting || !!theirTub || SIT_ACTS.includes(theirs.act ?? '')} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : SINK_ACTS.includes(theirs.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.them : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : p.couple ? { side: p.couple.mySide === 'L' ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
         />
       )}
 
@@ -1140,9 +1143,11 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
           <div key={d.id}>
             <Spr sprite={decorSprite(d)} x={foot.x} y={foot.y} z={art?.flat ? 1 : depth.get(d.id)} flip={!!d.rot}
               onHold={editing ? undefined : () => on.pickDecor(d)} className={`decor ${sel} ${d.id === p.ghost?.movingId ? 'moving' : ''} ${cellsOf(scene, d.item_id, d.x, d.y, d.rot ?? 0).some(([cx, cy]) => RESERVED[scene]?.(cx, cy)) ? 'over-door' : ''}`}
-              title={['wardrobe', 'dresser'].includes(d.item_id) && !editing ? '👗 Tủ đồ — thay trang phục' : d.item_id === 'bed' && !editing ? '🛏️ Giường — ngủ, âu yếm' : item(d.item_id).name}
-              onClick={['wardrobe', 'dresser'].includes(d.item_id) && !editing ? () => go(roomPt(d.x + 0.5, d.y + 1.6), on.wardrobe)
+              title={d.item_id === 'wardrobe' && !editing ? '👗 Tủ đồ — thay trang phục' : d.item_id === 'dresser' && !editing ? '💄 Bàn trang điểm — ngồi trang điểm' : d.item_id === 'bed' && !editing ? '🛏️ Giường — ngủ, âu yếm' : item(d.item_id).name}
+              onClick={d.item_id === 'wardrobe' && !editing ? () => go(roomPt(d.x + 0.5, d.y + 1.6), on.wardrobe)
+                : d.item_id === 'dresser' && !editing ? () => on.makeup(vanitySeat(d))
                 : d.item_id === 'bed' && !editing ? () => go(walkTarget(scene, roomPt(d.x + 1.5, d.y - 0.5)) ?? p.live.mine.pos, () => on.bed(d)) : undefined} />
+            {d.item_id === 'dresser' && (() => { const st = vanitySeat(d); return <Spr sprite={stoolSprite()} x={st.x} y={st.y + 3} z={Math.round(st.y) - 1} title="💄 Ngồi trang điểm" onClick={editing ? undefined : () => on.makeup(st)} />; })()}
             {p.dark && art?.glow && <Glow x={foot.x} y={foot.y - 24} r={24} />}
           </div>
         );

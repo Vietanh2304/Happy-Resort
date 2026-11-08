@@ -106,7 +106,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
   const pair = duo && !moving && !sitting ? duoPose(duo, dancing ? dance!.m : null) : null;
   const sprite = af !== null ? characterSprite(look, sitting ? 'actsit' : 'act', undefined, 'front', af)
     : pair ? (pair.f === 'side' ? characterSprite(look, 'idle', undefined, 'side') : characterSprite(look, 'act', undefined, 'front', pair.f))
-    : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? 'front' : faceBack && !moving ? 'back' : view, step);
+    : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? (faceBack ? 'back' : 'front') : faceBack && !moving ? 'back' : view, step);
   const ax = sprite.ax ?? sprite.w / 2;
   const ps = avatarPx(s * (zoom ?? 1));
   if (swim) {
