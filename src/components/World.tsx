@@ -1157,12 +1157,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
               return (
                 <>
                   <Spr sprite={stoolSprite()} x={st.x} y={st.y + 3} z={Math.round(st.y) - 1} title="💄 Ngồi trang điểm" onClick={editing ? undefined : () => on.makeup(st)} />
-                  {face && (
-                    <div className="mirror-face" style={{ left: (mi.x - 5) * s, top: (mi.y - 7) * s, width: 10 * s, height: 13 * s, zIndex: (depth.get(d.id) ?? 0) + 1 }}>
-                      <img src={face.url} alt="" style={{ width: face.w * s * 0.42, height: face.h * s * 0.42, left: (5 - face.w * 0.21) * s, top: -1 * s }} />
-                    </div>
-                  )}
-                  {sitter && <span className="makeup-brush" style={{ left: (st.x + 3) * s, top: (st.y - 22) * s, fontSize: Math.max(10, 5 * s), zIndex: Math.round(st.y) + 40 }}>💄</span>}
+                  {face && sitter && <MakeupFx key={sitter.id} face={face} mi={mi} st={st} s={s} z={(depth.get(d.id) ?? 0) + 1} />}
                 </>
               );
             })()}
@@ -1471,5 +1466,29 @@ function Petals() {
     <div className="petals">
       {Array.from({ length: 8 }, (_, i) => <i key={i} style={{ left: `${(i * 13 + 4) % 100}%`, animationDelay: `${i * 1.6}s`, animationDuration: `${9 + (i % 3) * 3}s` }} />)}
     </div>
+  );
+}
+
+/** Trang điểm: lần lượt thoa kem → đánh phấn má → kẻ mắt → tô son; mặt trong gương hồng má, đỏ môi dần */
+const MAKEUP_STEPS = [
+  { tool: '🧴', cls: 'dab', label: 'thoa kem' }, { tool: '🖌️', cls: 'sweep', label: 'đánh phấn' },
+  { tool: '✏️', cls: 'line', label: 'kẻ mắt' }, { tool: '💄', cls: 'lips', label: 'tô son' },
+];
+function MakeupFx({ face, mi, st, s, z }: { face: Sprite; mi: Pt; st: Pt; s: number; z: number }) {
+  const [k, setK] = useState(0);
+  useEffect(() => { const t = setInterval(() => setK(v => Math.min(v + 1, MAKEUP_STEPS.length)), 1400); return () => clearInterval(t); }, []);
+  const step = MAKEUP_STEPS[Math.min(k, MAKEUP_STEPS.length - 1)];
+  const done = k >= MAKEUP_STEPS.length;
+  const w = face.w * 0.42, h = face.h * 0.42;
+  return (
+    <>
+      <div className="mirror-face" style={{ left: (mi.x - 5) * s, top: (mi.y - 7) * s, width: 10 * s, height: 13 * s, zIndex: z }}>
+        <img src={face.url} alt="" style={{ width: w * s, height: h * s, left: (5 - w / 2) * s, top: -1 * s }} />
+        {k >= 2 && <i className="blush" style={{ left: (5 - w * 0.3) * s, top: (h * 0.36 - 1) * s, width: w * 0.6 * s, height: 1.2 * s }} />}
+        {k >= 4 && <i className="lips" style={{ left: (5 - 0.6) * s, top: (h * 0.43 - 1) * s, width: 1.2 * s, height: 0.7 * s }} />}
+      </div>
+      {!done && <span className={`makeup-tool ${step.cls}`} style={{ left: (st.x + 2) * s, top: (st.y - 24) * s, fontSize: Math.max(10, 5 * s), zIndex: Math.round(st.y) + 40 }}>{step.tool}</span>}
+      {!done && step.cls === 'sweep' && <span className="makeup-dust" style={{ left: (st.x - 3) * s, top: (st.y - 24) * s, zIndex: Math.round(st.y) + 41 }}>✨</span>}
+    </>
   );
 }

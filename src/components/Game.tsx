@@ -903,9 +903,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
             pet: () => setSheet({ kind: 'pet' }),
             bed: d => setSheet({ kind: 'bed', bed: d.id }),
             makeup: seat => go({ x: seat.x, y: seat.y + 6 }, () => {
-              live.update({ pos: seat, act: 'makeup' }); live.say('💄');
-              setTimeout(() => { if (liveNow.current.mine.act === 'makeup') live.say('✨'); }, 2500);
-              setTimeout(() => { if (liveNow.current.mine.act === 'makeup') { live.say('💋'); toast('💄 Trang điểm xong — xinh quá đi!'); } }, 5000);
+              live.update({ pos: seat, act: 'makeup' }); live.say('🪞');
+              setTimeout(() => { if (liveNow.current.mine.act === 'makeup') live.say('💋 Xinh quá đi! ✨'); }, 6000);
             }),
             kid: id => setSheet(kids.find(k => k.id === id && !k.name) ? { kind: 'kidname', id } : { kind: 'kid', id }),
             postcard: (city, i, name) => setSheet({ kind: 'postcard', city, i, name }),
