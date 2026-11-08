@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { content, item } from './content';
 import {
-  sellPrice, activeCombos, canCook, catchFish, needsWater, plotStage, averageStars, beachPickups, guestFarewell, guestWeights, islandPickup,
+  sellPrice, activeCombos, canCook, catchFish, needsWater, plotLevel, plotStage, averageStars, beachPickups, guestFarewell, guestWeights, islandPickup,
   questionFor, rollGuest, unlockedIslands,
 } from './game';
 import { localTime, phaseOf } from './time';
@@ -121,20 +121,18 @@ describe('câu cá, vườn, nấu ăn', () => {
     expect(caught.has('fish_clown')).toBe(false);  // cá hề chỉ ban ngày
     expect(caught.has('lobster')).toBe(false);     // tôm hùm cần mưa/tuyết
   });
-  it('cây lớn theo giờ thật + phải được tưới', () => {
+  it('cây lên 3 cấp: mỗi cấp cần tưới + bón phân + đủ giờ', () => {
     const now = Date.parse('2026-11-08T12:00:00Z');
     const ago = (h: number) => new Date(now - h * 3.6e6).toISOString();
-    const p = { plot: 0, crop_id: 'carrot', water_days: 0, last_watered: null, planted_at: ago(1) };   // cà rốt: 12 tiếng, tưới 1 lần
+    const p = { plot: 0, crop_id: 'carrot', water_days: 0, last_watered: null, planted_at: ago(1), fert_n: 0 };   // cà rốt: 12 tiếng, 2 lần tưới/cấp
     expect(plotStage(p, now)).toBe('seed');
-    expect(plotStage({ ...p, water_days: 1 }, now)).toBe('sprout');                    // tưới rồi nhưng mới 1 tiếng
-    expect(plotStage({ ...p, water_days: 1, planted_at: ago(13) }, now)).toBe('ripe');
-    expect(plotStage({ ...p, planted_at: ago(13) }, now)).toBe('seed');                // chưa tưới thì không lớn
-    expect(needsWater({ ...p, water_days: 1, last_watered: '2026-11-04' }, '2026-11-05')).toBe(false);   // tưới đủ rồi
-    const s = { ...p, crop_id: 'strawberry' };                                          // dâu: 24 tiếng, tưới 2 ngày
-    expect(needsWater({ ...s, water_days: 1, last_watered: '2026-11-05' }, '2026-11-05')).toBe(false);
-    expect(needsWater({ ...s, water_days: 1, last_watered: '2026-11-04' }, '2026-11-05')).toBe(true);
-    expect(plotStage({ ...s, water_days: 1, planted_at: ago(30) }, now)).toBe('sprout');   // đủ giờ nhưng thiếu 1 lần tưới
-    expect(plotStage({ ...s, water_days: 2, planted_at: ago(30) }, now)).toBe('ripe');
+    expect(plotLevel({ ...p, water_days: 2, fert_n: 1, planted_at: ago(5) }, now)).toBe(1);
+    expect(plotLevel({ ...p, water_days: 2, fert_n: 0, planted_at: ago(5) }, now)).toBe(0);       // thiếu phân
+    expect(plotLevel({ ...p, water_days: 6, fert_n: 3, planted_at: ago(5) }, now)).toBe(1);       // chưa đủ giờ
+    expect(plotStage({ ...p, water_days: 6, fert_n: 3, planted_at: ago(13) }, now)).toBe('ripe');
+    expect(needsWater({ ...p, water_days: 1, watered_at: ago(0.5) }, '', now)).toBe(false);       // mới tưới nửa tiếng
+    expect(needsWater({ ...p, water_days: 1, watered_at: ago(2) }, '', now)).toBe(true);
+    expect(needsWater({ ...p, water_days: 2, watered_at: ago(2) }, '', now)).toBe(false);        // đủ nước cấp này, chờ bón phân/giờ
   });
   it('giá bán theo loại, đồ hiếm gấp đôi', () => {
     const sell = content.economy.sell;

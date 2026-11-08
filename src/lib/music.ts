@@ -1,7 +1,7 @@
 // Nhạc nền lo-fi chill tự sinh bằng Web Audio (không dùng file nhạc, không lo bản quyền):
 // hợp âm piano điện ấm, giai điệu ngũ cung thưa thớt có tiếng vang, trống nhẹ, tiếng đĩa than lạo xạo.
 
-export type Mood = 'day' | 'night' | 'love' | 'cafe' | 'camp' | 'sea' | 'deep' | 'sky';
+export type Mood = 'day' | 'night' | 'love' | 'cafe' | 'camp' | 'sea' | 'deep' | 'sky' | 'waltz' | 'jazz' | 'disco' | 'latin' | 'slow';
 
 const PROG: Record<Mood, number[][]> = {
   day: [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59]],      // Fmaj7 Em7 Dm7 Cmaj7
@@ -12,7 +12,18 @@ const PROG: Record<Mood, number[][]> = {
   deep: [[45, 52, 57, 60], [41, 48, 53, 57], [43, 50, 55, 59], [40, 47, 52, 55]],                // Am9 F G Em — lặn dưới biển, mơ màng
   sky: [[48, 55, 60, 64], [43, 50, 55, 59], [45, 52, 57, 60], [41, 48, 53, 57]],                  // C G Am F — bay giữa trời
   sea: [[50, 54, 57, 61], [47, 50, 54, 57], [43, 47, 50, 54], [45, 49, 52, 57]],                  // Dmaj7 Bm7 Gmaj7 A — nghỉ dưỡng bên biển
+  // Sàn nhảy
+  waltz: [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]],                                  // C F G C — waltz 3/4
+  jazz: [[50, 53, 57, 60], [43, 50, 53, 59], [48, 52, 55, 59], [45, 49, 55, 60]],                  // ii-V-I-VI swing
+  disco: [[45, 52, 57, 60], [45, 52, 57, 60], [43, 50, 55, 59], [41, 48, 53, 57]],                  // Am Am G F — disco sôi động
+  latin: [[45, 52, 57, 60], [50, 53, 57, 62], [52, 56, 59, 62], [45, 52, 57, 60]],                  // Am Dm E7 Am — cha-cha
+  slow: [[48, 52, 55, 59], [45, 48, 52, 55], [41, 45, 48, 52], [43, 47, 50, 53]],                   // Cmaj7 Am7 Fmaj7 G7 — khiêu vũ chậm
 };
+/** Bài nhạc cho sàn nhảy */
+export const DANCE_SONGS: { mood: Mood; name: string }[] = [
+  { mood: 'waltz', name: '🎻 Waltz dịu dàng' }, { mood: 'jazz', name: '🎷 Jazz swing' }, { mood: 'disco', name: '🪩 Disco sôi động' },
+  { mood: 'latin', name: '💃 Cha-cha-cha' }, { mood: 'slow', name: '🌙 Khiêu vũ chậm' },
+];
 const LOVE_MELODY = [76, 74, 72, 74, 76, 79, 76, 74, 72, 69, 72, 74, 76, 72, 74, 72];
 const PENTA = [72, 74, 76, 79, 81, 84];
 const BPM = 70;
@@ -210,6 +221,7 @@ class Lofi {
     while (this.nextBeat < ctx.currentTime + 0.6) {
       const t = this.nextBeat, b = this.beat, inBar = b % 4;
       const chord = PROG[this.mood][Math.floor(b / 4) % 4];
+      if (this.dance()) continue;
       if (this.mood === 'camp') {
         // Ghi-ta rải hợp âm, không trống, thêm tiếng dế
         const pat = [0, 2, 1, 3, 2, 4, 1, 3];
@@ -278,6 +290,50 @@ class Lofi {
       this.nextBeat += BEAT;
       this.beat++;
     }
+  }
+
+  /** Các bài sàn nhảy: mỗi bài một tiết tấu riêng (trả về true nếu đã xếp xong một nhịp) */
+  private dance() {
+    const m = this.mood;
+    if (!['waltz', 'jazz', 'disco', 'latin', 'slow'].includes(m)) return false;
+    const t = this.nextBeat, b = this.beat;
+    const bpm = m === 'waltz' ? 150 : m === 'jazz' ? 132 : m === 'disco' ? 120 : m === 'latin' ? 112 : 66;
+    const B = 60 / bpm;
+    const per = m === 'waltz' ? 3 : 4, inBar = b % per;
+    const chord = PROG[m][Math.floor(b / per) % 4];
+    const mel = (scale: number[], p: number, oct = 12) => { if (Math.random() < p) this.bell(scale[Math.floor(Math.random() * scale.length)] + oct, t + (Math.random() < 0.5 ? 0 : B / 2)); };
+    if (m === 'waltz') {
+      if (inBar === 0) this.keys(chord[0] - 12, t, B * 2.5, 0.07);
+      else chord.forEach(n => this.keys(n + 12, t, B * 0.8, 0.03));
+      if (inBar === 0 && Math.random() < 0.8) this.bell(chord[Math.floor(Math.random() * 3)] + 24, t);
+    } else if (m === 'jazz') {
+      this.pluck(chord[0] - 12 + [0, 4, 7, 9][inBar], t, 0.08);                       // bass đi bộ
+      if (inBar === 1 || inBar === 3) chord.slice(1).forEach(n => this.keys(n, t + B * 0.66, B * 0.5, 0.035));
+      this.hiss(t, 6000, 'bandpass', 0.03, 0.25); this.hiss(t + B * 0.66, 6000, 'bandpass', 0.02, 0.1);   // ride cymbal swing
+      if (inBar === 1 || inBar === 3) this.hiss(t, 1800, 'bandpass', 0.05, 0.12);
+      mel(chord, 0.45, 24);
+    } else if (m === 'disco') {
+      this.kick(t);                                                                    // four-on-the-floor
+      this.hiss(t + B / 2, 8000, 'highpass', 0.06, 0.12);                              // hi-hat mở phách lệch
+      if (inBar === 1 || inBar === 3) this.hiss(t, 2000, 'bandpass', 0.09, 0.15);       // clap
+      this.pluck(chord[0] - 12, t, 0.08); this.pluck(chord[0], t + B / 2, 0.07);        // bass quãng tám
+      if (inBar === 0 || inBar === 2) chord.forEach(n => this.keys(n + 12, t + B / 2, B * 0.25, 0.03));
+      mel([69, 72, 74, 76, 79], 0.35, 12);
+    } else if (m === 'latin') {
+      this.pluck(chord[0] - 12 + (inBar === 2 ? 7 : 0), t, 0.08);
+      if (inBar === 3) { this.pluck(chord[0] - 12, t + B / 2, 0.07); this.hiss(t + B / 2, 3000, 'bandpass', 0.05, 0.08); }   // cha-cha
+      this.hiss(t, 4000, 'bandpass', 0.035, 0.18);                                     // guiro
+      if (inBar === 0 || inBar === 2) this.bell(96, t + B * 0.5);                       // clave
+      if (inBar === 1) chord.slice(1).forEach(n => this.keys(n + 12, t, B * 0.4, 0.03));
+      mel(chord, 0.4, 24);
+    } else {
+      if (inBar === 0) { chord.forEach((n, i) => this.keys(n, t + i * 0.05, B * 4, 0.04)); this.keys(chord[0] - 12, t, B * 4, 0.06); }
+      this.bell(LOVE_MELODY[b % LOVE_MELODY.length], t + 0.02);
+      if (inBar === 2) this.hiss(t, 3000, 'bandpass', 0.03, 0.4);
+    }
+    this.nextBeat += B;
+    this.beat++;
+    return true;
   }
 
   start() {

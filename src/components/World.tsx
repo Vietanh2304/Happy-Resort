@@ -29,6 +29,7 @@ import { weatherIcon, type Weather } from '../lib/weather';
 import {
   ARCADE, BATH, BEACH, RIDE_MS, BUILDINGS, FARM, GARDEN, HOUSE, ROOM, SCENES, SEATS, SHOP, TOWN, WALL_L, WALL_R, RESERVED, farmCell, roomGrid, roomPt, walkTarget, wallSlot,
   type GameId, type Pt, type SceneId,
+  SIT_ACTS,
 } from '../lib/world';
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
@@ -40,7 +41,7 @@ import { reefBackground } from '../lib/reef';
 import { SWIMMERS } from '../lib/critters';
 import { Follower, Wanderer } from './Wander';
 import { atSchool, classroomSprite, SCHOOL, type StallId } from '../lib/school';
-import { CAMPUS, campusBackground, schoolStopSprite } from '../lib/campusArt';
+import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite } from '../lib/campusArt';
 import { CampusContent } from './Campus';
 import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
@@ -176,6 +177,7 @@ export function World(props: WorldProps) {
     sky: () => undefined,
     school: classroomSprite,
     campus: () => campusBackground(myView.phase),
+    gym: () => gymBackground(myView.phase === 'night'),
     ranch: () => ranchBackground(myView.phase === 'night'),
     city: () => cityBackground(myView.phase),
     office: () => officeBackground(myView.phase === 'night'),
@@ -334,7 +336,7 @@ function SceneContent(p: WorldProps) {
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
 
-      {scene === 'city' && <CityContent go={go} night={phase === 'night'} onOffice={() => enter('office')} onHome={() => enter('town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 })} />}
+      {scene === 'city' && <CityContent go={go} night={phase === 'night'} onStall={id => p.stall?.(id)} onOffice={() => enter('office')} onHome={() => enter('town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 })} />}
       {scene === 'office' && p.job && p.work && (
         <>
           <OfficeContent job={p.job} me={me} go={go} onDesk={p.work.desk} onTalk={p.work.talk} />
@@ -354,9 +356,10 @@ function SceneContent(p: WorldProps) {
           <Hot x={82} y={140} w={28} h={4} title="Ra sân trường" onClick={() => enter('campus', CAMPUS.door)} />
         </>
       )}
-      {scene === 'campus' && (
-        <CampusContent kids={p.kids} me={me} partner={partner} when={p.myView.time} walking={[live.mine.walkKid, theirs?.walkKid]} night={phase === 'night'} go={go}
-          onKid={id => on.kid(id)} onClass={() => enter('school')} onStall={id => p.stall?.(id)} onHome={() => enter('town', SCHOOL.door)} />
+      {(scene === 'campus' || scene === 'gym') && (
+        <CampusContent gym={scene === 'gym'} kids={p.kids} me={me} partner={partner} when={p.myView.time} weather={p.myView.weather?.type} walking={[live.mine.walkKid, theirs?.walkKid]} night={scene === 'campus' && phase === 'night'} go={go}
+          onKid={id => on.kid(id)} onClass={() => enter('school')} onGym={() => enter('gym')} onStall={id => p.stall?.(id)} onHome={() => enter('town', SCHOOL.door)}
+          onSit={seat => go({ x: seat.x, y: seat.y - 6 }, () => live.update({ pos: seat, act: 'sit' }))} />
       )}
       {scene === 'reef' && <ReefContent phase={phase} go={go} onSee={id => p.onSee?.(id)} chestOpen={!!p.chestOpen} onChest={() => p.onChest?.()} />}
       {scene === 'sky' && (
@@ -460,13 +463,13 @@ function SceneContent(p: WorldProps) {
       {!myBed && scene !== 'lounge' && scene !== 'sky' && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left}
-        sitting={sitting || !!myTub} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
+        sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
       {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left}
-          sitting={sitting || !!theirTub} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : p.couple ? { side: p.couple.mySide === 'L' ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
+          sitting={sitting || !!theirTub || SIT_ACTS.includes(theirs.act ?? '')} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : zAt} dance={scene === 'disco' ? p.dance.them : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : p.couple ? { side: p.couple.mySide === 'L' ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
         />
       )}
 
@@ -1169,6 +1172,12 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
         </>
       )}
       {scene === 'bathroom' && <BathContent {...p} />}
+      {scene === 'bathroom' && (
+        <>
+          <Spr sprite={toiletSprite()} x={BATH.toilet.x} y={BATH.toilet.y + 4} z={Math.round(BATH.toilet.y) - 1} title="🚽 Bồn cầu" />
+          {['pee', 'peesit', 'poop'].some(a => a === p.live.mine.act || (p.partnerHere && a === p.live.theirs?.act)) && <Tag x={BATH.toilet.x + 4} y={BATH.toilet.y - 36} className="label">🚪 Đang bận…</Tag>}
+        </>
+      )}
       {p.dark && <div className="room-night" />}
     </>
   );

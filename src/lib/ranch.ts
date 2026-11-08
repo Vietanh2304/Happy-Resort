@@ -78,13 +78,15 @@ export function homeIn(pen: AnimalDef['pen'], i: number): Pt {
 }
 
 // ───────── Xưởng may ─────────
-export type GarmentType = 'tee' | 'shirt' | 'sweater' | 'hoodie' | 'dress' | 'gown' | 'skirt' | 'aodai' | 'overall';
+export type GarmentType = 'tee' | 'shirt' | 'sweater' | 'hoodie' | 'dress' | 'gown' | 'skirt' | 'aodai' | 'overall' | 'suit' | 'jacket' | 'pajama' | 'sport' | 'hanbok' | 'qipao' | 'cardigan';
 export type Pattern = 'plain' | 'stripe' | 'dots' | 'check' | 'flower' | 'heart';
 export interface Design { type: GarmentType; c1: string; c2: string; trim: string; pattern: Pattern; sleeve: 'none' | 'short' | 'long' | 'puff'; length: 'short' | 'long'; shoes: string; fabric: 'yarn' | 'silk' }
 export const GARMENTS: { id: GarmentType; name: string; icon: string }[] = [
   { id: 'tee', name: 'Áo phông + quần', icon: '👕' }, { id: 'shirt', name: 'Sơ mi + quần', icon: '👔' }, { id: 'sweater', name: 'Áo len', icon: '🧶' },
   { id: 'hoodie', name: 'Áo hoodie', icon: '🧥' }, { id: 'dress', name: 'Váy liền', icon: '👗' }, { id: 'gown', name: 'Đầm dạ hội', icon: '💃' },
   { id: 'skirt', name: 'Áo + chân váy', icon: '🩱' }, { id: 'aodai', name: 'Áo dài', icon: '🎎' }, { id: 'overall', name: 'Yếm', icon: '🧑‍🌾' },
+  { id: 'suit', name: 'Com-lê', icon: '🤵' }, { id: 'jacket', name: 'Áo khoác', icon: '🧥' }, { id: 'pajama', name: 'Đồ ngủ', icon: '😴' }, { id: 'sport', name: 'Đồ thể thao', icon: '🏃' },
+  { id: 'hanbok', name: 'Hanbok', icon: '🎐' }, { id: 'qipao', name: 'Sườn xám', icon: '🏮' }, { id: 'cardigan', name: 'Cardigan', icon: '🧶' },
 ];
 export const PATTERNS: { id: Pattern; name: string }[] = [
   { id: 'plain', name: 'Trơn' }, { id: 'stripe', name: 'Sọc' }, { id: 'dots', name: 'Chấm bi' }, { id: 'check', name: 'Caro' }, { id: 'flower', name: 'Hoa nhí' }, { id: 'heart', name: 'Trái tim' },
@@ -92,5 +94,5 @@ export const PATTERNS: { id: Pattern; name: string }[] = [
 export const PALETTE = ['#f59ab3', '#e8604a', '#f7a98a', '#f6c64e', '#a5d470', '#7cc8b4', '#8db8ef', '#5a6ad0', '#b7a6e8', '#c8a2e8', '#fffaf0', '#c8c0b8', '#6a6a7a', '#3a3a5a', '#8a5a3c', '#2a2030'];
 export const FABRIC_NEED = 2;     // mỗi bộ cần 2 cuộn len hoặc 2 tấm lụa
 /** Giá bán bộ đồ tự may: lụa đắt hơn len, váy dạ hội/áo dài đắt hơn */
-export const designPrice = (d: Design) => (d.fabric === 'silk' ? 260 : 160) + (d.type === 'gown' || d.type === 'aodai' ? 120 : 0) + (d.pattern !== 'plain' ? 40 : 0);
+export const designPrice = (d: Design) => (d.fabric === 'silk' ? 260 : 160) + (['gown', 'aodai', 'suit', 'hanbok', 'qipao'].includes(d.type) ? 120 : 0) + (d.pattern !== 'plain' ? 40 : 0);
 export const DEFAULT_DESIGN: Design = { type: 'dress', c1: '#f59ab3', c2: '#fffaf0', trim: '#fffaf0', pattern: 'dots', sleeve: 'puff', length: 'short', shoes: '#e86a7a', fabric: 'yarn' };

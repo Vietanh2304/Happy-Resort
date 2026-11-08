@@ -112,34 +112,50 @@ export function catchFishQ(userId: string, date: string, cast: number, shore: Sh
   return pickWeighted(seeded(`${userId}:${date}:fish:${cast}:${quality}`), use)!.id;
 }
 
-export interface Plot { plot?: number; crop_id: string; water_days: number; last_watered: string | null }
+export interface Plot { plot?: number; crop_id: string; water_days: number; last_watered: string | null; fert_n?: number; watered_at?: string | null }
 
-// Cây lớn theo giờ thật kể từ lúc gieo (mỗi "ngày" trong danh sách cây = 6 tiếng), và phải được tưới:
-// cây nhanh (≤ 3) tưới 1 lần là đủ, cây lâu (4–5) cần tưới 2 ngày khác nhau. Vd cà rốt 12 tiếng, đào 30 tiếng.
+// Cây lớn qua 3 cấp. Mỗi cấp cần: đủ số lần tưới (mỗi lần cách nhau ≥ 1 tiếng), 1 lần bón phân, và đủ thời gian
+// (mỗi cấp = 1/3 tổng thời gian của loại cây; mỗi "ngày" trong danh sách cây = 6 tiếng). Đủ 3 cấp là chín.
 export const GROW_H = 6;
+export const LEVELS = 3;
+export const WATER_GAP_MS = 55 * 60 * 1000;
 const cropBase = (cropId: string) => content.garden.crops.find(c => c.id === cropId)?.days ?? 3;
 export const cropHours = (cropId: string) => cropBase(cropId) * GROW_H;
-export const waterNeed = (cropId: string) => (cropBase(cropId) >= 4 ? 2 : 1);
-/** Giữ tên cũ cho chỗ cần "số lần tưới" */
+/** Số lần tưới cho mỗi cấp: cây nhanh 2, cây lâu 3 */
+export const waterPerLevel = (cropId: string) => (cropBase(cropId) >= 4 ? 3 : 2);
+export const waterNeed = (cropId: string) => waterPerLevel(cropId) * LEVELS;
 export const cropDays = waterNeed;
-/** Phần trăm lớn (0..1) theo thời gian; chưa tưới lần nào thì hạt chưa nảy mầm */
+const hoursOf = (p: Plot & { planted_at?: string }, now: number) => (p.planted_at ? (now - Date.parse(p.planted_at)) / 3.6e6 : 0);
+/** Cấp đã đạt (0..3) */
+export function plotLevel(p: Plot & { planted_at?: string }, now = Date.now()) {
+  const w = waterPerLevel(p.crop_id), H = cropHours(p.crop_id), h = hoursOf(p, now);
+  let k = 0;
+  while (k < LEVELS && p.water_days >= w * (k + 1) && (p.fert_n ?? 0) >= k + 1 && h >= (H * (k + 1)) / LEVELS) k++;
+  return k;
+}
+/** Phần trăm lớn (0..1) */
 export function growth(p: Plot & { planted_at?: string }, now = Date.now()) {
   if (!p.water_days) return 0;
-  const h = p.planted_at ? (now - Date.parse(p.planted_at)) / 3.6e6 : Infinity;
-  return Math.min(1, h / cropHours(p.crop_id), p.water_days / waterNeed(p.crop_id) >= 1 ? 1 : 0.95);
+  const k = plotLevel(p, now);
+  return Math.min((k + 1) / LEVELS, Math.max(k / LEVELS, hoursOf(p, now) / cropHours(p.crop_id)));
 }
 export function plotStage(p: Plot & { planted_at?: string }, now = Date.now()): 'seed' | 'sprout' | 'ripe' {
-  if (p.water_days >= waterNeed(p.crop_id) && growth(p, now) >= 1) return 'ripe';
+  if (plotLevel(p, now) >= LEVELS) return 'ripe';
   return p.water_days === 0 ? 'seed' : 'sprout';
 }
-export function needsWater(p: Plot & { planted_at?: string }, today: string) {
-  return plotStage(p) !== 'ripe' && p.water_days < waterNeed(p.crop_id) && p.last_watered !== today;
+/** Cấp hiện tại còn thiếu nước và đã qua 1 tiếng từ lần tưới trước */
+export function needsWater(p: Plot & { planted_at?: string }, _today?: string, now = Date.now()) {
+  const k = plotLevel(p, now);
+  if (k >= LEVELS || p.water_days >= waterPerLevel(p.crop_id) * (k + 1)) return false;
+  return !p.watered_at || now - Date.parse(p.watered_at) >= WATER_GAP_MS;
 }
-/** Còn bao lâu nữa thì chín (chữ cho người đọc) */
+export const needsFert = (p: Plot & { planted_at?: string }, now = Date.now()) => { const k = plotLevel(p, now); return k < LEVELS && (p.fert_n ?? 0) < k + 1; };
+/** Còn bao lâu nữa thì đủ thời gian cho cấp kế tiếp */
 export function ripeIn(p: Plot & { planted_at?: string }, now = Date.now()) {
   if (!p.planted_at) return '';
-  const left = Math.max(0, Date.parse(p.planted_at) + cropHours(p.crop_id) * 3.6e6 - now) / 3.6e6;
-  return left >= 1 ? `khoảng ${Math.ceil(left)} tiếng nữa` : `khoảng ${Math.max(1, Math.ceil(left * 60))} phút nữa`;
+  const k = Math.min(LEVELS - 1, plotLevel(p, now));
+  const left = Math.max(0, Date.parse(p.planted_at) + (cropHours(p.crop_id) * (k + 1) / LEVELS) * 3.6e6 - now) / 3.6e6;
+  return left <= 0 ? 'đủ thời gian rồi' : left >= 1 ? `còn khoảng ${Math.ceil(left)} tiếng` : `còn khoảng ${Math.max(1, Math.ceil(left * 60))} phút`;
 }
 
 /** Món nấu được từ túi đồ hiện tại */
@@ -150,5 +166,8 @@ export function canCook(needs: { id: string; n: number }[], inventory: { item_id
 /** Giá bán một món cho hũ xu chung (đồ hiếm được giá gấp đôi) */
 export function sellPrice(itemId: string) {
   const it = item(itemId);
-  return it.price ?? (content.economy.sell[it.kind] ?? 20) * (it.rarity === 'rare' ? 2 : 1);
+  const base = it.price ?? (content.economy.sell[it.kind] ?? 20) * (it.rarity === 'rare' ? 2 : 1);
+  // cửa hàng thu mua luôn rẻ hơn giá bán ra (tối đa nửa giá)
+  const shop = content.shop.find(x => x.id === itemId)?.price;
+  return shop !== undefined ? Math.max(1, Math.min(base, Math.floor(shop / 2))) : base;
 }

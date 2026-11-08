@@ -2,7 +2,7 @@
 // Tọa độ là pixel logic của từng cảnh (trước khi phóng to).
 import { HH, HW } from './iso';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'campus' | 'ranch' | 'office' | 'city';
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'campus' | 'gym' | 'ranch' | 'office' | 'city';
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -39,6 +39,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   office: { name: 'Công ty', icon: '🏢', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 112, y1: 140 }, spawn: { x: 96, y: 138 } },
   ranch: { name: 'Trang trại chăn nuôi', icon: '🐄', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 44, y1: 188 }, spawn: { x: 128, y: 178 } },
   campus: { name: 'Trường học', icon: '🏫', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 100, y1: 180 }, spawn: { x: 128, y: 172 } },
+  gym: { name: 'Nhà thể chất', icon: '🏀', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 86, y1: 140 }, spawn: { x: 96, y: 136 } },
   school: { name: 'Lớp học của bé', icon: '✏️', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 112, y1: 140 }, spawn: { x: 96, y: 138 } },
   sky: { name: 'Bãi nhảy dù', icon: '🪂', w: 192, h: 144, outdoor: true, spawn: { x: 96, y: 118 } },
   hill: { name: 'Đồi ngắm cảnh', icon: '⛰️', w: 192, h: 144, outdoor: true, spawn: { x: 86, y: 124 } },
@@ -135,6 +136,8 @@ export const BATH = {
   seats: [{ ...roomPt(3.1, 3.3, 11), left: false }, { ...roomPt(4.9, 3.3, 11), left: true }] as (Pt & { left: boolean })[],
   stand: roomPt(4, 4.7),
   toBath: roomPt(6.8, 0.4),      // cửa phòng ngủ → phòng tắm (tường phải)
+  toilet: roomPt(0.6, 5.5),      // bồn cầu sát tường trái
+  toiletStand: roomPt(1.6, 5.5),
 };
 
 /** Ô chỉ cấm đặt đồ nhưng vẫn đi qua được (thảm cửa, lối vào phòng tắm) */
@@ -145,7 +148,7 @@ export const RESERVED: Record<string, (x: number, y: number) => boolean> = {
   house: (x, y) => (y < 8 && x === 0 && y <= 4) || (y === WALL_L && (x <= 4 || x >= 6)) || (y === WALL_R && x >= 3 && x <= 5) || (y === 7 && x >= 4 && x <= 5),
   // lối vào phòng tắm (góc tường phải phía trong) để trống, không đặt tủ che cửa
   bedroom: (x, y) => (y < 8 && x >= 6 && y <= 1) || (y === WALL_L && x >= 6) || (y === WALL_R && x >= 3),
-  bathroom: (x, y) => (y < 8 && x >= 2 && x <= 5 && y >= 1 && y <= 3) || (y < 8 && x === 0 && y >= 1 && y <= 2)
+  bathroom: (x, y) => (y < 8 && x >= 2 && x <= 5 && y >= 1 && y <= 3) || (y < 8 && x === 0 && ((y >= 1 && y <= 2) || y === 5))
     || (y === WALL_L && (x >= 6 || (x >= 1 && x <= 2))) || (y === WALL_R && x >= 3 && x <= 5),
   garden: () => false,
   farm: () => false,
@@ -182,3 +185,6 @@ export function walkTarget(scene: SceneId, p: Pt): Pt | null {
   const c = (v: number) => Math.max(0.6, Math.min(ROOM.n - 0.3, v));
   return roomPt(c(gx), c(gy));
 }
+
+/** Động tác ngồi (ghế ngoài sân trường, bồn cầu) */
+export const SIT_ACTS = ['sit', 'poop', 'peesit'];

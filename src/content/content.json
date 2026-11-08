@@ -304,7 +304,8 @@
       "id": "watermelon",
       "name": "Dưa hấu",
       "icon": "🍉",
-      "kind": "trinket"
+      "kind": "trinket",
+      "price": 42
     },
     {
       "id": "mooncake",
@@ -503,37 +504,43 @@
       "id": "carrot",
       "name": "Cà rốt",
       "icon": "🥕",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 26
     },
     {
       "id": "potato",
       "name": "Khoai tây",
       "icon": "🥔",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 26
     },
     {
       "id": "rice",
       "name": "Lúa",
       "icon": "🌾",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 34
     },
     {
       "id": "tomato",
       "name": "Cà chua",
       "icon": "🍅",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 34
     },
     {
       "id": "corn",
       "name": "Ngô",
       "icon": "🌽",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 34
     },
     {
       "id": "strawberry",
       "name": "Dâu tây",
       "icon": "🍓",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 42
     },
     {
       "id": "sushi",
@@ -919,79 +926,92 @@
       "id": "cabbage",
       "name": "Cải thảo",
       "icon": "🥬",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 34
     },
     {
       "id": "chili",
       "name": "Ớt",
       "icon": "🌶️",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 26
     },
     {
       "id": "eggplant",
       "name": "Cà tím",
       "icon": "🍆",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 34
     },
     {
       "id": "grape",
       "name": "Nho",
       "icon": "🍇",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 42
     },
     {
       "id": "squash",
       "name": "Bí đỏ",
       "icon": "🎃",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 42
     },
     {
       "id": "garlic",
       "name": "Tỏi",
       "icon": "🧄",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 26
     },
     {
       "id": "peach_fruit",
       "name": "Quả đào",
       "icon": "🍑",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 50
     },
     {
       "id": "rose_bloom",
       "name": "Hoa hồng",
       "icon": "🌹",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 34
     },
     {
       "id": "tulip_bloom",
       "name": "Hoa tulip",
       "icon": "🌷",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 26
     },
     {
       "id": "lavender",
       "name": "Oải hương",
       "icon": "🪻",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 34
     },
     {
       "id": "daisy_bloom",
       "name": "Hoa cúc",
       "icon": "🌼",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 26
     },
     {
       "id": "sunflower_bloom",
       "name": "Bông hướng dương",
       "icon": "🌻",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 34
     },
     {
       "id": "sakura_bloom",
       "name": "Hoa anh đào",
       "icon": "🌸",
-      "kind": "crop"
+      "kind": "crop",
+      "price": 42
     },
     {
       "id": "kimchi_stew",
@@ -1519,6 +1539,209 @@
       "icon": "🍭",
       "kind": "dish",
       "price": 8
+    },
+    {
+      "id": "ca_phe_sua",
+      "name": "Cà phê sữa đá",
+      "icon": "☕",
+      "kind": "dish",
+      "price": 15
+    },
+    {
+      "id": "bac_xiu",
+      "name": "Bạc xỉu",
+      "icon": "🥛",
+      "kind": "dish",
+      "price": 15
+    },
+    {
+      "id": "croissant",
+      "name": "Bánh sừng bò",
+      "icon": "🥐",
+      "kind": "dish",
+      "price": 18
+    },
+    {
+      "id": "tiramisu",
+      "name": "Bánh tiramisu",
+      "icon": "🍰",
+      "kind": "dish",
+      "price": 23
+    },
+    {
+      "id": "mi_ly",
+      "name": "Mì ly",
+      "icon": "🍜",
+      "kind": "dish",
+      "price": 10
+    },
+    {
+      "id": "sandwich",
+      "name": "Bánh sandwich",
+      "icon": "🥪",
+      "kind": "dish",
+      "price": 13
+    },
+    {
+      "id": "onigiri",
+      "name": "Cơm nắm",
+      "icon": "🍙",
+      "kind": "dish",
+      "price": 9
+    },
+    {
+      "id": "sua_chuoi",
+      "name": "Sữa chuối",
+      "icon": "🍼",
+      "kind": "dish",
+      "price": 8
+    },
+    {
+      "id": "keo_deo",
+      "name": "Kẹo dẻo",
+      "icon": "🍬",
+      "kind": "dish",
+      "price": 5
+    },
+    {
+      "id": "seed_carrot",
+      "name": "Hạt giống cà rốt",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 6
+    },
+    {
+      "id": "seed_potato",
+      "name": "Hạt giống khoai tây",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 6
+    },
+    {
+      "id": "seed_rice",
+      "name": "Hạt giống lúa",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 9
+    },
+    {
+      "id": "seed_tomato",
+      "name": "Hạt giống cà chua",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 9
+    },
+    {
+      "id": "seed_corn",
+      "name": "Hạt giống ngô",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 9
+    },
+    {
+      "id": "seed_strawberry",
+      "name": "Hạt giống dâu tây",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 12
+    },
+    {
+      "id": "seed_cabbage",
+      "name": "Hạt giống cải thảo",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 9
+    },
+    {
+      "id": "seed_chili",
+      "name": "Hạt giống ớt",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 6
+    },
+    {
+      "id": "seed_eggplant",
+      "name": "Hạt giống cà tím",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 9
+    },
+    {
+      "id": "seed_watermelon",
+      "name": "Hạt giống dưa hấu",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 12
+    },
+    {
+      "id": "seed_grape",
+      "name": "Hạt giống nho",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 12
+    },
+    {
+      "id": "seed_squash",
+      "name": "Hạt giống bí đỏ",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 12
+    },
+    {
+      "id": "seed_garlic",
+      "name": "Hạt giống tỏi",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 6
+    },
+    {
+      "id": "seed_peach_fruit",
+      "name": "Hạt giống quả đào",
+      "icon": "🌱",
+      "kind": "goods",
+      "price": 15
+    },
+    {
+      "id": "seed_rose_bloom",
+      "name": "Hạt giống hoa hồng",
+      "icon": "🌰",
+      "kind": "goods",
+      "price": 9
+    },
+    {
+      "id": "seed_tulip_bloom",
+      "name": "Hạt giống hoa tulip",
+      "icon": "🌰",
+      "kind": "goods",
+      "price": 6
+    },
+    {
+      "id": "seed_lavender",
+      "name": "Hạt giống oải hương",
+      "icon": "🌰",
+      "kind": "goods",
+      "price": 9
+    },
+    {
+      "id": "seed_daisy_bloom",
+      "name": "Hạt giống hoa cúc",
+      "icon": "🌰",
+      "kind": "goods",
+      "price": 6
+    },
+    {
+      "id": "seed_sunflower_bloom",
+      "name": "Hạt giống bông hướng dương",
+      "icon": "🌰",
+      "kind": "goods",
+      "price": 9
+    },
+    {
+      "id": "seed_sakura_bloom",
+      "name": "Hạt giống hoa anh đào",
+      "icon": "🌰",
+      "kind": "goods",
+      "price": 12
     }
   ],
   "animals": [
@@ -2463,7 +2686,7 @@
     "keepsake": "keepsake"
   },
   "fishing": {
-    "castsPerDay": 8,
+    "castsPerDay": 100000,
     "fish": [
       {
         "id": "fish_goby",
@@ -3246,7 +3469,7 @@
     },
     {
       "id": "fertilizer",
-      "price": 10,
+      "price": 8,
       "cat": "garden"
     },
     {
@@ -3285,99 +3508,104 @@
       "cat": "decor"
     },
     {
-      "id": "fish_goby",
-      "price": 40,
-      "cat": "food"
+      "id": "seed_carrot",
+      "price": 12,
+      "cat": "seed"
     },
     {
-      "id": "rice",
-      "price": 15,
-      "cat": "food"
+      "id": "seed_potato",
+      "price": 12,
+      "cat": "seed"
     },
     {
-      "id": "shrimp",
-      "price": 40,
-      "cat": "food"
+      "id": "seed_rice",
+      "price": 18,
+      "cat": "seed"
     },
     {
-      "id": "potato",
-      "price": 15,
-      "cat": "food"
+      "id": "seed_tomato",
+      "price": 18,
+      "cat": "seed"
     },
     {
-      "id": "tomato",
-      "price": 22,
-      "cat": "food"
+      "id": "seed_corn",
+      "price": 18,
+      "cat": "seed"
     },
     {
-      "id": "carrot",
-      "price": 15,
-      "cat": "food"
+      "id": "seed_strawberry",
+      "price": 24,
+      "cat": "seed"
     },
     {
-      "id": "corn",
-      "price": 22,
-      "cat": "food"
+      "id": "seed_cabbage",
+      "price": 18,
+      "cat": "seed"
     },
     {
-      "id": "strawberry",
-      "price": 25,
-      "cat": "food"
+      "id": "seed_chili",
+      "price": 12,
+      "cat": "seed"
     },
     {
-      "id": "coconut",
-      "price": 25,
-      "cat": "food"
+      "id": "seed_eggplant",
+      "price": 18,
+      "cat": "seed"
     },
     {
-      "id": "squid",
-      "price": 45,
-      "cat": "food"
+      "id": "seed_watermelon",
+      "price": 24,
+      "cat": "seed"
     },
     {
-      "id": "lobster",
-      "price": 90,
-      "cat": "food"
+      "id": "seed_grape",
+      "price": 24,
+      "cat": "seed"
     },
     {
-      "id": "cabbage",
-      "price": 22,
-      "cat": "food"
+      "id": "seed_squash",
+      "price": 24,
+      "cat": "seed"
     },
     {
-      "id": "chili",
-      "price": 22,
-      "cat": "food"
+      "id": "seed_garlic",
+      "price": 12,
+      "cat": "seed"
     },
     {
-      "id": "grape",
-      "price": 25,
-      "cat": "food"
-    },
-    {
-      "id": "watermelon",
+      "id": "seed_peach_fruit",
       "price": 30,
-      "cat": "food"
+      "cat": "seed"
     },
     {
-      "id": "squash",
-      "price": 22,
-      "cat": "food"
+      "id": "seed_rose_bloom",
+      "price": 18,
+      "cat": "seed"
     },
     {
-      "id": "garlic",
-      "price": 22,
-      "cat": "food"
+      "id": "seed_tulip_bloom",
+      "price": 12,
+      "cat": "seed"
     },
     {
-      "id": "eggplant",
-      "price": 22,
-      "cat": "food"
+      "id": "seed_lavender",
+      "price": 18,
+      "cat": "seed"
     },
     {
-      "id": "peach_fruit",
-      "price": 28,
-      "cat": "food"
+      "id": "seed_daisy_bloom",
+      "price": 12,
+      "cat": "seed"
+    },
+    {
+      "id": "seed_sunflower_bloom",
+      "price": 18,
+      "cat": "seed"
+    },
+    {
+      "id": "seed_sakura_bloom",
+      "price": 24,
+      "cat": "seed"
     }
   ],
   "dinner": {

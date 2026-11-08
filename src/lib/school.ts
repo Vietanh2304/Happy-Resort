@@ -150,6 +150,8 @@ export const PERIOD: Record<Period, { icon: string; label: string; time: string 
   closed: { icon: '🌙', label: 'Trường nghỉ', time: '' },
 };
 export const SCHEDULE = '7:30 chào cờ · 8:00 vào lớp · 9:30 ra chơi · 11:00 ăn trưa · 12:00 ngủ trưa · 13:00 học · 14:30 thể dục · 16:30 tan học';
+/** Môn thể dục trong nhà (hoặc trời mưa / tuyết thì cả lớp vào nhà thể chất) */
+export const peIndoor = (game: string, weather?: string | null) => ['aerobic', 'rope', 'hoop'].includes(game) || ['rain', 'snow', 'storm'].includes(weather ?? '');
 /** Trong lớp chỉ có học sinh khi đang giờ học / ngủ trưa */
 export const inClassroom = (p: Period) => p === 'class' || p === 'nap';
 
@@ -171,9 +173,11 @@ export const CLASSMATE_NPC = ['Bin', 'Na', 'Tí', 'Mi', 'Bông', 'Cún', 'Bơ', 
 export const MATE_CHATTER = ['Chơi đuổi bắt không?', 'Tớ được cô khen đó!', 'Trưa nay có cơm gà 😋', 'Ê nhảy dây đi!', 'Hihi', 'Tớ quên vở rồi 😱', 'Bạn là ba mẹ của… hả?', 'Chào cô chú ạ! 👋'];
 
 /** Đồ ăn ở trường: nhà ăn (cơm trưa) + 2 xe hàng trước cổng. price = giá mua (bán lại được nửa giá) */
-export type StallId = 'canteen' | 'bread' | 'sweet';
+export type StallId = 'canteen' | 'bread' | 'sweet' | 'citycafe' | 'store';
 export const STALLS: Record<StallId, { icon: string; name: string; vendor: string; hello: string; menu: { id: string; price: number }[] }> = {
   canteen: { icon: '🍱', name: 'Nhà ăn của trường', vendor: 'Cô cấp dưỡng', hello: 'Cơm trưa nóng hổi đây, ăn cho mau lớn nha!', menu: [{ id: 'com_ga', price: 40 }, { id: 'com_suon', price: 45 }, { id: 'canh_bi', price: 25 }, { id: 'sua_hop', price: 15 }, { id: 'chuoi', price: 10 }] },
   bread: { icon: '🥖', name: 'Xe bánh mì cô Tư', vendor: 'Cô Tư', hello: 'Bánh mì nóng giòn mới ra lò nè!', menu: [{ id: 'banh_mi', price: 25 }, { id: 'xoi_gac', price: 20 }, { id: 'bap_xao', price: 20 }, { id: 'nuoc_mia', price: 15 }] },
+  citycafe: { icon: '☕', name: 'Quán cà phê góc phố', vendor: 'Anh barista', hello: 'Chào buổi sáng! Uống gì cho tỉnh táo đi làm nè?', menu: [{ id: 'ca_phe_sua', price: 30 }, { id: 'bac_xiu', price: 30 }, { id: 'croissant', price: 35 }, { id: 'tiramisu', price: 45 }] },
+  store: { icon: '🏪', name: 'Cửa hàng tiện lợi 24h', vendor: 'Bạn thu ngân', hello: 'Xin chào quý khách! Hôm nay có khuyến mãi mì ly đó ạ.', menu: [{ id: 'mi_ly', price: 20 }, { id: 'sandwich', price: 25 }, { id: 'onigiri', price: 18 }, { id: 'sua_chuoi', price: 15 }, { id: 'keo_deo', price: 10 }] },
   sweet: { icon: '🍦', name: 'Xe kem & bánh tráng', vendor: 'Chú Bảy', hello: 'Kem mát lạnh, bánh tráng trộn đây các con ơi!', menu: [{ id: 'kem_que', price: 15 }, { id: 'banh_trang', price: 20 }, { id: 'tra_sua', price: 30 }, { id: 'keo_bong', price: 15 }] },
 };

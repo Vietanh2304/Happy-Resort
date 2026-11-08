@@ -16,6 +16,18 @@ export function BagSheet({ inventory, partner, onClose }: { inventory: api.InvRo
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
 
+  async function eat() {
+    if (!picked) return;
+    setBusy(true);
+    try {
+      await api.craft([{ id: picked, n: 1 }]);
+      await api.claim(`aff:${new Date().toISOString().slice(0, 10)}:${Date.now()}`);
+      toast(`🍽️ Ăn ${item(picked).icon} ${item(picked).name} ngon quá! +1 💗 thiện cảm`);
+      notify('inventory', 'claims');
+      if ((inventory.find(r => r.item_id === picked)?.qty ?? 0) <= 1) setPicked(null);
+    } catch (e) { toastError(e); }
+    setBusy(false);
+  }
   async function give() {
     if (!picked) return;
     setBusy(true);
@@ -57,6 +69,7 @@ export function BagSheet({ inventory, partner, onClose }: { inventory: api.InvRo
       })}
       {picked && (
         <div className="gift-box stack">
+          {['dish', 'crop'].includes(item(picked).kind) && <button className="btn" disabled={busy} onClick={eat}>🍽️ Ăn ngay (+1 💗 thiện cảm)</button>}
           <b>Tặng {item(picked).icon} {item(picked).name} cho {partner?.display_name || 'người ấy'}?</b>
           <input value={note} maxLength={120} onChange={e => setNote(e.target.value)} placeholder="Kèm lời nhắn (không bắt buộc)" />
           <button className="btn" disabled={busy || !partner} onClick={give}>{partner ? 'Gửi qua cầu 🎁' : 'Người ấy chưa vào resort'}</button>

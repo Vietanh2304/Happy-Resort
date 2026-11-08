@@ -13,7 +13,7 @@ import type { HillSky } from '../lib/townSprites';
 import { useGuests } from '../lib/useGuests';
 import { shared, useLive } from '../lib/useLive';
 import { useCall } from '../lib/useCall';
-import { loadMusicPref, music, saveMusicPref } from '../lib/music';
+import { loadMusicPref, music, saveMusicPref, type Mood } from '../lib/music';
 import { occupant } from '../lib/placement';
 import { weatherIcon } from '../lib/weather';
 import { villageWeather } from '../lib/villageWeather';
@@ -42,7 +42,7 @@ import { kidStage } from '../lib/kids';
 import { newJob, type JobData } from '../lib/work';
 import { atSchool, SCHOOL } from '../lib/school';
 import { logName } from '../lib/reef';
-import { CafePanel, LoungePanel, CampPanel, WheelPanel } from './Places';
+import { CafePanel, LoungePanel, CampPanel, WheelPanel, Chat, status as placeStatus } from './Places';
 import { PLANE_NOTES, Postcard, type TwinPlane } from './Twin';
 import { FishMeter, type Zone } from './FishMeter';
 import { DanceBar } from './Disco';
@@ -123,6 +123,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Tin nhắn chung; null = chưa chạy migration 012 (bảng messages chưa có)
   const [messages, , messagesReady] = useSynced('chat', () => api.loadMessages().catch(e => { if (/messages|schema cache|does not exist/i.test(String(e?.message ?? e))) return null; throw e; }), [] as api.Message[] | null);
   const [bridge, reloadBridge] = useSynced('checkins', () => api.loadBridge(myTime.date), { planks: 0, todayIds: [] as string[] }, [myTime.date]);
+  const [affection] = useSynced('claims', () => api.loadAffection([me.id, ...(partner ? [partner.id] : [])]), 0, [partner?.id]);
   const [claimed, , claimsLoaded] = useSynced('claims', () => api.loadClaimsOn(me.id, myTime.date), [] as string[], [myTime.date]);
   // Quà mỗi ngày: lần đầu vào game trong ngày thì hộp quà tự hiện
   const giftOpen = !claimed.includes(`gift:${myTime.date}`);
@@ -267,7 +268,6 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     setFishing(null);
   }
   function startFishing() {
-    if (castsUsed >= content.fishing.castsPerDay) return toast('🎣 Hôm nay câu đủ rồi, mai cá lại cắn câu nhé');
     live.update({ act: 'fishing' });
     setFishing('wait');
     fishTimers.current.push(setTimeout(() => setFishing('bite'), 1500 + Math.random() * 3500));
@@ -289,7 +289,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     run(async () => {
       await api.claim(`fish:${myTime.date}:${n}`, [{ id: fishId, n: 1 }]);
       live.say(item(fishId).icon);
-      toast(`${z === 'green' ? '🎯 Chuẩn! ' : '😅 '}Câu được ${item(fishId).icon} ${item(fishId).name}! (còn ${content.fishing.castsPerDay - n - 1} lượt)`);
+      toast(`${z === 'green' ? '🎯 Chuẩn! ' : '😅 '}Câu được ${item(fishId).icon} ${item(fishId).name}!`);
       notify('claims', 'inventory', 'collection');
     });
   }
@@ -306,7 +306,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     await api.farmPlant(cell, cropId);
     setSheet(null);
     live.say('🌱');
-    toast(`🌱 Đã gieo ${item(cropId).name}. Nhớ tưới mỗi ngày nhé!`);
+    toast(`🌱 Đã gieo ${item(cropId).name}. Nhớ tưới nước và bón phân để cây lên cấp nhé!`);
+    notify('inventory');
     notify('farm');
   });
   const farmDo = (kind: 'water' | 'fertilize' | 'harvest' | 'clear', cell: number) => run(async () => {
@@ -317,7 +318,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       setTimeout(() => { if (live.mine.act === 'water') live.update({ act: null }); }, 1800);
       await api.farmWater(cell, myTime.date);
     }
-    if (kind === 'fertilize') { await api.farmFertilize(cell); toast('🧪 Đã bón phân — mùa này được gấp đôi!'); notify('inventory'); }
+    if (kind === 'fertilize') { await api.farmFertilize(cell); toast('🧪 Đã bón phân — cây sẵn sàng lên cấp!'); notify('inventory'); }
     if (kind === 'harvest') {
       const n = content.garden.harvest * (row.fertilized ? 2 : 1);
       await api.farmHarvest(cell, content.garden.harvest);
@@ -487,7 +488,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Người ấy vừa vào rạp/nhà hàng → rủ mình
   const theirScene = theirs?.scene;
   useEffect(() => {
-    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky', 'school', 'campus'].includes(theirScene) && theirScene !== scene) {
+    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky', 'school', 'campus', 'gym'].includes(theirScene) && theirScene !== scene) {
       toast(`${SCENES[theirScene].icon} ${partnerName} đang đợi bạn ở ${SCENES[theirScene].name}`);
     }
   }, [theirScene]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -775,12 +776,13 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   }
 
   // ───── Hiển thị ─────
+  const [discoMood, setDiscoMood] = useState<Mood>('waltz');
   const editIsland = scene === 'house' || scene === 'bedroom' || scene === 'bathroom' ? scene : scene === 'town' ? 'garden' : scene === 'farm' ? 'farm' : null;
   const plantedAt = (x: number, y: number) => farm.some(r => r.cell === farmCell(x, y));
   const editor = useDecorEditor(inventory, { island: editing ? editIsland : null, decor, blocked: editIsland === 'farm' ? plantedAt : undefined });
   useEffect(() => {
-    music.setMood(live.mine.act === 'intimate' ? 'love' : live.mine.act === 'sleep' ? 'night' : scene === 'cafe' ? 'cafe' : scene === 'camp' ? 'camp' : scene === 'beach' || scene === 'lounge' ? 'sea' : scene === 'reef' ? 'deep' : scene === 'sky' ? 'sky' : ['hill', 'bathroom', 'restaurant', 'wheel'].includes(scene) || theme === 'romantic' ? 'love' : myView.phase === 'night' || myView.phase === 'sunset' ? 'night' : 'day');
-  }, [myView.phase, scene, theme, live.mine.act]);
+    music.setMood(scene === 'disco' ? discoMood : live.mine.act === 'intimate' ? 'love' : live.mine.act === 'sleep' ? 'night' : scene === 'cafe' ? 'cafe' : scene === 'camp' ? 'camp' : scene === 'beach' || scene === 'lounge' ? 'sea' : scene === 'reef' ? 'deep' : scene === 'sky' ? 'sky' : ['hill', 'bathroom', 'restaurant', 'wheel'].includes(scene) || theme === 'romantic' ? 'love' : myView.phase === 'night' || myView.phase === 'sunset' ? 'night' : 'day');
+  }, [myView.phase, scene, theme, live.mine.act, discoMood]);
   const capsulesReady = capsules.filter(c => c.to_id === me.id && !c.opened_at && c.body !== null).length;
   const unread = notes.filter(n => n.to_id === me.id && !n.read_at).length + capsulesReady;
   // ───── Thông báo khi đang chạy nền ─────
@@ -806,6 +808,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     beach: ['town', { x: TOWN.toBeach.x, y: TOWN.toBeach.y - 6 }, '🏘️ Về làng'],
   };
   const exit = !editing && !fishing && !inBed && !festIcon ? EXITS[scene] : undefined;
+  // Nhà thể chất: ném bóng rổ (vui thôi, đôi khi vào rổ)
+  const shoot3 = () => { const ok = Math.random() < 0.45; live.say(ok ? '🏀 Vàoooo! 🎉' : '🏀 Ối, trượt rồi 😅'); };
   const wxIcon = (v: View | null) => (v?.weather ? (v.weather.type === 'clear' && v.phase === 'night' ? '🌙' : weatherIcon[v.weather.type]) : '');
 
   return (
@@ -829,6 +833,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <button className={`chip hud-toggle ${fests.length || combos.length || expecting || quizLeft ? 'ping' : ''}`} onClick={() => setHudOpen(v => !v)} aria-label="Thêm">{hudOpen ? '✕' : '☰'}</button>
         <span className={`hud-more ${hudOpen ? 'open' : ''}`} onClick={e => { if ((e.target as HTMLElement).closest('button:not([data-keep])')) setHudOpen(false); }}>
         <span title="Số ngày cả hai cùng ghé">💞 {bridge.planks}</span>
+        <span title="Điểm thiện cảm — mỗi lần ăn một món +1">💗 {affection}</span>
         <button className={`chip ${quizLeft ? 'glow' : ''}`} onClick={() => setSheet({ kind: 'quizday' })}>🧠 Đố vui {quizRight}/5</button>
         <span title="Trời trong làng">{wxIcon(myView)} {myWeather.temp}° · {clock(myTime)}</span>
         {combos.map(c => {
@@ -913,13 +918,21 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onLeaveTub={() => live.update({ act: null, pos: BATH.stand })}
           onSplash={() => doAct('splash')}
           onLeaveRoom={() => enter('bedroom', BATH.toBath)}
+          onToilet={kind => {
+            const sit = kind === 'poop' || me.avatar.gender !== 'm';     // nam tè đứng, nữ tè ngồi, đi nặng thì cùng ngồi
+            go(BATH.toiletStand, () => {
+              live.update({ act: kind === 'poop' ? 'poop' : sit ? 'peesit' : 'pee', pos: sit ? BATH.toilet : BATH.toiletStand });
+              live.say(kind === 'poop' ? '💩' : '💧');
+              setTimeout(() => { if (['pee', 'peesit', 'poop'].includes(live.mine.act ?? '')) { live.update({ act: null, pos: BATH.toiletStand }); live.say('🧼'); toast('🚽 Xong! Nhớ rửa tay nhé 🧼'); } }, kind === 'poop' ? 6000 : 3500);
+            });
+          }}
         />
       ) : inBed ? (
         <BedPanel live={live} mode={live.mine.act === 'intimate' ? 'intimate' : 'sleep'} together={!!partnerHere && theirs?.bed === live.mine.bed} callThem={callThem} onWake={wake} />
       ) : festIcon && theme && scene === 'town' ? (
         <FestTray theme={theme} icon={festIcon} onPick={setFestIcon} onDone={() => setFestIcon(null)} />
       ) : scene === 'disco' ? (
-        <DanceBar me={me} them={partner?.id ?? ''} themName={partnerName} date={myTime.date} onMove={danceMove} onLeave={() => enter('town', { x: TOWN.fountain.x, y: TOWN.fountain.y + 28 })} />
+        <DanceBar onSong={setDiscoMood} me={me} them={partner?.id ?? ''} themName={partnerName} date={myTime.date} onMove={danceMove} onLeave={() => enter('town', { x: TOWN.fountain.x, y: TOWN.fountain.y + 28 })} />
       ) : scene === 'twin' ? (
         <div className="room-bar">
           <div className="room-panel">
@@ -945,6 +958,20 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <CampusPanel live={live} kids={kids} when={myTime} partnerHere={!!partnerHere} partnerName={partnerName}
           onClass={() => enter('school')} onStall={id => setSheet({ kind: 'stall', id })} onLeave={() => enter('town', SCHOOL.door)}
           onPickup={k => { enter('town', SCHOOL.door); live.update({ walkKid: k.id }); toast(`🎒 Đón bé ${k.name} tan học — bé nắm tay đi về cùng bạn`); }} />
+      ) : scene === 'gym' ? (
+        <div className="room-bar">
+          <div className="room-panel">
+            {placeStatus(!!partnerHere, partnerName, `Rủ ${partnerName} vào nhà thể chất chơi bóng rổ nhé 🏀`)}
+            <p className="muted small-note">🏀 Giờ thể dục (14:30–15:30) các môn nhảy dây, bóng rổ, nhịp điệu học trong này; trời mưa hay có tuyết thì cả lớp đều vào đây.</p>
+            <div className="row wrap">
+              <button className="btn small" onClick={shoot3}>🏀 Ném bóng rổ</button>
+              <button className="btn small ghost" onClick={() => live.say('🤸 Lộn một vòng trên đệm!')}>🤸 Nhào lộn</button>
+              <button className="btn small ghost" onClick={() => live.say('🏃 Chạy một vòng sân nè!')}>🏃 Chạy vòng</button>
+            </div>
+            <Chat live={live} placeholder="Nói gì đó…" />
+          </div>
+          <button className="btn small ghost leave" onClick={() => enter('campus', CAMPUS.gym.door)}>🚪 Ra sân trường</button>
+        </div>
       ) : scene === 'reef' ? (
         <ReefPanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} seen={reefSeen} onLeave={() => enter('lounge')} />
       ) : scene === 'sky' ? (
@@ -1081,7 +1108,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       })()}
       {kitchenOpen && <KitchenRoom me={me} partner={partner} inventory={inventory} date={myTime.date} onLeave={() => setKitchenOpen(false)} />}
       {sheet?.kind === 'shop' && <ShopSheet coins={couple?.coins ?? 0} inventory={inventory} onClose={close} />}
-      {sheet?.kind === 'seed' && <SeedSheet onPick={c => sow(sheet.cell, c)} onClose={close} />}
+      {sheet?.kind === 'seed' && <SeedSheet inventory={inventory} onPick={c => sow(sheet.cell, c)} onClose={close} />}
       {sheet?.kind === 'plot' && farm.find(r => r.cell === sheet.cell) && (
         <PlotSheet row={farm.find(r => r.cell === sheet.cell)!} today={myTime.date} fertilizer={fertilizer}
           onWater={() => farmDo('water', sheet.cell)} onFertilize={() => farmDo('fertilize', sheet.cell)}

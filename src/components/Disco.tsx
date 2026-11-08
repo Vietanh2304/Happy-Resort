@@ -2,6 +2,7 @@
 // Hai người cùng trúng một nhịp = "đồng điệu" 💞. Đồng bộ bằng kênh trò chơi 'dance'.
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import * as api from '../lib/api';
+import { DANCE_SONGS, type Mood } from '../lib/music';
 import { seeded } from '../lib/rng';
 import { reward, useGameChannel, type Msg } from './gameKit';
 
@@ -10,20 +11,22 @@ export const BEATS = 32, BEAT_MS = 1200, WINDOW = 340, AHEAD = 6500;
 const DIRS = [{ k: 'ArrowLeft', icon: '⬅️' }, { k: 'ArrowUp', icon: '⬆️' }, { k: 'ArrowDown', icon: '⬇️' }, { k: 'ArrowRight', icon: '➡️' }];
 /** Động tác ứng với mũi tên và nhịp (mỗi mũi tên có 2 kiểu cho đỡ nhàm) */
 export const moveOf = (d: number, k: number) => (d * 2 + (k % 2)) % 8;
-interface State { at: number; seed: number; hits: Record<string, number[]> }
+interface State { at: number; seed: number; song: number; hits: Record<string, number[]> }
 
-export function DanceBar({ me, them, themName, date, onMove, onLeave }: {
-  me: api.Profile; them: string; themName: string; date: string;
+export function DanceBar({ me, them, themName, date, onMove, onLeave, onSong }: {
+  me: api.Profile; them: string; themName: string; date: string; onSong: (m: Mood) => void;
   onMove: (who: 'me' | 'them', move: number, both: boolean) => void; onLeave: () => void;
 }) {
   const stRef = useRef<State | null>(null);
   const seqRef = useRef<number[]>([]);
   const [st, dispatch] = useReducer((s: State, m: Msg): State => {
     if (m.t === 'state' && m.by !== me.id && !s.at) return m.st;
-    if (m.t === 'new') return { at: m.at, seed: m.seed, hits: {} };
+    if (m.t === 'new') return { at: m.at, seed: m.seed, song: m.song ?? 0, hits: {} };
     if (m.t === 'hit') return (s.hits[m.by] ?? []).includes(m.k) ? s : { ...s, hits: { ...s.hits, [m.by]: [...(s.hits[m.by] ?? []), m.k] } };
     return s;
-  }, { at: 0, seed: 0, hits: {} });
+  }, { at: 0, seed: 0, song: 0, hits: {} });
+  const [pick, setPick] = useState(0);
+  useEffect(() => { onSong(DANCE_SONGS[st.at ? st.song : pick].mood); }, [st.at, st.song, pick]); // eslint-disable-line react-hooks/exhaustive-deps
   stRef.current = st;
   const send = useGameChannel('dance', me.id, m => {
     if (m.t === 'hello' && m.by !== me.id && stRef.current?.at) send('state', { st: stRef.current });
@@ -68,9 +71,10 @@ export function DanceBar({ me, them, themName, date, onMove, onLeave }: {
         {running ? <span>💃 Bạn {mine.length} · {themName} {theirs.length} · <b>💞 Đồng điệu {sync}</b></span>
           : over ? <span>🎉 Đồng điệu <b>{sync}/{BEATS}</b> · Bạn {mine.length} · {themName} {theirs.length} — {sync >= 22 ? 'Cặp đôi sàn nhảy! 🔥' : sync >= 12 ? 'Ăn ý ghê 💞' : 'Nhảy thêm vài bài nữa nào 😆'}</span>
             : st.at && now < st.at ? <span>🎶 Vào nhạc… {Math.ceil((st.at - now) / 1000)}</span>
-              : <span>💃 Nhạc waltz: mũi tên chạy tới vòng tròn thì bấm đúng hướng (máy tính: phím mũi tên) — mỗi nhịp trúng là một động tác khiêu vũ đôi. Cùng trúng một nhịp = 💞</span>}
+              : <span>💃 {DANCE_SONGS[pick].name}: mũi tên chạy tới vòng tròn thì bấm đúng hướng (máy tính: phím mũi tên) — mỗi nhịp trúng là một động tác khiêu vũ đôi. Cùng trúng một nhịp = 💞</span>}
         <div className="row">
-          {!running && <button className="btn small" onClick={() => send('new', { at: Date.now() + 3000, seed: Date.now() })}>{st.at ? '🔄 Bài khác' : '🎶 Bắt đầu nhảy'}</button>}
+          {!running && DANCE_SONGS.map((sg, i) => <button key={sg.mood} className={`chip ${pick === i ? 'on' : ''}`} onClick={() => setPick(i)}>{sg.name}</button>)}
+          {!running && <button className="btn small" onClick={() => send('new', { at: Date.now() + 3000, seed: Date.now(), song: pick })}>{st.at ? '🔄 Bài khác' : '🎶 Bắt đầu nhảy'}</button>}
           <button className="btn small ghost" onClick={onLeave}>🚪 Ra ngoài</button>
         </div>
       </div>

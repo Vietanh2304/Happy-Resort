@@ -39,15 +39,17 @@ function Walker({ i }: { i: number }) {
   );
 }
 
-export function CityContent({ go, onOffice, onHome, night }: { go: (to: Pt, then?: () => void) => void; onOffice: () => void; onHome: () => void; night: boolean }) {
+export function CityContent({ go, onOffice, onHome, onStall, night }: { go: (to: Pt, then?: () => void) => void; onOffice: () => void; onHome: () => void; onStall: (id: 'citycafe' | 'store') => void; night: boolean }) {
   const s = useScale();
   const cars = ['#e8604a', '#5aa8e0', '#fffaf0', '#2a2a3a', '#f6c64e', '#a5d470'];
   return (
     <>
       <Tag x={CITY.company.x} y={4} className="label" onClick={() => go(CITY.company.door, onOffice)}>🏢 Công ty — vào làm</Tag>
       <button className="hot" title="Vào công ty" style={{ left: 112 * s, top: 84 * s, width: 32 * s, height: 20 * s }} onClick={e => { e.stopPropagation(); go(CITY.company.door, onOffice); }} />
-      <Tag x={36} y={84} className="label">☕ Cà phê</Tag>
-      <Tag x={196} y={50} className="label">🏪 Tiện lợi</Tag>
+      <Tag x={36} y={84} className="label" onClick={() => go({ x: 36, y: 108 }, () => onStall('citycafe'))}>☕ Cà phê</Tag>
+      <button className="hot" title="Vào quán cà phê" style={{ left: 28 * s, top: 92 * s, width: 16 * s, height: 12 * s }} onClick={e => { e.stopPropagation(); go({ x: 36, y: 108 }, () => onStall('citycafe')); }} />
+      <Tag x={196} y={50} className="label" onClick={() => go({ x: 196, y: 108 }, () => onStall('store'))}>🏪 Tiện lợi</Tag>
+      <button className="hot" title="Vào cửa hàng tiện lợi" style={{ left: 182 * s, top: 92 * s, width: 28 * s, height: 12 * s }} onClick={e => { e.stopPropagation(); go({ x: 196, y: 108 }, () => onStall('store')); }} />
       <Tag x={CITY.bus.x} y={86} className="label" onClick={() => go(CITY.bus.stand, onHome)}>🚌 Về làng</Tag>
       <button className="hot" title="Trạm xe buýt — về làng" style={{ left: 224 * s, top: 94 * s, width: 24 * s, height: 22 * s }} onClick={e => { e.stopPropagation(); go(CITY.bus.stand, onHome); }} />
       {/* Xe cộ hai chiều */}

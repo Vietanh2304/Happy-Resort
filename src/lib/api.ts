@@ -109,6 +109,9 @@ export interface Wish { id: string; user_id: string; body: string; created_at: s
 export interface Meetup { day: string; set_by: string }
 
 /** Key các phần thưởng mình đã nhận trong một ngày (nhặt đồ, combo, đảo...) */
+/** Điểm thiện cảm: mỗi lần ăn một món = 1 điểm (đếm claim 'aff:' của cả hai người) */
+export const loadAffection = (ids: string[]) =>
+  run<{ key: string }[]>(supabase.from('claims').select('key').in('user_id', ids).like('key', 'aff:%')).then(r => r.length);
 export const loadClaimsOn = (userId: string, day: string) =>
   run<{ key: string }[]>(supabase.from('claims').select('key').eq('user_id', userId).like('key', `%${day}%`))
     .then(rows => rows.map(r => r.key));
@@ -179,7 +182,7 @@ export const togetherBonus = (day: string, amount: number) =>
   run<boolean>(supabase.rpc('together_bonus', { p_day: day, p_amount: amount }));
 
 // Nông trại chung
-export interface FarmRow { cell: number; crop_id: string; planted_by: string; planted_at: string; water_days: number; last_watered: string | null; fertilized: boolean }
+export interface FarmRow { cell: number; crop_id: string; planted_by: string; planted_at: string; water_days: number; last_watered: string | null; fertilized: boolean; fert_n?: number; watered_at?: string | null }
 export const loadFarm = () => run<FarmRow[]>(supabase.from('farm').select('*'));
 export const farmPlant = (cell: number, crop: string) => run(supabase.rpc('farm_plant', { p_cell: cell, p_crop: crop }));
 export const farmWater = (cell: number, day: string) => run<boolean>(supabase.rpc('farm_water', { p_cell: cell, p_day: day }));

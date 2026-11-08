@@ -2,11 +2,11 @@
 // chào cờ, ra chơi, ăn trưa ở nhà ăn, giờ thể dục, tan học có phụ huynh đón; 2 xe hàng rong trước cổng.
 import { useEffect, useState, type CSSProperties } from 'react';
 import * as api from '../lib/api';
-import { CAMPUS, cartSprite, flagSprite, lunchTableSprite, trayFood } from '../lib/campusArt';
+import { CAMPUS, cartSprite, flagSprite, GYM, lunchTableSprite, matSprite, trayFood } from '../lib/campusArt';
 import { item } from '../lib/content';
 import { kidLook, kidSprite } from '../lib/kids';
 import { notify } from '../lib/realtime';
-import { atSchool, CLASSMATE_NPC, MATE_CHATTER, owlSprite, PERIOD, peOf, periodOf, SCHEDULE, STALLS, type Period, type StallId } from '../lib/school';
+import { atSchool, CLASSMATE_NPC, MATE_CHATTER, owlSprite, PERIOD, peIndoor, peOf, periodOf, SCHEDULE, STALLS, type Period, type StallId } from '../lib/school';
 import { characterSprite } from '../lib/sprites';
 import { toast, toastError } from '../lib/toast';
 import type { Live } from '../lib/useLive';
@@ -36,8 +36,8 @@ function spotOf(period: Period, pe: string, i: number, n: number, tick: number):
   if (period === 'recess') return { at: roam(Y), cls: i % 4 === 0 ? 'hop' : undefined };
   if (period === 'lunch') {
     const t = CAMPUS.tables[i % 4], k = Math.floor(i / 4);
-    if (k > 3) return null;
-    return { at: { x: t.x - 14 + k * 9, y: t.y - 2 }, food: i % 3 === 0 ? trayFood[(i + k) % trayFood.length] : undefined };
+    if (k > 2) return null;
+    return { at: { x: t.x - 15 + k * 10, y: t.y - 2 }, food: i % 3 === 0 ? trayFood[(i + k) % trayFood.length] : undefined };
   }
   if (period === 'pe') {
     if (pe === 'ball' || pe === 'run') {
@@ -56,21 +56,28 @@ function spotOf(period: Period, pe: string, i: number, n: number, tick: number):
   return null;
 }
 
-export function CampusContent({ kids, me, partner, when, walking, night, go, onKid, onClass, onStall, onHome }: {
-  kids: api.Kid[]; me: api.Profile; partner: api.Profile | null; when: When; walking: (string | null | undefined)[]; night: boolean;
-  go: (to: Pt, then?: () => void) => void; onKid: (id: string) => void; onClass: () => void; onStall: (id: StallId) => void; onHome: () => void;
+/** Chỗ ngồi của ba mẹ ở bàn ăn ngoài sân (đầu bàn bên phải, các bé ngồi phía trái) */
+export const tableSeat = (i: number): Pt => ({ x: CAMPUS.tables[i].x + 15, y: CAMPUS.tables[i].y - 2 });
+/** Toạ độ sân trường → sàn nhà thể chất (giờ thể dục trong nhà) */
+const toGym = (p: Pt): Pt => ({ x: Math.round(GYM.court.x0 + 8 + ((p.x - 120) / 120) * (GYM.court.x1 - GYM.court.x0 - 16)), y: Math.round(GYM.court.y0 + 8 + ((p.y - 108) / 40) * (GYM.court.y1 - GYM.court.y0 - 10)) });
+
+export function CampusContent({ gym, kids, me, partner, when, weather, walking, night, go, onKid, onClass, onGym, onSit, onStall, onHome }: {
+  gym?: boolean; kids: api.Kid[]; me: api.Profile; partner: api.Profile | null; when: When; weather?: string | null; walking: (string | null | undefined)[]; night: boolean;
+  go: (to: Pt, then?: () => void) => void; onKid: (id: string) => void; onClass: () => void; onGym: () => void; onSit: (seat: Pt) => void; onStall: (id: StallId) => void; onHome: () => void;
 }) {
   const s = useScale();
   const ps = avatarPx(s);
   const period = periodOf(when.date, when.hour, when.minute);
   const pe = peOf(when.date);
+  const indoor = period === 'pe' && peIndoor(pe.id, weather);
   const [tick, setTick] = useState(0);
   const [said, setSaid] = useState<{ i: number; text: string } | null>(null);
   useEffect(() => { const t = setInterval(() => setTick(v => v + 1), 2800); return () => clearInterval(t); }, []);
   useEffect(() => { if (!said) return; const t = setTimeout(() => setSaid(null), 2600); return () => clearTimeout(t); }, [said]);
-  const weekendPlay = period === 'closed' && !night && when.hour >= 8 && when.hour < 18;   // cuối tuần / chiều tối vẫn có vài bạn ra sân chơi
+  const weekendPlay = !gym && period === 'closed' && !night && when.hour >= 8 && when.hour < 18;   // cuối tuần / chiều tối vẫn có vài bạn ra sân chơi
+  const showPupils = gym ? indoor : !indoor;
   const mine = kids.filter(k => k.name && atSchool(k, when.date, when.hour, when.minute) && !walking.includes(k.id));
-  const pupils = [
+  const pupils = !showPupils ? [] : [
     ...mine.map(k => ({ id: k.id, name: k.name, girl: k.gender === 'f', look: kidLook(k, me, partner), mine: true })),
     ...CLASSMATE_NPC.slice(0, weekendPlay ? 3 : CLASSMATE_NPC.length).map(m => ({ id: m.name, name: m.name, girl: m.girl, look: m.look, mine: false })),
   ];
@@ -80,44 +87,69 @@ export function CampusContent({ kids, me, partner, when, walking, night, go, onK
   };
   const vendors = when.hour >= 6 && when.hour < 19;
   const info = PERIOD[period];
+  const peHere = period === 'pe' && showPupils;
+  const P = (x: number, y: number) => (gym ? toGym({ x, y }) : { x, y });
   return (
     <>
-      <Tag x={128} y={2} className="label">🌻 Trường Tiểu học Hướng Dương · {info.icon} {period === 'pe' ? `Thể dục: ${pe.icon} ${pe.name}` : weekendPlay ? 'Giờ chơi tự do' : info.label}</Tag>
-      <Tag x={CAMPUS.door.x} y={66} className="label" onClick={() => go(CAMPUS.door, onClass)}>✏️ Vào lớp</Tag>
-      <button className="hot" title="Vào lớp học" style={{ left: 116 * s, top: 72 * s, width: 24 * s, height: 24 * s }} onClick={e => { e.stopPropagation(); go(CAMPUS.door, onClass); }} />
-      <Tag x={CAMPUS.canteen.x} y={40} className="label" onClick={() => go(CAMPUS.canteen.door, () => onStall('canteen'))}>🍱 Nhà ăn</Tag>
-      <button className="hot" title="Nhà ăn" style={{ left: 22 * s, top: 72 * s, width: 16 * s, height: 24 * s }} onClick={e => { e.stopPropagation(); go(CAMPUS.canteen.door, () => onStall('canteen')); }} />
-      <Spr sprite={flagSprite()} x={CAMPUS.flag.x} y={CAMPUS.flag.y} z={CAMPUS.flag.y} className="flag-wave" title="Cột cờ" />
-      {CAMPUS.tables.map((t, i) => <Spr key={i} sprite={lunchTableSprite()} x={t.x} y={t.y + 4} z={t.y + 4} title="Bàn ăn trưa" />)}
-      {/* 2 xe hàng rong trước cổng trường */}
-      {(['bread', 'sweet'] as const).map(id => {
-        const c = CAMPUS.carts[id], st = STALLS[id];
-        const open = () => go({ x: c.x, y: c.y + 6 }, () => onStall(id));
-        return (
-          <div key={id}>
-            {vendors && adult(id === 'bread' ? { gender: 'f', hair: 3, hairColor: 0, skin: 1, shirt: 9, outfit: 14 } : { gender: 'm', hair: 2, hairColor: 0, skin: 2, shirt: 3, outfit: 6 }, { x: c.x + 8, y: c.y - 6 }, st.vendor, 'idle', c.y - 6)}
-            <Spr sprite={cartSprite(id)} x={c.x} y={c.y} z={c.y} title={`${st.icon} ${st.name}`} onClick={open} />
-            <Tag x={c.x} y={c.y - 34} className="label" onClick={open}>{st.icon} {id === 'bread' ? 'Bánh mì · xôi' : 'Kem · bánh tráng'}</Tag>
-          </div>
-        );
-      })}
-      <Tag x={CAMPUS.toTown.x + 8} y={150} className="label" onClick={() => go(CAMPUS.toTown, onHome)}>🏘️ Về làng</Tag>
-      {adult({ gender: 'm', hair: 0, hairColor: 6, skin: 2, shirt: 7, outfit: 6, glasses: 1 }, CAMPUS.guard, 'Bác bảo vệ')}
-      {/* cô giáo trông các bé ngoài sân */}
-      {['flag', 'recess', 'pe', 'lunch', 'dismiss'].includes(period) && (
+      {gym ? (
         <>
-          <Spr sprite={owlSprite()} x={period === 'lunch' ? 60 : period === 'dismiss' ? 104 : 116} y={period === 'flag' ? 116 : 140} className="bob" title="Cô giáo cú mèo" />
-          {period === 'pe' && tick % 3 === 0 && <Tag x={116} y={110} className="bed-bubble">📢 Tuýt tuýt! Cố lên các con!</Tag>}
-          {period === 'flag' && <Tag x={152} y={100} className="bed-bubble">{new Date(`${when.date}T12:00:00`).getDay() === 1 ? '🚩 Nghiêm! Chào cờ!' : '🤸 Một, hai, ba, bốn!'}</Tag>}
+          <Tag x={96} y={2} className="label">🏀 Nhà thể chất · {indoor ? `${pe.icon} Lớp đang học ${pe.name}` : period === 'pe' ? `Hôm nay lớp học ${pe.name} ngoài sân` : 'Đang trống — vào chơi tự do nhé'}</Tag>
+          <Spr sprite={matSprite()} x={GYM.mats.x - 40} y={GYM.mats.y + 8} z={GYM.mats.y - 20} />
+          <Spr sprite={matSprite()} x={GYM.mats.x + 40} y={GYM.mats.y + 8} z={GYM.mats.y - 20} />
+        </>
+      ) : (
+        <>
+          <Tag x={128} y={2} className="label">🌻 Trường Tiểu học Hướng Dương · {info.icon} {period === 'pe' ? `Thể dục: ${pe.icon} ${pe.name}${indoor ? ' (trong nhà thể chất)' : ''}` : weekendPlay ? 'Giờ chơi tự do' : info.label}</Tag>
+          <Tag x={CAMPUS.door.x} y={66} className="label" onClick={() => go(CAMPUS.door, onClass)}>✏️ Vào lớp</Tag>
+          <button className="hot" title="Vào lớp học" style={{ left: 116 * s, top: 72 * s, width: 24 * s, height: 24 * s }} onClick={e => { e.stopPropagation(); go(CAMPUS.door, onClass); }} />
+          <Tag x={CAMPUS.canteen.x} y={40} className="label" onClick={() => go(CAMPUS.canteen.door, () => onStall('canteen'))}>🍱 Nhà ăn</Tag>
+          <button className="hot" title="Nhà ăn" style={{ left: 22 * s, top: 72 * s, width: 16 * s, height: 24 * s }} onClick={e => { e.stopPropagation(); go(CAMPUS.canteen.door, () => onStall('canteen')); }} />
+          <Tag x={CAMPUS.gym.x} y={28} className="label" onClick={() => go(CAMPUS.gym.door, onGym)}>🏀 Nhà thể chất{indoor ? ' · đang học' : ''}</Tag>
+          <button className="hot" title="Nhà thể chất" style={{ left: 217 * s, top: 72 * s, width: 20 * s, height: 24 * s }} onClick={e => { e.stopPropagation(); go(CAMPUS.gym.door, onGym); }} />
+          <Spr sprite={flagSprite()} x={CAMPUS.flag.x} y={CAMPUS.flag.y} z={CAMPUS.flag.y} className="flag-wave" title="Cột cờ" />
+          {CAMPUS.tables.map((t, i) => <Spr key={i} sprite={lunchTableSprite()} x={t.x} y={t.y + 4} z={t.y + 4} title="🪑 Ngồi vào bàn" onClick={() => onSit(tableSeat(i))} />)}
+          {/* 2 xe hàng rong trước cổng trường */}
+          {(['bread', 'sweet'] as const).map(id => {
+            const c = CAMPUS.carts[id], st = STALLS[id];
+            const open = () => go({ x: c.x, y: c.y + 6 }, () => onStall(id));
+            return (
+              <div key={id}>
+                {vendors && adult(id === 'bread' ? { gender: 'f', hair: 3, hairColor: 0, skin: 1, shirt: 9, outfit: 14 } : { gender: 'm', hair: 2, hairColor: 0, skin: 2, shirt: 3, outfit: 6 }, { x: c.x + 8, y: c.y - 6 }, st.vendor, 'idle', c.y - 6)}
+                <Spr sprite={cartSprite(id)} x={c.x} y={c.y} z={c.y} title={`${st.icon} ${st.name}`} onClick={open} />
+                <Tag x={c.x} y={c.y - 34} className="label" onClick={open}>{st.icon} {id === 'bread' ? 'Bánh mì · xôi' : 'Kem · bánh tráng'}</Tag>
+              </div>
+            );
+          })}
+          <Tag x={CAMPUS.toTown.x + 8} y={150} className="label" onClick={() => go(CAMPUS.toTown, onHome)}>🏘️ Về làng</Tag>
+          {adult({ gender: 'm', hair: 0, hairColor: 6, skin: 2, shirt: 7, outfit: 6, glasses: 1 }, CAMPUS.guard, 'Bác bảo vệ')}
+          {period === 'dismiss' && [0, 1, 2, 3].map(i => <div key={i}>{adult(
+            [{ gender: 'f' as const, hair: 3, hairColor: 1, skin: 0, shirt: 4, outfit: 14 }, { gender: 'm' as const, hair: 2, hairColor: 0, skin: 2, shirt: 10, outfit: 4 }, { gender: 'f' as const, hair: 5, hairColor: 2, skin: 1, shirt: 8, outfit: 1 }, { gender: 'm' as const, hair: 6, hairColor: 6, skin: 3, shirt: 2, outfit: 7 }][i],
+            { x: [92, 166, 210, 40][i], y: 172 }, 'Phụ huynh')}</div>)}
+          {period === 'class' || period === 'nap' ? <Tag x={128} y={110} className="label dim">{period === 'nap' ? '😴 Các bé đang ngủ trưa trong lớp' : '✏️ Các bé đang học trong lớp'}</Tag> : null}
+          {indoor && <Tag x={128} y={110} className="label dim">🏀 Cả lớp đang học {pe.name} trong nhà thể chất</Tag>}
+          {period === 'closed' && !weekendPlay && <Tag x={128} y={110} className="label dim">🌙 Trường nghỉ · {SCHEDULE.split(' · ')[0]}</Tag>}
         </>
       )}
-      {period === 'pe' && pe.id === 'tug' && <div className="tug-rope" style={{ left: 120 * s, top: 125 * s, width: 128 * s, height: Math.max(2, s) }} />}
-      {period === 'pe' && (pe.id === 'ball' || pe.id === 'hoop') && <span className={`campus-ball ${pe.id}`} style={v({ left: (pe.id === 'ball' ? 150 : 222) * s, top: (pe.id === 'ball' ? 128 : 96) * s, fontSize: Math.max(10, 5 * s), '--d': `${(pe.id === 'ball' ? 66 : 14) * s}px` })}>{pe.id === 'ball' ? '⚽' : '🏀'}</span>}
-      {period === 'pe' && pe.id === 'rope' && <div className="jump-rope" style={{ left: 166 * s, top: 112 * s, width: 36 * s, height: 22 * s }} />}
+      {/* cô giáo trông các bé */}
+      {(gym ? indoor : ['flag', 'recess', 'lunch', 'dismiss'].includes(period) || peHere) && (() => {
+        const t = gym ? { x: 30, y: 134 } : { x: period === 'lunch' ? 60 : period === 'dismiss' ? 104 : 116, y: period === 'flag' ? 116 : 140 };
+        return (
+          <>
+            <Spr sprite={owlSprite()} x={t.x} y={t.y} className="bob" title="Cô giáo cú mèo" />
+            {peHere && tick % 3 === 0 && <Tag x={t.x} y={t.y - 30} className="bed-bubble">📢 Tuýt tuýt! Cố lên các con!</Tag>}
+            {!gym && period === 'flag' && <Tag x={152} y={100} className="bed-bubble">{new Date(`${when.date}T12:00:00`).getDay() === 1 ? '🚩 Nghiêm! Chào cờ!' : '🤸 Một, hai, ba, bốn!'}</Tag>}
+          </>
+        );
+      })()}
+      {peHere && pe.id === 'tug' && (() => { const a = P(120, 125), b = P(248, 125); return <div className="tug-rope" style={{ left: a.x * s, top: a.y * s, width: (b.x - a.x) * s, height: Math.max(2, s) }} />; })()}
+      {peHere && pe.id === 'ball' && (() => { const a = P(150, 128); return <span className="campus-ball ball" style={v({ left: a.x * s, top: a.y * s, fontSize: Math.max(10, 5 * s), '--d': `${(gym ? 90 : 66) * s}px` })}>⚽</span>; })()}
+      {peHere && pe.id === 'hoop' && (() => { const a = gym ? { x: GYM.hoops[1].x - 4, y: 42 } : { x: 222, y: 96 }; return <span className="campus-ball hoop" style={v({ left: a.x * s, top: a.y * s, fontSize: Math.max(10, 5 * s) })}>🏀</span>; })()}
+      {peHere && pe.id === 'rope' && (() => { const a = P(166, 112); return <div className="jump-rope" style={{ left: a.x * s, top: a.y * s, width: 36 * s, height: 22 * s }} />; })()}
       {/* các bé */}
       {pupils.map((k, i) => {
-        const sp = weekendPlay ? { at: spotOf('recess', pe.id, i, pupils.length, tick)!.at } : spotOf(period, pe.id, i, pupils.length, tick);
-        if (!sp) return null;
+        const raw = weekendPlay ? { at: spotOf('recess', pe.id, i, pupils.length, tick)!.at } : spotOf(period, pe.id, i, pupils.length, tick);
+        if (!raw) return null;
+        const sp = gym ? { ...raw, at: pe.id === 'hoop' ? { x: 130 + (i % 5) * 9, y: 96 + Math.floor(i / 5) * 12 } : toGym(raw.at) } : raw;
         const at = k.mine && period === 'dismiss' ? { x: 128, y: 138 } : sp.at;
         return (
           <div key={k.id}>
@@ -129,12 +161,6 @@ export function CampusContent({ kids, me, partner, when, walking, night, go, onK
           </div>
         );
       })}
-      {/* tan học: phụ huynh đứng chờ ngoài cổng */}
-      {period === 'dismiss' && [0, 1, 2, 3].map(i => adult(
-        [{ gender: 'f' as const, hair: 3, hairColor: 1, skin: 0, shirt: 4, outfit: 14 }, { gender: 'm' as const, hair: 2, hairColor: 0, skin: 2, shirt: 10, outfit: 4 }, { gender: 'f' as const, hair: 5, hairColor: 2, skin: 1, shirt: 8, outfit: 1 }, { gender: 'm' as const, hair: 6, hairColor: 6, skin: 3, shirt: 2, outfit: 7 }][i],
-        { x: [92, 166, 210, 40][i], y: 172 }, 'Phụ huynh'))}
-      {period === 'class' || period === 'nap' ? <Tag x={128} y={110} className="label dim">{period === 'nap' ? '😴 Các bé đang ngủ trưa trong lớp' : '✏️ Các bé đang học trong lớp'}</Tag> : null}
-      {period === 'closed' && !weekendPlay && <Tag x={128} y={110} className="label dim">🌙 Trường nghỉ · {SCHEDULE.split(' · ')[0]}</Tag>}
       {night && <div className="city-night" />}
     </>
   );

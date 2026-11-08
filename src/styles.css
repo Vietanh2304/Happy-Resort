@@ -1570,3 +1570,6 @@ textarea { resize: vertical; }
 .tag.label.dim { opacity: 0.85; }
 .spr.flag-wave { animation: flagwave 2.4s ease-in-out infinite; transform-origin: 20% 100%; }
 @keyframes flagwave { 50% { scale: 1.04 1; } }
+
+.qty-row { gap: 6px; align-items: center; margin: 4px 0 8px; }
+.qty-row b { min-width: 22px; text-align: center; }
