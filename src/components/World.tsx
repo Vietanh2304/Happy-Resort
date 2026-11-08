@@ -33,6 +33,7 @@ import {
   BACK_ACTS,
   SINK_ACTS,
   vanitySeat,
+  vanityMirror,
 } from '../lib/world';
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
@@ -1147,7 +1148,24 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
               onClick={d.item_id === 'wardrobe' && !editing ? () => go(roomPt(d.x + 0.5, d.y + 1.6), on.wardrobe)
                 : d.item_id === 'dresser' && !editing ? () => on.makeup(vanitySeat(d))
                 : d.item_id === 'bed' && !editing ? () => go(walkTarget(scene, roomPt(d.x + 1.5, d.y - 0.5)) ?? p.live.mine.pos, () => on.bed(d)) : undefined} />
-            {d.item_id === 'dresser' && (() => { const st = vanitySeat(d); return <Spr sprite={stoolSprite()} x={st.x} y={st.y + 3} z={Math.round(st.y) - 1} title="💄 Ngồi trang điểm" onClick={editing ? undefined : () => on.makeup(st)} />; })()}
+            {d.item_id === 'dresser' && (() => {
+              const st = vanitySeat(d), mi = vanityMirror(d);
+              // ai đang ngồi trang điểm ở ghế này → hiện mặt người đó trong gương + cây son đưa lên đưa xuống
+              const at = (who: typeof p.live.mine | null | undefined) => !!who && who.act === 'makeup' && Math.hypot(who.pos.x - st.x, who.pos.y - st.y) < 2;
+              const sitter = at(p.live.mine) ? p.me : p.partnerHere && at(p.live.theirs) ? p.partner : null;
+              const face = sitter ? characterSprite(sitter.avatar, 'sit', undefined, 'front') : null;
+              return (
+                <>
+                  <Spr sprite={stoolSprite()} x={st.x} y={st.y + 3} z={Math.round(st.y) - 1} title="💄 Ngồi trang điểm" onClick={editing ? undefined : () => on.makeup(st)} />
+                  {face && (
+                    <div className="mirror-face" style={{ left: (mi.x - 5) * s, top: (mi.y - 7) * s, width: 10 * s, height: 13 * s, zIndex: (depth.get(d.id) ?? 0) + 1 }}>
+                      <img src={face.url} alt="" style={{ width: face.w * s * 0.42, height: face.h * s * 0.42, left: (5 - face.w * 0.21) * s, top: -1 * s }} />
+                    </div>
+                  )}
+                  {sitter && <span className="makeup-brush" style={{ left: (st.x + 3) * s, top: (st.y - 22) * s, fontSize: Math.max(10, 5 * s), zIndex: Math.round(st.y) + 40 }}>💄</span>}
+                </>
+              );
+            })()}
             {p.dark && art?.glow && <Glow x={foot.x} y={foot.y - 24} r={24} />}
           </div>
         );

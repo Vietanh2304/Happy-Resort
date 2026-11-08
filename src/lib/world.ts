@@ -192,7 +192,9 @@ export function walkTarget(scene: SceneId, p: Pt): Pt | null {
 export const SIT_ACTS = ['sit', 'poop', 'peesit', 'makeup'];
 /** Đứng ở bồn rửa mặt (sau lưng bồn tắm) */
 export const SINK_ACTS = ['wash', 'brush', 'face'];
-/** Ghế đôn trước bàn trang điểm (đồ 'dresser' rộng 2 ô, mặt quay về +y) */
-export const vanitySeat = (d: { x: number; y: number }) => roomPt(d.x + 1, d.y + 1.35);
+/** Ghế đôn ngay giữa phía trước bàn trang điểm (đồ 'dresser' chiếm ô x-1..x; xoay thì chiếm y-1..y, mặt quay về +x) */
+export const vanitySeat = (d: { x: number; y: number; rot?: number }) => (d.rot ? roomPt(d.x + 1.45, d.y) : roomPt(d.x, d.y + 1.45));
+/** Tâm gương của bàn trang điểm (cao ~19 px trên mặt sàn) */
+export const vanityMirror = (d: { x: number; y: number; rot?: number }) => (d.rot ? roomPt(d.x + 0.3, d.y, 19) : roomPt(d.x, d.y + 0.3, 19));
 /** Động tác đứng quay lưng (đi tè, rửa tay) */
 export const BACK_ACTS = ['pee', 'wash', 'brush', 'face', 'makeup'];

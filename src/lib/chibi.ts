@@ -193,7 +193,7 @@ function outfitOf(o: number, C: string, S: string, girl = false): Outfit {
  * `step`: nhịp bước 0..3, `hold`: đang cầm đồ với động tác.
  */
 export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', step = 0, hold?: Held): Sprite {
-  if (pose === 'sit' || pose === 'sleep' || pose === 'dance' || pose === 'act' || pose === 'actsit' || hold) view = 'front';
+  if ((pose === 'sit' && view !== 'back') || pose === 'sleep' || pose === 'dance' || pose === 'act' || pose === 'actsit' || hold) view = 'front';
   if (pose !== 'walk' && pose !== 'dance' && pose !== 'act' && pose !== 'actsit') step = 0;
   const S = SKINS[look.skin ?? 0] ?? SKINS[0];
   const H = HAIR_COLORS[look.hairColor ?? 0] ?? HAIR_COLORS[0];

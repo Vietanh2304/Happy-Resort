@@ -1573,3 +1573,10 @@ textarea { resize: vertical; }
 
 .qty-row { gap: 6px; align-items: center; margin: 4px 0 8px; }
 .qty-row b { min-width: 22px; text-align: center; }
+
+/* Bàn trang điểm: mặt phản chiếu trong gương + son đưa lên má */
+.mirror-face { position: absolute; border-radius: 50%; overflow: hidden; opacity: 0.8; pointer-events: none; }
+.mirror-face img { position: absolute; image-rendering: pixelated; filter: saturate(0.8) brightness(1.08); animation: mirrorbob 1.6s ease-in-out infinite; }
+@keyframes mirrorbob { 50% { translate: 0 1px; } }
+.makeup-brush { position: absolute; pointer-events: none; line-height: 1; animation: makeupdab 1.2s ease-in-out infinite; transform-origin: 50% 100%; }
+@keyframes makeupdab { 0%, 100% { translate: 0 0; rotate: -20deg; } 30% { translate: -4px -3px; rotate: 10deg; } 60% { translate: -2px 1px; rotate: -5deg; } }
