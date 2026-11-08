@@ -3,7 +3,7 @@ import { BATH_WATERS, type BathWater } from '../lib/interiors';
 import type { Live } from '../lib/useLive';
 
 /** Bảng dưới cảnh phòng tắm: chọn nước tắm (cả hai cùng thấy), vào/ra bồn, nhắn tin */
-export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName, onEnter, onLeaveTub, onLeaveRoom, onSplash, onToilet, onWash }: {
+export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName, onEnter, onLeaveTub, onLeaveRoom, onSplash, onToilet, onWash, onBrush, onFace }: {
   water: BathWater;
   live: Live;
   partnerHere: boolean;
@@ -15,6 +15,8 @@ export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName,
   onSplash: () => void;
   onToilet: (kind: 'pee' | 'poop') => void;
   onWash: () => void;
+  onBrush: () => void;
+  onFace: () => void;
 }) {
   const [text, setText] = useState('');
   const inTub = live.mine.act === 'bath';
@@ -40,6 +42,8 @@ export function BathPanel({ water, live, partnerHere, partnerInTub, partnerName,
           <button className="btn small ghost" disabled={inTub} onClick={() => onToilet('pee')}>🚽 Đi tè</button>
           <button className="btn small ghost" disabled={inTub} onClick={() => onToilet('poop')}>💩 Đi nặng</button>
           <button className="btn small ghost" disabled={inTub} onClick={onWash}>🧼 Rửa tay</button>
+          <button className="btn small ghost" disabled={inTub} onClick={onBrush}>🪥 Đánh răng</button>
+          <button className="btn small ghost" disabled={inTub} onClick={onFace}>🫧 Rửa mặt</button>
         </div>
         <ul className="chat-log">
           {live.chat.slice(-3).map(c => <li key={c.at} className={c.from}>{c.text}</li>)}

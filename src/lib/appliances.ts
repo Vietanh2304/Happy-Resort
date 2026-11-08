@@ -78,12 +78,20 @@ const armchair = () => isoSprite('armchair', 1, 1, 22, q => {
   q.box(0.35, 0.3, 7, 0.3, 0.12, 4, shade('#f59ab3'));
 });
 
-const dresser = () => isoSprite('dresser', 2, 1, 30, q => {
-  q.box(0.05, 0.15, 0, 1.9, 0.75, 16, shade('#f6e2c8'));
-  for (const z of [5, 10]) leftFace(q, 0.1, 1.9, 0.9, z, z + 0.6, '#d8bc98');
-  for (const z of [2.5, 7.5, 12.5]) for (const g of [0.55, 1.45]) { const [x, y] = q.pt(g, 0.9, z); q.px(x, y, '#d29a63'); }
-  const [mx, my] = q.pt(1.2, 0.35, 16); ellipse(q, mx, my - 6, 4, 5, '#e8c070'); ellipse(q, mx, my - 6, 3, 4, '#d7ecf7'); q.px(mx - 1, my - 8, '#fff');
-  const [vx, vy] = q.pt(0.4, 0.5, 16); q.rect(vx - 1, vy - 3, 3, 3, '#8db8ef'); ellipse(q, vx, vy - 5, 2.5, 2, '#f59ab3');
+const dresser = () => isoSprite('dresser:v2', 2, 1, 40, q => {
+  // bàn trang điểm: mặt bàn trắng hồng, 4 chân mảnh, ngăn kéo giữa
+  for (const [a, b] of [[0.12, 0.25], [1.8, 0.25], [0.12, 0.8], [1.8, 0.8]]) q.box(a, b, 0, 0.08, 0.08, 11, shade('#e8c8a8'));
+  q.box(0.05, 0.15, 11, 1.9, 0.75, 3, shade('#fbeee4'));
+  leftFace(q, 0.6, 1.4, 0.9, 8, 11, '#f2dcc8'); { const [x, y] = q.pt(1, 0.9, 9.5); q.px(x, y, '#d29a63'); }
+  // gương bầu dục lớn viền vàng + bóng đèn
+  const [mx, my] = q.pt(1, 0.3, 14);
+  ellipse(q, mx, my - 11, 7, 10, '#e8c070'); ellipse(q, mx, my - 11, 5.5, 8.5, '#d7ecf7'); q.rect(mx - 3, my - 16, 1, 4, '#ffffff'); q.px(mx - 2, my - 17, '#ffffff');
+  for (const [dx, dy] of [[-7, -16], [7, -16], [-8, -9], [8, -9], [0, -22]]) { q.px(mx + dx, my + dy, '#fff1a8'); q.px(mx + dx, my + dy - 1, '#ffffff'); }
+  // nước hoa, son, hộp phấn, lọ hoa
+  const [ax, ay] = q.pt(0.35, 0.55, 14); q.rect(ax - 1, ay - 4, 3, 4, '#f59ab3'); q.px(ax, ay - 5, '#e8c070');
+  const [bx, by] = q.pt(0.55, 0.7, 14); q.rect(bx, by - 3, 1, 3, '#e8604a'); q.px(bx, by - 4, '#c8483a');
+  const [cx, cy] = q.pt(1.55, 0.6, 14); ellipse(q, cx, cy - 1, 2, 1, '#c8a2e8'); q.px(cx, cy - 2, '#ffffff');
+  const [dx, dy] = q.pt(1.75, 0.45, 14); q.rect(dx - 1, dy - 3, 2, 3, '#a8d8f0'); ellipse(q, dx, dy - 5, 2, 1.6, '#f59ab3'); q.px(dx - 1, dy - 6, '#f6c64e');
 });
 
 const piano = () => isoSprite('piano', 2, 1, 30, q => {

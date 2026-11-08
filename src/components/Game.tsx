@@ -810,10 +810,16 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const liveNow = useRef(live);
   liveNow.current = live;
   // Rửa tay ở bồn rửa mặt (đứng quay lưng, xà phòng + nước)
-  const washHands = () => go(BATH.sink, () => {
-    live.update({ act: 'wash' }); live.say('🧼💦');
-    setTimeout(() => { if (liveNow.current.mine.act === 'wash') { live.update({ act: null }); live.say('✨'); toast('🧼 Tay sạch thơm rồi!'); } }, 4500);
-  });
+  // Bồn rửa mặt cạnh gương bị bồn tắm + chậu cây vây quanh: đi tới cạnh bồn cầu rồi bước thẳng vào bồn rửa
+  const atSink = (act: 'wash' | 'brush' | 'face') => {
+    const [say, ms, done] = act === 'wash' ? ['🧼💦', 4000, '🧼 Tay sạch thơm rồi!'] : act === 'brush' ? ['🪥🫧', 6000, '🪥 Răng trắng tinh, hơi thở thơm mát!'] : ['🫧💦', 5000, '🫧 Mặt mũi tươi tỉnh rồi!'] as const;
+    const step = () => {
+      live.update({ pos: BATH.sink, act }); live.say(say);
+      setTimeout(() => { if (liveNow.current.mine.act === act) { live.update({ act: null }); live.say('✨'); toast(done); } }, ms);
+    };
+    if (Math.hypot(live.mine.pos.x - BATH.sink.x, live.mine.pos.y - BATH.sink.y) < 3) step(); else go(BATH.toiletStand, step);
+  };
+  const washHands = () => atSink('wash');
   const exit = !editing && !fishing && !inBed && !festIcon ? EXITS[scene] : undefined;
   // Nhà thể chất: ném bóng rổ (vui thôi, đôi khi vào rổ)
   const shoot3 = () => { const ok = Math.random() < 0.45; live.say(ok ? '🏀 Vàoooo! 🎉' : '🏀 Ối, trượt rồi 😅'); };
@@ -925,7 +931,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onLeaveTub={() => live.update({ act: null, pos: BATH.stand })}
           onSplash={() => doAct('splash')}
           onLeaveRoom={() => enter('bedroom', BATH.toBath)}
-          onWash={washHands}
+          onWash={washHands} onBrush={() => atSink('brush')} onFace={() => atSink('face')}
           onToilet={kind => {
             const sit = kind === 'poop' || me.avatar.gender !== 'm';     // nam tè đứng, nữ tè ngồi, đi nặng thì cùng ngồi
             go(BATH.toiletStand, () => {
