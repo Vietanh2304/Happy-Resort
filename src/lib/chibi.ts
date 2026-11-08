@@ -8,7 +8,7 @@ import { mix, type Pen, type Sprite } from './pixel';
 
 export interface ChibiLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: 'm' | 'f'; glasses?: number; design?: Design | null }
 export type View = 'front' | 'back' | 'side';
-export type Pose = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance' | 'act' | 'actsit';
+export type Pose = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance' | 'act' | 'actsit' | 'makeup';
 /**
  * Động tác tay (pose 'act' đứng / 'actsit' ngồi, `step` = số thứ tự):
  * 0 vung tay sau đầu · 1 ném ra · 2 hất nước sang hai bên · 3 hất nước lên · 4 chèo kéo · 5 chèo đẩy
@@ -194,7 +194,8 @@ function outfitOf(o: number, C: string, S: string, girl = false): Outfit {
  */
 export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', step = 0, hold?: Held): Sprite {
   if ((pose === 'sit' && view !== 'back') || pose === 'sleep' || pose === 'dance' || pose === 'act' || pose === 'actsit' || hold) view = 'front';
-  if (pose !== 'walk' && pose !== 'dance' && pose !== 'act' && pose !== 'actsit') step = 0;
+  if (pose !== 'walk' && pose !== 'dance' && pose !== 'act' && pose !== 'actsit' && pose !== 'makeup') step = 0;
+  if (pose === 'makeup' && view === 'side') view = 'front';
   const S = SKINS[look.skin ?? 0] ?? SKINS[0];
   const H = HAIR_COLORS[look.hairColor ?? 0] ?? HAIR_COLORS[0];
   const C = SHIRTS[look.shirt ?? 0] ?? SHIRTS[0];
@@ -205,7 +206,7 @@ export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', s
   const hit = cache.get(key);
   if (hit) return hit;
 
-  const LW = hold ? 24 : 16, LH = pose === 'sit' || pose === 'actsit' ? 24 : 26;
+  const LW = hold ? 24 : 16, LH = pose === 'sit' || pose === 'actsit' || pose === 'makeup' ? 24 : 26;
   const canvas = document.createElement('canvas');
   canvas.width = (LW + 2) * K; canvas.height = (LH + 2) * K;
   const ctx = canvas.getContext('2d')!;
@@ -254,7 +255,7 @@ function draw(P: HiPen, a: Args) {
   const Sd = mix(S, '#c07060', 0.28), Hd = mix(H, '#2a1a1a', 0.3), Hl = mix(H, '#ffffff', 0.32);
   const hair = HAIRS[hairIx];
   const o = a.design ? designOutfit(a.design) : outfitOf(out, C, S, a.girl);
-  const sit = pose === 'sit' || pose === 'actsit';
+  const sit = pose === 'sit' || pose === 'actsit' || pose === 'makeup';
   const bob = pose === 'walk' && step % 2 === 1 ? -1 : 0;   // nhịp giữa hai bước: người nhổm lên
   const y = bob;                                            // độ lệch phần thân trên
   const side = view === 'side', back = view === 'back';
@@ -348,6 +349,18 @@ function draw(P: HiPen, a: Args) {
       // tay giơ cao vẽ sau đầu để không bị tóc che
       lateArms = () => { arm(lx + 1, y + 26, hlx, y + hly); arm(rx - 1, y + 26, hrx, y + hry); };
       if (![0, 1, 4, 6, 7].includes(step % moves.length)) { lateArms(); lateArms = null; }
+    } else if (pose === 'makeup') {
+      // Trang điểm (16 nhịp, mỗi 4 nhịp một bước): thoa kem · đánh phấn má · kẻ mắt · tô son.
+      // Tay phải đưa lên mặt, chấm qua lại; tay trái cầm hộp phấn/gương nhỏ trước ngực.
+      const tool = Math.floor(step / 4) % 4, dab = step % 2;
+      const hand: [number, number][][] = [
+        [[21, 19], [20, 18]], [[22, 18], [21, 20]], [[19, 14], [21, 14]], [[17, 20], [15, 20]],
+      ];
+      const [hx, hy] = hand[tool][dab];
+      const back = view === 'back';
+      const r = () => arm(rx - 1, y + 26, back ? 31 - hx : hx, y + hy);
+      arm(lx + 1, y + 26, back ? 19 : 12, y + 31);
+      if (back) r(); else lateArms = r;                     // nhìn sau lưng: tay khuất sau đầu; nhìn trước: tay trước mặt
     } else if (pose === 'act' || pose === 'actsit') {
       const [hlx, hly, hrx, hry] = ACTS[step % ACTS.length];
       const draw = () => { arm(lx + 1, y + 26, hlx, y + hly); arm(rx - 1, y + 26, hrx, y + hry); };

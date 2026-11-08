@@ -49,10 +49,12 @@ interface Props {
   zoom?: number;
   /** Đứng quay lưng (đi tè, rửa tay) */
   faceBack?: boolean;
+  /** Đang ngồi trang điểm: tay đưa lên mặt theo nhịp */
+  makeup?: boolean;
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom, faceBack }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom, faceBack, makeup }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -79,10 +81,10 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
   }, [x, y]);
 
   useEffect(() => {
-    if (!moving && !swim) return;
-    const t = setInterval(() => setStep(v => (v + 1) % 4), moving ? 130 : 320);   // lặn: đứng yên vẫn đạp chân nhẹ
+    if (!moving && !swim && !makeup) return;
+    const t = setInterval(() => setStep(v => (v + 1) % (makeup && !moving ? 16 : 4)), moving ? 130 : makeup ? 350 : 320);   // lặn: đứng yên vẫn đạp chân nhẹ
     return () => { clearInterval(t); setStep(0); };
-  }, [moving, swim]);
+  }, [moving, swim, makeup]);
   // Đứng yên một lúc thì quay mặt ra phía trước
   useEffect(() => {
     if (moving || view === 'front') return;
@@ -106,6 +108,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
   const pair = duo && !moving && !sitting ? duoPose(duo, dancing ? dance!.m : null) : null;
   const sprite = af !== null ? characterSprite(look, sitting ? 'actsit' : 'act', undefined, 'front', af)
     : pair ? (pair.f === 'side' ? characterSprite(look, 'idle', undefined, 'side') : characterSprite(look, 'act', undefined, 'front', pair.f))
+    : makeup && !moving ? characterSprite(look, 'makeup', undefined, faceBack ? 'back' : 'front', step)
     : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? (faceBack ? 'back' : 'front') : faceBack && !moving ? 'back' : view, step);
   const ax = sprite.ax ?? sprite.w / 2;
   const ps = avatarPx(s * (zoom ?? 1));

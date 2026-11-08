@@ -467,13 +467,13 @@ function SceneContent(p: WorldProps) {
       <KidLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />
       {!myBed && scene !== 'lounge' && scene !== 'sky' && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
-        x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')}
+        x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')} makeup={live.mine.act === 'makeup'}
         sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : SINK_ACTS.includes(live.mine.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
       {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
-          x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')}
+          x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')} makeup={theirs.act === 'makeup'}
           sitting={sitting || !!theirTub || SIT_ACTS.includes(theirs.act ?? '')} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : SINK_ACTS.includes(theirs.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.them : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : p.couple ? { side: p.couple.mySide === 'L' ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
         />
       )}
@@ -1153,11 +1153,11 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
               // ai đang ngồi trang điểm ở ghế này → hiện mặt người đó trong gương + cây son đưa lên đưa xuống
               const at = (who: typeof p.live.mine | null | undefined) => !!who && who.act === 'makeup' && Math.hypot(who.pos.x - st.x, who.pos.y - st.y) < 2;
               const sitter = at(p.live.mine) ? p.me : p.partnerHere && at(p.live.theirs) ? p.partner : null;
-              const face = sitter ? characterSprite(sitter.avatar, 'sit', undefined, 'front') : null;
+              const face = sitter ? sitter.avatar : null;
               return (
                 <>
                   <Spr sprite={stoolSprite()} x={st.x} y={st.y + 3} z={Math.round(st.y) - 1} title="💄 Ngồi trang điểm" onClick={editing ? undefined : () => on.makeup(st)} />
-                  {face && sitter && <MakeupFx key={sitter.id} face={face} mi={mi} st={st} s={s} z={(depth.get(d.id) ?? 0) + 1} />}
+                  {face && sitter && <MakeupFx key={sitter.id} look={face} mi={mi} st={st} s={s} z={(depth.get(d.id) ?? 0) + 1} />}
                 </>
               );
             })()}
@@ -1469,26 +1469,25 @@ function Petals() {
   );
 }
 
-/** Trang điểm: lần lượt thoa kem → đánh phấn má → kẻ mắt → tô son; mặt trong gương hồng má, đỏ môi dần */
-const MAKEUP_STEPS = [
-  { tool: '🧴', cls: 'dab', label: 'thoa kem' }, { tool: '🖌️', cls: 'sweep', label: 'đánh phấn' },
-  { tool: '✏️', cls: 'line', label: 'kẻ mắt' }, { tool: '💄', cls: 'lips', label: 'tô son' },
-];
-function MakeupFx({ face, mi, st, s, z }: { face: Sprite; mi: Pt; st: Pt; s: number; z: number }) {
+/** Trang điểm: thoa kem → đánh phấn má → kẻ mắt → tô son (mỗi bước 1,4 giây, khớp nhịp tay của nhân vật);
+ *  gương phản chiếu mặt trước của người ngồi (lật ngang), má hồng / môi đỏ dần */
+const MAKEUP_TOOLS = ['🧴', '🖌️', '✏️', '💄'];
+function MakeupFx({ look, mi, st, s, z }: { look: Profile['avatar']; mi: Pt; st: Pt; s: number; z: number }) {
+  const [step, setStep] = useState(0);
   const [k, setK] = useState(0);
-  useEffect(() => { const t = setInterval(() => setK(v => Math.min(v + 1, MAKEUP_STEPS.length)), 1400); return () => clearInterval(t); }, []);
-  const step = MAKEUP_STEPS[Math.min(k, MAKEUP_STEPS.length - 1)];
-  const done = k >= MAKEUP_STEPS.length;
+  useEffect(() => { const t = setInterval(() => setStep(v => (v + 1) % 16), 350); return () => clearInterval(t); }, []);
+  useEffect(() => { const t = setInterval(() => setK(v => Math.min(v + 1, 4)), 1400); return () => clearInterval(t); }, []);
+  const face = characterSprite(look, 'makeup', undefined, 'front', step);
   const w = face.w * 0.42, h = face.h * 0.42;
+  const tool = MAKEUP_TOOLS[Math.floor(step / 4)];
   return (
     <>
       <div className="mirror-face" style={{ left: (mi.x - 5) * s, top: (mi.y - 7) * s, width: 10 * s, height: 13 * s, zIndex: z }}>
-        <img src={face.url} alt="" style={{ width: w * s, height: h * s, left: (5 - w / 2) * s, top: -1 * s }} />
+        <img src={face.url} alt="" style={{ width: w * s, height: h * s, left: (5 - w / 2) * s, top: -1 * s, transform: 'scaleX(-1)' }} />
         {k >= 2 && <i className="blush" style={{ left: (5 - w * 0.3) * s, top: (h * 0.36 - 1) * s, width: w * 0.6 * s, height: 1.2 * s }} />}
         {k >= 4 && <i className="lips" style={{ left: (5 - 0.6) * s, top: (h * 0.43 - 1) * s, width: 1.2 * s, height: 0.7 * s }} />}
       </div>
-      {!done && <span className={`makeup-tool ${step.cls}`} style={{ left: (st.x + 2) * s, top: (st.y - 24) * s, fontSize: Math.max(10, 5 * s), zIndex: Math.round(st.y) + 40 }}>{step.tool}</span>}
-      {!done && step.cls === 'sweep' && <span className="makeup-dust" style={{ left: (st.x - 3) * s, top: (st.y - 24) * s, zIndex: Math.round(st.y) + 41 }}>✨</span>}
+      {k < 4 && <span className="makeup-tool" style={{ left: (st.x + 4) * s, top: (st.y - 25) * s, fontSize: Math.max(8, 3.6 * s), zIndex: Math.round(st.y) + 40 }}>{tool}</span>}
     </>
   );
 }
