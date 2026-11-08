@@ -1544,3 +1544,29 @@ textarea { resize: vertical; }
 .bloom { transform-origin: 50% 100%; animation: palm-sway 3s ease-in-out infinite; }
 .summer-sun { position: absolute; inset: 0; z-index: 900; pointer-events: none; overflow: hidden; background: #fff4c01c; }
 .summer-sun i { position: absolute; top: -20%; right: -10%; width: 22%; height: 160%; background: linear-gradient(#fff6c060, #fff6c000 70%); transform: rotate(32deg); transform-origin: top; animation: rays 8s ease-in-out infinite; }
+
+/* Nút ra ngoài luôn hiện (góc trái dưới khung cảnh) */
+.world { position: relative; }
+.exit-chip { position: absolute; left: 10px; bottom: 10px; z-index: 900; border: 2px solid var(--ink); background: #fffaf0; border-radius: 999px; padding: 5px 12px; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 3px 0 #0003; }
+.exit-chip:hover { background: #ffe3ec; }
+
+/* Khuôn viên trường */
+.spr.hop { animation: kidhop 0.55s ease-in-out infinite; }
+@keyframes kidhop { 50% { translate: 0 -22%; } }
+.spr.tug-l { animation: tugl 1.2s ease-in-out infinite; }
+.spr.tug-r { animation: tugr 1.2s ease-in-out infinite; }
+@keyframes tugl { 50% { translate: -12% 0; rotate: -8deg; } }
+@keyframes tugr { 50% { translate: -12% 0; rotate: -8deg; } }
+.tug-rope { position: absolute; z-index: 131; background: #c8905a; border-radius: 2px; animation: tugrope 1.2s ease-in-out infinite; pointer-events: none; }
+@keyframes tugrope { 50% { translate: -4px 0; } }
+.campus-ball { position: absolute; z-index: 150; pointer-events: none; line-height: 1; }
+.campus-ball.ball { animation: ballroll 3.2s ease-in-out infinite alternate; }
+@keyframes ballroll { 0% { translate: 0 0; rotate: 0deg; } 50% { translate: calc(var(--d) * 0.6) -6px; } 100% { translate: var(--d) 4px; rotate: 720deg; } }
+.campus-ball.hoop { animation: hoopshot 1.6s ease-in infinite; }
+@keyframes hoopshot { 0% { translate: -30px 40px; } 50% { translate: -10px -10px; } 100% { translate: 8px 4px; } }
+.jump-rope { position: absolute; z-index: 128; border: 2px solid #e8604a; border-top: none; border-radius: 0 0 50% 50%; pointer-events: none; transform-origin: 50% 0; animation: ropespin 0.55s linear infinite; }
+@keyframes ropespin { 0% { transform: scaleY(1); } 50% { transform: scaleY(-0.6); } 100% { transform: scaleY(1); } }
+.tag.food-bubble { background: #fff; border: 1px solid var(--ink); border-radius: 8px; padding: 0 3px; font-size: 11px; }
+.tag.label.dim { opacity: 0.85; }
+.spr.flag-wave { animation: flagwave 2.4s ease-in-out infinite; transform-origin: 20% 100%; }
+@keyframes flagwave { 50% { scale: 1.04 1; } }

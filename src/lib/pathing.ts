@@ -3,6 +3,7 @@ import type { Decor } from './api';
 import { ART } from './furniture';
 import { cellsOf, isWallCell } from './placement';
 import { SCHOOL } from './school';
+import { CAMPUS } from './campusArt';
 import { BEACH, BUILDINGS, FARM, GARDEN, RESERVED, WALK_THROUGH, ROOM, roomGrid, roomPt, SCENES, TOWN, type Pt, type SceneId } from './world';
 
 interface Grid { cols: number; rows: number; blocked: Uint8Array; toCell: (p: Pt) => [number, number]; toPt: (c: number, r: number) => Pt }
@@ -52,7 +53,7 @@ function outdoorShapes(scene: SceneId, decor: Decor[]): Shape[] {
     rect(TOWN.mailbox.x - 3, TOWN.mailbox.y - 6, TOWN.mailbox.x + 3, TOWN.mailbox.y - 1);
     rect(TOWN.toArcade.x - 21, TOWN.toArcade.y - 30, TOWN.toArcade.x + 21, TOWN.toArcade.y - 6);
     rect(TOWN.bus.x - 4, TOWN.bus.y - 4, TOWN.bus.x + 4, TOWN.bus.y);   // trạm xe buýt
-    rect(SCHOOL.x - 24, SCHOOL.y - 30, SCHOOL.x + 24, SCHOOL.y - 2);   // trường học
+    rect(SCHOOL.x - 5, SCHOOL.y - 4, SCHOOL.x + 5, SCHOOL.y);   // biển xe đưa đón học sinh
     rect(TOWN.twin.x - 6, TOWN.twin.y - 6, TOWN.twin.x + 6, TOWN.twin.y);
     rect(TOWN.wheel.x - 16, TOWN.wheel.y - 24, TOWN.wheel.x + 16, TOWN.wheel.y - 2);   // chân đu quay
     // Hàng rào cây quanh vườn hoa (chừa lối vào phía trên)
@@ -61,6 +62,12 @@ function outdoorShapes(scene: SceneId, decor: Decor[]): Shape[] {
     rect(g.x - 10, gy1 + 4, gx1 + 10, gy1 + 11);
     rect(g.x - 10, g.y - 10, g.x - 4, gy1 + 10); rect(gx1 + 4, g.y - 10, gx1 + 10, gy1 + 10);
     grid(GARDEN, 'garden');
+  }
+  if (scene === 'campus') {
+    rect(0, 145, CAMPUS.gate.x0, 157); rect(CAMPUS.gate.x1, 145, 256, 157);         // hàng rào, chừa cổng
+    rect(CAMPUS.flag.x - 3, CAMPUS.flag.y - 4, CAMPUS.flag.x + 3, CAMPUS.flag.y);
+    for (const t of CAMPUS.tables) rect(t.x - 20, t.y - 2, t.x + 20, t.y + 4);
+    for (const c of Object.values(CAMPUS.carts)) rect(c.x - 16, c.y - 8, c.x + 16, c.y);
   }
   if (scene === 'beach') {
     trunk(180, 62); trunk(134, 64);

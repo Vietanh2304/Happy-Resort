@@ -17,7 +17,7 @@ import { loadMusicPref, music, saveMusicPref } from '../lib/music';
 import { occupant } from '../lib/placement';
 import { weatherIcon } from '../lib/weather';
 import { villageWeather } from '../lib/villageWeather';
-import { BATH, BEACH, RIDE_MS, SCENES, TOWN, farmCell, type GameId, type Pt, type SceneId } from '../lib/world';
+import { BATH, BEACH, BUILDINGS, RIDE_MS, SCENES, TOWN, farmCell, type GameId, type Pt, type SceneId } from '../lib/world';
 import { addDays, festivalsOn, mainTheme, THEMES, type CustomDay } from '../lib/festivals';
 import { BedPanel, BedSheet, InviteModal } from './Bed';
 import { KidNameSheet, KidSheet } from './Family';
@@ -29,6 +29,9 @@ import { AlbumSheet, BookSheet, CalendarSheet, FestTray, PetSheet, PhotoSheet } 
 import { ReefPanel } from './Reef';
 import { SkyPanel } from './Skydive';
 import { SchoolPanel } from './School';
+import { CampusPanel, StallSheet } from './Campus';
+import { CAMPUS } from '../lib/campusArt';
+import type { StallId } from '../lib/school';
 import { DailyGift, DailyQuiz } from './Daily';
 import { AnimalSheet, RanchShopSheet, WorkshopSheet } from './Ranch';
 import { TailorSheet } from './Tailor';
@@ -83,6 +86,7 @@ type SheetState =
   | { kind: 'gift' }
   | { kind: 'animal'; id: string }
   | { kind: 'ranchshop' }
+  | { kind: 'stall'; id: StallId }
   | { kind: 'workshop' }
   | { kind: 'tailor' }
   | { kind: 'work' }
@@ -483,7 +487,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Người ấy vừa vào rạp/nhà hàng → rủ mình
   const theirScene = theirs?.scene;
   useEffect(() => {
-    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky', 'school'].includes(theirScene) && theirScene !== scene) {
+    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky', 'school', 'campus'].includes(theirScene) && theirScene !== scene) {
       toast(`${SCENES[theirScene].icon} ${partnerName} đang đợi bạn ở ${SCENES[theirScene].name}`);
     }
   }, [theirScene]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -676,7 +680,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // ───── Em bé ─────
   const expecting = kids.find(k => k.born_on > myTime.date);
   // Ngày đầu tiên đi học: ghé trường đúng lúc bé đang học thì ghi vào kỷ niệm
-  const firstDay = scene === 'school' ? kids.find(k => k.name && atSchool(k, myTime.date, myTime.hour, myTime.minute) && !k.milestones.includes('school')) : undefined;
+  const firstDay = scene === 'school' || scene === 'campus' ? kids.find(k => k.name && atSchool(k, myTime.date, myTime.hour, myTime.minute) && !k.milestones.includes('school')) : undefined;
   useEffect(() => {
     if (!firstDay) return;
     api.kidMilestone(firstDay.id, 'school').then(ok => { if (ok) { toast(`🌟 Mốc đáng nhớ: 🏫 Ngày đầu tiên đi học của bé ${firstDay.name}!`); notify('kids'); } }, console.error);
@@ -789,6 +793,19 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const answeredToday = answers.some(a => a.user_id === me.id && a.day === myTime.date);
   const firstSeat = !partner || me.id < partner.id;
   const close = () => setSheet(null);
+  // Nút ra luôn hiện ở các nơi chỉ có cửa vẽ trên nền (dễ bị bỏ sót): công ty, thành phố, cửa hàng, khu vui chơi, nhà, trang trại…
+  const EXITS: Partial<Record<SceneId, [SceneId, Pt, string]>> = {
+    office: ['city', { x: 128, y: 112 }, '🚪 Ra phố'],
+    city: ['town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 }, '🚌 Về làng'],
+    shop: ['town', BUILDINGS[1].door, '🚪 Ra ngoài'],
+    arcade: ['town', TOWN.toArcade, '🚪 Ra ngoài'],
+    house: ['town', BUILDINGS[0].door, '🚪 Ra ngoài'],
+    bedroom: ['house', SCENES.bedroom.spawn, '🚪 Ra phòng khách'],
+    ranch: ['farm', { x: 230, y: 180 }, '🌾 Về nông trại'],
+    farm: ['town', TOWN.toFarm, '🏘️ Về làng'],
+    beach: ['town', { x: TOWN.toBeach.x, y: TOWN.toBeach.y - 6 }, '🏘️ Về làng'],
+  };
+  const exit = !editing && !fishing && !inBed && !festIcon ? EXITS[scene] : undefined;
   const wxIcon = (v: View | null) => (v?.weather ? (v.weather.type === 'clear' && v.phase === 'night' ? '🌙' : weatherIcon[v.weather.type]) : '');
 
   return (
@@ -845,7 +862,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <World
           scene={scene} me={me} partner={partner} myView={myView} realView={realView} partnerView={partnerView}
           live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
-          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} animals={animals} job={myJob} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
+          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
           farm={farm} guests={activeGuests} pickups={pickups} fishing={fishing} combos={combos}
           daysTogether={bridge.planks}
@@ -879,6 +896,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
             star: tapStar,
           }}
         />
+        {exit && <button className="exit-chip" onClick={() => enter(exit[0], exit[1])}>{exit[2]}</button>}
       </main>
       {link === 'down' && <div className="link-down">📡 Mất kết nối đồng bộ với người ấy — đang thử nối lại… (kiểm tra mạng, hoặc tải lại trang)</div>}
       {gameInvite && sheet?.kind !== 'game' && <button className="invite-chip" onClick={() => { openGame(gameInvite, false); setGameInvite(null); }}>🎮 Vào chơi {TITLES[gameInvite]}</button>}
@@ -920,8 +938,12 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           <button className="btn small ghost leave" onClick={() => enter('town', { x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 })}>🚪 Ra ngoài</button>
         </div>
       ) : scene === 'school' ? (
-        <SchoolPanel live={live} kids={kids} when={myTime} partnerHere={!!partnerHere} partnerName={partnerName} onLeave={() => enter('town', SCHOOL.door)}
+        <SchoolPanel live={live} kids={kids} when={myTime} partnerHere={!!partnerHere} partnerName={partnerName} onLeave={() => enter('campus', CAMPUS.door)}
           onStudy={() => setSheet({ kind: 'study' })} onMeeting={() => (myTime.hour >= 17 ? setSheet({ kind: 'meeting' }) : toast('📣 Họp phụ huynh bắt đầu lúc 17:00 — tới giờ quay lại nhé'))}
+          onPickup={k => { enter('town', SCHOOL.door); live.update({ walkKid: k.id }); toast(`🎒 Đón bé ${k.name} tan học — bé nắm tay đi về cùng bạn`); }} />
+      ) : scene === 'campus' ? (
+        <CampusPanel live={live} kids={kids} when={myTime} partnerHere={!!partnerHere} partnerName={partnerName}
+          onClass={() => enter('school')} onStall={id => setSheet({ kind: 'stall', id })} onLeave={() => enter('town', SCHOOL.door)}
           onPickup={k => { enter('town', SCHOOL.door); live.update({ walkKid: k.id }); toast(`🎒 Đón bé ${k.name} tan học — bé nắm tay đi về cùng bạn`); }} />
       ) : scene === 'reef' ? (
         <ReefPanel live={live} partnerHere={!!partnerHere} partnerName={partnerName} seen={reefSeen} onLeave={() => enter('lounge')} />
@@ -1006,6 +1028,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       )}
       {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={myTime.date} live={live} pick={sheet.id} onClose={close} />}
       {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} />}
+      {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'workshop' && <WorkshopSheet inventory={inventory} together={!!partnerHere} partnerName={partnerName} onClose={close} />}
       {sheet?.kind === 'tailor' && <TailorSheet me={me} partnerName={partnerName} inventory={inventory} outfits={outfits} wearing={me.avatar.design}

@@ -1428,6 +1428,97 @@
       "name": "Giấy khen của bé",
       "icon": "🏅",
       "kind": "decor"
+    },
+    {
+      "id": "com_ga",
+      "name": "Cơm gà nhà trường",
+      "icon": "🍗",
+      "kind": "dish",
+      "price": 20
+    },
+    {
+      "id": "com_suon",
+      "name": "Cơm sườn trứng",
+      "icon": "🍱",
+      "kind": "dish",
+      "price": 23
+    },
+    {
+      "id": "canh_bi",
+      "name": "Canh bí đỏ",
+      "icon": "🥣",
+      "kind": "dish",
+      "price": 13
+    },
+    {
+      "id": "sua_hop",
+      "name": "Hộp sữa tươi",
+      "icon": "🧃",
+      "kind": "dish",
+      "price": 8
+    },
+    {
+      "id": "chuoi",
+      "name": "Chuối tráng miệng",
+      "icon": "🍌",
+      "kind": "dish",
+      "price": 5
+    },
+    {
+      "id": "banh_mi",
+      "name": "Bánh mì pate",
+      "icon": "🥖",
+      "kind": "dish",
+      "price": 13
+    },
+    {
+      "id": "xoi_gac",
+      "name": "Xôi gấc",
+      "icon": "🍙",
+      "kind": "dish",
+      "price": 10
+    },
+    {
+      "id": "bap_xao",
+      "name": "Bắp xào bơ",
+      "icon": "🌽",
+      "kind": "dish",
+      "price": 10
+    },
+    {
+      "id": "nuoc_mia",
+      "name": "Nước mía",
+      "icon": "🥤",
+      "kind": "dish",
+      "price": 8
+    },
+    {
+      "id": "kem_que",
+      "name": "Kem que",
+      "icon": "🍦",
+      "kind": "dish",
+      "price": 8
+    },
+    {
+      "id": "banh_trang",
+      "name": "Bánh tráng trộn",
+      "icon": "🌯",
+      "kind": "dish",
+      "price": 10
+    },
+    {
+      "id": "tra_sua",
+      "name": "Trà sữa trân châu",
+      "icon": "🧋",
+      "kind": "dish",
+      "price": 15
+    },
+    {
+      "id": "keo_bong",
+      "name": "Kẹo bông gòn",
+      "icon": "🍭",
+      "kind": "dish",
+      "price": 8
     }
   ],
   "animals": [

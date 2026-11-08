@@ -6,12 +6,14 @@ import { characterSprite } from '../lib/sprites';
 import type { Pt } from '../lib/world';
 import { Tag, useScale } from './Stage';
 import { Follower } from './Wander';
+import { avatarPx } from './Avatar';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
 const OUTFITS = [0, 1, 2, 6, 7, 8, 9, 14, 16, 3, 10];
 const CHATTER = ['Trễ giờ làm rồi!', 'Alo, em nghe…', 'Trưa nay ăn gì ta?', 'Mưa sắp tới kìa', '☕ Cà phê không?', 'Hôm nay đẹp trời ghê', '…'];
 
 function Walker({ i }: { i: number }) {
+  const ps = avatarPx(useScale());
   const r = useMemo(() => seeded(`walker:${i}`), [i]);
   const look = useMemo(() => ({ gender: (r() < 0.5 ? 'm' : 'f') as 'm' | 'f', hair: Math.floor(r() * 8), hairColor: Math.floor(r() * 6), skin: Math.floor(r() * 4), shirt: Math.floor(r() * 12), outfit: OUTFITS[Math.floor(r() * OUTFITS.length)] }), [r]);
   const y = CITY.sidewalk.y0 + 6 + Math.floor(r() * 20);
@@ -31,7 +33,7 @@ function Walker({ i }: { i: number }) {
   }, [i]);
   return (
     <>
-      <Follower sprite={characterSprite(look, 'idle', undefined, 'side')} walk={characterSprite(look, 'walk', undefined, 'side', 1)} x={at.x} y={at.y} title="Người đi đường" onClick={() => setSay(CHATTER[i % CHATTER.length])} />
+      <Follower sprite={characterSprite(look, 'idle', undefined, 'side')} walk={characterSprite(look, 'walk', undefined, 'side', 1)} x={at.x} y={at.y} title="Người đi đường" ps={ps} onClick={() => setSay(CHATTER[i % CHATTER.length])} />
       {say && <Tag x={at.x} y={at.y - 30} className="bed-bubble">{say}</Tag>}
     </>
   );

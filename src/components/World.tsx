@@ -39,7 +39,9 @@ import { SkyContent } from './Skydive';
 import { reefBackground } from '../lib/reef';
 import { SWIMMERS } from '../lib/critters';
 import { Follower, Wanderer } from './Wander';
-import { atSchool, classroomSprite, SCHOOL, schoolSprite } from '../lib/school';
+import { atSchool, classroomSprite, SCHOOL, type StallId } from '../lib/school';
+import { CAMPUS, campusBackground, schoolStopSprite } from '../lib/campusArt';
+import { CampusContent } from './Campus';
 import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
 import { RanchContent } from './Ranch';
@@ -110,6 +112,7 @@ export interface WorldProps {
   ranch?: { animal: (id: string) => void; shop: () => void; workshop: () => void; tailor: () => void };
   job?: import('../lib/work').JobData;
   work?: { desk: () => void; talk: (name: string, line: string) => void };
+  stall?: (id: StallId) => void;
   /** Đang ôm / hôn nhau (cả hai cùng thấy): bên trái/phải của mình */
   couple?: { kind: 'hug' | 'kiss'; at: number; mySide: 'L' | 'R' } | null;
   hillReal: boolean;             // đang chọn "Giờ thật" (theo thời tiết thật)
@@ -172,6 +175,7 @@ export function World(props: WorldProps) {
     reef: () => reefBackground(myView.phase),
     sky: () => undefined,
     school: classroomSprite,
+    campus: () => campusBackground(myView.phase),
     ranch: () => ranchBackground(myView.phase === 'night'),
     city: () => cityBackground(myView.phase),
     office: () => officeBackground(myView.phase === 'night'),
@@ -347,8 +351,12 @@ function SceneContent(p: WorldProps) {
       {scene === 'school' && (
         <>
           <SchoolContent kids={p.kids} me={me} partner={partner} when={p.myView.time} walking={[live.mine.walkKid, theirs?.walkKid]} onKid={id => on.kid(id)} />
-          <Hot x={82} y={140} w={28} h={4} title="Ra ngoài" onClick={() => enter('town', SCHOOL.door)} />
+          <Hot x={82} y={140} w={28} h={4} title="Ra sân trường" onClick={() => enter('campus', CAMPUS.door)} />
         </>
+      )}
+      {scene === 'campus' && (
+        <CampusContent kids={p.kids} me={me} partner={partner} when={p.myView.time} walking={[live.mine.walkKid, theirs?.walkKid]} night={phase === 'night'} go={go}
+          onKid={id => on.kid(id)} onClass={() => enter('school')} onStall={id => p.stall?.(id)} onHome={() => enter('town', SCHOOL.door)} />
       )}
       {scene === 'reef' && <ReefContent phase={phase} go={go} onSee={id => p.onSee?.(id)} chestOpen={!!p.chestOpen} onChest={() => p.onChest?.()} />}
       {scene === 'sky' && (
@@ -531,8 +539,8 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       {p.theme && <FestTown {...p} theme={p.theme} />}
       <Spr sprite={busStopSprite()} x={TOWN.bus.x} y={TOWN.bus.y} title="🚌 Trạm xe buýt — lên thành phố đi làm" onClick={() => go({ x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 }, () => enter('city'))} />
       <Tag x={TOWN.bus.x + 4} y={TOWN.bus.y - 26} className="label" onClick={() => go({ x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 }, () => enter('city'))}>🚌 Đi làm</Tag>
-      <Spr sprite={schoolSprite()} x={SCHOOL.x} y={SCHOOL.y} title="🏫 Trường học của các bé" onClick={() => go(SCHOOL.door, () => enter('school'))} />
-      <Tag x={SCHOOL.x} y={SCHOOL.y - 52} className="label" onClick={() => go(SCHOOL.door, () => enter('school'))}>🏫 Trường học{theirs?.scene === 'school' ? ' 💗' : ''}</Tag>
+      <Spr sprite={schoolStopSprite()} x={SCHOOL.x} y={SCHOOL.y} title="🚸 Xe đưa đón — tới trường của các bé" onClick={() => go(SCHOOL.door, () => enter('campus'))} />
+      <Tag x={SCHOOL.x} y={SCHOOL.y - 34} className="label" onClick={() => go(SCHOOL.door, () => enter('campus'))}>🏫 Trường học{theirs?.scene === 'school' || theirs?.scene === 'campus' ? ' 💗' : ''}</Tag>
       <Spr sprite={telescopeSprite()} x={TOWN.twin.x} y={TOWN.twin.y} title="🔭 Đài quan sát hai bờ" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))} />
       <Tag x={TOWN.twin.x} y={TOWN.twin.y - 24} className="label" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))}>🔭{theirs?.scene === 'twin' ? ' 💗' : ''}</Tag>
       {p.meetupLeft !== null && p.meetupLeft >= 0 && <div className="plane-fly"><span>✈️</span><b>{p.meetupLeft === 0 ? '💞 Hôm nay gặp nhau rồi!' : `Còn ${p.meetupLeft} ngày nữa gặp nhau 💕`}</b></div>}

@@ -120,3 +120,60 @@ export const owlSprite = () => makeSprite('owl-teacher:v1', 18, 22, p => {
   p.rect(8, 10, 2, 2, '#f6a03a'); p.rect(2, 2, 3, 4, '#a8784a'); p.rect(13, 2, 3, 4, '#a8784a');
   p.rect(15, 12, 2, 9, '#c8a050'); p.rect(6, 21, 2, 1, '#f6a03a'); p.rect(10, 21, 2, 1, '#f6a03a');
 });
+
+// ───────── Thời khoá biểu một ngày ở trường (giờ thật, thứ 2–6) ─────────
+export type Period = 'flag' | 'class' | 'recess' | 'lunch' | 'nap' | 'pe' | 'dismiss' | 'closed';
+export function periodOf(date: string, hour: number, minute: number): Period {
+  const dow = new Date(`${date}T12:00:00`).getDay(), h = hour + minute / 60;
+  if (dow < 1 || dow > 5) return 'closed';
+  if (h < 7.5) return 'closed';
+  if (h < 8) return 'flag';
+  if (h < 9.5) return 'class';
+  if (h < 10) return 'recess';
+  if (h < 11) return 'class';
+  if (h < 12) return 'lunch';
+  if (h < 13) return 'nap';
+  if (h < 14.5) return 'class';
+  if (h < 15.5) return 'pe';
+  if (h < 16.5) return 'class';
+  if (h < 17) return 'dismiss';
+  return 'closed';
+}
+export const PERIOD: Record<Period, { icon: string; label: string; time: string }> = {
+  flag: { icon: '🚩', label: 'Chào cờ & tập thể dục buổi sáng', time: '7:30–8:00' },
+  class: { icon: '✏️', label: 'Đang trong giờ học', time: '' },
+  recess: { icon: '🛝', label: 'Ra chơi', time: '9:30–10:00' },
+  lunch: { icon: '🍱', label: 'Ăn trưa ở nhà ăn', time: '11:00–12:00' },
+  nap: { icon: '😴', label: 'Ngủ trưa', time: '12:00–13:00' },
+  pe: { icon: '⚽', label: 'Giờ thể dục ở sân trường', time: '14:30–15:30' },
+  dismiss: { icon: '🔔', label: 'Tan học — phụ huynh đón con', time: '16:30–17:00' },
+  closed: { icon: '🌙', label: 'Trường nghỉ', time: '' },
+};
+export const SCHEDULE = '7:30 chào cờ · 8:00 vào lớp · 9:30 ra chơi · 11:00 ăn trưa · 12:00 ngủ trưa · 13:00 học · 14:30 thể dục · 16:30 tan học';
+/** Trong lớp chỉ có học sinh khi đang giờ học / ngủ trưa */
+export const inClassroom = (p: Period) => p === 'class' || p === 'nap';
+
+/** Môn thể dục hôm nay */
+export const PE_GAMES = [
+  { id: 'ball', icon: '⚽', name: 'Đá bóng' }, { id: 'rope', icon: '🪢', name: 'Nhảy dây' }, { id: 'run', icon: '🏃', name: 'Chạy tiếp sức' },
+  { id: 'tug', icon: '💪', name: 'Kéo co' }, { id: 'aerobic', icon: '🤸', name: 'Thể dục nhịp điệu' }, { id: 'hoop', icon: '🏀', name: 'Ném bóng rổ' },
+] as const;
+export const peOf = (date: string) => PE_GAMES[Math.floor(seeded(`pe:${date}`)() * PE_GAMES.length)];
+
+/** Các bạn cùng lớp (NPC) */
+const SKIN = ['#ffe0c8', '#f6cfa8', '#e0a878', '#b07850'], HAIR = ['#3a2a2a', '#6a4028', '#1a1a2a', '#c8904a', '#8a5a3c'];
+const CLOTH = ['#8db8ef', '#f59ab3', '#a5d470', '#f6c64e', '#c8a0f0', '#f6a06a', '#7ad0d0'];
+export const CLASSMATE_NPC = ['Bin', 'Na', 'Tí', 'Mi', 'Bông', 'Cún', 'Bơ', 'Gạo', 'Sóc', 'Mít', 'Kem', 'Tôm'].map((name, i) => {
+  const r = seeded(`mate:${name}`);
+  const girl = i % 2 === 1;
+  return { name, girl, look: { skin: SKIN[Math.floor(r() * SKIN.length)], hair: HAIR[Math.floor(r() * HAIR.length)], cloth: CLOTH[(i * 3 + Math.floor(r() * 3)) % CLOTH.length] } };
+});
+export const MATE_CHATTER = ['Chơi đuổi bắt không?', 'Tớ được cô khen đó!', 'Trưa nay có cơm gà 😋', 'Ê nhảy dây đi!', 'Hihi', 'Tớ quên vở rồi 😱', 'Bạn là ba mẹ của… hả?', 'Chào cô chú ạ! 👋'];
+
+/** Đồ ăn ở trường: nhà ăn (cơm trưa) + 2 xe hàng trước cổng. price = giá mua (bán lại được nửa giá) */
+export type StallId = 'canteen' | 'bread' | 'sweet';
+export const STALLS: Record<StallId, { icon: string; name: string; vendor: string; hello: string; menu: { id: string; price: number }[] }> = {
+  canteen: { icon: '🍱', name: 'Nhà ăn của trường', vendor: 'Cô cấp dưỡng', hello: 'Cơm trưa nóng hổi đây, ăn cho mau lớn nha!', menu: [{ id: 'com_ga', price: 40 }, { id: 'com_suon', price: 45 }, { id: 'canh_bi', price: 25 }, { id: 'sua_hop', price: 15 }, { id: 'chuoi', price: 10 }] },
+  bread: { icon: '🥖', name: 'Xe bánh mì cô Tư', vendor: 'Cô Tư', hello: 'Bánh mì nóng giòn mới ra lò nè!', menu: [{ id: 'banh_mi', price: 25 }, { id: 'xoi_gac', price: 20 }, { id: 'bap_xao', price: 20 }, { id: 'nuoc_mia', price: 15 }] },
+  sweet: { icon: '🍦', name: 'Xe kem & bánh tráng', vendor: 'Chú Bảy', hello: 'Kem mát lạnh, bánh tráng trộn đây các con ơi!', menu: [{ id: 'kem_que', price: 15 }, { id: 'banh_trang', price: 20 }, { id: 'tra_sua', price: 30 }, { id: 'keo_bong', price: 15 }] },
+};

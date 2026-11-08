@@ -20,8 +20,10 @@ export function Wanderer({ id, home, r, name, onClick, badge, box }: { id: strin
   return <Follower sprite={critterSprite(id, 0)} walk={critterSprite(id, 1)} x={at.x} y={at.y - (fly ? 12 : 0)} title={name} onClick={() => onClick(at)} flap={fly} badge={badge} />;
 }
 
-export function Follower({ sprite, walk, x, y, title, onClick, flap, badge }: { sprite: Sprite; walk?: Sprite; x: number; y: number; title: string; onClick: () => void; flap?: boolean; badge?: string }) {
+/** ps: cỡ một pixel của sprite (mặc định = cỡ cảnh; người lớn dùng avatarPx để bằng nhân vật chính) */
+export function Follower({ sprite, walk, x, y, title, onClick, flap, badge, ps, className }: { sprite: Sprite; walk?: Sprite; x: number; y: number; title: string; onClick: () => void; flap?: boolean; badge?: string; ps?: number; className?: string }) {
   const s = useScale();
+  const px = ps ?? s;
   const [shown, setShown] = useState({ x, y, ms: 0, left: false });
   const [moving, setMoving] = useState(false);
   const [step, setStep] = useState(false);
@@ -42,15 +44,15 @@ export function Follower({ sprite, walk, x, y, title, onClick, flap, badge }: { 
   }, [moving, flap]);
   const sp = (moving || flap) && step && walk ? walk : sprite;
   const pos = {
-    left: Math.round((shown.x - sp.w / 2) * s), top: Math.round((shown.y - sp.h) * s),
+    left: Math.round(shown.x * s - (sp.w / 2) * px), top: Math.round(shown.y * s - sp.h * px),
     transition: `left ${shown.ms}ms linear, top ${shown.ms}ms linear`,
   };
   return (
     <>
-      <img src={sp.url} alt={title} title={title} draggable={false} className="spr tappable"
+      <img src={sp.url} alt={title} title={title} draggable={false} className={`spr tappable ${className ?? ''}`}
         onClick={e => { e.stopPropagation(); onClick(); }}
-        style={{ ...pos, width: sp.w * s, height: sp.h * s, zIndex: Math.round(shown.y) + 2, transform: shown.left ? 'scaleX(-1)' : undefined }} />
-      {badge && <span className="crit-badge" style={{ ...pos, marginLeft: (sp.w / 2) * s, zIndex: 300 }}>{badge}</span>}
+        style={{ ...pos, width: sp.w * px, height: sp.h * px, zIndex: Math.round(shown.y) + 2, transform: shown.left ? 'scaleX(-1)' : undefined }} />
+      {badge && <span className="crit-badge" style={{ ...pos, marginLeft: (sp.w / 2) * px, zIndex: 300 }}>{badge}</span>}
     </>
   );
 }
