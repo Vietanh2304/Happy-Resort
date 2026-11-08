@@ -39,8 +39,10 @@ interface KidSheetProps {
   live: Live;
   pick?: string;
   onClose: () => void;
+  /** Làm động tác thật (đi tới nôi, bế, cho bú, ru, tắm…) */
+  onDo?: (actionId: string, kid: api.Kid) => void;
 }
-export function KidSheet({ kids, me, partner, today, live, pick, onClose }: KidSheetProps) {
+export function KidSheet({ kids, me, partner, today, live, pick, onClose, onDo }: KidSheetProps) {
   const born = kids.filter(k => k.name && k.born_on <= today);
   const [sel, setSel] = useState(pick ?? born[0]?.id);
   const kid = born.find(k => k.id === sel) ?? born[0];
@@ -68,7 +70,8 @@ export function KidSheet({ kids, me, partner, today, live, pick, onClose }: KidS
         }
       } else if (a.id === 'talk') say = `🗣️ "${callMe}!"`;
       live.say(say);
-      if (a.id === 'hold') { live.update({ act: 'carry' }); setTimeout(() => live.update({ act: null }), 9000); onClose(); }
+      if (stage === 'baby' && onDo) { onDo(a.id, kid); onClose(); }
+      else if (a.id === 'hold') { live.update({ act: 'carry' }); setTimeout(() => live.update({ act: null }), 9000); onClose(); }
       notify('kids');
     } catch (e) { toastError(e); }
   }

@@ -17,7 +17,7 @@ import { loadMusicPref, music, saveMusicPref, type Mood } from '../lib/music';
 import { occupant } from '../lib/placement';
 import { weatherIcon } from '../lib/weather';
 import { villageWeather } from '../lib/villageWeather';
-import { BATH, BEACH, BUILDINGS, RIDE_MS, SCENES, TOWN, farmCell, type GameId, type Pt, type SceneId } from '../lib/world';
+import { BATH, BEACH, BUILDINGS, NURSERY, RIDE_MS, SCENES, TOWN, farmCell, type GameId, type Pt, type SceneId } from '../lib/world';
 import { addDays, festivalsOn, mainTheme, THEMES, type CustomDay } from '../lib/festivals';
 import { BedPanel, BedSheet, InviteModal } from './Bed';
 import { KidNameSheet, KidSheet } from './Family';
@@ -820,6 +820,24 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     if (Math.hypot(live.mine.pos.x - BATH.sink.x, live.mine.pos.y - BATH.sink.y) < 3) step(); else go(BATH.toiletStand, step);
   };
   const washHands = () => atSink('wash');
+  // Chăm bé sơ sinh bằng động tác thật: tới nôi rồi bế / cho bú / thay tã / hát ru; tắm thì bế bé sang phòng tắm
+  const babyCare = (id: string) => {
+    const plan: Record<string, [SceneId, Pt, string, number]> = {
+      bottle: ['bedroom', NURSERY.cradleStand, 'babyfeed', 7000], diaper: ['bedroom', NURSERY.cradleStand, 'diaper', 5000],
+      lullaby: ['bedroom', NURSERY.cradleStand, 'lull', 9000], hold: ['bedroom', NURSERY.cradleStand, 'carry', 10000],
+      bath: ['bathroom', NURSERY.babyTubStand, 'babybath', 8000],
+    };
+    const p = plan[id];
+    if (!p) return;
+    const [where, stand, act, ms] = p;
+    const begin = () => {
+      live.update({ act });
+      setTimeout(() => { if (liveNow.current.mine.act === act) live.update({ act: null }); }, ms);
+    };
+    if (scene === where) go(stand, begin);
+    else if (where === 'bathroom' && scene === 'bedroom') { live.update({ act: 'carry' }); go(BATH.toBath, () => { enter('bathroom', NURSERY.babyTubStand); setTimeout(begin, 300); }); }
+    else { enter(where, stand); setTimeout(begin, 300); }
+  };
   const exit = !editing && !fishing && !inBed && !festIcon ? EXITS[scene] : undefined;
   // Nhà thể chất: ném bóng rổ (vui thôi, đôi khi vào rổ)
   const shoot3 = () => { const ok = Math.random() < 0.45; live.say(ok ? '🏀 Vàoooo! 🎉' : '🏀 Ối, trượt rồi 😅'); };
@@ -1071,7 +1089,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onSleep={() => { live.update({ act: 'sleep', bed: sheet.bed }); setSheet(null); toast('😴 Chúc ngủ ngon…'); }}
           onInvite={() => askBed('love', sheet.bed)} onBaby={() => askBed('baby', sheet.bed)} onClose={close} />
       )}
-      {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={myTime.date} live={live} pick={sheet.id} onClose={close} />}
+      {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={myTime.date} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
       {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} coins={couple?.coins ?? 0} onClose={close} />}

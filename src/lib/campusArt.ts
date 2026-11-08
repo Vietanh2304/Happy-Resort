@@ -171,3 +171,10 @@ export const stoolSprite = () => makeSprite('vanity-stool', 12, 10, p => {
   p.rect(3, 5, 1, 5, '#d8b088'); p.rect(8, 5, 1, 5, '#d8b088');
   ellipse(p, 6, 4, 5.5, 2.6, '#f59ab3'); ellipse(p, 6, 3.4, 4.5, 1.8, '#f8b8cc'); p.px(4, 3, '#ffffff');
 });
+
+/** Bồn tắm em bé bằng nhựa xanh trên giá gỗ */
+export const babyTubSprite = () => makeSprite('baby-tub', 20, 16, p => {
+  p.rect(3, 8, 1, 8, '#c8905a'); p.rect(16, 8, 1, 8, '#c8905a'); p.rect(3, 13, 14, 1, '#a8703f');
+  ellipse(p, 10, 6, 9.5, 4.5, '#7ac8e8'); ellipse(p, 10, 5.4, 8, 3.2, '#a8e0f8'); ellipse(p, 10, 5.6, 6.5, 2.3, '#d8f4ff');
+  p.px(6, 4, '#ffffff'); p.px(13, 5, '#ffffff'); p.px(9, 3, '#ffffff');
+});

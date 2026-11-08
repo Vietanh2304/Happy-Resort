@@ -198,3 +198,11 @@ export const vanitySeat = (d: { x: number; y: number; rot?: number }) => (d.rot 
 export const vanityMirror = (d: { x: number; y: number; rot?: number }) => (d.rot ? roomPt(d.x + 0.3, d.y, 19) : roomPt(d.x, d.y + 0.3, 19));
 /** Động tác đứng quay lưng (đi tè, rửa tay) */
 export const BACK_ACTS = ['pee', 'wash', 'brush', 'face', 'makeup'];
+
+/** Chăm bé sơ sinh: nôi (phòng ngủ) + chỗ đứng cạnh nôi; bồn tắm em bé (phòng tắm) + chỗ đứng */
+export const NURSERY = {
+  cradle: roomPt(4.6, 2.6), cradleStand: roomPt(4.7, 3.7),
+  babyTub: roomPt(5.4, 5.6), babyTubStand: roomPt(4.5, 5.9),
+};
+/** Động tác chăm bé: bé không còn nằm trong nôi khi đang được bế / bú / tắm */
+export const BABY_OUT = ['carry', 'babyfeed', 'babybath'];

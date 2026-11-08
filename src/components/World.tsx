@@ -34,6 +34,8 @@ import {
   SINK_ACTS,
   vanitySeat,
   vanityMirror,
+  NURSERY,
+  BABY_OUT,
 } from '../lib/world';
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
@@ -45,7 +47,7 @@ import { reefBackground } from '../lib/reef';
 import { SWIMMERS } from '../lib/critters';
 import { Follower, Wanderer } from './Wander';
 import { atSchool, classroomSprite, SCHOOL, type StallId } from '../lib/school';
-import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite, stoolSprite } from '../lib/campusArt';
+import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite, stoolSprite, babyTubSprite } from '../lib/campusArt';
 import { CampusContent } from './Campus';
 import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
@@ -289,7 +291,7 @@ function SceneContent(p: WorldProps) {
   const holdFor = (who: typeof live.mine | null, mine: boolean): Hold | undefined => {
     if (!who) return undefined;
     if (scene === 'camp' && who.act === 'roast') return { spec: { kind: 'stick', color: marshmallow(mine ? p.campHeat : 55) }, mode: 'roast' };
-    if (who.act === 'carry') return { spec: { kind: 'baby', color: '#f7b8cc' }, mode: 'carry' };
+    if (who.act === 'carry' || who.act === 'babyfeed') return { spec: { kind: 'baby', color: '#f7b8cc' }, mode: 'carry' };
     if (scene === 'beach' && who.act === 'fishing') return { spec: { kind: 'rod', color: '#c98a52' }, mode: 'fish' };
     if (scene === 'farm' && who.act === 'water') return { spec: { kind: 'can', color: '#7ac8e8' }, mode: 'pour' };
     if (scene === 'cafe' && who.act === 'read') return { spec: { kind: 'book', color: '#8db8ef' }, mode: 'read' };
@@ -991,12 +993,18 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
       continue;
     }
     if (stage === 'baby' && scene === 'bedroom') {
-      const c = roomPt(4.6, 2.6);
+      const c = NURSERY.cradle;
+      const acts = [live.mine.act, theirs?.act];
+      const out_ = acts.some(a => BABY_OUT.includes(a ?? ''));      // bé đang được bế / cho bú
+      const lull = acts.includes('lull'), diaper = acts.includes('diaper'), feed = acts.includes('babyfeed');
       out.push(
         <div key={k.id}>
-          <Spr sprite={cradleSprite()} x={c.x} y={c.y} title={`👶 Nôi của bé ${k.name}`} onClick={() => p.on.kid(k.id)} className="rock" />
-          <Spr sprite={kidSprite('baby', look, sad ? 'idle' : 'sleep', girl)} x={c.x - 1} y={c.y - 6} z={Math.round(c.y) + 1} onClick={() => p.on.kid(k.id)} />
-          {sad && <Tag x={c.x} y={c.y - 22} className="hint">🍼?</Tag>}
+          <SprPx sprite={cradleSprite()} x={c.x} y={c.y} k={0.85} title={`👶 Nôi của bé ${k.name}`} onClick={() => p.on.kid(k.id)} className={lull ? 'rock fast' : 'rock'} />
+          {!out_ && <SprPx sprite={kidSprite('baby', look, lull || !sad ? 'sleep' : 'idle', girl)} x={c.x - 1} y={c.y - 5} z={Math.round(c.y) + 1} k={0.75} onClick={() => p.on.kid(k.id)} />}
+          {sad && !out_ && !lull && <Tag x={c.x} y={c.y - 20} className="hint">🍼?</Tag>}
+          {lull && <Tag x={c.x + 2} y={c.y - 22} className="float-notes">🎵 🎶</Tag>}
+          {diaper && <Tag x={c.x} y={c.y - 18} className="float-notes">🧷✨</Tag>}
+          {feed && (() => { const who = live.mine.act === 'babyfeed' ? live.mine : theirs!; return <Tag x={who.pos.x + 5} y={who.pos.y - 20} className="float-notes">🍼</Tag>; })()}
         </div>,
       );
     } else if (stage !== 'baby' && scene === 'house' && !atSchool(k, today, p.myView.time.hour, p.myView.time.minute)) {
@@ -1191,6 +1199,17 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
         </>
       )}
       {scene === 'bathroom' && <BathContent {...p} />}
+      {scene === 'bathroom' && p.kids.some(k => k.name && k.born_on <= p.myView.time.date && kidStage(k, p.myView.time.date) === 'baby') && (() => {
+        const t = NURSERY.babyTub, kid = p.kids.find(k => k.name && kidStage(k, p.myView.time.date) === 'baby')!;
+        const bathing = [p.live.mine.act, p.partnerHere ? p.live.theirs?.act : null].includes('babybath');
+        return (
+          <>
+            <SprPx sprite={babyTubSprite()} x={t.x} y={t.y} k={0.85} title="🛁 Bồn tắm em bé" />
+            {bathing && <SprPx sprite={kidSprite('baby', kidLook(kid, p.me, p.partner), 'idle', kid.gender === 'f')} x={t.x} y={t.y - 5} z={Math.round(t.y) + 1} k={0.75} />}
+            {bathing && <Tag x={t.x} y={t.y - 16} className="float-notes">🫧 💦 🦆</Tag>}
+          </>
+        );
+      })()}
       {scene === 'bathroom' && (
         <>
           <Spr sprite={toiletSprite()} x={BATH.toilet.x} y={BATH.toilet.y + 4} z={Math.round(BATH.toilet.y) - 1} title="🚽 Bồn cầu" />
@@ -1490,4 +1509,12 @@ function MakeupFx({ look, mi, st, s, z }: { look: Profile['avatar']; mi: Pt; st:
       {k < 4 && <span className="makeup-tool" style={{ left: (st.x + 4) * s, top: (st.y - 25) * s, fontSize: Math.max(8, 3.6 * s), zIndex: Math.round(st.y) + 40 }}>{tool}</span>}
     </>
   );
+}
+
+/** Sprite vẽ theo cỡ nhân vật (avatarPx) × k — cho đồ em bé khỏi to quá */
+function SprPx({ sprite, x, y, z, k, title, onClick, className = '' }: { sprite: Sprite; x: number; y: number; z?: number; k: number; title?: string; onClick?: () => void; className?: string }) {
+  const s = useScale(), ps = avatarPx(s) * k;
+  return <img src={sprite.url} alt={title ?? ''} title={title} draggable={false} className={`spr ${onClick ? 'tappable' : ''} ${className}`}
+    onClick={onClick ? e => { e.stopPropagation(); onClick(); } : undefined}
+    style={{ left: x * s - (sprite.w * ps) / 2, top: y * s - sprite.h * ps, width: sprite.w * ps, height: sprite.h * ps, zIndex: z ?? Math.round(y) }} />;
 }

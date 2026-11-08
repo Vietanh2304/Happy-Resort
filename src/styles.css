@@ -1591,3 +1591,8 @@ textarea { resize: vertical; }
 @keyframes mk-dust { from { opacity: 1; translate: 0 0; } to { opacity: 0; translate: -6px -8px; } }
 .mirror-face .blush { position: absolute; background: radial-gradient(circle, #ff8fae 30%, transparent 31%) left / 40% 100% no-repeat, radial-gradient(circle, #ff8fae 30%, transparent 31%) right / 40% 100% no-repeat; opacity: 0.85; }
 .mirror-face .lips { position: absolute; background: #e8304a; border-radius: 40%; }
+
+/* Chăm bé */
+.spr.rock.fast { animation-duration: 0.9s !important; }
+.tag.float-notes { background: none; border: none; font-size: 12px; animation: floatnotes 1.6s ease-in-out infinite; pointer-events: none; }
+@keyframes floatnotes { 0% { translate: 0 2px; opacity: 0.5; } 50% { translate: 0 -4px; opacity: 1; } 100% { translate: 0 2px; opacity: 0.5; } }
