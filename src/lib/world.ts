@@ -2,7 +2,7 @@
 // Tọa độ là pixel logic của từng cảnh (trước khi phóng to).
 import { HH, HW } from './iso';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'campus' | 'gym' | 'ranch' | 'office' | 'city';
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'campus' | 'gym' | 'street' | 'florist' | 'bakery' | 'ranch' | 'office' | 'city';
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -39,6 +39,9 @@ export const SCENES: Record<SceneId, SceneDef> = {
   office: { name: 'Công ty', icon: '🏢', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 112, y1: 140 }, spawn: { x: 96, y: 138 } },
   ranch: { name: 'Trang trại chăn nuôi', icon: '🐄', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 44, y1: 188 }, spawn: { x: 128, y: 178 } },
   campus: { name: 'Trường học', icon: '🏫', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 100, y1: 180 }, spawn: { x: 128, y: 172 } },
+  street: { name: 'Phố tiệm nhỏ', icon: '🛍️', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 104, y1: 184 }, spawn: { x: 128, y: 176 } },
+  florist: { name: 'Tiệm hoa của Hy', icon: '🌸', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 100, y1: 140 }, spawn: { x: 96, y: 136 } },
+  bakery: { name: 'Tiệm bánh', icon: '🍰', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 100, y1: 140 }, spawn: { x: 96, y: 136 } },
   gym: { name: 'Nhà thể chất', icon: '🏀', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 86, y1: 140 }, spawn: { x: 96, y: 136 } },
   school: { name: 'Lớp học của bé', icon: '✏️', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 112, y1: 140 }, spawn: { x: 96, y: 138 } },
   sky: { name: 'Bãi nhảy dù', icon: '🪂', w: 192, h: 144, outdoor: true, spawn: { x: 96, y: 118 } },

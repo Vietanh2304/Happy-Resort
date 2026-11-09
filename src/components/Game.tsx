@@ -490,7 +490,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Người ấy vừa vào rạp/nhà hàng → rủ mình
   const theirScene = theirs?.scene;
   useEffect(() => {
-    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky', 'school', 'campus', 'gym'].includes(theirScene) && theirScene !== scene) {
+    if (theirScene && ['cinema', 'restaurant', 'cafe', 'wheel', 'camp', 'hill', 'lounge', 'reef', 'sky', 'school', 'campus', 'gym', 'florist', 'bakery'].includes(theirScene) && theirScene !== scene) {
       toast(`${SCENES[theirScene].icon} ${partnerName} đang đợi bạn ở ${SCENES[theirScene].name}`);
     }
   }, [theirScene]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -800,6 +800,9 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Nút ra luôn hiện ở các nơi chỉ có cửa vẽ trên nền (dễ bị bỏ sót): công ty, thành phố, cửa hàng, khu vui chơi, nhà, trang trại…
   const EXITS: Partial<Record<SceneId, [SceneId, Pt, string]>> = {
     office: ['city', { x: 128, y: 112 }, '🚪 Ra phố'],
+    street: ['town', { x: 94, y: 184 }, '🏘️ Về làng'],
+    florist: ['street', { x: 70, y: 106 }, '🚪 Ra phố'],
+    bakery: ['street', { x: 186, y: 106 }, '🚪 Ra phố'],
     city: ['town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 }, '🚌 Về làng'],
     shop: ['town', BUILDINGS[1].door, '🚪 Ra ngoài'],
     arcade: ['town', TOWN.toArcade, '🚪 Ra ngoài'],

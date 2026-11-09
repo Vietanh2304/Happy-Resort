@@ -53,6 +53,7 @@ import { Follower, Wanderer } from './Wander';
 import { atSchool, classroomSprite, SCHOOL, type StallId } from '../lib/school';
 import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite, stoolSprite, babyTubSprite } from '../lib/campusArt';
 import { CampusContent } from './Campus';
+import { bakeryRoom, BAKERY, FLORIST, floristRoom, STREET, streetBackground, streetSignSprite } from '../lib/shopsArt';
 import { FarmAnimals } from './Ranch';
 import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
@@ -190,6 +191,9 @@ export function World(props: WorldProps) {
     sky: () => undefined,
     school: classroomSprite,
     campus: () => campusBackground(myView.phase),
+    street: () => streetBackground(myView.phase),
+    florist: floristRoom,
+    bakery: () => bakeryRoom(true),
     gym: () => gymBackground(myView.phase === 'night'),
     ranch: () => ranchBackground(myView.phase === 'night'),
     city: () => cityBackground(myView.phase),
@@ -373,6 +377,9 @@ function SceneContent(p: WorldProps) {
           onKid={id => on.kid(id)} onClass={() => enter('school')} onGym={() => enter('gym')} onStall={id => p.stall?.(id)} onHome={() => enter('town', SCHOOL.door)}
           onSit={seat => go({ x: seat.x, y: seat.y - 6 }, () => live.update({ pos: seat, act: 'sit' }))} />
       )}
+      {scene === 'street' && <StreetContent go={go} enter={enter} />}
+      {scene === 'florist' && p.shops && <ShopInside kind="florist" go={go} onOpen={p.shops.flower} />}
+      {scene === 'bakery' && p.shops && <ShopInside kind="bakery" go={go} onOpen={p.shops.bakery} />}
       {scene === 'reef' && <ReefContent phase={phase} go={go} onSee={id => p.onSee?.(id)} chestOpen={!!p.chestOpen} onChest={() => p.onChest?.()} />}
       {scene === 'sky' && (
         <SkyContent phase={phase} firstSeat={p.firstSeat}
@@ -556,8 +563,8 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       <Tag x={TOWN.bus.x + 4} y={TOWN.bus.y - 26} className="label" onClick={() => go({ x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 }, () => enter('city'))}>🚌 Đi làm</Tag>
       <Spr sprite={schoolStopSprite()} x={SCHOOL.x} y={SCHOOL.y} title="🚸 Xe đưa đón — tới trường của các bé" onClick={() => go(SCHOOL.door, () => enter('campus'))} />
       <Tag x={SCHOOL.x} y={SCHOOL.y - 34} className="label" onClick={() => go(SCHOOL.door, () => enter('campus'))}>🏫 Trường học{theirs?.scene === 'school' || theirs?.scene === 'campus' ? ' 💗' : ''}</Tag>
-      {p.shops && <Tag x={GARDEN.x + 70} y={GARDEN.y - 18} className="label" onClick={() => go({ x: GARDEN.x + 70, y: GARDEN.y - 8 }, p.shops!.flower)}>🌸 Tiệm hoa của Hy</Tag>}
-      {p.shops && <Tag x={TOWN.cafe.x + 50} y={TOWN.cafe.y - 30} className="label" onClick={() => go({ x: TOWN.cafe.x + 40, y: TOWN.cafe.y + 6 }, p.shops!.bakery)}>🍰 Tiệm bánh</Tag>}
+      <Spr sprite={streetSignSprite()} x={GARDEN.x + 70} y={GARDEN.y - 8} title="🛍️ Phố tiệm nhỏ — tiệm hoa & tiệm bánh" onClick={() => go({ x: GARDEN.x + 70, y: GARDEN.y - 4 }, () => enter('street'))} />
+      <Tag x={GARDEN.x + 70} y={GARDEN.y - 40} className="label" onClick={() => go({ x: GARDEN.x + 70, y: GARDEN.y - 4 }, () => enter('street'))}>🛍️ Phố tiệm nhỏ{theirs?.scene === 'street' || theirs?.scene === 'florist' || theirs?.scene === 'bakery' ? ' 💗' : ''}</Tag>
       <Spr sprite={telescopeSprite()} x={TOWN.twin.x} y={TOWN.twin.y} title="🔭 Đài quan sát hai bờ" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))} />
       <Tag x={TOWN.twin.x} y={TOWN.twin.y - 24} className="label" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))}>🔭{theirs?.scene === 'twin' ? ' 💗' : ''}</Tag>
       {p.meetupLeft !== null && p.meetupLeft >= 0 && <div className="plane-fly"><span>✈️</span><b>{p.meetupLeft === 0 ? '💞 Hôm nay gặp nhau rồi!' : `Còn ${p.meetupLeft} ngày nữa gặp nhau 💕`}</b></div>}
@@ -1552,4 +1559,37 @@ function trickNow(p: WorldProps) {
   const ts = [p.live.mine.petTrick, p.partnerHere ? p.live.theirs?.petTrick : null].filter(Boolean) as { t: string; at: number }[];
   const last = ts.sort((a, b) => b.at - a.at)[0];
   return last && Date.now() - last.at < 4000 ? last.t : undefined;
+}
+
+/** Phố tiệm nhỏ: hai cửa tiệm để vào */
+function StreetContent({ go, enter }: { go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void }) {
+  const s = useScale();
+  const door = (k: 'florist' | 'bakery') => () => go(STREET[k].door, () => enter(k));
+  return (
+    <>
+      <Tag x={STREET.florist.x} y={54} className="label" onClick={door('florist')}>🌸 Tiệm hoa của Hy</Tag>
+      <Tag x={STREET.bakery.x} y={54} className="label" onClick={door('bakery')}>🍰 Tiệm bánh</Tag>
+      <button className="hot" title="Vào tiệm hoa" style={{ left: 58 * s, top: 62 * s, width: 24 * s, height: 40 * s }} onClick={e => { e.stopPropagation(); door('florist')(); }} />
+      <button className="hot" title="Vào tiệm bánh" style={{ left: 174 * s, top: 62 * s, width: 24 * s, height: 40 * s }} onClick={e => { e.stopPropagation(); door('bakery')(); }} />
+    </>
+  );
+}
+/** Bên trong tiệm: khách NPC đứng chờ, bấm quầy để xem đơn */
+const SHOP_NPC = [{ gender: 'f' as const, hair: 5, hairColor: 2, skin: 1, shirt: 8, outfit: 1 }, { gender: 'm' as const, hair: 2, hairColor: 0, skin: 2, shirt: 10, outfit: 4 }];
+function ShopInside({ kind, go, onOpen }: { kind: 'florist' | 'bakery'; go: (to: Pt, then?: () => void) => void; onOpen: () => void }) {
+  const s = useScale(), ps = avatarPx(s);
+  const spots = kind === 'florist' ? [FLORIST.counter, FLORIST.bench] : [BAKERY.oven, BAKERY.case];
+  const npc = characterSprite(SHOP_NPC[kind === 'florist' ? 0 : 1], 'idle');
+  const at = kind === 'florist' ? { x: 70, y: 112 } : { x: 168, y: 112 };
+  return (
+    <>
+      {spots.map((sp, i) => (
+        <Tag key={i} x={sp.x} y={sp.y - (kind === 'bakery' && i === 0 ? 66 : 30)} className="label" onClick={() => go(sp.stand, onOpen)}>
+          {kind === 'florist' ? (i ? '💐 Bàn cắm hoa' : '🎀 Quầy · đơn khách') : i ? '🧁 Tủ bánh · khách đặt' : '🔥 Lò nướng'}
+        </Tag>
+      ))}
+      <img src={npc.url} alt="Khách" title="🛎️ Khách đang chờ — bấm quầy để xem đơn" className="spr tappable" onClick={e => { e.stopPropagation(); go(spots[0].stand, onOpen); }}
+        style={{ left: at.x * s - (npc.w * ps) / 2, top: at.y * s - npc.h * ps, width: npc.w * ps, height: npc.h * ps, zIndex: at.y }} />
+    </>
+  );
 }
