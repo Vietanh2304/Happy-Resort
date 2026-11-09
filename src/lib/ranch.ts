@@ -18,12 +18,12 @@ export const ANIMALS: AnimalDef[] = [
   { kind: 'goat', name: 'Dê', icon: '🐐', price: 55, product: 'goat_milk', n: 1, hours: 10, eats: GREENS, pen: 'barn', verb: 'Vắt sữa dê' },
   { kind: 'sheep', name: 'Cừu', icon: '🐑', price: 60, product: 'wool', n: 2, hours: 24, eats: GREENS, pen: 'meadow', verb: 'Xén lông' },
   { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 50, product: 'cocoon', n: 3, hours: 24, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
-  // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (mỗi lần thu 1 con, bán gấp 3 lần tiền giống)
+  // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (giống 50–60 xu; lần thu nào cũng được 1 con bán gấp 3 tiền giống)
   { kind: 'horse', name: 'Ngựa', icon: '🐴', price: 100, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
-  { kind: 'carp', name: 'Cá chép giống', icon: '🐟', price: 80, product: 'carp', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá chép' },
-  { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 60, product: 'tilapia', n: 1, hours: 10, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
-  { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 70, product: 'catfish', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
-  { kind: 'koi', name: 'Cá koi giống', icon: '🎏', price: 300, product: 'koi', n: 1, hours: 24, eats: ['feed'], pen: 'pond', verb: 'Vớt cá koi' },
+  { kind: 'carp', name: 'Cá chép giống', icon: '🐟', price: 60, product: 'carp', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá chép' },
+  { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 50, product: 'tilapia', n: 1, hours: 10, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
+  { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 55, product: 'catfish', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
+  { kind: 'koi', name: 'Cá koi giống', icon: '🎏', price: 60, product: 'koi', n: 1, hours: 24, eats: ['feed'], pen: 'pond', verb: 'Vớt cá koi' },
   { kind: 'bee', name: 'Tổ ong', icon: '🐝', price: 55, product: 'honey', n: 1, hours: 24, eats: FLOWERS, pen: 'hive', verb: 'Lấy mật' },
 ];
 export const animalDef = (k: string) => ANIMALS.find(a => a.kind === k) ?? ANIMALS[0];
@@ -105,3 +105,9 @@ export const FABRIC_NEED = 2;     // mỗi bộ cần 2 cuộn len hoặc 2 tấ
 /** Giá bán bộ đồ tự may: lụa đắt hơn len, váy dạ hội/áo dài đắt hơn */
 export const designPrice = (d: Design) => (d.fabric === 'silk' ? 1188 : 1440) + (['gown', 'aodai', 'suit', 'hanbok', 'qipao'].includes(d.type) ? 120 : 0) + (d.pattern !== 'plain' ? 40 : 0);
 export const DEFAULT_DESIGN: Design = { type: 'dress', c1: '#f59ab3', c2: '#fffaf0', trim: '#fffaf0', pattern: 'dots', sleeve: 'puff', length: 'short', shoes: '#e86a7a', fabric: 'yarn' };
+
+/** Bán lại con vật: nuôi đủ 1 ngày thì bán được giá hơn lúc mua (×1.5); mới mua thì chỉ hoàn lại đúng giá */
+export const animalResale = (a: { kind: string; created_at?: string }, now = Date.now()) => {
+  const d = animalDef(a.kind);
+  return a.created_at && now - Date.parse(a.created_at) >= 24 * 3.6e6 ? Math.round(d.price * 1.5) : d.price;
+};

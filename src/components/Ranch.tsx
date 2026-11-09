@@ -7,7 +7,7 @@ import { item } from '../lib/content';
 import { sellPrice } from '../lib/game';
 import { emojiSprite } from '../lib/pixel';
 import { notify } from '../lib/realtime';
-import { animalDef, animalState, ANIMALS, FEED_PRICE, GROUPS, homeIn, RANCH, RECIPES, waitText, type AnimalDef } from '../lib/ranch';
+import { animalDef, animalResale, animalState, ANIMALS, FEED_PRICE, GROUPS, homeIn, RANCH, RECIPES, waitText, type AnimalDef } from '../lib/ranch';
 import { hiveSprite, ranchSignSprite, silkTraySprite, stableSprite } from '../lib/ranchArt';
 import { toast, toastError } from '../lib/toast';
 import type { Pt } from '../lib/world';
@@ -79,8 +79,9 @@ export function AnimalSheet({ animal, inventory, onClose, onRide }: { animal: ap
     onClose();
   });
   const sell = () => run(async () => {
-    if (!confirm(`Bán ${def.name} này lấy ${Math.round(def.price * 0.6)} xu?`)) return;
-    await api.ranchSell(animal.id, Math.round(def.price * 0.6));
+    const pay = animalResale(animal);
+    if (!confirm(`Bán ${def.name} này lấy ${pay} xu?${pay > def.price ? ' (nuôi lớn rồi nên được giá hơn lúc mua)' : ' (mới mua chưa đủ 1 ngày: hoàn lại đúng giá mua)'}`)) return;
+    await api.ranchSell(animal.id, pay);
     notify('ranch', 'profiles'); toast(`💰 Đã bán ${def.name}`); onClose();
   });
   const left = st.nextAt - Date.now();

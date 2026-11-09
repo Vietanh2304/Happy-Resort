@@ -1773,28 +1773,28 @@
       "name": "Cá chép",
       "icon": "🐟",
       "kind": "goods",
-      "price": 240
+      "price": 180
     },
     {
       "id": "tilapia",
       "name": "Cá rô phi",
       "icon": "🐟",
       "kind": "goods",
-      "price": 180
+      "price": 150
     },
     {
       "id": "catfish",
       "name": "Cá trê",
       "icon": "🐟",
       "kind": "goods",
-      "price": 210
+      "price": 165
     },
     {
       "id": "koi",
       "name": "Cá koi",
       "icon": "🎏",
       "kind": "goods",
-      "price": 900
+      "price": 180
     }
   ],
   "animals": [
