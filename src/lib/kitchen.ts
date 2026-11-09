@@ -265,7 +265,7 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
           const chop = (cell.chop ?? 0) + 1;
           if (cell.fresh) used.push(cell.id);
           setCell({ k: 'ing', id: cell.id, cut: chop >= CHOP_N, chop });
-          return done(chop >= CHOP_N ? `🔪 Thái xong ${item(cell.id).name}` : undefined);
+          return done(chop >= CHOP_N ? (variant === 'bakery' ? `👐 Nhào xong ${item(cell.id).name}` : `🔪 Thái xong ${item(cell.id).name}`) : undefined);
         }
         setHand(cell); setCell(null);
         return done();
@@ -282,12 +282,12 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
       if (r.meal && t === 'D') return no('Đang ăn mà 😋');
       // Ghép đồ: nguyên liệu vào đĩa/nồi, rót nồi ra đĩa, chồng đĩa bẩn
       if (hand.k === 'ing' && cell.k === 'plate') {
-        if (needsCut(hand.id) && !hand.cut) return no('🔪 Phải thái trước đã');
+        if (needsCut(hand.id) && !hand.cut) return no((variant === 'bakery' ? '👐 Phải nhào ở bàn nhào bột trước đã' : '🔪 Phải thái trước đã'));
         setCell({ ...cell, parts: [...cell.parts, commit(hand)] }); setHand(null);
         return done(platedSay(r.cells[k] as Plate));
       }
       if (hand.k === 'plate' && cell.k === 'ing') {
-        if (needsCut(cell.id) && !cell.cut) return no('🔪 Phải thái trước đã');
+        if (needsCut(cell.id) && !cell.cut) return no((variant === 'bakery' ? '👐 Phải nhào ở bàn nhào bột trước đã' : '🔪 Phải thái trước đã'));
         const pl = { ...hand, parts: [...hand.parts, commit(cell)] };
         setHand(pl); setCell(null);
         return done(platedSay(pl));
@@ -324,7 +324,7 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
 }
 
 function addToPot(pot: Pot, ing: Ing, now: number, onStove: boolean): Pot | string {
-  if (needsCut(ing.id) && !ing.cut) return '🔪 Phải thái trước đã';
+  if (needsCut(ing.id) && !ing.cut) return (variant === 'bakery' ? '👐 Phải nhào ở bàn nhào bột trước đã' : '🔪 Phải thái trước đã');
   if (pot.parts.length >= 4) return 'Nồi đầy rồi';
   if (stageOf(pot, now) === 'burnt') return '💨 Khét rồi — bấm vào nồi để đổ đi';
   // Cho thêm đồ sống vào thì nồi nguội bớt (món mới cũng phải chín)

@@ -365,7 +365,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
             <button className="btn k-use" onPointerDown={e => { e.preventDefault(); const [x, y] = ahead(); doAct(x, y); }}>✋ Dùng</button>
             <span className="k-hint">
               {hand ? <>Đang cầm: <b>{thingName(hand)}</b> · </> : null}
-              Máy tính: <kbd>WASD</kbd>/<kbd>mũi tên</kbd> đi, <kbd>Space</kbd> dùng · Điện thoại: chạm vào đồ để đi tới và dùng (chạm liên tục để thái/rửa)
+              Máy tính: <kbd>WASD</kbd>/<kbd>mũi tên</kbd> đi, <kbd>Space</kbd> dùng · Điện thoại: chạm vào đồ để đi tới và dùng ({variant === 'bakery' ? 'chạm liên tục để nhào bột/rửa' : 'chạm liên tục để thái/rửa'})
             </span>
           </div>
         )}
@@ -567,6 +567,7 @@ function drawTile(p: Pen, c: string, X: number, Y: number, x: number, y: number)
       p.rect(X + 12, Y + 4, 2, 2, '#7d8fa0'); p.rect(X + 12, Y + 9, 2, 4, '#7d8fa0'); p.rect(X + 3, Y + 10, 2, 2, '#f08aa6'); p.rect(X, Y + T - 2, T, 2, '#aab8c6');
       break;
     case 'B':
+      if (kitchenVariant() === 'bakery') { counter('#e8e4dc'); p.rect(X + 2, Y + 3, 12, 8, '#f8f4ec'); p.rect(X + 4, Y + 4, 7, 5, '#f6e0b0'); p.rect(X + 5, Y + 5, 3, 2, '#fff4d8'); p.rect(X + 3, Y + 11, 10, 2, '#c8905a'); p.px(X + 2, Y + 11, '#8a5a3c'); p.px(X + 13, Y + 11, '#8a5a3c'); break; }
       counter(); p.rect(X + 2, Y + 2, 12, 9, '#f0cf8e'); p.rect(X + 2, Y + 10, 12, 1, '#d4a85e'); p.rect(X + 10, Y + 3, 3, 1, '#d8dee6'); p.rect(X + 13, Y + 3, 1, 1, '#6a4a32');
       break;
     case 'S':
