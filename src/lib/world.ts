@@ -202,6 +202,8 @@ export const BACK_ACTS = ['pee', 'wash', 'brush', 'face', 'makeup'];
 /** Chăm bé sơ sinh: nôi (phòng ngủ) + chỗ đứng cạnh nôi; bồn tắm em bé (phòng tắm) + chỗ đứng */
 export const NURSERY = {
   cradle: roomPt(4.6, 2.6), cradleStand: roomPt(4.7, 3.7),
+  cradles: [roomPt(4.6, 2.6), roomPt(5.9, 2.4), roomPt(4.4, 4.2)],
+  cradleStands: [roomPt(4.7, 3.7), roomPt(6.2, 3.5), roomPt(3.6, 4.6)],
   babyTub: roomPt(5.4, 5.6), babyTubStand: roomPt(4.5, 5.9),
 };
 /** Động tác chăm bé: bé không còn nằm trong nôi khi đang được bế / bú / tắm */

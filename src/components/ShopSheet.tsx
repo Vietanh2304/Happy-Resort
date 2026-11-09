@@ -57,7 +57,7 @@ export function ShopSheet({ coins, inventory, onClose }: { coins: number; invent
       </div>
 
       {tab === 'holiday' ? (
-        <HolidayShop coins={coins} busy={busy} inventory={inventory} onBuy={(id, price) => act(async () => { for (let i = 0; i < n; i++) await api.buyItem(id, price); }, `🛍️ Đã mua ${item(id).icon} ${item(id).name} — ${WHERE.holiday}`)} />
+        <HolidayShop coins={coins} busy={busy} inventory={inventory} onBuy={(id, price) => act(() => api.buyItems(id, price, n), `🛍️ Đã mua ${item(id).icon} ${item(id).name} — ${WHERE.holiday}`)} />
       ) : tab !== 'sell' ? (
         <div className="bag-grid shop-grid">
           {content.shop.filter(x => (x.cat ?? 'decor') === tab).map(x => {
@@ -65,7 +65,7 @@ export function ShopSheet({ coins, inventory, onClose }: { coins: number; invent
             const have = inventory.find(r => r.item_id === x.id)?.qty ?? 0;
             return (
               <button key={x.id} className="bag-item" disabled={busy || coins < x.price * n}
-                onClick={() => act(async () => { for (let i = 0; i < n; i++) await api.buyItem(x.id, x.price); }, `🛍️ Đã mua ${n} ${it.icon} ${it.name} (−${x.price * n} xu) — ${WHERE[tab]}`)}>
+                onClick={() => act(() => api.buyItems(x.id, x.price, n), `🛍️ Đã mua ${n} ${it.icon} ${it.name} (−${x.price * n} xu) — ${WHERE[tab]}`)}>
                 <img src={art(x.id)} className="px-img shop-art" alt="" />
                 <small>{it.name}</small>
                 <i>🪙 {x.price}{n > 1 ? ` ×${n}` : ''}{have ? ` · có ${have}` : ''}</i>

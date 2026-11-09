@@ -39,7 +39,7 @@ function leaves(p: Pen, cx: number, cy: number, r: number, base = LEAF, seed = 0
 
 // ───────── Nội thất (isometric) ─────────
 
-const bed = () => isoSprite('bed', 2, 3, 30, q => {
+const bed = () => isoSprite('bed:v2', 2, 3, 30, q => {
   const w = shade(WOOD);
   q.box(0, 0, 0, 2, 0.3, 20, w);                                // đầu giường
   bearEars(q, ...xy(q.pt(1, 0.15, 21)), WOOD_D);
@@ -48,8 +48,9 @@ const bed = () => isoSprite('bed', 2, 3, 30, q => {
   q.box(0.2, 0.5, 9, 0.75, 0.55, 3, shade('#fff8ee', 0.5));      // gối có tai thỏ
   q.box(1.05, 0.5, 9, 0.75, 0.55, 3, shade('#fff8ee', 0.5));
   for (const g of [0.45, 1.3]) { const [x, y] = q.pt(g, 0.7, 12); q.px(x - 1, y - 1, PINK); q.px(x + 1, y - 1, PINK); }
-  q.box(0.05, 1.2, 6, 1.9, 1.75, 5, shade('#e8946a'));           // chăn
-  q.flat(0.05, 1.2, 11, 1.9, 0.3, '#f6c0a0');                     // mép chăn gập
+  q.box(0.05, 1.2, 6, 1.9, 1.75, 6, shade('#d6d6dc'));           // chăn bông màu ghi nhạt, phồng
+  q.flat(0.05, 1.2, 12, 1.9, 0.3, '#ececf0');                     // mép chăn gập
+  for (const g of [1.65, 2.1, 2.55]) for (const a of [0.5, 1, 1.5]) { const [x, y] = q.pt(a, g, 12); q.px(x, y, '#bdbdc6'); }   // đường chần bông
   q.box(0, 2.9, 0, 2, 0.12, 9, w);                               // chân giường
 });
 

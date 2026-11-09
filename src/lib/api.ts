@@ -178,6 +178,14 @@ export const craft = (take: Gift[], give: Gift[] = []) => run(supabase.rpc('craf
 export const sellItem = (itemId: string, n: number, price: number) =>
   run<number>(supabase.rpc('sell_item', { p_item: itemId, p_n: n, p_price: price }));
 export const buyItem = (itemId: string, price: number) => run<number>(supabase.rpc('buy_item', { p_item: itemId, p_price: price }));
+export async function buyItems(itemId: string, price: number, n: number) {
+  if (n <= 1) return buyItem(itemId, price);
+  const r = await supabase.rpc('buy_items', { p_item: itemId, p_price: price, p_n: n });
+  if (!r.error) return r.data as number;
+  if (!/buy_items|function/i.test(r.error.message)) throw new Error(r.error.message);
+  let left = 0; for (let i = 0; i < n; i++) left = await buyItem(itemId, price);
+  return left;
+}
 export const togetherBonus = (day: string, amount: number) =>
   run<boolean>(supabase.rpc('together_bonus', { p_day: day, p_amount: amount }));
 

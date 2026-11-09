@@ -354,7 +354,6 @@ function SceneContent(p: WorldProps) {
         <>
           <RanchContent animals={p.animals ?? []} go={go} onAnimal={p.ranch.animal} onShop={p.ranch.shop} onWorkshop={p.ranch.workshop} onTailor={p.ranch.tailor} />
           <Hot x={112} y={182} w={32} h={10} title="Về nông trại" onClick={() => go({ x: 128, y: 186 }, () => enter('farm', { x: 230, y: 180 }))} />
-          <Tag x={128} y={180} className="label">🌾 Về nông trại</Tag>
         </>
       )}
       {scene === 'school' && (
@@ -657,8 +656,7 @@ function FarmContent(p: WorldProps) {
       {editing && <GridCells {...p} grid={FARM} label="Ô ruộng" planted={(x, y) => p.farm.some(r => r.cell === farmCell(x, y))} />}
       <Spr sprite={treeSprite(1)} x={236} y={88} /><Spr sprite={cherrySprite()} x={16} y={96} /><Spr sprite={pineSprite()} x={244} y={150} />
       {!editing && <Hot x={112} y={178} w={32} h={14} title="Về làng" onClick={() => go(FARM.exit, () => enter('town', TOWN.toFarm))} />}
-      {!editing && <Tag x={232} y={170} className="label" onClick={() => go({ x: 232, y: 184 }, () => enter('ranch'))}>🐄 Trang trại chăn nuôi</Tag>}
-      <Tag x={128} y={176} className="label">🏘️ Về làng</Tag>
+      {!editing && <Tag x={228} y={58} className="label" onClick={() => go({ x: 232, y: 184 }, () => enter('ranch'))}>🐄 Chăn nuôi</Tag>}
       {!dark && <Butterflies />}
     </>
   );
@@ -993,8 +991,9 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
       continue;
     }
     if (stage === 'baby' && scene === 'bedroom') {
-      const c = NURSERY.cradle;
-      const acts = [live.mine.act, theirs?.act];
+      const bi = born.filter(b => kidStage(b, today) === 'baby').indexOf(k);
+      const c = NURSERY.cradles[bi % NURSERY.cradles.length];
+      const acts = [live.mine.care === k.id ? live.mine.act : null, theirs?.care === k.id ? theirs.act : null];
       const out_ = acts.some(a => BABY_OUT.includes(a ?? ''));      // bé đang được bế / cho bú
       const lull = acts.includes('lull'), diaper = acts.includes('diaper'), feed = acts.includes('babyfeed');
       out.push(
@@ -1016,9 +1015,9 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
 
 function KidAtHome({ idx, sprite, walk, sad, onClick, name }: { idx: number; sprite: Sprite; walk: Sprite; sad: boolean; onClick: () => void; name: string }) {
   const spots = useMemo(() => [roomPt(2.6, 6.2), roomPt(5.2, 6.4), roomPt(3.6, 5.4), roomPt(6.2, 5.6), roomPt(1.8, 5.2)], []);
-  const [i, setI] = useState(idx);
+  const [i, setI] = useState((idx * 2) % 5);
   useEffect(() => {
-    const t = setInterval(() => setI(v => (v + 1 + Math.floor(Math.random() * 2)) % spots.length), 5000 + idx * 900);
+    const t = setInterval(() => setI(v => (v + 1) % spots.length), 5000);   // các bé cùng bước một nhịp, cách nhau 2 chỗ → không bao giờ trùng
     return () => clearInterval(t);
   }, [spots.length, idx]);
   const at = spots[i];
@@ -1200,7 +1199,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
       )}
       {scene === 'bathroom' && <BathContent {...p} />}
       {scene === 'bathroom' && p.kids.some(k => k.name && k.born_on <= p.myView.time.date && kidStage(k, p.myView.time.date) === 'baby') && (() => {
-        const t = NURSERY.babyTub, kid = p.kids.find(k => k.name && kidStage(k, p.myView.time.date) === 'baby')!;
+        const t = NURSERY.babyTub, careId = p.live.mine.act === 'babybath' ? p.live.mine.care : p.live.theirs?.care, kid = p.kids.find(k => k.id === careId) ?? p.kids.find(k => k.name && kidStage(k, p.myView.time.date) === 'baby')!;
         const bathing = [p.live.mine.act, p.partnerHere ? p.live.theirs?.act : null].includes('babybath');
         return (
           <>

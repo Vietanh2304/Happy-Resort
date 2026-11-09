@@ -821,17 +821,19 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   };
   const washHands = () => atSink('wash');
   // Chăm bé sơ sinh bằng động tác thật: tới nôi rồi bế / cho bú / thay tã / hát ru; tắm thì bế bé sang phòng tắm
-  const babyCare = (id: string) => {
+  const babyCare = (id: string, kid: api.Kid) => {
+    const babies = kids.filter(k => k.name && k.born_on <= myTime.date && kidStage(k, myTime.date) === 'baby');
+    const cs = NURSERY.cradleStands[Math.max(0, babies.findIndex(k => k.id === kid.id)) % NURSERY.cradleStands.length];
     const plan: Record<string, [SceneId, Pt, string, number]> = {
-      bottle: ['bedroom', NURSERY.cradleStand, 'babyfeed', 7000], diaper: ['bedroom', NURSERY.cradleStand, 'diaper', 5000],
-      lullaby: ['bedroom', NURSERY.cradleStand, 'lull', 9000], hold: ['bedroom', NURSERY.cradleStand, 'carry', 10000],
+      bottle: ['bedroom', cs, 'babyfeed', 7000], diaper: ['bedroom', cs, 'diaper', 5000],
+      lullaby: ['bedroom', cs, 'lull', 9000], hold: ['bedroom', cs, 'carry', 10000],
       bath: ['bathroom', NURSERY.babyTubStand, 'babybath', 8000],
     };
     const p = plan[id];
     if (!p) return;
     const [where, stand, act, ms] = p;
     const begin = () => {
-      live.update({ act });
+      live.update({ act, care: kid.id });
       setTimeout(() => { if (liveNow.current.mine.act === act) live.update({ act: null }); }, ms);
     };
     if (scene === where) go(stand, begin);

@@ -305,7 +305,7 @@
       "name": "Dưa hấu",
       "icon": "🍉",
       "kind": "trinket",
-      "price": 42
+      "price": 48
     },
     {
       "id": "mooncake",
@@ -505,42 +505,42 @@
       "name": "Cà rốt",
       "icon": "🥕",
       "kind": "crop",
-      "price": 26
+      "price": 36
     },
     {
       "id": "potato",
       "name": "Khoai tây",
       "icon": "🥔",
       "kind": "crop",
-      "price": 26
+      "price": 36
     },
     {
       "id": "rice",
       "name": "Lúa",
       "icon": "🌾",
       "kind": "crop",
-      "price": 34
+      "price": 42
     },
     {
       "id": "tomato",
       "name": "Cà chua",
       "icon": "🍅",
       "kind": "crop",
-      "price": 34
+      "price": 42
     },
     {
       "id": "corn",
       "name": "Ngô",
       "icon": "🌽",
       "kind": "crop",
-      "price": 34
+      "price": 42
     },
     {
       "id": "strawberry",
       "name": "Dâu tây",
       "icon": "🍓",
       "kind": "crop",
-      "price": 42
+      "price": 48
     },
     {
       "id": "sushi",
@@ -927,91 +927,91 @@
       "name": "Cải thảo",
       "icon": "🥬",
       "kind": "crop",
-      "price": 34
+      "price": 42
     },
     {
       "id": "chili",
       "name": "Ớt",
       "icon": "🌶️",
       "kind": "crop",
-      "price": 26
+      "price": 36
     },
     {
       "id": "eggplant",
       "name": "Cà tím",
       "icon": "🍆",
       "kind": "crop",
-      "price": 34
+      "price": 42
     },
     {
       "id": "grape",
       "name": "Nho",
       "icon": "🍇",
       "kind": "crop",
-      "price": 42
+      "price": 48
     },
     {
       "id": "squash",
       "name": "Bí đỏ",
       "icon": "🎃",
       "kind": "crop",
-      "price": 42
+      "price": 48
     },
     {
       "id": "garlic",
       "name": "Tỏi",
       "icon": "🧄",
       "kind": "crop",
-      "price": 26
+      "price": 36
     },
     {
       "id": "peach_fruit",
       "name": "Quả đào",
       "icon": "🍑",
       "kind": "crop",
-      "price": 50
+      "price": 54
     },
     {
       "id": "rose_bloom",
       "name": "Hoa hồng",
       "icon": "🌹",
       "kind": "crop",
-      "price": 34
+      "price": 42
     },
     {
       "id": "tulip_bloom",
       "name": "Hoa tulip",
       "icon": "🌷",
       "kind": "crop",
-      "price": 26
+      "price": 36
     },
     {
       "id": "lavender",
       "name": "Oải hương",
       "icon": "🪻",
       "kind": "crop",
-      "price": 34
+      "price": 42
     },
     {
       "id": "daisy_bloom",
       "name": "Hoa cúc",
       "icon": "🌼",
       "kind": "crop",
-      "price": 26
+      "price": 36
     },
     {
       "id": "sunflower_bloom",
       "name": "Bông hướng dương",
       "icon": "🌻",
       "kind": "crop",
-      "price": 34
+      "price": 42
     },
     {
       "id": "sakura_bloom",
       "name": "Hoa anh đào",
       "icon": "🌸",
       "kind": "crop",
-      "price": 42
+      "price": 48
     },
     {
       "id": "kimchi_stew",
@@ -1294,7 +1294,7 @@
       "name": "Trứng vịt",
       "icon": "🥚",
       "kind": "goods",
-      "price": 26
+      "price": 40
     },
     {
       "id": "milk",
@@ -1308,7 +1308,7 @@
       "name": "Sữa dê",
       "icon": "🍼",
       "kind": "goods",
-      "price": 34
+      "price": 40
     },
     {
       "id": "wool",

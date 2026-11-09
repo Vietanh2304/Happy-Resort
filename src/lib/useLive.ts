@@ -28,6 +28,7 @@ export interface LiveState {
   ride?: number;          // lúc bấm quay vòng đu quay
   bed?: string | null;    // đang nằm trên giường nào (act = 'sleep' | 'intimate')
   walkKid?: string | null; // đang dắt bé nào đi chơi
+  care?: string | null;    // đang chăm bé nào (bế, cho bú, ru, tắm)
   duck?: boolean;          // thả vịt cao su vào bồn tắm
   sea?: SeaSpot;           // đang ngắm biển ở đâu (ghế ngắm biển)
   seaAt?: number;
