@@ -55,6 +55,7 @@ import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite
 import { CampusContent } from './Campus';
 import { bakeryRoom, BAKERY, FLORIST, floristRoom, STREET, streetBackground, streetSignSprite } from '../lib/shopsArt';
 import { StableAndPond } from './Ranch';
+import { critterSprite } from '../lib/critters';
 import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
 import { RanchContent } from './Ranch';
@@ -1547,7 +1548,7 @@ function FarmVisitors({ farm, date }: { farm: { cell: number; crop_id: string }[
         const near = flowers.find(r => r.crop_id === v.flower) ?? flowers[i % Math.max(1, flowers.length)];
         if (!near) return null;
         const home = { x: FARM.x + ((near.cell % FARM.cols) + 0.5) * FARM.cw, y: FARM.y + Math.floor(near.cell / FARM.cols) * FARM.ch + 4 };
-        return <Wanderer key={v.id} id={v.bird ? 'parrot' : 'butterfly'} home={home} r={14} name={`📸 ${v.name}`} className={`visitor hue-${v.id}`}
+        return <FlyingVisitor key={v.id} id={v.bird ? 'parrot' : 'butterfly'} home={home} name={`📸 ${v.name}`} className={`visitor hue-${v.id}`}
           onClick={() => api.collect([`bug:${v.id}`]).then(() => { toast(`📸 Đã chụp ảnh ${v.name}! Xem trong 🦋 Sổ bướm & chim`); notify('collection'); }, toastError)} />;
       })}
     </>
@@ -1621,3 +1622,13 @@ function ShopInside({ kind, go, onOpen, onExit, holding }: { kind: 'florist' | '
 
 /** Màu ngựa đang cưỡi (theo con trong chuồng) */
 const horseKind = (animals: { id: string; kind: string }[] | undefined, h: string | boolean) => (typeof h === 'string' ? animals?.find(a => a.id === h)?.kind : undefined) ?? 'horse';
+
+/** Bướm / chim bay lượn liên tục quanh luống hoa (chậm như cá lúc lặn, đủ để bấm chụp), vỗ cánh */
+function FlyingVisitor({ id, home, name, className, onClick }: { id: string; home: Pt; name: string; className: string; onClick: () => void }) {
+  const [at, setAt] = useState({ x: home.x, y: home.y - 14 });
+  useEffect(() => {
+    const t = setInterval(() => setAt({ x: home.x + (Math.random() * 2 - 1) * 30, y: home.y - 10 - Math.random() * 18 }), 1600);
+    return () => clearInterval(t);
+  }, [home.x, home.y]);
+  return <Follower sprite={critterSprite(id, 0)} walk={critterSprite(id, 1)} x={at.x} y={at.y} title={name} className={className} onClick={onClick} flap speed={18} />;
+}

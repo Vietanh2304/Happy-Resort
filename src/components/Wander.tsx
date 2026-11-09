@@ -22,7 +22,7 @@ export function Wanderer({ id, home, r, name, onClick, badge, box, scale, classN
 }
 
 /** ps: cỡ một pixel của sprite (mặc định = cỡ cảnh; người lớn dùng avatarPx để bằng nhân vật chính) */
-export function Follower({ sprite, walk, x, y, title, onClick, flap, badge, ps, className }: { sprite: Sprite; walk?: Sprite; x: number; y: number; title: string; onClick: () => void; flap?: boolean; badge?: string; ps?: number; className?: string }) {
+export function Follower({ sprite, walk, x, y, title, onClick, flap, badge, ps, className, speed = 45 }: { sprite: Sprite; walk?: Sprite; x: number; y: number; title: string; onClick: () => void; flap?: boolean; badge?: string; ps?: number; className?: string; speed?: number }) {
   const s = useScale();
   const px = ps ?? s;
   const [shown, setShown] = useState({ x, y, ms: 0, left: false });
@@ -33,7 +33,7 @@ export function Follower({ sprite, walk, x, y, title, onClick, flap, badge, ps, 
   useEffect(() => {
     const c = cur.current, dist = Math.hypot(x - c.x, y - c.y);
     if (dist < 0.5) return;
-    const ms = (dist / 45) * 1000;
+    const ms = (dist / speed) * 1000;
     const t0 = setTimeout(() => { setShown({ x, y, ms, left: x < c.x }); setMoving(true); }, 300);
     const t1 = setTimeout(() => setMoving(false), ms + 310);
     return () => { clearTimeout(t0); clearTimeout(t1); };
