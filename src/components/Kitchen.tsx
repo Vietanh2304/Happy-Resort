@@ -135,6 +135,11 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
       s.last = room.last.id;
       if (ready.current) {
         const l = room.last;
+        if (l.id.startsWith('sale:')) {   // tiệm bánh: bán bánh lên quầy → máy chủ bếp cộng xu vào hũ chung
+          if (room.host === me.id && l.coins > 0) api.grantCoins(`coins:k${l.id}`, l.coins).then(ok => ok && notify('profiles'), console.error);
+          toast(`🛎️ Bán ${l.dishes.map(d => item(d).icon).join('')} · +${l.coins} xu`);
+          return;
+        }
         toast(`${l.q === 3 ? '😋 Ngon tuyệt!' : l.q === 2 ? '🙂 Cũng ngon nè' : '😅 Hơi sống…'} Ăn xong ${l.dishes.map(d => item(d).icon).join('')}${l.both ? ' cùng nhau 💞' : ''}${l.coins ? ` · +${l.coins} xu` : ''}`);
         reward('cook', date);
       }
@@ -621,11 +626,11 @@ function BakeryCustomers({ date, last, s }: { date: string; last: { id: string; 
   }, [last?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   return <>{orders.map((o, i) => {
     if (gone.includes(i)) return null;
-    const sp = characterSprite(CUST[i % 3], 'idle'), x = 2.5 + i * 4.2, k = s * 0.55;
+    const sp = characterSprite(CUST[i % 3], 'idle'), x = 2.5 + i * 4.2, k = s * 0.8;
     return <div key={i}>
       <img src={sp.url} alt="Khách" className="k-customer" onClick={() => setAsk(ask === i ? null : i)}
         style={{ left: x * T * s, top: (ROWS - 0.15) * T * s - sp.h * k, width: sp.w * k, height: sp.h * k, cursor: 'pointer', pointerEvents: 'auto', animationDelay: `${-i * 0.6}s` }} />
-      {ask === i && <span className="k-ask" style={{ left: x * T * s, top: (ROWS - 0.15) * T * s - sp.h * k - 28 }}>{o.who}: cho mình {o.n} {item(o.want).icon} {item(o.want).name} nhé!</span>}
+      {ask === i && <span className="k-ask" style={{ left: x * T * s, top: (ROWS - 0.15) * T * s - sp.h * k - 28 }}>Cho mình {o.n} {item(o.want).icon} {item(o.want).name} nhé!</span>}
     </div>;
   })}</>;
 }
