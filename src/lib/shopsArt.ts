@@ -119,3 +119,49 @@ export const streetSignSprite = () => makeSprite('street-sign', 22, 26, p => {
   p.rect(10, 8, 2, 18, '#8a5a3c'); p.rect(1, 2, 20, 9, '#f59ab3'); p.rect(2, 3, 18, 7, '#ffd8e4');
   ellipse(p, 7, 6.5, 2, 2, '#e8304a'); p.rect(12, 5, 6, 3, '#e8b070'); p.rect(12, 4, 6, 1, '#fffaf0');
 });
+
+/** Bó hoa pixel (kiểu tranh tô màu): tán lá xanh phía sau, hoa nở xếp vòm, giấy gói hình phễu chấm bi + nơ to. */
+const FLOWER_LOOK: Record<string, { p: string; d: string; l: string; c: string; kind: 'round' | 'cup' | 'spike' | 'daisy' | 'sun' }> = {
+  rose_bloom: { p: '#e8304a', d: '#a81830', l: '#ff7a8a', c: '#c82040', kind: 'round' },
+  tulip_bloom: { p: '#f070b0', d: '#c04888', l: '#ffb0d8', c: '#e05aa0', kind: 'cup' },
+  lavender: { p: '#a070e0', d: '#7048b0', l: '#d0b0ff', c: '#8858c8', kind: 'spike' },
+  daisy_bloom: { p: '#ffffff', d: '#d8d8e8', l: '#ffffff', c: '#f6c64e', kind: 'daisy' },
+  sunflower_bloom: { p: '#f6c64e', d: '#d89a20', l: '#ffe890', c: '#7a4a20', kind: 'sun' },
+  sakura_bloom: { p: '#ffc0d8', d: '#e890b0', l: '#ffe4ee', c: '#f6c64e', kind: 'daisy' },
+};
+const BQ_SLOTS: [number, number][] = [[24, 17], [16, 21], [32, 21], [10, 27], [38, 27], [20, 28], [28, 28], [24, 33]];
+export function bouquetSprite(stems: string[], paper: string | null, ribbon: string) {
+  return makeSprite(`bq:${stems.join(',')}:${paper}:${ribbon}`, 48, 62, p => {
+    const n = stems.length;
+    // tán lá phía sau (2 tông xanh ngọc như tranh), rộng theo số hoa
+    if (n) {
+      const leaf = (x: number, y: number, rx: number, ry: number) => { ellipse(p, x, y, rx, ry, '#1e9a6a'); ellipse(p, x - 1, y - 1, rx - 1.5, ry - 1.5, '#3cc890'); ellipse(p, x - 2, y - 2, rx / 3, ry / 3, '#8af0c0'); };
+      const k = Math.max(5, n);
+      for (const [x, y] of BQ_SLOTS.slice(0, k)) { leaf(x - 5, y + 4, 5, 3.5); leaf(x + 5, y + 5, 5, 3.5); }
+      leaf(24, 34, 13, 6); leaf(12, 33, 6, 4); leaf(36, 33, 6, 4);
+      for (const [x, y] of [[6, 30], [42, 30], [24, 12]] as const) if (n >= 5) leaf(x, y, 4, 3);
+    }
+    // hoa
+    stems.forEach((id, i) => {
+      const [x, y] = BQ_SLOTS[i % BQ_SLOTS.length], f = FLOWER_LOOK[id] ?? FLOWER_LOOK.rose_bloom;
+      if (f.kind === 'spike') { for (let k = 0; k < 6; k++) { ellipse(p, x, y - 4 + k * 2, 2.2 - k * 0.1, 1.4, k % 2 ? f.d : f.p); p.px(x - 1, y - 4 + k * 2, f.l); } return; }
+      if (f.kind === 'cup') { ellipse(p, x, y + 1, 4, 3.6, f.d); p.rect(x - 4, y - 3, 8, 4, f.p); p.rect(x - 4, y - 4, 2, 2, f.p); p.rect(x - 1, y - 5, 2, 3, f.p); p.rect(x + 2, y - 4, 2, 2, f.p); p.rect(x - 3, y - 2, 2, 3, f.l); return; }
+      if (f.kind === 'round') { ellipse(p, x, y, 4.6, 4.2, f.d); ellipse(p, x, y - 0.5, 3.8, 3.4, f.p); ellipse(p, x + 0.5, y - 0.5, 2, 1.8, f.d); p.px(x - 2, y - 2, f.l); p.px(x - 1, y - 3, f.l); p.px(x + 1, y + 1, f.l); return; }
+      const big = f.kind === 'sun' ? 1.4 : 1;
+      for (let a = 0; a < 8; a++) { const t = (a / 8) * Math.PI * 2; ellipse(p, x + Math.cos(t) * 3.2 * big, y + Math.sin(t) * 3.2 * big, 1.9 * big, 1.9 * big, a % 2 ? f.d : f.p); }
+      ellipse(p, x, y, 2 * big, 2 * big, f.c); p.px(x - 1, y - 1, f.l);
+    });
+    if (!paper) return;
+    // giấy gói hình phễu, chấm bi, viền đậm
+    const dark = mix(paper, '#000000', 0.25), light = mix(paper, '#ffffff', 0.55);
+    for (let y = 36; y < 56; y++) { const w = Math.round(14 - (y - 36) * 0.5); p.rect(24 - w, y, w * 2, 1, paper); p.px(24 - w, y, dark); p.px(24 + w - 1, y, dark); }
+    for (const [x, y] of [[13, 36], [35, 36], [24, 35]] as const) ellipse(p, x, y, 3, 1.6, '#3cc890');   // lá chìa ra mép giấy
+    for (let i = 0; i < 14; i++) p.px(13 + ((i * 7) % 22), 37 + ((i * 5) % 15), light);
+    // nơ to + đuôi nơ
+    const rd = mix(ribbon, '#000000', 0.3);
+    ellipse(p, 18, 47, 5, 3, ribbon); ellipse(p, 30, 47, 5, 3, ribbon); ellipse(p, 18, 47, 2, 1.2, rd); ellipse(p, 30, 47, 2, 1.2, rd);
+    p.rect(22, 45, 4, 4, rd); p.rect(20, 50, 3, 6, ribbon); p.rect(26, 50, 3, 6, ribbon); p.px(20, 55, rd); p.px(28, 55, rd);
+    // đuôi giấy dưới cùng
+    p.rect(20, 56, 8, 4, paper); p.rect(19, 59, 10, 2, light); p.px(19, 58, dark); p.px(28, 58, dark);
+  });
+}

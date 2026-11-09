@@ -1671,3 +1671,7 @@ textarea { resize: vertical; }
 .cake-fruit { position: absolute; font-size: 22px; }
 
 .k-customer { position: absolute; transform: translateX(-50%); z-index: 50; pointer-events: none; animation: sprbob 1.6s ease-in-out infinite; }
+
+.bq-img { width: 192px; height: 248px; image-rendering: pixelated; animation: fp-pop .25s ease-out; }
+.bq-img.big { width: 216px; height: 279px; }
+.fp-table { cursor: pointer; min-height: 180px; align-items: center; }

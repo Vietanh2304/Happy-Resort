@@ -5,6 +5,7 @@ import { item } from '../lib/content';
 import { notify } from '../lib/realtime';
 import { BAKES, bakeOf, bakeOrders, flowerOrders, nextBlockIn, orderBlock, OVEN_SLOTS, ovenSlots, VISITORS } from '../lib/shops';
 import { toast, toastError } from '../lib/toast';
+import { bouquetSprite } from '../lib/shopsArt';
 import type { Live } from '../lib/useLive';
 import { Sheet } from './Sheet';
 
@@ -70,12 +71,9 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
       <p className="muted small-note">{sel === -1 ? '🌸 Cắm tự do: chọn hoa nào cũng được, từ 3 cành trở lên' : <>{o.icon} {o.who} muốn: <b>{o.want.map(([id, n]) => `${item(id).icon} ${item(id).name} ×${n}`).join(' + ')}</b></>}</p>
       {!doneView ? (
         <>
-          <div className="fp-table">
-            <div className="fp-basket" onClick={() => setStems(s => s.slice(0, -1))} title="Bấm vào lẵng để rút cành vừa cắm">
-              {stems.map((id, i) => <span key={i} className="fp-flower" style={{ left: `${SLOTS[i][0]}%`, top: `${SLOTS[i][1]}%`, zIndex: 10 + i }}>{item(id).icon}</span>)}
-              <i className="fp-weave" />
-              {!stems.length && <em className="fp-hint">Lẵng trống — bấm hoa bên dưới để cắm vào</em>}
-            </div>
+          <div className="fp-table" onClick={() => setStems(s => s.slice(0, -1))} title="Bấm vào bó hoa để rút cành vừa cắm">
+            {stems.length ? <img className="bq-img" src={bouquetSprite(stems, null, ribbon).url} alt="Bó hoa đang cắm" />
+              : <em className="fp-hint" style={{ position: 'static', padding: 40 }}>Bàn cắm trống — bấm hoa bên dưới để cắm từng cành</em>}
           </div>
           <div className="fp-buckets">
             {flowers.map(id => { const h = have(inventory, id) - cnt(id); return (
@@ -95,10 +93,7 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
         <>
           <div className="fp-final">
             <div className="fp-sparkle">✨</div>
-            <div className="fp-bunch">
-              {stems.map((id, i) => <span key={i} style={{ left: `${SLOTS[i][0]}%`, top: `${SLOTS[i][1] * 0.8}%` }}>{item(id).icon}</span>)}
-              <i className="fp-wrap" style={{ borderTopColor: paper }} /><i className="fp-bow" style={{ background: ribbon }} />
-            </div>
+            <img className="bq-img big" src={bouquetSprite(stems, paper, ribbon).url} alt="Bó hoa hoàn chỉnh" />
             <b>Bó hoa {o.occasion} cho {o.who}</b>
           </div>
           <div className="row wrap">
