@@ -1,6 +1,7 @@
 // Khách thú ghé làng vẽ bằng pixel, mỗi con 2 khung (bước chân / vỗ cánh / nhảy) để đi lang thang thật.
 import { ellipse } from './iso';
 import { makeSprite, mix, type Pen } from './pixel';
+import { horseSprite } from './ranchArt';
 
 type Four = { kind: 'four'; body: string; light: string; dark: string; ear: 'point' | 'flop' | 'long' | 'round' | 'antler' | 'none'; tail: 'curl' | 'wag' | 'puff' | 'long' | 'none'; spiky?: boolean; long?: boolean; spots?: string; big?: boolean; beard?: boolean; fluffy?: boolean };
 type Bird = { kind: 'bird'; body: string; wing: string; belly: string; beak: string; legs: string; tall?: boolean; head?: string; round?: boolean; comb?: boolean };
@@ -36,6 +37,7 @@ export const SWIMMERS = new Set(['fish', 'octopus']);
 export const FLIERS = new Set(['butterfly']);
 
 export function critterSprite(id: string, f: 0 | 1) {
+  if (id.startsWith('horse')) return horseSprite(id, f);
   const sp = SPECS[id] ?? SPECS.cat;
   return makeSprite(`critter:${id}:${f}`, 16, 14, p => draw(p, sp, f));
 }

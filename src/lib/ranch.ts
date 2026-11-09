@@ -2,7 +2,7 @@
 // vải (len, lụa) để may đồ. Giá & thời gian ở đây; máy chủ chỉ chặn số vô lý.
 import type { Pt } from './world';
 
-export type AnimalKind = 'chicken' | 'duck' | 'cow' | 'goat' | 'sheep' | 'silkworm' | 'bee' | 'horse' | 'carp' | 'tilapia' | 'catfish' | 'koi';
+export type AnimalKind = 'chicken' | 'duck' | 'cow' | 'goat' | 'sheep' | 'silkworm' | 'bee' | 'horse' | 'horse_white' | 'horse_black' | 'carp' | 'tilapia' | 'catfish' | 'koi';
 export interface AnimalDef {
   kind: AnimalKind; name: string; icon: string; price: number;
   product: string; n: number; hours: number;         // thu được gì, bao nhiêu, mấy tiếng một lần
@@ -19,7 +19,9 @@ export const ANIMALS: AnimalDef[] = [
   { kind: 'sheep', name: 'Cừu', icon: '🐑', price: 60, product: 'wool', n: 2, hours: 24, eats: GREENS, pen: 'meadow', verb: 'Xén lông' },
   { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 50, product: 'cocoon', n: 3, hours: 24, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
   // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (giống 50–60 xu; lần thu nào cũng được 1 con bán gấp 3 tiền giống)
-  { kind: 'horse', name: 'Ngựa', icon: '🐴', price: 100, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
+  { kind: 'horse', name: 'Ngựa nâu', icon: '🐴', price: 100, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
+  { kind: 'horse_white', name: 'Ngựa bạch', icon: '🐴', price: 120, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
+  { kind: 'horse_black', name: 'Ngựa ô', icon: '🐴', price: 120, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
   { kind: 'carp', name: 'Cá chép giống', icon: '🐟', price: 60, product: 'carp', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá chép' },
   { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 50, product: 'tilapia', n: 1, hours: 10, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
   { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 55, product: 'catfish', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
@@ -65,8 +67,8 @@ export const GROUPS: { id: Recipe['group']; name: string }[] = [
 
 // ───────── Bản đồ trang trại (256×192) ─────────
 export const RANCH = {
-  w: 256, h: 192,
-  exit: { x: 128, y: 186 },
+  w: 256, h: 262,
+  exit: { x: 128, y: 256 },
   shop: { x: 128, y: 120, stand: { x: 128, y: 130 } },          // bảng mua con giống + cám
   workshop: { x: 128, y: 70, door: { x: 116, y: 76 }, tailor: { x: 142, y: 76 } },
   pens: {
@@ -75,9 +77,9 @@ export const RANCH = {
     meadow: { x0: 14, x1: 100, y0: 132, y1: 178 },
     hut: { x0: 150, x1: 186, y0: 140, y1: 164 },
     hive: { x0: 196, x1: 244, y0: 146, y1: 176 },
-    // hai chuồng này nằm trên bản đồ NÔNG TRẠI
-    stable: { x0: 98, x1: 176, y0: 18, y1: 50 },
-    pond: { x0: 192, x1: 244, y0: 22, y1: 42 },
+    // phần mở rộng phía dưới bản đồ trang trại
+    stable: { x0: 50, x1: 110, y0: 206, y1: 244 },
+    pond: { x0: 156, x1: 236, y0: 210, y1: 236 },
   } as Record<AnimalDef['pen'], { x0: number; x1: number; y0: number; y1: number }>,
 };
 export function homeIn(pen: AnimalDef['pen'], i: number): Pt {
@@ -111,3 +113,5 @@ export const animalResale = (a: { kind: string; created_at?: string }, now = Dat
   const d = animalDef(a.kind);
   return a.created_at && now - Date.parse(a.created_at) >= 24 * 3.6e6 ? Math.round(d.price * 1.5) : d.price;
 };
+
+export const isHorse = (kind: string) => kind.startsWith('horse');

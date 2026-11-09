@@ -37,7 +37,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   reef: { name: 'Lặn ngắm san hô', icon: '🤿', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 26, y1: 134 }, spawn: { x: 96, y: 40 } },
   city: { name: 'Thành phố (đi làm)', icon: '🌆', w: 256, h: 192, outdoor: true, walk: { x0: 8, x1: 248, y0: 106, y1: 128 }, spawn: { x: 222, y: 120 } },
   office: { name: 'Công ty', icon: '🏢', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 112, y1: 140 }, spawn: { x: 96, y: 138 } },
-  ranch: { name: 'Trang trại chăn nuôi', icon: '🐄', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 44, y1: 188 }, spawn: { x: 128, y: 178 } },
+  ranch: { name: 'Trang trại chăn nuôi', icon: '🐄', w: 256, h: 262, outdoor: true, walk: { x0: 6, x1: 250, y0: 44, y1: 258 }, spawn: { x: 128, y: 248 } },
   campus: { name: 'Trường học', icon: '🏫', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 100, y1: 180 }, spawn: { x: 128, y: 172 } },
   street: { name: 'Phố tiệm nhỏ', icon: '🛍️', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 104, y1: 184 }, spawn: { x: 128, y: 176 } },
   florist: { name: 'Tiệm hoa của Hy', icon: '🌸', w: 192, h: 144, outdoor: false, walk: { x0: 10, x1: 182, y0: 100, y1: 140 }, spawn: { x: 96, y: 136 } },

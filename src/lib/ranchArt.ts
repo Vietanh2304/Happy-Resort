@@ -12,17 +12,18 @@ function fence(p: Pen, b: { x0: number; x1: number; y0: number; y1: number }, op
 }
 
 export function ranchBackground(dark: boolean) {
-  return makeSprite(`ranch:v1:${dark}`, RANCH.w, RANCH.h, p => {
+  return makeSprite(`ranch:v2:${dark}`, RANCH.w, RANCH.h, p => {
     const d = (c: string) => (dark ? mix(c, '#1a2440', 0.45) : c);
     const rand = seeded('ranch');
-    p.rect(0, 0, 256, 192, d('#9fd067'));
-    for (let y = 0; y < 192; y += 8) for (let x = 0; x < 256; x += 8) if (((x + y) / 8) % 2) p.rect(x, y, 8, 8, d('#a4d36c'));
-    for (let i = 0; i < 500; i++) p.px(Math.floor(rand() * 256), Math.floor(rand() * 192), d(rand() < 0.5 ? '#8cc65c' : '#b9e086'));
+    p.rect(0, 0, 256, 262, d('#9fd067'));
+    for (let y = 0; y < 262; y += 8) for (let x = 0; x < 256; x += 8) if (((x + y) / 8) % 2) p.rect(x, y, 8, 8, d('#a4d36c'));
+    for (let i = 0; i < 500; i++) p.px(Math.floor(rand() * 256), Math.floor(rand() * 262), d(rand() < 0.5 ? '#8cc65c' : '#b9e086'));
     // đồi xa + hàng cây phía trên
     for (let x = 0; x < 256; x++) { const h = 30 + Math.round(Math.sin(x / 23) * 6 + Math.sin(x / 9) * 2); p.rect(x, 0, 1, h, d('#7ab858')); }
     for (let x = 4; x < 256; x += 14) { ellipse(p, x, 26 + (x % 3), 7, 7, d('#4a9a4a')); ellipse(p, x - 2, 23 + (x % 3), 3, 3, d('#6aba5a')); }
     // lối đi đất ở giữa (từ cổng lên nhà xưởng) + nhánh sang hai bên
-    for (let y = 80; y < 192; y++) p.rect(118, y, 20, 1, d('#d8b880'));
+    for (let y = 80; y < 262; y++) p.rect(118, y, 20, 1, d('#d8b880'));
+    p.rect(60, 222, 140, 10, d('#d8b880'));
     p.rect(92, 112, 72, 12, d('#d8b880'));
     // đồng cỏ cừu: cỏ đậm hơn
     const m = RANCH.pens.meadow; p.rect(m.x0, m.y0, m.x1 - m.x0, m.y1 - m.y0, d('#8ac85a'));
@@ -45,8 +46,23 @@ export function ranchBackground(dark: boolean) {
     p.rect(w.x - 4, w.y - 24, 8, 6, d('#a8d8f0'));
     // hàng rào các chuồng
     fence(p, RANCH.pens.coop, 14); fence(p, RANCH.pens.barn, 14); fence(p, RANCH.pens.meadow, 14);
-    // cổng ra nông trại
-    p.rect(114, 182, 2, 10, d('#a8703f')); p.rect(140, 182, 2, 10, d('#a8703f')); p.rect(114, 182, 28, 2, d('#c8905a'));
+    // ── phần dưới: chuồng ngựa + bãi tập (trái), ao cá nước ngọt (phải) ──
+    const st = RANCH.pens.stable;
+    p.rect(8, 186, 40, 34, d('#b8784a')); for (let x = 9; x < 48; x += 4) p.rect(x, 186, 1, 34, d('#9a6038'));
+    for (let i = 0; i < 9; i++) p.rect(5 + i, 177 + i, 46 - i * 2, 1, d(i % 2 ? '#a8483a' : '#c8584a'));
+    p.rect(20, 200, 16, 20, d('#4a2a1a')); p.rect(22, 202, 12, 18, d('#2a1a10')); p.rect(26, 192, 4, 4, d('#fff1a8'));
+    p.rect(st.x0, st.y0, st.x1 - st.x0, st.y1 - st.y0, d('#c8b070'));                                       // bãi tập đất cát
+    for (let i = 0; i < 60; i++) p.px(st.x0 + Math.floor(rand() * (st.x1 - st.x0)), st.y0 + Math.floor(rand() * (st.y1 - st.y0)), d('#b89a58'));
+    p.rect(st.x1 - 14, st.y1 - 8, 12, 6, d('#e8d08a')); p.rect(st.x1 - 14, st.y1 - 8, 12, 1, d('#f8e8a8'));        // máng cỏ
+    fence(p, st, 14);
+    const pd = RANCH.pens.pond;
+    ellipse(p, (pd.x0 + pd.x1) / 2, (pd.y0 + pd.y1) / 2, (pd.x1 - pd.x0) / 2 + 6, (pd.y1 - pd.y0) / 2 + 6, d('#c8b08a'));
+    ellipse(p, (pd.x0 + pd.x1) / 2, (pd.y0 + pd.y1) / 2, (pd.x1 - pd.x0) / 2 + 3, (pd.y1 - pd.y0) / 2 + 3, d('#5aa8d0'));
+    ellipse(p, (pd.x0 + pd.x1) / 2, (pd.y0 + pd.y1) / 2 - 2, (pd.x1 - pd.x0) / 2 - 4, (pd.y1 - pd.y0) / 2 - 4, d('#7ac8e8'));
+    for (const [x, y] of [[pd.x0 + 6, pd.y0 + 4], [pd.x1 - 10, pd.y1 - 6]]) { ellipse(p, x, y, 4, 2, d('#5aa84a')); p.px(x + 1, y - 1, d('#f59ab3')); }
+    for (let x = pd.x0 - 6; x < pd.x1 + 6; x += 5) { p.rect(x, pd.y0 - 8, 1, 3, d('#4a9a4a')); }
+    // cổng ra nông trại (đáy bản đồ)
+    p.rect(114, 252, 2, 10, d('#a8703f')); p.rect(140, 252, 2, 10, d('#a8703f')); p.rect(114, 252, 28, 2, d('#c8905a'));
   }, null);
 }
 
@@ -72,3 +88,29 @@ export const stableSprite = () => makeSprite('stable', 30, 26, p => {
   p.rect(10, 13, 10, 13, '#5a3a2a'); p.rect(11, 14, 8, 12, '#3a2a20');
   p.rect(1, 22, 8, 4, '#a8693f'); p.rect(2, 21, 6, 2, '#e8d070');
 });
+
+/** Ngựa vẽ riêng (nhìn ngang, quay phải): thân dài, cổ & đầu ngẩng, bờm, đuôi, 4 chân có móng, 2 khung bước. Ba màu lông. */
+const HORSE_COLORS: Record<string, { body: string; dark: string; light: string; mane: string; hoof: string; nose: string }> = {
+  horse: { body: '#a8693f', dark: '#7a4a2a', light: '#c88a5a', mane: '#3a2216', hoof: '#2a1a12', nose: '#5a3a28' },
+  horse_white: { body: '#f6f2ec', dark: '#d0c8be', light: '#ffffff', mane: '#c8c0b8', hoof: '#8a8078', nose: '#e8b8b8' },
+  horse_black: { body: '#2e2834', dark: '#1a1620', light: '#4a4256', mane: '#0e0c12', hoof: '#0a0a0e', nose: '#4a3a44' },
+};
+export function horseSprite(kind: string, f: 0 | 1, saddle = false) {
+  const c = HORSE_COLORS[kind] ?? HORSE_COLORS.horse;
+  return makeSprite(`horse:${kind}:${f}:${saddle}`, 32, 26, p => {
+    // chân (khung bước: chân trước/sau so le)
+    const legs = f ? [[8, 0], [12, 1], [21, -1], [25, 0]] : [[8, 0], [12, 0], [21, 0], [25, 0]];
+    legs.forEach(([x, dx], i) => { const col = i % 2 ? c.dark : c.body; p.rect(x + dx, 15, 2, 8, col); p.rect(x + dx, 22, 3, 2, c.hoof); });
+    // thân
+    ellipse(p, 16.5, 12, 11, 5.6, c.body); ellipse(p, 16.5, 10.2, 9.5, 3, c.light); ellipse(p, 16, 15, 9, 2, c.dark);
+    // cổ + đầu
+    for (let i = 0; i < 7; i++) p.rect(23 + i, 9 - i, 4, 5, c.body);
+    ellipse(p, 29, 3.4, 3, 2.6, c.body); p.rect(29, 3, 3, 3, c.body); p.rect(31, 4, 1, 2, c.nose);
+    p.px(29, 2, '#1a1418'); p.px(28, 1, c.light);                                   // mắt
+    p.rect(27, 0, 1, 2, c.dark); p.rect(28, -1, 1, 1, c.dark);                      // tai
+    // bờm + đuôi
+    for (let i = 0; i < 8; i++) p.rect(22 + i, 7 - i, 2, 3, c.mane);
+    p.rect(4, 9, 3, 2, c.mane); p.rect(2, 10, 3, 6, c.mane); p.rect(3, 15, 2, 4, c.mane); p.px(2, 18 + f, c.mane);
+    if (saddle) { p.rect(12, 6, 9, 3, '#8a3a32'); p.rect(12, 6, 9, 1, '#c8583a'); p.rect(15, 9, 2, 4, '#5a3a2a'); p.rect(14, 12, 4, 1, '#c8c8d8'); }
+  });
+}

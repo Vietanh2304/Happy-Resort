@@ -1622,3 +1622,5 @@ textarea { resize: vertical; }
 @keyframes pet-sit { 50% { scale: 1 0.82; } }
 @keyframes pet-shake { 50% { rotate: -12deg; translate: 0 -2px; } }
 @keyframes pet-roll { to { rotate: 360deg; } }
+
+.exit-chip.dismount { bottom: 52px; background: #ffe8c8; }

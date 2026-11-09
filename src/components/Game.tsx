@@ -845,6 +845,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     else if (where === 'bathroom' && scene === 'bedroom') { live.update({ act: 'carry' }); go(BATH.toBath, () => { enter('bathroom', NURSERY.babyTubStand); setTimeout(begin, 300); }); }
     else { enter(where, stand); setTimeout(begin, 300); }
   };
+  const dismount = () => { live.update({ horse: null }); live.say('🐴 Cảm ơn bạn ngựa! Về chuồng nghỉ nhé'); };
   const exit = !editing && !fishing && !inBed && !festIcon ? EXITS[scene] : undefined;
   // Nhà thể chất: ném bóng rổ (vui thôi, đôi khi vào rổ)
   const shoot3 = () => { const ok = Math.random() < 0.45; live.say(ok ? '🏀 Vàoooo! 🎉' : '🏀 Ối, trượt rồi 😅'); };
@@ -872,7 +873,6 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <span className={`hud-more ${hudOpen ? 'open' : ''}`} onClick={e => { if ((e.target as HTMLElement).closest('button:not([data-keep])')) setHudOpen(false); }}>
         <span title="Số ngày cả hai cùng ghé">💞 {bridge.planks}</span>
         <span title="Điểm thiện cảm — mỗi lần ăn một món +1">💗 {affection}</span>
-        {live.mine.horse && <button className="chip glow" onClick={() => { live.update({ horse: false }); live.say('🐴 Cảm ơn bạn ngựa!'); }}>🐴 Xuống ngựa</button>}
         <button className={`chip ${quizLeft ? 'glow' : ''}`} onClick={() => setSheet({ kind: 'quizday' })}>🧠 Đố vui {quizRight}/5</button>
         <span title="Trời trong làng">{wxIcon(myView)} {myWeather.temp}° · {clock(myTime)}</span>
         {combos.map(c => {
@@ -945,6 +945,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           }}
         />
         {exit && <button className="exit-chip" onClick={() => enter(exit[0], exit[1])}>{exit[2]}</button>}
+        {live.mine.horse && <button className="exit-chip dismount" onClick={dismount}>🐴 Xuống ngựa · về chuồng</button>}
       </main>
       {link === 'down' && <div className="link-down">📡 Mất kết nối đồng bộ với người ấy — đang thử nối lại… (kiểm tra mạng, hoặc tải lại trang)</div>}
       {gameInvite && sheet?.kind !== 'game' && <button className="invite-chip" onClick={() => { openGame(gameInvite, false); setGameInvite(null); }}>🎮 Vào chơi {TITLES[gameInvite]}</button>}
@@ -1098,7 +1099,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onInvite={() => askBed('love', sheet.bed)} onBaby={() => askBed('baby', sheet.bed)} onClose={close} />
       )}
       {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={myTime.date} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
-      {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} onRide={() => { close(); live.update({ horse: true }); live.say('🐎 Hí hí! Đi dạo nào!'); enter('town', TOWN.toFarm); }} />}
+      {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} riding={live.mine.horse === sheet.id} onDismount={() => { close(); dismount(); }} onRide={() => { close(); live.update({ horse: sheet.id }); live.say('🐎 Hí hí! Đi dạo nào!'); enter('town', TOWN.toFarm); }} />}
       {sheet?.kind === 'flowershop' && <FlowerShopSheet date={myTime.date} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
       {sheet?.kind === 'bakery' && <BakerySheet me={me} date={myTime.date} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
       {sheet?.kind === 'bugbook' && <BugBookSheet me={me} onClose={close} />}

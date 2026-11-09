@@ -54,7 +54,7 @@ import { atSchool, classroomSprite, SCHOOL, type StallId } from '../lib/school';
 import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite, stoolSprite, babyTubSprite } from '../lib/campusArt';
 import { CampusContent } from './Campus';
 import { bakeryRoom, BAKERY, FLORIST, floristRoom, STREET, streetBackground, streetSignSprite } from '../lib/shopsArt';
-import { FarmAnimals } from './Ranch';
+import { StableAndPond } from './Ranch';
 import { busStopSprite } from '../lib/officeArt';
 import { SchoolContent } from './School';
 import { RanchContent } from './Ranch';
@@ -363,7 +363,8 @@ function SceneContent(p: WorldProps) {
       {scene === 'ranch' && p.ranch && (
         <>
           <RanchContent animals={p.animals ?? []} go={go} onAnimal={p.ranch.animal} onShop={p.ranch.shop} onWorkshop={p.ranch.workshop} onTailor={p.ranch.tailor} />
-          <Hot x={112} y={182} w={32} h={10} title="Về nông trại" onClick={() => go({ x: 128, y: 186 }, () => enter('farm', { x: 230, y: 180 }))} />
+          <Hot x={112} y={250} w={32} h={10} title="Về nông trại" onClick={() => go({ x: 128, y: 256 }, () => enter('farm', { x: 230, y: 180 }))} />
+          <StableAndPond animals={p.animals ?? []} riding={[live.mine.horse as string | null, theirs?.horse as string | null]} go={go} onAnimal={p.ranch.animal} onPen={p.ranch.pen} />
         </>
       )}
       {scene === 'school' && (
@@ -481,13 +482,13 @@ function SceneContent(p: WorldProps) {
       <KidLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />
       {!myBed && scene !== 'lounge' && scene !== 'sky' && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
-        x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')} makeup={live.mine.act === 'makeup'} riding={!!live.mine.horse && !!SCENES[scene].outdoor}
+        x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')} makeup={live.mine.act === 'makeup'} riding={live.mine.horse && SCENES[scene].outdoor ? horseKind(p.animals, live.mine.horse) : undefined}
         sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : SINK_ACTS.includes(live.mine.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
       {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
-          x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')} makeup={theirs.act === 'makeup'} riding={!!theirs.horse && !!SCENES[scene].outdoor}
+          x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')} makeup={theirs.act === 'makeup'} riding={theirs.horse && SCENES[scene].outdoor ? horseKind(p.animals, theirs.horse) : undefined}
           sitting={sitting || !!theirTub || SIT_ACTS.includes(theirs.act ?? '')} bubble={live.bubbles.partner} hold={holdFor(theirs, false)} status={liveStatus(partner)} zAt={theirTub ? undefined : SINK_ACTS.includes(theirs.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.them : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.them} duo={scene === 'disco' ? { side: p.firstSeat ? 'R' : 'L', together: true } : p.couple ? { side: p.couple.mySide === 'L' ? 'R' : 'L', together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
         />
       )}
@@ -671,7 +672,6 @@ function FarmContent(p: WorldProps) {
       {editing && <GridCells {...p} grid={FARM} label="Ô ruộng" planted={(x, y) => p.farm.some(r => r.cell === farmCell(x, y))} />}
       <Spr sprite={treeSprite(1)} x={236} y={88} /><Spr sprite={cherrySprite()} x={16} y={96} /><Spr sprite={pineSprite()} x={244} y={150} />
       {!editing && <Hot x={112} y={178} w={32} h={14} title="Về làng" onClick={() => go(FARM.exit, () => enter('town', TOWN.toFarm))} />}
-      {!editing && p.ranch && <FarmAnimals animals={p.animals ?? []} go={go} onAnimal={p.ranch.animal} onPen={p.ranch.pen} />}
       {!editing && <FarmVisitors farm={p.farm} date={p.myView.time.date} />}
       {!editing && p.shops && <Tag x={66} y={52} className="label" onClick={p.shops.bugbook}>🦋 Sổ bướm & chim</Tag>}
       {!editing && <Tag x={228} y={58} className="label" onClick={() => go({ x: 232, y: 184 }, () => enter('ranch'))}>🐄 Chăn nuôi</Tag>}
@@ -1593,3 +1593,6 @@ function ShopInside({ kind, go, onOpen }: { kind: 'florist' | 'bakery'; go: (to:
     </>
   );
 }
+
+/** Màu ngựa đang cưỡi (theo con trong chuồng) */
+const horseKind = (animals: { id: string; kind: string }[] | undefined, h: string | boolean) => (typeof h === 'string' ? animals?.find(a => a.id === h)?.kind : undefined) ?? 'horse';

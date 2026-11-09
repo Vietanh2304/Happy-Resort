@@ -8,7 +8,7 @@ import { sellPrice } from '../lib/game';
 import { emojiSprite } from '../lib/pixel';
 import { notify } from '../lib/realtime';
 import { animalDef, animalResale, animalState, ANIMALS, FEED_PRICE, GROUPS, homeIn, RANCH, RECIPES, waitText, type AnimalDef } from '../lib/ranch';
-import { hiveSprite, ranchSignSprite, silkTraySprite, stableSprite } from '../lib/ranchArt';
+import { hiveSprite, ranchSignSprite, silkTraySprite } from '../lib/ranchArt';
 import { toast, toastError } from '../lib/toast';
 import type { Pt } from '../lib/world';
 import { Sheet } from './Sheet';
@@ -58,7 +58,7 @@ function feedFrom(def: AnimalDef, inv: api.InvRow[]) {
   return def.eats.find(id => inv.some(r => r.item_id === id && r.qty > 0)) ?? null;
 }
 
-export function AnimalSheet({ animal, inventory, onClose, onRide }: { animal: api.Animal; inventory: api.InvRow[]; onClose: () => void; onRide?: () => void }) {
+export function AnimalSheet({ animal, inventory, onClose, onRide, riding, onDismount }: { animal: api.Animal; inventory: api.InvRow[]; onClose: () => void; onRide?: () => void; riding?: boolean; onDismount?: () => void }) {
   const st = animalState(animal);
   const def = st.def;
   const food = feedFrom(def, inventory);
@@ -87,7 +87,7 @@ export function AnimalSheet({ animal, inventory, onClose, onRide }: { animal: ap
   const left = st.nextAt - Date.now();
   return (
     <Sheet title={`${def.icon} ${animal.name || def.name}`} onClose={onClose}>
-      {def.kind === 'horse' && onRide && <button className="btn" onClick={onRide}>🐎 Cưỡi ngựa dạo làng</button>}
+      {def.kind.startsWith('horse') && (riding ? <button className="btn" onClick={onDismount}>🏠 Xuống ngựa, đưa về chuồng</button> : onRide && <button className="btn" onClick={onRide}>🐎 Cưỡi ngựa dạo làng</button>)}
       <p className="muted">
         {st.hungry ? '🍽️ Đang đói — cho ăn để có sản phẩm.' : '😊 No bụng rồi.'}{' '}
         {st.ready ? `✨ ${def.verb} được rồi!` : st.fed ? `Đợi ${waitText(left)} nữa để ${def.verb.toLowerCase()}.` : ''}
@@ -160,21 +160,21 @@ export function WorkshopSheet({ inventory, together, partnerName, onClose }: { i
   );
 }
 
-/** Trên nông trại: chuồng ngựa (giữa nhà kho và ao) + cá bơi trong ao */
-export function FarmAnimals({ animals, go, onAnimal, onPen }: { animals: api.Animal[]; go: (to: Pt, then?: () => void) => void; onAnimal: (id: string) => void; onPen: (pen: 'stable' | 'pond') => void }) {
+/** Chuồng ngựa (bãi tập) + ao cá ở phần dưới trang trại; ngựa đang được cưỡi thì không có trong chuồng */
+export function StableAndPond({ animals, riding, go, onAnimal, onPen }: { animals: api.Animal[]; riding: (string | null | undefined)[]; go: (to: Pt, then?: () => void) => void; onAnimal: (id: string) => void; onPen: (pen: 'stable' | 'pond') => void }) {
+  const s = useScale();
   const badge = (a: api.Animal) => { const st = animalState(a); return st.ready ? '✨' : st.hungry ? '🍽️' : undefined; };
-  const horses = animals.filter(a => animalDef(a.kind).pen === 'stable'), fish = animals.filter(a => animalDef(a.kind).pen === 'pond');
+  const horses = animals.filter(a => animalDef(a.kind).pen === 'stable' && !riding.includes(a.id)), fish = animals.filter(a => animalDef(a.kind).pen === 'pond');
   const S = RANCH.pens.stable, P = RANCH.pens.pond;
   return (
     <>
-      <Spr sprite={stableSprite()} x={110} y={44} title="🐴 Chuồng ngựa" />
-      <button className="hot" title="🐴 Chuồng ngựa" style={{ left: 96 * useScale(), top: 18 * useScale(), width: 30 * useScale(), height: 28 * useScale() }} onClick={e => { e.stopPropagation(); go({ x: 112, y: 62 }, () => onPen('stable')); }} />
-      <Tag x={110} y={28} className="label" onClick={() => go({ x: 112, y: 62 }, () => onPen('stable'))}>🐴 Chuồng ngựa{horses.length ? ` · ${horses.length}` : ''}</Tag>
-      <Tag x={218} y={46} className="label" onClick={() => go({ x: 218, y: 62 }, () => onPen('pond'))}>🐟 Ao cá{fish.length ? ` · ${fish.length}` : ''}</Tag>
-      {horses.map((a, i) => <Wanderer key={a.id} id="horse" home={{ x: S.x0 + 34 + i * 14, y: S.y0 + 22 }} r={14} box={{ ...S, x0: S.x0 + 22 }} name={`🐴 ${a.name || 'Ngựa'}`} badge={badge(a)}
-        onClick={() => go({ x: S.x0 + 40 + i * 10, y: 62 }, () => onAnimal(a.id))} />)}
-      {fish.map((a, i) => <Wanderer key={a.id} id="fish" home={{ x: P.x0 + 10 + (i % 4) * 11, y: P.y0 + 10 + Math.floor(i / 4) * 6 }} r={8} box={P} scale={0.45} name={`${animalDef(a.kind).icon} ${animalDef(a.kind).name.replace(' giống', '')}`} badge={badge(a)}
-        onClick={() => go({ x: 220, y: 62 }, () => onAnimal(a.id))} />)}
+      <Tag x={30} y={170} className="label" onClick={() => go({ x: 30, y: 230 }, () => onPen('stable'))}>🐴 Chuồng ngựa{horses.length ? ` · ${horses.length}` : ''}</Tag>
+      <button className="hot" title="🐴 Chuồng ngựa" style={{ left: 8 * s, top: 178 * s, width: 40 * s, height: 42 * s }} onClick={e => { e.stopPropagation(); go({ x: 30, y: 230 }, () => onPen('stable')); }} />
+      <Tag x={(P.x0 + P.x1) / 2} y={P.y0 - 22} className="label" onClick={() => go({ x: (P.x0 + P.x1) / 2, y: P.y1 + 12 }, () => onPen('pond'))}>🐟 Ao cá{fish.length ? ` · ${fish.length}` : ''}</Tag>
+      {horses.map((a, i) => <Wanderer key={a.id} id={a.kind} home={{ x: S.x0 + 16 + (i % 3) * 16, y: S.y0 + 20 + Math.floor(i / 3) * 10 }} r={12} box={S} name={`${animalDef(a.kind).icon} ${a.name || animalDef(a.kind).name}`} badge={badge(a)} scale={0.62}
+        onClick={at => go({ x: at.x, y: Math.min(256, at.y + 10) }, () => onAnimal(a.id))} />)}
+      {fish.map((a, i) => <Wanderer key={a.id} id="fish" home={{ x: P.x0 + 12 + (i % 5) * 12, y: P.y0 + 10 + Math.floor(i / 5) * 6 }} r={8} box={P} scale={0.45} name={`${animalDef(a.kind).icon} ${animalDef(a.kind).name.replace(' giống', '')}`} badge={badge(a)}
+        onClick={() => go({ x: (P.x0 + P.x1) / 2, y: P.y1 + 12 }, () => onAnimal(a.id))} />)}
     </>
   );
 }
