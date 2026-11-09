@@ -1596,3 +1596,29 @@ textarea { resize: vertical; }
 .spr.rock.fast { animation-duration: 0.9s !important; }
 .tag.float-notes { background: none; border: none; font-size: 12px; animation: floatnotes 1.6s ease-in-out infinite; pointer-events: none; }
 @keyframes floatnotes { 0% { translate: 0 2px; opacity: 0.5; } 50% { translate: 0 -4px; opacity: 1; } 100% { translate: 0 2px; opacity: 0.5; } }
+
+/* Ôm thật: tựa vào nhau đung đưa nhẹ; hôn: nghiêng đầu vào nhau rồi giữ */
+.avatar img.duo-hug.duo-L { animation: hugL 1.6s ease-in-out infinite !important; }
+.avatar img.duo-hug.duo-R { animation: hugR 1.6s ease-in-out infinite !important; }
+@keyframes hugL { 0%, 100% { translate: 1px 0; rotate: 3deg; } 50% { translate: 2px 0; rotate: 6deg; } }
+@keyframes hugR { 0%, 100% { translate: -1px 0; rotate: -3deg; } 50% { translate: -2px 0; rotate: -6deg; } }
+.avatar img.duo-kiss.duo-L { animation: kissL 0.8s ease-out forwards !important; }
+.avatar img.duo-kiss.duo-R { animation: kissR 0.8s ease-out forwards !important; }
+@keyframes kissL { to { translate: 2px 1px; rotate: 10deg; } }
+@keyframes kissR { to { translate: -2px 0; rotate: -7deg; } }
+
+/* Bướm & chim ghé vườn: tô màu theo loài */
+.spr.visitor { filter: drop-shadow(0 1px 0 #0003); }
+.spr.hue-bf_red { filter: hue-rotate(-40deg); }
+.spr.hue-bf_white { filter: hue-rotate(160deg) brightness(1.6) saturate(0.4); }
+.spr.hue-bf_purple { filter: hue-rotate(60deg); }
+.spr.hue-bf_yellow { filter: hue-rotate(-120deg); }
+.spr.hue-bird_sparrow { filter: hue-rotate(30deg); }
+.spr.hue-bird_robin { filter: hue-rotate(140deg); }
+.spr.hue-bf_morpho { filter: hue-rotate(200deg); }
+.spr.pet.trick-sit { animation: pet-sit 0.8s ease-in-out 3; transform-origin: 50% 100%; }
+.spr.pet.trick-shake { animation: pet-shake 0.4s ease-in-out 6; transform-origin: 50% 100%; }
+.spr.pet.trick-roll { animation: pet-roll 1s linear 3; transform-origin: 50% 70%; }
+@keyframes pet-sit { 50% { scale: 1 0.82; } }
+@keyframes pet-shake { 50% { rotate: -12deg; translate: 0 -2px; } }
+@keyframes pet-roll { to { rotate: 360deg; } }

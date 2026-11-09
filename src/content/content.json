@@ -1577,7 +1577,7 @@
       "name": "Bánh sừng bò",
       "icon": "🥐",
       "kind": "dish",
-      "price": 18
+      "price": 315
     },
     {
       "id": "tiramisu",
@@ -1795,6 +1795,34 @@
       "icon": "🎏",
       "kind": "goods",
       "price": 180
+    },
+    {
+      "id": "cookie",
+      "name": "Bánh quy bơ",
+      "icon": "🍪",
+      "kind": "dish",
+      "price": 200
+    },
+    {
+      "id": "cupcake",
+      "name": "Bánh cupcake",
+      "icon": "🧁",
+      "kind": "dish",
+      "price": 230
+    },
+    {
+      "id": "honey_cake",
+      "name": "Bánh mật ong",
+      "icon": "🍯",
+      "kind": "dish",
+      "price": 173
+    },
+    {
+      "id": "cheesecake",
+      "name": "Bánh phô mai",
+      "icon": "🍰",
+      "kind": "dish",
+      "price": 570
     }
   ],
   "animals": [

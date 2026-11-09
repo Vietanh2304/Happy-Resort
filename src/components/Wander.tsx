@@ -6,7 +6,7 @@ import type { Pt } from '../lib/world';
 import { useScale } from './Stage';
 
 /** Khách thú đi lang thang quanh chỗ của nó (bước chân / vỗ cánh), chạm để chào */
-export function Wanderer({ id, home, r, name, onClick, badge, box, scale }: { id: string; home: Pt; r: number; name: string; onClick: (at: Pt) => void; badge?: string; box?: { x0: number; x1: number; y0: number; y1: number }; scale?: number }) {
+export function Wanderer({ id, home, r, name, onClick, badge, box, scale, className }: { id: string; home: Pt; r: number; name: string; onClick: (at: Pt) => void; badge?: string; box?: { x0: number; x1: number; y0: number; y1: number }; scale?: number; className?: string }) {
   const s = useScale();
   const [at, setAt] = useState(home);
   useEffect(() => {
@@ -18,7 +18,7 @@ export function Wanderer({ id, home, r, name, onClick, badge, box, scale }: { id
     return () => clearInterval(t);
   }, [home.x, home.y, r]);
   const fly = FLIERS.has(id);
-  return <Follower sprite={critterSprite(id, 0)} walk={critterSprite(id, 1)} x={at.x} y={at.y - (fly ? 12 : 0)} title={name} onClick={() => onClick(at)} flap={fly} badge={badge} ps={scale ? s * scale : undefined} />;
+  return <Follower sprite={critterSprite(id, 0)} walk={critterSprite(id, 1)} x={at.x} y={at.y - (fly ? 12 : 0)} title={name} onClick={() => onClick(at)} flap={fly} badge={badge} ps={scale ? s * scale : undefined} className={className} />;
 }
 
 /** ps: cỡ một pixel của sprite (mặc định = cỡ cảnh; người lớn dùng avatarPx để bằng nhân vật chính) */

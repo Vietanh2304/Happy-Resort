@@ -112,6 +112,9 @@ export interface Meetup { day: string; set_by: string }
 /** Điểm thiện cảm: mỗi lần ăn một món = 1 điểm (đếm claim 'aff:' của cả hai người) */
 export const loadAffection = (ids: string[]) =>
   run<{ key: string }[]>(supabase.from('claims').select('key').in('user_id', ids).like('key', 'aff:%')).then(r => r.length);
+/** Lò nướng của tiệm bánh: các khoá 'oven:…' và 'ovenout:…' của mình (không theo ngày) */
+export const loadOven = (userId: string) =>
+  run<{ key: string }[]>(supabase.from('claims').select('key').eq('user_id', userId).like('key', 'oven%')).then(r => r.map(x => x.key));
 export const loadClaimsOn = (userId: string, day: string) =>
   run<{ key: string }[]>(supabase.from('claims').select('key').eq('user_id', userId).like('key', `%${day}%`))
     .then(rows => rows.map(r => r.key));

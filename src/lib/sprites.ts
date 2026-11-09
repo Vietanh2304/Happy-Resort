@@ -38,7 +38,7 @@ export const PRESETS: { name: string; outfit: number; acc: number }[] = [
   { name: '🇹🇼 Sườn xám', outfit: 14, acc: 9 },
 ];
 
-export type Frame = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance' | 'act' | 'actsit' | 'makeup';
+export type Frame = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance' | 'act' | 'actsit' | 'makeup' | 'embrace' | 'kiss';
 
 
 export type { Held, View } from './chibi';

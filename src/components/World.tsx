@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { Decor, FarmRow, FestDecor, Guest, Kid, Pet, Profile } from '../lib/api';
+import * as api from '../lib/api';
+import { notify } from '../lib/realtime';
+import { toast, toastError } from '../lib/toast';
+import { visitorsToday } from '../lib/shops';
 import { cradleSprite, kidLook, kidMood, kidSprite, kidStage, strollerSprite } from '../lib/kids';
 import { HEIGHT_K, HH, HW } from '../lib/iso';
 import { cupSprite, drinkProp, foodProp, marshmallow, wareSprite, type Hold } from '../lib/props';
@@ -121,6 +125,7 @@ export interface WorldProps {
   job?: import('../lib/work').JobData;
   work?: { desk: () => void; talk: (name: string, line: string) => void };
   stall?: (id: StallId) => void;
+  shops?: { flower: () => void; bakery: () => void; bugbook: () => void };
   /** Đang ôm / hôn nhau (cả hai cùng thấy): bên trái/phải của mình */
   couple?: { kind: 'hug' | 'kiss'; at: number; mySide: 'L' | 'R' } | null;
   hillReal: boolean;             // đang chọn "Giờ thật" (theo thời tiết thật)
@@ -551,6 +556,8 @@ function TownContent(p: WorldProps & { dark: boolean }) {
       <Tag x={TOWN.bus.x + 4} y={TOWN.bus.y - 26} className="label" onClick={() => go({ x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 }, () => enter('city'))}>🚌 Đi làm</Tag>
       <Spr sprite={schoolStopSprite()} x={SCHOOL.x} y={SCHOOL.y} title="🚸 Xe đưa đón — tới trường của các bé" onClick={() => go(SCHOOL.door, () => enter('campus'))} />
       <Tag x={SCHOOL.x} y={SCHOOL.y - 34} className="label" onClick={() => go(SCHOOL.door, () => enter('campus'))}>🏫 Trường học{theirs?.scene === 'school' || theirs?.scene === 'campus' ? ' 💗' : ''}</Tag>
+      {p.shops && <Tag x={GARDEN.x + 70} y={GARDEN.y - 18} className="label" onClick={() => go({ x: GARDEN.x + 70, y: GARDEN.y - 8 }, p.shops!.flower)}>🌸 Tiệm hoa của Hy</Tag>}
+      {p.shops && <Tag x={TOWN.cafe.x + 50} y={TOWN.cafe.y - 30} className="label" onClick={() => go({ x: TOWN.cafe.x + 40, y: TOWN.cafe.y + 6 }, p.shops!.bakery)}>🍰 Tiệm bánh</Tag>}
       <Spr sprite={telescopeSprite()} x={TOWN.twin.x} y={TOWN.twin.y} title="🔭 Đài quan sát hai bờ" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))} />
       <Tag x={TOWN.twin.x} y={TOWN.twin.y - 24} className="label" onClick={() => go({ x: TOWN.twin.x - 10, y: TOWN.twin.y + 4 }, () => enter('twin'))}>🔭{theirs?.scene === 'twin' ? ' 💗' : ''}</Tag>
       {p.meetupLeft !== null && p.meetupLeft >= 0 && <div className="plane-fly"><span>✈️</span><b>{p.meetupLeft === 0 ? '💞 Hôm nay gặp nhau rồi!' : `Còn ${p.meetupLeft} ngày nữa gặp nhau 💕`}</b></div>}
@@ -658,6 +665,8 @@ function FarmContent(p: WorldProps) {
       <Spr sprite={treeSprite(1)} x={236} y={88} /><Spr sprite={cherrySprite()} x={16} y={96} /><Spr sprite={pineSprite()} x={244} y={150} />
       {!editing && <Hot x={112} y={178} w={32} h={14} title="Về làng" onClick={() => go(FARM.exit, () => enter('town', TOWN.toFarm))} />}
       {!editing && p.ranch && <FarmAnimals animals={p.animals ?? []} go={go} onAnimal={p.ranch.animal} />}
+      {!editing && <FarmVisitors farm={p.farm} date={p.myView.time.date} />}
+      {!editing && p.shops && <Tag x={40} y={52} className="label" onClick={p.shops.bugbook}>🦋 Sổ bướm & chim</Tag>}
       {!editing && <Tag x={228} y={58} className="label" onClick={() => go({ x: 232, y: 184 }, () => enter('ranch'))}>🐄 Chăn nuôi</Tag>}
       {!dark && <Butterflies />}
     </>
@@ -866,13 +875,13 @@ function PetLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
     const inTub = scene === 'bathroom';
     if (inTub) return null;
     const target = seat ? { x: seat.x + (seat.left ? 13 : -13), y: seat.y + 3 } : { x: who.pos.x - 11, y: who.pos.y + 1 };
-    return <PetSprite pet={pet} x={target.x} y={target.y} onClick={p.on.pet} sit={!!seat} />;
+    return <PetSprite pet={pet} x={target.x} y={target.y} onClick={p.on.pet} sit={!!seat} trick={trickNow(p)} />;
   }
   if (scene !== 'house' || p.petWith) return null;
-  return <PetAtHome pet={pet} hungry={hungry} onClick={p.on.pet} />;
+  return <PetAtHome pet={pet} hungry={hungry} onClick={p.on.pet} trick={trickNow(p)} />;
 }
 
-function PetAtHome({ pet, hungry, onClick }: { pet: Pet; hungry: boolean; onClick: () => void }) {
+function PetAtHome({ pet, hungry, onClick, trick }: { pet: Pet; hungry: boolean; onClick: () => void; trick?: string }) {
   const spots = useMemo(() => [roomPt(6.4, 6.2), roomPt(3.4, 6.8), roomPt(6.9, 4.8), roomPt(5.6, 6.9), roomPt(4.4, 6)], []);
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -882,13 +891,13 @@ function PetAtHome({ pet, hungry, onClick }: { pet: Pet; hungry: boolean; onClic
   const at = spots[i];
   return (
     <>
-      <PetSprite pet={pet} x={at.x} y={at.y} onClick={onClick} sleepy={i === 2} />
+      <PetSprite pet={pet} x={at.x} y={at.y} onClick={onClick} sleepy={i === 2} trick={trick} />
       {hungry && <Tag x={at.x} y={at.y - 26} className="hint">🍖?</Tag>}
     </>
   );
 }
 
-function PetSprite({ pet, x, y, onClick, sit, sleepy }: { pet: Pet; x: number; y: number; onClick: () => void; sit?: boolean; sleepy?: boolean }) {
+function PetSprite({ pet, x, y, onClick, sit, sleepy, trick }: { pet: Pet; x: number; y: number; onClick: () => void; sit?: boolean; sleepy?: boolean; trick?: string }) {
   const [shown, setShown] = useState({ x, y, ms: 0, left: false });
   const [moving, setMoving] = useState(false);
   const [step, setStep] = useState(false);
@@ -909,11 +918,12 @@ function PetSprite({ pet, x, y, onClick, sit, sleepy }: { pet: Pet; x: number; y
   }, [moving]);
   const sprite = petSprite(pet.kind, moving && step ? 'walk' : sleepy && !sit ? 'sleep' : 'sit');
   const s = useScale();
+  const grow = Math.min(1.3, 0.8 + (Math.floor(pet.love / 10) + 1) * 0.05);   // lớn dần theo cấp thân thiết
   return (
-    <img src={sprite.url} alt={pet.name} title={`🐾 ${pet.name}`} draggable={false} className="spr tappable pet"
+    <img src={sprite.url} alt={pet.name} title={`🐾 ${pet.name}`} draggable={false} className={`spr tappable pet ${trick ? `trick-${trick}` : ''}`}
       onClick={e => { e.stopPropagation(); onClick(); }}
       style={{
-        left: Math.round((shown.x - sprite.w / 2) * s), top: Math.round((shown.y - sprite.h) * s), width: sprite.w * s, height: sprite.h * s,
+        left: Math.round((shown.x - (sprite.w * grow) / 2) * s), top: Math.round((shown.y - sprite.h * grow) * s), width: sprite.w * s * grow, height: sprite.h * s * grow,
         zIndex: Math.round(shown.y) + 2, transform: shown.left ? undefined : 'scaleX(-1)',
         transition: `left ${shown.ms}ms linear, top ${shown.ms}ms linear`,
       }} />
@@ -1518,4 +1528,28 @@ function SprPx({ sprite, x, y, z, k, title, onClick, className = '' }: { sprite:
   return <img src={sprite.url} alt={title ?? ''} title={title} draggable={false} className={`spr ${onClick ? 'tappable' : ''} ${className}`}
     onClick={onClick ? e => { e.stopPropagation(); onClick(); } : undefined}
     style={{ left: x * s - (sprite.w * ps) / 2, top: y * s - sprite.h * ps, width: sprite.w * ps, height: sprite.h * ps, zIndex: z ?? Math.round(y) }} />;
+}
+
+/** Bướm & chim ghé nông trại theo loài hoa đang trồng — bấm để chụp ảnh lưu vào sổ */
+function FarmVisitors({ farm, date }: { farm: { cell: number; crop_id: string }[]; date: string }) {
+  const flowers = farm.filter(r => content.garden.crops.find(c => c.id === r.crop_id)?.flower);
+  const vis = visitorsToday(date, flowers.map(r => r.crop_id));
+  return (
+    <>
+      {vis.map((v, i) => {
+        const near = flowers.find(r => r.crop_id === v.flower) ?? flowers[i % Math.max(1, flowers.length)];
+        if (!near) return null;
+        const home = { x: FARM.x + ((near.cell % FARM.cols) + 0.5) * FARM.cw, y: FARM.y + Math.floor(near.cell / FARM.cols) * FARM.ch + 4 };
+        return <Wanderer key={v.id} id={v.bird ? 'parrot' : 'butterfly'} home={home} r={14} name={`📸 ${v.name}`} className={`visitor hue-${v.id}`}
+          onClick={() => api.collect([`bug:${v.id}`]).then(() => { toast(`📸 Đã chụp ảnh ${v.name}! Xem trong 🦋 Sổ bướm & chim`); notify('collection'); }, toastError)} />;
+      })}
+    </>
+  );
+}
+
+/** Trò thú cưng đang làm (ai trong hai người ra lệnh, trong 4 giây gần nhất) */
+function trickNow(p: WorldProps) {
+  const ts = [p.live.mine.petTrick, p.partnerHere ? p.live.theirs?.petTrick : null].filter(Boolean) as { t: string; at: number }[];
+  const last = ts.sort((a, b) => b.at - a.at)[0];
+  return last && Date.now() - last.at < 4000 ? last.t : undefined;
 }

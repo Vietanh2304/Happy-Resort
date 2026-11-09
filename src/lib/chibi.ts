@@ -8,7 +8,7 @@ import { mix, type Pen, type Sprite } from './pixel';
 
 export interface ChibiLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: 'm' | 'f'; glasses?: number; design?: Design | null }
 export type View = 'front' | 'back' | 'side';
-export type Pose = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance' | 'act' | 'actsit' | 'makeup';
+export type Pose = 'idle' | 'walk' | 'sit' | 'sleep' | 'dance' | 'act' | 'actsit' | 'makeup' | 'embrace' | 'kiss';
 /**
  * Động tác tay (pose 'act' đứng / 'actsit' ngồi, `step` = số thứ tự):
  * 0 vung tay sau đầu · 1 ném ra · 2 hất nước sang hai bên · 3 hất nước lên · 4 chèo kéo · 5 chèo đẩy
@@ -196,6 +196,7 @@ export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', s
   if ((pose === 'sit' && view !== 'back') || pose === 'sleep' || pose === 'dance' || pose === 'act' || pose === 'actsit' || hold) view = 'front';
   if (pose !== 'walk' && pose !== 'dance' && pose !== 'act' && pose !== 'actsit' && pose !== 'makeup') step = 0;
   if (pose === 'makeup' && view === 'side') view = 'front';
+  if (pose === 'embrace' || pose === 'kiss') { view = 'side'; step = 0; }
   const S = SKINS[look.skin ?? 0] ?? SKINS[0];
   const H = HAIR_COLORS[look.hairColor ?? 0] ?? HAIR_COLORS[0];
   const C = SHIRTS[look.shirt ?? 0] ?? SHIRTS[0];
@@ -309,7 +310,8 @@ function draw(P: HiPen, a: Args) {
     if (o.sleeve === 'puff') P.ell(sx, sy + 1, 2.5, 2, mix(o.top, '#ffffff', 0.3));
     P.ell(hx, hy + 1, 1.8, 1.8, far ? Sd : S);
   };
-  if (side) arm(15, y + 27, 15 + swing, y + 35, true);
+  const hugging = pose === 'embrace' || pose === 'kiss';
+  if (side) { if (hugging) arm(15, y + 27, 29, y + 26, true); else arm(15, y + 27, 15 + swing, y + 35, true); }
 
   // ── Thân ──
   const tx0 = side ? 11 : 10, tw = side ? 10 : 12;
@@ -370,7 +372,7 @@ function draw(P: HiPen, a: Args) {
       arm(lx + 1, y + 26, lx, y + 35 + swingL);
       arm(rx - 1, y + 26, rx, y + 35 - swingL);
     }
-  } else arm(16, y + 27, 16 - swing, y + 35);
+  } else if (hugging) arm(16, y + 27, 30, y + 31); else arm(16, y + 27, 16 - swing, y + 35);
 
   // ── Đầu ──
   head(P, a, y, { S, Sd, H, Hd, Hl });
@@ -404,7 +406,7 @@ function head(P: HiPen, a: Args, y: number, c: { S: string; Sd: string; H: strin
   else P.ell(cx, y + 14.5, 11.5, 9.6, c.S);
   if (!back) {
     const eye = (x: number, w3: boolean) => {
-      if (pose === 'sleep') { P.px(x, y + 18, INK); P.rect(x + 1, y + 19, w3 ? 1 : 2, 1, INK); P.px(x + (w3 ? 2 : 3), y + 18, INK); return; }
+      if (pose === 'sleep' || pose === 'kiss') { P.px(x, y + 18, INK); P.rect(x + 1, y + 19, w3 ? 1 : 2, 1, INK); P.px(x + (w3 ? 2 : 3), y + 18, INK); return; }
       const rows = w3 ? ['.KK', 'WKK', 'WKK', 'KKK', 'KIK', '.K.'] : ['.KK.', 'KWKK', 'KWKK', 'KKKK', 'KIIK', '.KK.'];
       P.map(rows, { K: INK, W: '#ffffff', I: '#7a5a9a' }, x, y + 15);
       if (girl && !w3 && x < 16) P.px(x - 1, y + 16, INK);

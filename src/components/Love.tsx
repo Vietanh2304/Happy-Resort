@@ -227,6 +227,7 @@ export function FestTray({ theme, icon, onPick, onDone }: { theme: Theme; icon: 
 // ───────── Thú cưng ─────────
 
 interface PetProps {
+  onTrick?: (t: 'sit' | 'shake' | 'roll') => void;
   pet: api.Pet | null;
   inventory: api.InvRow[];
   date: string;
@@ -236,7 +237,7 @@ interface PetProps {
   onWalk: () => void;
   onClose: () => void;
 }
-export function PetSheet({ pet, inventory, date, walking, partnerWalking, partnerName, onWalk, onClose }: PetProps) {
+export function PetSheet({ pet, inventory, date, walking, partnerWalking, partnerName, onWalk, onClose, onTrick }: PetProps) {
   const [kind, setKind] = useState('cat');
   const [name, setName] = useState('');
   const [rename, setRename] = useState<string | null>(null);
@@ -296,6 +297,15 @@ export function PetSheet({ pet, inventory, date, walking, partnerWalking, partne
         <button className="btn small ghost" disabled={!have('pet_treat')} onClick={() => care(null, 1, false, `🍖 ${pet.name} vẫy đuôi rối rít`, 'pet_treat')}>🍖 Bánh thưởng ({have('pet_treat')})</button>
         <button className="btn small ghost" onClick={() => care('pet:pat', 1, false, `🤲 ${pet.name} lim dim vì sướng 💕`)}>🤲 Vuốt ve</button>
         <button className="btn small ghost" onClick={() => care('pet:play', 1, false, `🎾 ${pet.name} chạy theo bóng hớn hở`)}>🎾 Chơi bóng</button>
+        <button className="btn small ghost" onClick={() => care('pet:bath', 2, false, `🛁 ${pet.name} được tắm thơm tho, lông mềm mượt`)}>🛁 Tắm</button>
+        <button className="btn small ghost" onClick={() => care('pet:brush', 1, false, `🪮 ${pet.name} được chải lông, sướng rung cả đuôi`)}>🪮 Chải lông</button>
+        <button className="btn small ghost" disabled={!have('pet_toy')} onClick={() => care(null, 3, false, `🧸 ${pet.name} mê món đồ chơi mới lắm!`, 'pet_toy')}>🧸 Đồ chơi mới ({have('pet_toy')})</button>
+      </div>
+      <p className="muted small-note">🌱 Bé lớn dần theo cấp thân thiết · Cấp 2 biết ngồi, cấp 4 biết bắt tay, cấp 6 biết lăn tròn. Đồ chơi mua ở cửa hàng (mục Thú cưng).</p>
+      <div className="row wrap">
+        {([['sit', 2, '🐾 Ngồi'], ['shake', 4, '🤝 Bắt tay'], ['roll', 6, '🌀 Lăn tròn']] as const).map(([t, lv, txt]) => (
+          <button key={t} className="btn small" disabled={level < lv || !onTrick} onClick={() => { onTrick?.(t); onClose(); }}>{level < lv ? `🔒 ${txt} (cấp ${lv})` : txt}</button>
+        ))}
         <button className={`btn small ${walking ? '' : 'ghost'}`} disabled={partnerWalking} onClick={() => { onWalk(); onClose(); }}>
           {walking ? '🏠 Đưa bé về nhà' : partnerWalking ? `🦮 ${partnerName} đang dắt bé` : '🦮 Dắt đi dạo'}
         </button>
