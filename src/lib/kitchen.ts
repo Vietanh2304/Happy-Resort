@@ -175,6 +175,11 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
     }
     case 'S': case 'L': {
       const pot = cell?.k === 'pot' ? cell : null;
+      // Khét rồi: bấm vào nồi / máy xay (tay không hoặc đang cầm đĩa) là đổ phần khét đi ngay — máy xay gắn cố định không bưng ra thùng rác được
+      if (pot && pot.parts.length && stageOf(pot, now) === 'burnt' && (!hand || hand.k === 'plate')) {
+        setCell({ ...pot, parts: [], heat: 0, on: 0 });
+        return done(t === 'L' ? '🗑️ Đổ phần khét trong máy xay đi — xay lại nhé' : '🗑️ Đổ phần khét đi — nấu lại nhé');
+      }
       if (!hand) {
         if (!pot) return no('Bếp trống — đặt nồi lên đây');
         if (t === 'L') return no(pot.parts.length ? `🥤 ${STAGE_LABEL[stageOf(pot, now)]} — cầm đĩa tới để rót ra` : 'Máy xay trống — cho trái cây vào');
@@ -248,6 +253,10 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
         setCell(res.plate); setHand(res.pot);
         return done(res.say);
       }
+      if (hand.k === 'plate' && cell.k === 'pot' && cell.parts.length && stageOf(cell, now) === 'burnt') {
+        setCell({ ...cell, parts: [], heat: 0, on: 0 });
+        return done('🗑️ Đổ phần khét đi — nấu lại nhé');
+      }
       if (hand.k === 'plate' && cell.k === 'pot') {
         const res = pour(cell, hand, now);
         if (typeof res === 'string') return no(res);
@@ -266,7 +275,7 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
 function addToPot(pot: Pot, ing: Ing, now: number, onStove: boolean): Pot | string {
   if (needsCut(ing.id) && !ing.cut) return '🔪 Phải thái trước đã';
   if (pot.parts.length >= 4) return 'Nồi đầy rồi';
-  if (stageOf(pot, now) === 'burnt') return '💨 Khét rồi — bưng nồi ra thùng rác đổ đi';
+  if (stageOf(pot, now) === 'burnt') return '💨 Khét rồi — bấm vào nồi để đổ đi';
   // Cho thêm đồ sống vào thì nồi nguội bớt (món mới cũng phải chín)
   const h = Math.min(heatOf(pot, now), HEAT[pot.t].raw * 0.4);
   return { ...pot, parts: [...pot.parts, { id: ing.id, cut: ing.cut }], heat: h, on: onStove || pot.t === 'L' ? now : 0 };
@@ -275,7 +284,7 @@ function addToPot(pot: Pot, ing: Ing, now: number, onStove: boolean): Pot | stri
 function pour(pot: Pot, plate: Plate, now: number): { pot: Pot; plate: Plate; say: string } | string {
   const st = stageOf(pot, now);
   if (st === 'empty') return pot.t === 'L' ? 'Máy xay đang trống' : 'Nồi đang trống';
-  if (st === 'burnt') return '💨 Khét mất rồi — bưng nồi ra thùng rác đổ đi';
+  if (st === 'burnt') return '💨 Khét mất rồi — bấm vào để đổ đi rồi làm lại';
   const pl: Plate = { k: 'plate', parts: [...plate.parts, ...pot.parts.map(p => ({ ...p, cook: pot.t }))], q: Math.min(plate.q, QUALITY[st]) };
   const say = st === 'raw' ? '😬 Còn sống mà đã múc ra rồi…' : st === 'over' ? '😅 Hơi quá lửa chút' : '😋 Chín tới, thơm quá!';
   return { pot: { ...pot, parts: [], heat: 0, on: 0 }, plate: pl, say: platedSay(pl) ?? say };

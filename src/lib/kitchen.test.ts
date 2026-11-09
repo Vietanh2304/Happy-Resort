@@ -67,7 +67,22 @@ describe('phòng bếp', () => {
     expect(pl.k === 'plate' && pl.q).toBe(3);
     // Múc khi khét thì không được
     const burnt = act(r, B, ...P, 0).r;
-    expect(act(burnt, B, ...STOVE, 1000 + (HEAT.S.over + 5) * 1000).say).toMatch(/Khét/);
+    const dump = act(burnt, B, ...STOVE, 1000 + (HEAT.S.over + 5) * 1000);
+    expect(dump.say).toMatch(/khét/i);
+    const after = dump.r.cells[`${STOVE[0]},${STOVE[1]}`]!;
+    expect(after.k === 'pot' && after.parts.length).toBe(0);              // đổ phần khét ngay tại bếp
+  });
+
+  it('máy xay xay quá lâu bị khét: bấm vào là đổ đi được (không bị kẹt)', () => {
+    const L = find('L');
+    let r = newRoom(A);
+    r = doAll(r, [[A, F, 0, { pick: 'strawberry' }], [A, BOARD, 0], ...Array.from({ length: CHOP_N + 1 }, () => [A, BOARD, 0] as [string, readonly [number, number], number]), [A, L, 1000]]).r;
+    const at = 1000 + (HEAT.L.over + 5) * 1000;
+    const cup = r.cells[`${L[0]},${L[1]}`]!;
+    expect(cup.k === 'pot' && stageOf(cup, at)).toBe('burnt');
+    const res = act(r, A, ...L, at);
+    const after = res.r.cells[`${L[0]},${L[1]}`]!;
+    expect(after.k === 'pot' && after.parts.length).toBe(0);
   });
 
   it('bưng nồi ra khỏi bếp thì ngừng đun, đặt lại thì đun tiếp', () => {
