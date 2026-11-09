@@ -1613,8 +1613,8 @@ textarea { resize: vertical; }
 .spr.hue-bf_white { filter: hue-rotate(160deg) brightness(1.6) saturate(0.4); }
 .spr.hue-bf_purple { filter: hue-rotate(60deg); }
 .spr.hue-bf_yellow { filter: hue-rotate(-120deg); }
-.spr.hue-bird_sparrow { filter: hue-rotate(30deg); }
-.spr.hue-bird_robin { filter: hue-rotate(140deg); }
+.spr.hue-bird_sparrow { filter: none; }
+.spr.hue-bird_robin { filter: none; }
 .spr.hue-bf_morpho { filter: hue-rotate(200deg); }
 .spr.pet.trick-sit { animation: pet-sit 0.8s ease-in-out 3; transform-origin: 50% 100%; }
 .spr.pet.trick-shake { animation: pet-shake 0.4s ease-in-out 6; transform-origin: 50% 100%; }

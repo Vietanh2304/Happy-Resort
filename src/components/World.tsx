@@ -1548,7 +1548,7 @@ function FarmVisitors({ farm, date }: { farm: { cell: number; crop_id: string }[
         const near = flowers.find(r => r.crop_id === v.flower) ?? flowers[i % Math.max(1, flowers.length)];
         if (!near) return null;
         const home = { x: FARM.x + ((near.cell % FARM.cols) + 0.5) * FARM.cw, y: FARM.y + Math.floor(near.cell / FARM.cols) * FARM.ch + 4 };
-        return <FlyingVisitor key={v.id} id={v.bird ? 'parrot' : 'butterfly'} home={home} name={`📸 ${v.name}`} className={`visitor hue-${v.id}`}
+        return <FlyingVisitor key={v.id} id={v.bird ? v.id : 'butterfly'} home={home} name={`📸 ${v.name}`} className={`visitor hue-${v.id}`}
           onClick={() => api.collect([`bug:${v.id}`]).then(() => { toast(`📸 Đã chụp ảnh ${v.name}! Xem trong 🦋 Sổ bướm & chim`); notify('collection'); }, toastError)} />;
       })}
     </>

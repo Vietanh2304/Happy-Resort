@@ -38,6 +38,7 @@ export const FLIERS = new Set(['butterfly']);
 
 export function critterSprite(id: string, f: 0 | 1) {
   if (id.startsWith('horse')) return horseSprite(id, f);
+  if (id.startsWith('bird_')) return birdSprite(id, f);
   const sp = SPECS[id] ?? SPECS.cat;
   return makeSprite(`critter:${id}:${f}`, 16, 14, p => draw(p, sp, f));
 }
@@ -124,4 +125,30 @@ function draw(p: Pen, s: Spec, f: 0 | 1) {
       p.px(13, 5, '#2a2438'); p.px(14, 7, '#3a2a2a'); p.rect(1, f ? 8 : 9, 2, 2, '#6a7888'); p.rect(6, 12, 3, 1, '#6a7888');
       break;
   }
+}
+
+/** Chim nhỏ đang bay (nhìn ngang, quay phải), 2 khung vỗ cánh: cánh lên / cánh xuống */
+const BIRDS: Record<string, { back: string; dark: string; breast: string; beak: string; cheek?: string }> = {
+  bird_sparrow: { back: '#a8703f', dark: '#6a4028', breast: '#f6d04a', beak: '#f6a03a', cheek: '#fff1c8' },
+  bird_robin: { back: '#7a8a9a', dark: '#4a5868', breast: '#f0703a', beak: '#3a3a3a', cheek: '#ffffff' },
+};
+export function birdSprite(id: string, f: 0 | 1) {
+  const c = BIRDS[id] ?? BIRDS.bird_sparrow;
+  return makeSprite(`bird:v2:${id}:${f}`, 18, 14, p => {
+    // đuôi xòe
+    p.rect(1, 7, 3, 2, c.dark); p.rect(0, 6, 2, 1, c.dark); p.rect(0, 9, 2, 1, c.dark);
+    // thân tròn + ngực
+    ellipse(p, 8, 8, 5, 3.4, c.back); ellipse(p, 9, 9.2, 3.6, 2.2, c.breast);
+    // đầu
+    ellipse(p, 13, 6, 3, 2.8, c.back); if (c.cheek) p.px(14, 7, c.cheek);
+    p.rect(16, 6, 2, 1, c.beak); p.px(16, 7, c.beak);
+    // cánh có lớp lông (sáng ở mép trên): khung 0 vỗ lên, khung 1 vỗ xuống
+    const wl = mix(c.back, '#ffffff', 0.35);
+    const up: [number, number, number][] = [[6, 5, 6], [6, 4, 6], [7, 3, 5], [8, 2, 4], [9, 1, 3], [10, 0, 1]];
+    for (const [x, y, w] of up) {
+      const yy = f ? 16 - y - 3 : y;
+      p.rect(x, yy, w, 1, c.dark); p.px(x + w - 1, yy, wl);
+    }
+    p.rect(14, 4, 2, 2, '#1a1418'); p.px(14, 4, '#ffffff');                      // mắt to long lanh
+  });
 }
