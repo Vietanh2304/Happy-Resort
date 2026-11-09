@@ -161,19 +161,68 @@ export function WorkshopSheet({ inventory, together, partnerName, onClose }: { i
 }
 
 /** Trên nông trại: chuồng ngựa (giữa nhà kho và ao) + cá bơi trong ao */
-export function FarmAnimals({ animals, go, onAnimal }: { animals: api.Animal[]; go: (to: Pt, then?: () => void) => void; onAnimal: (id: string) => void }) {
+export function FarmAnimals({ animals, go, onAnimal, onPen }: { animals: api.Animal[]; go: (to: Pt, then?: () => void) => void; onAnimal: (id: string) => void; onPen: (pen: 'stable' | 'pond') => void }) {
   const badge = (a: api.Animal) => { const st = animalState(a); return st.ready ? '✨' : st.hungry ? '🍽️' : undefined; };
   const horses = animals.filter(a => animalDef(a.kind).pen === 'stable'), fish = animals.filter(a => animalDef(a.kind).pen === 'pond');
   const S = RANCH.pens.stable, P = RANCH.pens.pond;
   return (
     <>
       <Spr sprite={stableSprite()} x={110} y={44} title="🐴 Chuồng ngựa" />
-      <Tag x={110} y={28} className="label">🐴 Chuồng ngựa{horses.length ? ` · ${horses.length}` : ''}</Tag>
-      <Tag x={218} y={46} className="label">🐟 Ao cá{fish.length ? ` · ${fish.length}` : ''}</Tag>
+      <button className="hot" title="🐴 Chuồng ngựa" style={{ left: 96 * useScale(), top: 18 * useScale(), width: 30 * useScale(), height: 28 * useScale() }} onClick={e => { e.stopPropagation(); go({ x: 112, y: 62 }, () => onPen('stable')); }} />
+      <Tag x={110} y={28} className="label" onClick={() => go({ x: 112, y: 62 }, () => onPen('stable'))}>🐴 Chuồng ngựa{horses.length ? ` · ${horses.length}` : ''}</Tag>
+      <Tag x={218} y={46} className="label" onClick={() => go({ x: 218, y: 62 }, () => onPen('pond'))}>🐟 Ao cá{fish.length ? ` · ${fish.length}` : ''}</Tag>
       {horses.map((a, i) => <Wanderer key={a.id} id="horse" home={{ x: S.x0 + 34 + i * 14, y: S.y0 + 22 }} r={14} box={{ ...S, x0: S.x0 + 22 }} name={`🐴 ${a.name || 'Ngựa'}`} badge={badge(a)}
         onClick={() => go({ x: S.x0 + 40 + i * 10, y: 62 }, () => onAnimal(a.id))} />)}
       {fish.map((a, i) => <Wanderer key={a.id} id="fish" home={{ x: P.x0 + 10 + (i % 4) * 11, y: P.y0 + 10 + Math.floor(i / 4) * 6 }} r={8} box={P} scale={0.45} name={`${animalDef(a.kind).icon} ${animalDef(a.kind).name.replace(' giống', '')}`} badge={badge(a)}
         onClick={() => go({ x: 220, y: 62 }, () => onAnimal(a.id))} />)}
     </>
+  );
+}
+
+/** Bảng chăm cả chuồng ngựa / cả ao cá: xem từng con, cho ăn hết, thu hết */
+export function PenSheet({ pen, animals, inventory, onAnimal, onShop, onClose }: { pen: 'stable' | 'pond'; animals: api.Animal[]; inventory: api.InvRow[]; onAnimal: (id: string) => void; onShop: () => void; onClose: () => void }) {
+  const list = animals.filter(a => animalDef(a.kind).pen === pen);
+  const [busy, setBusy] = useState(false);
+  const run = async (f: () => Promise<unknown>) => { setBusy(true); try { await f(); } catch (e) { toastError(e); } setBusy(false); };
+  const feedAll = () => run(async () => {
+    let n = 0, inv = inventory.map(r => ({ ...r }));
+    for (const a of list.filter(x => animalState(x).hungry)) {
+      const def = animalDef(a.kind);
+      let use = feedFrom(def, inv);
+      if (!use) { await api.buyItem('feed', FEED_PRICE); use = 'feed'; inv.push({ ...inv[0], item_id: 'feed', qty: 1 }); }
+      await api.craft([{ id: use, n: 1 }]);
+      const r = inv.find(x => x.item_id === use); if (r) r.qty--;
+      await api.ranchFeed(a.id); n++;
+    }
+    notify('ranch', 'inventory', 'profiles');
+    toast(n ? `🍽️ Đã cho ${n} con ăn` : 'Con nào cũng no rồi 😊');
+  });
+  const collectAll = () => run(async () => {
+    let n = 0;
+    for (const a of list.filter(x => animalState(x).ready)) { const d = animalDef(a.kind); if (await api.ranchCollect(a.id, d.product, d.n, d.hours)) n += d.n; }
+    notify('ranch', 'inventory', 'collection');
+    toast(n ? `✨ Thu được ${n} món` : 'Chưa có con nào thu được — cho ăn rồi đợi đủ giờ nhé');
+  });
+  return (
+    <Sheet title={pen === 'stable' ? '🐴 Chuồng ngựa' : '🐟 Ao cá nước ngọt'} onClose={onClose}>
+      {!list.length ? (
+        <><p className="muted">{pen === 'stable' ? 'Chuồng chưa có ngựa.' : 'Ao chưa thả cá.'} Mua ở trang trại chăn nuôi, mục 🛒 Mua con giống.</p>
+          <button className="btn" onClick={onShop}>🛒 Mua {pen === 'stable' ? 'ngựa' : 'cá giống'}</button></>
+      ) : (
+        <>
+          <div className="row wrap">
+            <button className="btn" disabled={busy} onClick={feedAll}>🍽️ Cho tất cả ăn</button>
+            <button className="btn ghost" disabled={busy} onClick={collectAll}>✨ {pen === 'stable' ? 'Chải lông hết' : 'Kéo lưới thu hết'}</button>
+          </div>
+          <ul className="task-list">
+            {list.map(a => { const st = animalState(a), d = st.def; return (
+              <li key={a.id}><b>{d.icon} {a.name || d.name.replace(' giống', '')}</b>
+                <small className="muted">{st.ready ? `✨ ${d.verb} được rồi` : st.hungry ? '🍽️ Đang đói' : `⏳ ${waitText(st.nextAt - Date.now())} nữa`}</small>
+                <button className="btn small ghost" onClick={() => onAnimal(a.id)}>Xem</button></li>
+            ); })}
+          </ul>
+        </>
+      )}
+    </Sheet>
   );
 }

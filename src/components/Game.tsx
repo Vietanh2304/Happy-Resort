@@ -34,7 +34,7 @@ import { BakerySheet, BugBookSheet, FlowerShopSheet } from './Shops';
 import { CAMPUS } from '../lib/campusArt';
 import type { StallId } from '../lib/school';
 import { DailyGift, DailyQuiz } from './Daily';
-import { AnimalSheet, RanchShopSheet, WorkshopSheet } from './Ranch';
+import { AnimalSheet, RanchShopSheet, WorkshopSheet, PenSheet } from './Ranch';
 import { TailorSheet } from './Tailor';
 import { WorkSheet } from './Work';
 import { bragClassGrade, MeetingSheet, StudySheet } from './Study';
@@ -88,7 +88,7 @@ type SheetState =
   | { kind: 'animal'; id: string }
   | { kind: 'ranchshop' }
   | { kind: 'stall'; id: StallId }
-  | { kind: 'flowershop' } | { kind: 'bakery' } | { kind: 'bugbook' }
+  | { kind: 'flowershop' } | { kind: 'bakery' } | { kind: 'bugbook' } | { kind: 'pen'; pen: 'stable' | 'pond' }
   | { kind: 'workshop' }
   | { kind: 'tailor' }
   | { kind: 'work' }
@@ -903,7 +903,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <World
           scene={scene} me={me} partner={partner} myView={myView} realView={realView} partnerView={partnerView}
           live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
-          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: () => setSheet({ kind: 'bakery' }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
+          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: () => setSheet({ kind: 'bakery' }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
           farm={farm} guests={activeGuests} pickups={pickups} fishing={fishing} combos={combos}
           daysTogether={bridge.planks}
@@ -1099,6 +1099,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'flowershop' && <FlowerShopSheet date={myTime.date} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
       {sheet?.kind === 'bakery' && <BakerySheet me={me} date={myTime.date} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
       {sheet?.kind === 'bugbook' && <BugBookSheet me={me} onClose={close} />}
+      {sheet?.kind === 'pen' && <PenSheet pen={sheet.pen} animals={animals} inventory={inventory} onAnimal={id => setSheet({ kind: 'animal', id })} onShop={() => { close(); enter('ranch'); }} onClose={close} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'workshop' && <WorkshopSheet inventory={inventory} together={!!partnerHere} partnerName={partnerName} onClose={close} />}

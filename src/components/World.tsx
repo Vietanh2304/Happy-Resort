@@ -121,7 +121,7 @@ export interface WorldProps {
   chestOpen?: boolean;           // lặn: rương báu hôm nay đã mở
   onChest?: () => void;
   animals?: import('../lib/api').Animal[];
-  ranch?: { animal: (id: string) => void; shop: () => void; workshop: () => void; tailor: () => void };
+  ranch?: { animal: (id: string) => void; shop: () => void; workshop: () => void; tailor: () => void; pen: (pen: 'stable' | 'pond') => void };
   job?: import('../lib/work').JobData;
   work?: { desk: () => void; talk: (name: string, line: string) => void };
   stall?: (id: StallId) => void;
@@ -664,9 +664,9 @@ function FarmContent(p: WorldProps) {
       {editing && <GridCells {...p} grid={FARM} label="Ô ruộng" planted={(x, y) => p.farm.some(r => r.cell === farmCell(x, y))} />}
       <Spr sprite={treeSprite(1)} x={236} y={88} /><Spr sprite={cherrySprite()} x={16} y={96} /><Spr sprite={pineSprite()} x={244} y={150} />
       {!editing && <Hot x={112} y={178} w={32} h={14} title="Về làng" onClick={() => go(FARM.exit, () => enter('town', TOWN.toFarm))} />}
-      {!editing && p.ranch && <FarmAnimals animals={p.animals ?? []} go={go} onAnimal={p.ranch.animal} />}
+      {!editing && p.ranch && <FarmAnimals animals={p.animals ?? []} go={go} onAnimal={p.ranch.animal} onPen={p.ranch.pen} />}
       {!editing && <FarmVisitors farm={p.farm} date={p.myView.time.date} />}
-      {!editing && p.shops && <Tag x={40} y={52} className="label" onClick={p.shops.bugbook}>🦋 Sổ bướm & chim</Tag>}
+      {!editing && p.shops && <Tag x={66} y={52} className="label" onClick={p.shops.bugbook}>🦋 Sổ bướm & chim</Tag>}
       {!editing && <Tag x={228} y={58} className="label" onClick={() => go({ x: 232, y: 184 }, () => enter('ranch'))}>🐄 Chăn nuôi</Tag>}
       {!dark && <Butterflies />}
     </>
