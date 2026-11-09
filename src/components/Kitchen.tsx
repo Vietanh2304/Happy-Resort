@@ -15,6 +15,7 @@ import { notify } from '../lib/realtime';
 import { characterSprite, type View } from '../lib/sprites';
 import { toast, toastError } from '../lib/toast';
 import { reward, useGameChannel, type Msg } from './gameKit';
+import { bakeOrders, orderBlock } from '../lib/shops';
 import { useGlide } from './play/kit';
 import { actFrame, type Act } from '../lib/acts';
 
@@ -340,7 +341,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
             {room.sink.wash > 0 && <Bar v={room.sink.wash / WASH_N} s={s} color="#7fd0f0" />}
           </div>
         ) : null))}
-        {variant === 'bakery' && [1, 4, 7, 10, 12].map((x, i) => <span key={x} className="k-customer" style={{ left: (x + 0.5) * T * s, top: (ROWS - 0.95) * T * s, fontSize: Math.max(14, 9 * s), animationDelay: `${-i * 0.6}s` }}>{['🧑', '👩', '👧', '👴', '👩‍🦰'][i]}</span>)}
+        {variant === 'bakery' && <BakeryCustomers date={date} last={room.last} s={s} />}
         {avatar('me', me.avatar, pos, mySeat, hand, undefined)}
         {theirShown && partner && avatar('them', partner.avatar, theirShown, theirSeat, room.hands[them] ?? null, partner.display_name)}
         {room.meal && <div className="k-meal" style={{ left: 10 * T * s, top: 4.2 * T * s }}>😋 {Math.ceil((room.meal.until - hostNow) / 1000)}s</div>}
@@ -601,4 +602,30 @@ function drawTile(p: Pen, c: string, X: number, Y: number, x: number, y: number)
       floor(); p.rect(X + 3, Y + 1, 10, 4, '#a86a3e'); p.rect(X + 3, Y + 6, 10, 6, '#c8844a'); p.rect(X + 4, Y + 7, 8, 4, '#f59ab3'); p.rect(X + 3, Y + 12, 2, 3, '#7a4a2a'); p.rect(X + 11, Y + 12, 2, 3, '#7a4a2a');
       break;
   }
+}
+
+/** Khách đứng ngoài quầy: bấm để xem muốn bánh gì; bán đúng bánh thì khách đó đi. Lượt khách mới mỗi 4 tiếng. */
+const CUST = [{ gender: 'f' as const, hair: 5, hairColor: 2, skin: 1, shirt: 8, outfit: 1 }, { gender: 'm' as const, hair: 2, hairColor: 0, skin: 2, shirt: 10, outfit: 4 }, { gender: 'f' as const, hair: 1, hairColor: 3, skin: 0, shirt: 4, outfit: 14 }];
+function BakeryCustomers({ date, last, s }: { date: string; last: { id: string; dishes: string[] } | null; s: number }) {
+  const block = orderBlock(new Date().getHours()), key = `bk-gone:${date}:${block}`;
+  const orders = bakeOrders(date, block);
+  const [gone, setGone] = useState<number[]>(() => { try { return JSON.parse(localStorage.getItem(key) ?? '[]'); } catch { return []; } });
+  const [ask, setAsk] = useState<number | null>(null);
+  const seen = useRef(last?.id);
+  useEffect(() => {
+    if (!last || last.id === seen.current || !last.id.startsWith('sale:')) return;
+    seen.current = last.id;
+    const i = orders.findIndex((o, k) => !gone.includes(k) && o.want === last.dishes[0]);
+    if (i < 0) return;
+    const g = [...gone, i]; setGone(g); try { localStorage.setItem(key, JSON.stringify(g)); } catch { /* bỏ qua */ }
+  }, [last?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <>{orders.map((o, i) => {
+    if (gone.includes(i)) return null;
+    const sp = characterSprite(CUST[i % 3], 'idle'), x = 2.5 + i * 4.2, k = s * 0.55;
+    return <div key={i}>
+      <img src={sp.url} alt="Khách" className="k-customer" onClick={() => setAsk(ask === i ? null : i)}
+        style={{ left: x * T * s, top: (ROWS - 0.15) * T * s - sp.h * k, width: sp.w * k, height: sp.h * k, cursor: 'pointer', pointerEvents: 'auto', animationDelay: `${-i * 0.6}s` }} />
+      {ask === i && <span className="k-ask" style={{ left: x * T * s, top: (ROWS - 0.15) * T * s - sp.h * k - 28 }}>{o.who}: cho mình {o.n} {item(o.want).icon} {item(o.want).name} nhé!</span>}
+    </div>;
+  })}</>;
 }

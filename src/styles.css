@@ -1675,3 +1675,4 @@ textarea { resize: vertical; }
 .bq-img { width: 192px; height: 248px; image-rendering: pixelated; animation: fp-pop .25s ease-out; }
 .bq-img.big { width: 216px; height: 279px; }
 .fp-table { cursor: pointer; min-height: 180px; align-items: center; }
+.k-ask { position: absolute; transform: translateX(-30%); z-index: 60; background: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 1px 6px; font-size: 12px; white-space: nowrap; }
