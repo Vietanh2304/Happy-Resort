@@ -97,20 +97,25 @@ const HORSE_COLORS: Record<string, { body: string; dark: string; light: string; 
 };
 export function horseSprite(kind: string, f: 0 | 1, saddle = false) {
   const c = HORSE_COLORS[kind] ?? HORSE_COLORS.horse;
-  return makeSprite(`horse:${kind}:${f}:${saddle}`, 32, 26, p => {
-    // chân (khung bước: chân trước/sau so le)
-    const legs = f ? [[8, 0], [12, 1], [21, -1], [25, 0]] : [[8, 0], [12, 0], [21, 0], [25, 0]];
-    legs.forEach(([x, dx], i) => { const col = i % 2 ? c.dark : c.body; p.rect(x + dx, 15, 2, 8, col); p.rect(x + dx, 22, 3, 2, c.hoof); });
+  return makeSprite(`horse:v3:${kind}:${f}:${saddle}`, 40, 32, p => {
+    // chân (khung bước: chân trước/sau so le), móng
+    const legs = f ? [[9, 1], [13, -1], [23, -1], [27, 1]] : [[9, 0], [13, 0], [23, 0], [27, 0]];
+    legs.forEach(([x, dx], i) => { const col = i % 2 ? c.dark : c.body; p.rect(x + dx, 20, 3, 9, col); p.rect(x + dx, 28, 3, 2, c.hoof); });
     // thân
-    ellipse(p, 16.5, 12, 11, 5.6, c.body); ellipse(p, 16.5, 10.2, 9.5, 3, c.light); ellipse(p, 16, 15, 9, 2, c.dark);
-    // cổ + đầu
-    for (let i = 0; i < 7; i++) p.rect(23 + i, 9 - i, 4, 5, c.body);
-    ellipse(p, 29, 3.4, 3, 2.6, c.body); p.rect(29, 3, 3, 3, c.body); p.rect(31, 4, 1, 2, c.nose);
-    p.px(29, 2, '#1a1418'); p.px(28, 1, c.light);                                   // mắt
-    p.rect(27, 0, 1, 2, c.dark); p.rect(28, -1, 1, 1, c.dark);                      // tai
-    // bờm + đuôi
-    for (let i = 0; i < 8; i++) p.rect(22 + i, 7 - i, 2, 3, c.mane);
-    p.rect(4, 9, 3, 2, c.mane); p.rect(2, 10, 3, 6, c.mane); p.rect(3, 15, 2, 4, c.mane); p.px(2, 18 + f, c.mane);
-    if (saddle) { p.rect(12, 6, 9, 3, '#8a3a32'); p.rect(12, 6, 9, 1, '#c8583a'); p.rect(15, 9, 2, 4, '#5a3a2a'); p.rect(14, 12, 4, 1, '#c8c8d8'); }
+    ellipse(p, 18, 17, 12, 6.5, c.body); ellipse(p, 18, 14.5, 10, 3, c.light); ellipse(p, 18, 21, 10, 2, c.dark);
+    // cổ nghiêng chéo lên phía trước (dày ở vai, thon dần)
+    for (let i = 0; i < 7; i++) p.rect(24 + i, 14 - i * 1.4, 6 - Math.floor(i / 3), 6, c.body);
+    // đầu ngựa dài: trán → mõm chúc xuống phía trước (vẽ theo từng hàng)
+    const head: [number, number, number][] = [[1, 31, 34], [2, 30, 35], [3, 30, 36], [4, 30, 37], [5, 31, 38], [6, 32, 39], [7, 33, 39], [8, 34, 39], [9, 35, 38]];
+    for (const [y, x0, x1] of head) p.rect(x0, y, x1 - x0 + 1, 1, c.body);
+    p.rect(36, 8, 3, 2, c.light); p.px(38, 8, c.nose); p.px(37, 9, c.dark);                 // mõm sáng màu, lỗ mũi, miệng
+    p.rect(32, 3, 2, 2, '#1a1418'); p.px(32, 3, '#ffffff');                                // mắt
+    p.rect(30, -1, 2, 3, c.body); p.px(30, -1, c.dark); p.rect(32, 0, 1, 2, c.dark);        // tai
+    // bờm dọc gáy (mép sau cổ) + chỏm lông trước trán
+    for (let i = 0; i < 8; i++) p.rect(23 + i, 12 - i * 1.4, 2, 4, c.mane);
+    p.rect(31, 1, 2, 2, c.mane);
+    // đuôi
+    p.rect(5, 13, 3, 3, c.mane); p.rect(3, 14, 3, 8, c.mane); p.rect(4, 21, 2, 4, c.mane); p.px(3, 24 + f, c.mane);
+    if (saddle) { p.rect(13, 9, 10, 3, '#8a3a32'); p.rect(13, 9, 10, 1, '#c8583a'); p.rect(17, 12, 2, 5, '#5a3a2a'); p.rect(16, 16, 4, 1, '#c8c8d8'); }
   });
 }
