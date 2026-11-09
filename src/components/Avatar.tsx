@@ -154,7 +154,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
           marginLeft: -Math.round(ax * ps), transformOrigin: `${Math.round(ax * ps)}px 50%`, marginTop: -Math.round(sprite.h * ps),
           transform: pair ? undefined : shown.left ? 'scaleX(-1)' : undefined,
           scale: pair?.f === 'side' && duo!.side === 'R' ? '-1 1' : undefined,
-          translate: riding ? `0 ${-Math.round(13 * ps)}px` : undefined, position: riding ? 'relative' : undefined,
+          translate: riding ? `${Math.round((shown.left ? 3 : -3) * ps)}px ${-Math.round(20 * ps)}px` : undefined, position: riding ? 'relative' : undefined,
         }}
       />
       {umbrella && !hold && (() => {
@@ -165,7 +165,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
       })()}
       {name && <span className="avatar-name" style={{ top: 2 * s }}>{name}</span>}
       {status && !bubble && <span className="avatar-status" style={{ bottom: sprite.h * ps + 3 }}>{status}</span>}
-      {bubble && <span className="speech" style={{ bottom: sprite.h * ps + 4 }}>{bubble}</span>}
+      {bubble && <span className="speech" style={{ bottom: sprite.h * ps + 4 + (riding ? 20 * ps : 0) }}>{bubble}</span>}
     </div>
   );
 }
