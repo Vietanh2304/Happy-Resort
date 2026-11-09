@@ -9,7 +9,7 @@ export const STREET = {
   toTown: { x: 128, y: 180 },
 };
 export const FLORIST = { counter: { x: 96, y: 84, stand: { x: 96, y: 100 } }, bench: { x: 150, y: 96, stand: { x: 150, y: 110 } }, door: { x: 96, y: 140 } };
-export const BAKERY = { prep: { x: 44, y: 94, stand: { x: 44, y: 106 } }, oven: { x: 44, y: 76, stand: { x: 50, y: 100 } }, case: { x: 120, y: 92, stand: { x: 120, y: 108 } }, door: { x: 96, y: 140 } };
+export const BAKERY = { fridge: { x: 176, y: 64, stand: { x: 168, y: 104 } }, deco: { x: 166, y: 112, stand: { x: 150, y: 124 } }, prep: { x: 44, y: 94, stand: { x: 44, y: 106 } }, oven: { x: 44, y: 76, stand: { x: 50, y: 100 } }, case: { x: 120, y: 92, stand: { x: 120, y: 108 } }, door: { x: 96, y: 140 } };
 
 const win = (p: Pen, x: number, y: number, w: number, h: number, glass: string) => {
   p.rect(x, y, w, h, '#ffffff'); p.rect(x + 1, y + 1, w - 2, h - 2, glass); p.rect(x + Math.floor(w / 2), y + 1, 1, h - 2, '#ffffff');
@@ -85,7 +85,7 @@ export function floristRoom() {
 
 /** Bên trong tiệm bánh: tường kem gạch, lò gạch có lửa, tủ kính bày bánh, quầy, bàn ghế nhỏ */
 export function bakeryRoom(baking: boolean) {
-  return makeSprite(`bakery-room:v2:${baking}`, 192, 144, p => {
+  return makeSprite(`bakery-room:v3:${baking}`, 192, 144, p => {
     p.rect(0, 0, 192, 76, '#fff0d8'); for (let y = 6; y < 70; y += 6) for (let x = (y / 6) % 2 ? 0 : 6; x < 192; x += 12) p.rect(x, y, 11, 5, '#f8e4c4');
     p.rect(0, 70, 192, 6, '#c8905a');
     for (let y = 76; y < 144; y++) p.rect(0, y, 192, 1, (y - 76) % 9 === 0 ? '#a8703f' : mix('#d8a068', '#c8905a', (y - 76) / 68));
@@ -99,13 +99,17 @@ export function bakeryRoom(baking: boolean) {
     // tủ kính bày bánh
     p.rect(92, 64, 64, 26, '#e8d4b0'); p.rect(94, 66, 60, 16, '#d8f0ff'); p.rect(94, 74, 60, 1, '#ffffff');
     for (let i = 0; i < 6; i++) { const x = 98 + i * 9; if (i % 2) { p.rect(x, 69, 6, 4, '#f59ab3'); p.rect(x, 68, 6, 1, '#fffaf0'); } else ellipse(p, x + 3, 71, 3, 1.8, '#e8b070'); ellipse(p, x + 3, 79, 3, 1.8, i % 3 ? '#d8a050' : '#fff0c0'); }
-    // quầy thu ngân + chuông
-    p.rect(160, 70, 28, 18, '#a8703f'); p.rect(160, 70, 28, 3, '#c88a5a'); ellipse(p, 174, 68, 2.5, 2, '#f6c64e');
+    // tủ nguyên liệu (tủ mát) góc phải
+    p.rect(164, 14, 24, 54, '#e8eef4'); p.rect(166, 16, 20, 24, '#d0dce8'); p.rect(166, 42, 20, 24, '#d0dce8'); p.rect(183, 26, 2, 6, '#8a8098'); p.rect(183, 50, 2, 6, '#8a8098');
+    for (let i = 0; i < 4; i++) { ellipse(p, 170 + (i % 2) * 8, 22 + Math.floor(i / 2) * 8, 2.5, 3, ['#fff6e0', '#f6c64e', '#fffaf0', '#ffe8a0'][i]); }
+    // bàn trang trí: đĩa xoay, túi bắt kem, bát dâu
     p.rect(4, 82, 80, 12, '#e8e4dc'); p.rect(4, 82, 80, 2, '#ffffff'); p.rect(6, 94, 76, 6, '#a8703f');
     ellipse(p, 24, 81, 8, 3, '#f0f0f8'); ellipse(p, 24, 80, 6, 2, '#fff4d8'); p.rect(40, 79, 16, 2, '#d8a868'); ellipse(p, 40, 80, 1.5, 1.5, '#a8703f'); ellipse(p, 56, 80, 1.5, 1.5, '#a8703f');
     ellipse(p, 70, 81, 5, 2, '#c8c8d8'); for (let i = 0; i < 8; i++) p.px(64 + (i * 3) % 12, 78 - (i % 2), '#ffffff');
     // bàn tròn nhỏ
-    for (const x of [40, 150]) { ellipse(p, x, 112, 12, 4, '#e8c890'); p.rect(x - 1, 112, 2, 12, '#8a5a3c'); ellipse(p, x, 109, 3, 1.5, '#f59ab3'); }
+    ellipse(p, 40, 112, 12, 4, '#e8c890'); p.rect(39, 112, 2, 12, '#8a5a3c'); ellipse(p, 40, 109, 3, 1.5, '#f59ab3');
+    p.rect(144, 104, 44, 10, '#f2ece4'); p.rect(144, 104, 44, 2, '#ffffff'); p.rect(146, 114, 2, 10, '#a8703f'); p.rect(184, 114, 2, 10, '#a8703f');
+    ellipse(p, 156, 104, 6, 2, '#d8d8e0'); ellipse(p, 156, 102, 4, 2, '#fff6e0'); p.rect(168, 99, 4, 6, '#f8b8cc'); p.px(169, 98, '#ffffff'); ellipse(p, 180, 103, 4, 2, '#ffffff'); p.px(179, 102, '#e8304a'); p.px(181, 102, '#e8304a');
     p.rect(82, 134, 28, 10, '#d8b088');
   }, null);
 }

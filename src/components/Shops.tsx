@@ -16,7 +16,7 @@ const RIBBONS = ['#e8304a', '#f6c64e', '#ffffff', '#b07ae0'];
 const left = (min: number) => (min >= 60 ? `${Math.floor(min / 60)} tiếng ${min % 60} phút` : `${min} phút`);
 
 /** Bó hoa đang cắm: hoa xòe hình quạt trên giấy gói, buộc nơ */
-function Bouquet({ stems, paper, ribbon }: { stems: string[]; paper: string; ribbon: string }) {
+export function Bouquet({ stems, paper, ribbon }: { stems: string[]; paper: string; ribbon: string }) {
   const n = stems.length;
   return (
     <div className="bouquet">
@@ -51,30 +51,55 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
     } catch (e) { toastError(e); }
     setBusy(false);
   };
+  const [doneView, setDoneView] = useState(false);
+  // chỗ cắm trong lẵng: hàng sau cao, hàng trước thấp, xòe hình vòm
+  const SLOTS = [[50, 18], [34, 24], [66, 24], [20, 36], [80, 36], [42, 40], [58, 40], [50, 52]];
   if (o && sel !== null) return (
-    <Sheet title={`💐 Cắm bó hoa · ${o.occasion}`} onClose={onClose}>
-      <p className="muted">{o.icon} {o.who} muốn: <b>{o.want.map(([id, n]) => `${item(id).icon} ${item(id).name} ×${n}`).join(' + ')}</b> · bấm hoa để cắm vào giỏ, bấm cành trong giỏ để rút ra</p>
-      <div className="arrange">
-        <div className="basket" onClick={() => setStems(s => s.slice(0, -1))} title="Bấm để rút cành vừa cắm">
-          <Bouquet stems={stems} paper={paper} ribbon={ribbon} />
-          {!stems.length && <span className="muted small-note">Giỏ đang trống</span>}
-        </div>
-        <div className="row wrap">
-          {flowers.map(id => { const h = have(inventory, id) - cnt(id); return (
-            <button key={id} className="bag-item" disabled={h < 1 || stems.length >= 8} onClick={() => setStems(s => [...s, id])}>
-              <span style={{ fontSize: 22 }}>{item(id).icon}</span><small>{item(id).name}</small><i>còn {h}</i>
-            </button>
-          ); })}
-        </div>
-        <div className="row wrap">
-          {PAPERS.map(pp => <button key={pp.id} className={`chip ${paper === pp.c ? 'on' : ''}`} onClick={() => setPaper(pp.c)}><i className="swatch" style={{ background: pp.c }} /> {pp.name}</button>)}
-          {RIBBONS.map(c => <button key={c} className={`chip ${ribbon === c ? 'on' : ''}`} onClick={() => setRibbon(c)}><i className="swatch" style={{ background: c }} /> Nơ</button>)}
-        </div>
-      </div>
-      <div className="row wrap">
-        <button className="btn" disabled={busy || !match} onClick={deliver}>{match ? `💝 Giao cho khách · +${o.reward} xu` : '🌷 Cắm đúng số hoa khách muốn đã nhé'}</button>
-        <button className="btn ghost" onClick={() => { setSel(null); setStems([]); }}>← Đơn khác</button>
-      </div>
+    <Sheet title={`💐 Cắm hoa · ${o.occasion}`} onClose={onClose}>
+      <p className="muted small-note">{o.icon} {o.who} muốn: <b>{o.want.map(([id, n]) => `${item(id).icon} ${item(id).name} ×${n}`).join(' + ')}</b></p>
+      {!doneView ? (
+        <>
+          <div className="fp-table">
+            <div className="fp-basket" onClick={() => setStems(s => s.slice(0, -1))} title="Bấm vào lẵng để rút cành vừa cắm">
+              {stems.map((id, i) => <span key={i} className="fp-flower" style={{ left: `${SLOTS[i][0]}%`, top: `${SLOTS[i][1]}%`, zIndex: 10 + i }}>{item(id).icon}</span>)}
+              <i className="fp-weave" />
+              {!stems.length && <em className="fp-hint">Lẵng trống — bấm hoa bên dưới để cắm vào</em>}
+            </div>
+          </div>
+          <div className="fp-buckets">
+            {flowers.map(id => { const h = have(inventory, id) - cnt(id); return (
+              <button key={id} className="fp-bucket" disabled={h < 1 || stems.length >= SLOTS.length} onClick={() => setStems(s => [...s, id])}>
+                <span>{item(id).icon}{item(id).icon}{item(id).icon}</span><i />
+                <small>{item(id).name} · {h}</small>
+              </button>
+            ); })}
+          </div>
+          <div className="row wrap">
+            <button className="btn" disabled={!match} onClick={() => setDoneView(true)}>{match ? '✨ Cắm xong, gói lại' : `🌷 Cắm đủ hoa khách muốn (${stems.length}/${o.want.reduce((s, [, n]) => s + n, 0)})`}</button>
+            <button className="btn ghost" onClick={() => setStems([])}>↺ Cắm lại</button>
+            <button className="btn ghost" onClick={() => { setSel(null); setStems([]); }}>← Đơn khác</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="fp-final">
+            <div className="fp-sparkle">✨</div>
+            <div className="fp-bunch">
+              {stems.map((id, i) => <span key={i} style={{ left: `${SLOTS[i][0]}%`, top: `${SLOTS[i][1] * 0.8}%` }}>{item(id).icon}</span>)}
+              <i className="fp-wrap" style={{ borderTopColor: paper }} /><i className="fp-bow" style={{ background: ribbon }} />
+            </div>
+            <b>Bó hoa {o.occasion} cho {o.who}</b>
+          </div>
+          <div className="row wrap">
+            {PAPERS.map(pp => <button key={pp.id} className={`chip ${paper === pp.c ? 'on' : ''}`} onClick={() => setPaper(pp.c)}><i className="swatch" style={{ background: pp.c }} /> {pp.name}</button>)}
+            {RIBBONS.map(c => <button key={c} className={`chip ${ribbon === c ? 'on' : ''}`} onClick={() => setRibbon(c)}><i className="swatch" style={{ background: c }} /> Nơ</button>)}
+          </div>
+          <div className="row wrap">
+            <button className="btn" disabled={busy} onClick={async () => { await deliver(); setDoneView(false); }}>💝 Giao cho khách · +{o.reward} xu</button>
+            <button className="btn ghost" onClick={() => setDoneView(false)}>← Cắm lại</button>
+          </div>
+        </>
+      )}
     </Sheet>
   );
   return (
@@ -98,78 +123,90 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
   );
 }
 
-/** Tiệm bánh: lò nướng 2 ngăn chạy theo giờ thật; bánh chín thì lấy ra, giao cho khách đặt */
-export function BakerySheet({ me, date, hour, minute, inventory, claimed, live, onClose }: { me: api.Profile; date: string; hour: number; minute: number; inventory: api.InvRow[]; claimed: string[]; live: Live; onClose: () => void }) {
+/** Đồ đang cầm trên tay ở tiệm bánh: nguyên liệu → bột → (lò) → bánh nướng → trang trí */
+export type BakeHold = { s: 'ing' | 'dough' | 'baked'; id: string; start?: number } | null;
+export type BakeStation = 'fridge' | 'prep' | 'oven' | 'deco' | 'case';
+export const holdIcon = (h: BakeHold) => (!h ? null : h.s === 'ing' ? '🧺' : h.s === 'dough' ? '🥣' : item(h.id).icon);
+const CREAMS = [{ id: 'vanilla', c: '#fff6e0', name: 'Kem tươi' }, { id: 'choco', c: '#7a4a2a', name: 'Sô-cô-la' }, { id: 'berry', c: '#f8b8cc', name: 'Kem dâu' }, { id: 'matcha', c: '#b8d890', name: 'Trà xanh' }];
+const FRUITS = ['🍓', '🫐', '🍒', '🍑', '🍊', '🥝'];
+
+/** Mỗi trạm trong tiệm bánh: tủ nguyên liệu → bàn nhào → lò nướng → bàn trang trí → tủ bánh (bán cho khách chờ ngoài cửa) */
+export function BakeryStationSheet({ station, hold, setHold, me, date, hour, minute, inventory, claimed, live, onClose }: {
+  station: BakeStation; hold: BakeHold; setHold: (h: BakeHold) => void; me: api.Profile; date: string; hour: number; minute: number; inventory: api.InvRow[]; claimed: string[]; live: Live; onClose: () => void;
+}) {
   const block = orderBlock(hour);
-  const [prep, setPrep] = useState<{ id: string; mix: number } | null>(null);
   const [keys, setKeys] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [mix, setMix] = useState(0);
+  const [cream, setCream] = useState<string | null>(null);
+  const [fruits, setFruits] = useState<string[]>([]);
   const reload = () => api.loadOven(me.id).then(setKeys, console.error);
   useEffect(() => { reload(); const t = setInterval(() => setNow(Date.now()), 15000); return () => clearInterval(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const slots = ovenSlots(keys);
   const orders = bakeOrders(date, block);
   const run = async (f: () => Promise<unknown>) => { setBusy(true); try { await f(); notify('inventory', 'profiles', 'claims'); await reload(); } catch (e) { toastError(e); } setBusy(false); };
-  const bake = (id: string) => run(async () => {
-    const b = bakeOf(id);
-    await api.craft(b.take.map(([i, n]) => ({ id: i, n })));
-    await api.claim(`oven:${Date.now()}:${id}`);
-    toast(`🔥 Cho ${item(id).name} vào lò — ${b.hours} tiếng nữa chín`);
-  });
-  const takeOut = (start: number, id: string) => run(async () => {
-    if (await api.claim(`ovenout:${start}`, [{ id, n: bakeOf(id).n }])) { live.say(`${item(id).icon} Thơm phức!`); toast(`🧁 Lấy ${bakeOf(id).n} ${item(id).name} ra khỏi lò`); }
-  });
-  const sell = (i: number) => run(async () => {
-    const o = orders[i];
-    await api.craft([{ id: o.want, n: o.n }]);
-    if (await api.grantCoins(`bakery:${date}:${block}:${i}`, o.reward)) { live.say(`🍰 ${o.who}: “${o.line}”`); toast(`🍰 Bán cho ${o.who} · +${o.reward} xu`); }
-  });
   const MIX = 8;
-  if (prep) return (
-    <Sheet title={`🥣 Làm ${item(prep.id).name}`} onClose={onClose}>
-      <p className="muted">Nguyên liệu: {bakeOf(prep.id).take.map(([i, n]) => label(i, n)).join(' + ')}. Bấm vào thau để nhào bột, đủ thì cho vào lò.</p>
-      <button className={`mix-bowl ${prep.mix % 2 ? 'b' : 'a'}`} disabled={prep.mix >= MIX} onClick={() => setPrep(p => p && { ...p, mix: p.mix + 1 })}>
-        <span>🥣</span><b>{prep.mix >= MIX ? '✨ Bột mịn rồi!' : `Nhào bột ${prep.mix}/${MIX}`}</b>
-      </button>
-      <div className="grow-bar"><i style={{ width: `${(prep.mix / MIX) * 100}%` }} /></div>
-      <div className="row wrap">
-        <button className="btn" disabled={busy || prep.mix < MIX || slots.length >= OVEN_SLOTS} onClick={async () => { await bake(prep.id); setPrep(null); }}>🔥 Cho vào lò ({bakeOf(prep.id).hours} tiếng)</button>
-        <button className="btn ghost" onClick={() => setPrep(null)}>← Quay lại</button>
+  const title = { fridge: '🧊 Tủ nguyên liệu', prep: '🥣 Bàn nhào bột', oven: '🔥 Lò nướng', deco: '🍓 Bàn trang trí', case: '🧁 Tủ bánh · khách đặt' }[station];
+  const holding = hold && <p className="hold-note">🤲 Đang cầm: <b>{hold.s === 'ing' ? `nguyên liệu ${item(hold.id).name}` : hold.s === 'dough' ? `bột ${item(hold.id).name}` : `${item(hold.id).icon} ${item(hold.id).name} vừa nướng`}</b></p>;
+  let body: React.ReactNode = null;
+  if (station === 'fridge') body = hold ? <p className="muted">Tay đang bận rồi — làm xong món đang cầm đã nhé.</p> : (
+    <ul className="recipe-list">
+      {BAKES.map(b => { const ok = b.take.every(([i, n]) => have(inventory, i) >= n); return (
+        <li key={b.id} className="row wrap"><b>{item(b.id).icon} {item(b.id).name} ×{b.n}</b>
+          <small className="muted">{b.take.map(([i, n]) => `${label(i, n)} (có ${have(inventory, i)})`).join(' + ')} · nướng {b.hours} tiếng</small>
+          <button className="btn small" disabled={busy || !ok} onClick={() => run(async () => { await api.craft(b.take.map(([i, n]) => ({ id: i, n }))); setHold({ s: 'ing', id: b.id }); toast('🧺 Lấy nguyên liệu rồi — mang ra bàn nhào bột'); onClose(); })}>🧺 Lấy nguyên liệu</button></li>
+      ); })}
+    </ul>
+  );
+  if (station === 'prep') body = hold?.s !== 'ing' ? <p className="muted">Lấy nguyên liệu ở 🧊 tủ trước rồi mang ra đây nhào bột nhé.</p> : (
+    <>
+      <button className={`mix-bowl ${mix % 2 ? 'b' : 'a'}`} disabled={mix >= MIX} onClick={() => setMix(m => m + 1)}><span>🥣</span><b>{mix >= MIX ? '✨ Bột mịn rồi!' : `Nhào bột ${mix}/${MIX}`}</b></button>
+      <div className="grow-bar"><i style={{ width: `${(mix / MIX) * 100}%` }} /></div>
+      <button className="btn" disabled={mix < MIX} onClick={() => { setHold({ s: 'dough', id: hold.id }); toast('🥣 Bột xong — mang ra 🔥 lò nướng'); onClose(); }}>👐 Bưng bột ra lò</button>
+    </>
+  );
+  if (station === 'oven') body = (
+    <>
+      {hold?.s === 'dough' && <button className="btn" disabled={busy || slots.length >= OVEN_SLOTS} onClick={() => run(async () => { await api.claim(`oven:${Date.now()}:${hold.id}`); setHold(null); toast(`🔥 Cho ${item(hold.id).name} vào lò — ${bakeOf(hold.id).hours} tiếng nữa chín`); })}>🔥 Cho bột vào lò ({bakeOf(hold.id).hours} tiếng)</button>}
+      <ul className="task-list">
+        {slots.map(sl => { const b = bakeOf(sl.id), ready = now >= sl.start + b.hours * 3.6e6, mins = Math.max(0, sl.start + b.hours * 3.6e6 - now) / 6e4; return (
+          <li key={sl.key}><b>{item(sl.id).icon} {item(sl.id).name}</b>
+            {ready ? <button className="btn small" disabled={busy || !!hold} onClick={() => { setHold({ s: 'baked', id: sl.id, start: sl.start }); live.say('🧤 Thơm phức!'); toast('🧤 Bánh chín rồi — mang ra 🍓 bàn trang trí'); onClose(); }}>🧤 Lấy ra</button>
+              : <span className="muted">⏳ còn {mins >= 60 ? `${Math.ceil(mins / 60)} tiếng` : `${Math.ceil(mins)} phút`}</span>}</li>
+        ); })}
+        {!slots.length && hold?.s !== 'dough' && <li className="muted">Lò đang trống ({OVEN_SLOTS} ngăn).</li>}
+      </ul>
+    </>
+  );
+  if (station === 'deco') body = hold?.s !== 'baked' ? <p className="muted">Lấy bánh chín ở 🔥 lò rồi mang ra đây thêm kem, thêm quả nhé.</p> : (
+    <>
+      <div className="cake-stage">
+        <span className="cake-base">{item(hold.id).icon}</span>
+        {cream && <i className="cake-cream" style={{ background: CREAMS.find(c => c.id === cream)!.c }} />}
+        {fruits.map((f, i) => <span key={i} className="cake-fruit" style={{ left: `${30 + (i % 4) * 13}%`, top: `${18 + Math.floor(i / 4) * 10}%` }}>{f}</span>)}
       </div>
-    </Sheet>
+      <div className="row wrap">{CREAMS.map(c => <button key={c.id} className={`chip ${cream === c.id ? 'on' : ''}`} onClick={() => setCream(c.id)}><i className="swatch" style={{ background: c.c }} /> {c.name}</button>)}</div>
+      <div className="row wrap">{FRUITS.map(f => <button key={f} className="chip" disabled={fruits.length >= 8} onClick={() => setFruits(x => [...x, f])}>{f}</button>)}<button className="chip" onClick={() => setFruits([])}>↺</button></div>
+      <button className="btn" disabled={busy || !cream} onClick={() => run(async () => {
+        const b = bakeOf(hold.id);
+        if (await api.claim(`ovenout:${hold.start}`, [{ id: hold.id, n: b.n }])) { live.say(`${item(hold.id).icon}✨ Xinh quá!`); toast(`🎂 Trang trí xong ${b.n} ${item(hold.id).name} — đã cất vào túi, ra 🧁 tủ bánh bán cho khách nhé`); }
+        setHold(null); onClose();
+      })}>{cream ? '✨ Xong, bày ra đĩa' : '🍦 Chọn kem trước đã'}</button>
+    </>
   );
-  return (
-    <Sheet title="🍰 Tiệm bánh nhỏ" onClose={onClose}>
-      <p className="muted small-note">Cứ 4 tiếng lại có khách mới đứng chờ ngoài cửa (lượt sau: {left(nextBlockIn(hour, minute))}).</p>
-      <h4 className="group-title">🔥 Lò nướng ({slots.length}/{OVEN_SLOTS})</h4>
-      {slots.length === 0 && <p className="muted small-note">Lò đang trống — chọn bánh bên dưới để nướng.</p>}
+  if (station === 'case') body = (
+    <>
+      <p className="muted small-note">Khách mới mỗi 4 tiếng, đứng chờ ngoài cửa (lượt sau: {left(nextBlockIn(hour, minute))}).</p>
       <ul className="task-list">
-        {slots.map(sl => {
-          const b = bakeOf(sl.id), ready = now >= sl.start + b.hours * 3.6e6, left = Math.max(0, sl.start + b.hours * 3.6e6 - now) / 6e4;
-          return <li key={sl.key}><b>{item(sl.id).icon} {item(sl.id).name}</b>
-            {ready ? <button className="btn small" disabled={busy} onClick={() => takeOut(sl.start, sl.id)}>🧤 Lấy bánh ra ({b.n})</button>
-              : <span className="muted">⏳ còn {left >= 60 ? `${Math.ceil(left / 60)} tiếng` : `${Math.ceil(left)} phút`}</span>}</li>;
-        })}
+        {orders.map((o, i) => { const k = `bakery:${date}:${block}:${i}`, done = claimed.includes(k), ok = have(inventory, o.want) >= o.n; return (
+          <li key={i} className={done ? 'done' : ''}><b>{o.who}</b><small className="muted">Muốn {label(o.want, o.n)} (có {have(inventory, o.want)})</small>
+            {done ? <span>✅ Đã bán</span> : <button className="btn small" disabled={busy || !ok} onClick={() => run(async () => { await api.craft([{ id: o.want, n: o.n }]); if (await api.grantCoins(k, o.reward)) { live.say(`🍰 ${o.who}: “${o.line}”`); toast(`🍰 Bán cho ${o.who} · +${o.reward} xu`); } })}>{ok ? `Giao · +${o.reward} xu` : 'Chưa có bánh'}</button>}</li>
+        ); })}
       </ul>
-      <h4 className="group-title">📖 Công thức (nguyên liệu từ trang trại)</h4>
-      <ul className="recipe-list">
-        {BAKES.map(b => {
-          const ok = b.take.every(([i, n]) => have(inventory, i) >= n);
-          return <li key={b.id} className="row wrap"><b>{item(b.id).icon} {item(b.id).name} ×{b.n}</b>
-            <small className="muted">{b.take.map(([i, n]) => label(i, n)).join(' + ')} · {b.hours} tiếng</small>
-            <button className="btn small" disabled={busy || !ok || slots.length >= OVEN_SLOTS} onClick={() => setPrep({ id: b.id, mix: 0 })}>🥣 Làm</button></li>;
-        })}
-      </ul>
-      <h4 className="group-title">🛎️ Khách đặt bánh hôm nay</h4>
-      <ul className="task-list">
-        {orders.map((o, i) => {
-          const done = claimed.includes(`bakery:${date}:${block}:${i}`), ok = have(inventory, o.want) >= o.n;
-          return <li key={i} className={done ? 'done' : ''}><b>{o.who}</b><small className="muted">Muốn {label(o.want, o.n)} (có {have(inventory, o.want)})</small>
-            {done ? <span>✅ Đã bán</span> : <button className="btn small" disabled={busy || !ok} onClick={() => sell(i)}>{ok ? `Giao · +${o.reward} xu` : 'Chưa có bánh'}</button>}</li>;
-        })}
-      </ul>
-    </Sheet>
+    </>
   );
+  return <Sheet title={title} onClose={onClose}>{holding}{body}</Sheet>;
 }
 
 /** Sổ bướm & chim: chụp đủ bộ thì nhận quà */

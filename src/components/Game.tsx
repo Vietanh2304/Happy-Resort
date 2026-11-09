@@ -30,7 +30,7 @@ import { ReefPanel } from './Reef';
 import { SkyPanel } from './Skydive';
 import { SchoolPanel } from './School';
 import { CampusPanel, StallSheet } from './Campus';
-import { BakerySheet, BugBookSheet, FlowerShopSheet } from './Shops';
+import { BakeryStationSheet, BugBookSheet, FlowerShopSheet, holdIcon, type BakeHold, type BakeStation } from './Shops';
 import { CAMPUS } from '../lib/campusArt';
 import type { StallId } from '../lib/school';
 import { DailyGift, DailyQuiz } from './Daily';
@@ -88,7 +88,7 @@ type SheetState =
   | { kind: 'animal'; id: string }
   | { kind: 'ranchshop' }
   | { kind: 'stall'; id: StallId }
-  | { kind: 'flowershop' } | { kind: 'bakery' } | { kind: 'bugbook' } | { kind: 'pen'; pen: 'stable' | 'pond' }
+  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'pen'; pen: 'stable' | 'pond' }
   | { kind: 'workshop' }
   | { kind: 'tailor' }
   | { kind: 'work' }
@@ -779,6 +779,9 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
 
   // ───── Hiển thị ─────
   const [discoMood, setDiscoMood] = useState<Mood>('waltz');
+  // Tiệm bánh: món đang cầm trên tay (giữ qua tải lại trang), hiện biểu tượng trên đầu nhân vật
+  const [bakeHold, setBakeHold] = useState<BakeHold>(() => { try { return JSON.parse(localStorage.getItem('bake-hold') ?? 'null'); } catch { return null; } });
+  const setBakeHoldSaved = (h: BakeHold) => { setBakeHold(h); try { localStorage.setItem('bake-hold', JSON.stringify(h)); } catch { /* bỏ qua */ } live.update({ dish: holdIcon(h) }); };
   const editIsland = scene === 'house' || scene === 'bedroom' || scene === 'bathroom' ? scene : scene === 'town' ? 'garden' : scene === 'farm' ? 'farm' : null;
   const plantedAt = (x: number, y: number) => farm.some(r => r.cell === farmCell(x, y));
   const editor = useDecorEditor(inventory, { island: editing ? editIsland : null, decor, blocked: editIsland === 'farm' ? plantedAt : undefined });
@@ -906,7 +909,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <World
           scene={scene} me={me} partner={partner} myView={myView} realView={realView} partnerView={partnerView}
           live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
-          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: () => setSheet({ kind: 'bakery' }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
+          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: (station?: string) => setSheet({ kind: 'bakery', station: (station ?? 'case') as BakeStation }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
           farm={farm} guests={activeGuests} pickups={pickups} fishing={fishing} combos={combos}
           daysTogether={bridge.planks}
@@ -1101,7 +1104,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={myTime.date} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
       {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} riding={live.mine.horse === sheet.id} onDismount={() => { close(); dismount(); }} onRide={() => { close(); live.update({ horse: sheet.id }); live.say('🐎 Hí hí! Đi dạo nào!'); enter('town', TOWN.toFarm); }} />}
       {sheet?.kind === 'flowershop' && <FlowerShopSheet date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
-      {sheet?.kind === 'bakery' && <BakerySheet me={me} date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
+      {sheet?.kind === 'bakery' && <BakeryStationSheet station={sheet.station ?? 'case'} hold={bakeHold} setHold={setBakeHoldSaved} me={me} date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
       {sheet?.kind === 'bugbook' && <BugBookSheet me={me} onClose={close} />}
       {sheet?.kind === 'pen' && <PenSheet pen={sheet.pen} animals={animals} inventory={inventory} onAnimal={id => setSheet({ kind: 'animal', id })} onShop={() => { close(); enter('ranch'); }} onClose={close} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}

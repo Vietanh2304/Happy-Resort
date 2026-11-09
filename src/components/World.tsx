@@ -126,7 +126,7 @@ export interface WorldProps {
   job?: import('../lib/work').JobData;
   work?: { desk: () => void; talk: (name: string, line: string) => void };
   stall?: (id: StallId) => void;
-  shops?: { flower: () => void; bakery: () => void; bugbook: () => void };
+  shops?: { flower: () => void; bakery: (station?: string) => void; bugbook: () => void };
   /** Đang ôm / hôn nhau (cả hai cùng thấy): bên trái/phải của mình */
   couple?: { kind: 'hug' | 'kiss'; at: number; mySide: 'L' | 'R' } | null;
   hillReal: boolean;             // đang chọn "Giờ thật" (theo thời tiết thật)
@@ -380,7 +380,7 @@ function SceneContent(p: WorldProps) {
       )}
       {scene === 'street' && <StreetContent go={go} enter={enter} />}
       {scene === 'florist' && p.shops && <ShopInside kind="florist" go={go} onOpen={p.shops.flower} onExit={() => enter('street', { x: 70, y: 108 })} />}
-      {scene === 'bakery' && p.shops && <ShopInside kind="bakery" go={go} onOpen={p.shops.bakery} onExit={() => enter('street', { x: 186, y: 108 })} />}
+      {scene === 'bakery' && p.shops && <ShopInside kind="bakery" holding={live.mine.dish ? { at: live.mine.pos, icon: live.mine.dish } : null} go={go} onOpen={p.shops.bakery} onExit={() => enter('street', { x: 186, y: 108 })} />}
       {scene === 'reef' && <ReefContent phase={phase} go={go} onSee={id => p.onSee?.(id)} chestOpen={!!p.chestOpen} onChest={() => p.onChest?.()} />}
       {scene === 'sky' && (
         <SkyContent phase={phase} firstSeat={p.firstSeat}
@@ -1603,14 +1603,15 @@ function ShopNpc({ i, kind }: { i: number; kind: 'florist' | 'bakery' }) {
     </>
   );
 }
-function ShopInside({ kind, go, onOpen, onExit }: { kind: 'florist' | 'bakery'; go: (to: Pt, then?: () => void) => void; onOpen: () => void; onExit: () => void }) {
+function ShopInside({ kind, go, onOpen, onExit, holding }: { kind: 'florist' | 'bakery'; go: (to: Pt, then?: () => void) => void; onOpen: (st?: string) => void; onExit: () => void; holding?: { at: Pt; icon: string } | null }) {
   const s = useScale();
-  const spots: { x: number; y: number; stand: Pt; label: string; dy: number }[] = kind === 'florist'
+  const spots: { x: number; y: number; stand: Pt; label: string; dy: number; st?: string }[] = kind === 'florist'
     ? [{ ...FLORIST.counter, label: '🎀 Quầy · đơn khách', dy: 30 }, { ...FLORIST.bench, label: '💐 Lẵng hoa · cắm bó', dy: 34 }]
-    : [{ ...BAKERY.oven, label: '🔥 Lò nướng', dy: 66 }, { ...BAKERY.prep, label: '🥣 Bàn nhào bột', dy: 20 }, { ...BAKERY.case, label: '🧁 Tủ bánh · khách đặt', dy: 30 }];
+    : [{ ...BAKERY.fridge, label: '🧊 Tủ nguyên liệu', dy: 52, st: 'fridge' }, { ...BAKERY.prep, label: '🥣 Bàn nhào bột', dy: 20, st: 'prep' }, { ...BAKERY.oven, label: '🔥 Lò nướng', dy: 66, st: 'oven' }, { ...BAKERY.deco, label: '🍓 Bàn trang trí', dy: 22, st: 'deco' }, { ...BAKERY.case, label: '🧁 Tủ bánh · khách đặt', dy: 30, st: 'case' }];
   return (
     <>
-      {spots.map((sp, i) => <Tag key={i} x={sp.x} y={sp.y - sp.dy} className="label" onClick={() => go(sp.stand, onOpen)}>{sp.label}</Tag>)}
+      {spots.map((sp, i) => <Tag key={i} x={sp.x} y={sp.y - sp.dy} className="label" onClick={() => go(sp.stand, () => onOpen(sp.st))}>{sp.label}</Tag>)}
+      {holding && <Tag x={holding.at.x + 6} y={holding.at.y - 30} className="hold-icon">{holding.icon}</Tag>}
       {[0, 1, 2].map(i => <ShopNpc key={i} i={i} kind={kind} />)}
       <button className="hot" title="🚪 Ra phố" style={{ left: 82 * s, top: 132 * s, width: 28 * s, height: 12 * s }} onClick={e => { e.stopPropagation(); go({ x: 96, y: 138 }, onExit); }} />
       <Tag x={96} y={128} className="label" onClick={() => go({ x: 96, y: 138 }, onExit)}>🚪 Cửa ra</Tag>

@@ -97,25 +97,35 @@ const HORSE_COLORS: Record<string, { body: string; dark: string; light: string; 
 };
 export function horseSprite(kind: string, f: 0 | 1, saddle = false) {
   const c = HORSE_COLORS[kind] ?? HORSE_COLORS.horse;
-  return makeSprite(`horse:v3:${kind}:${f}:${saddle}`, 40, 32, p => {
-    // chân (khung bước: chân trước/sau so le), móng
+  const maneL = mix(c.mane, '#ffffff', 0.28);
+  return makeSprite(`horse:v4:${kind}:${f}:${saddle}`, 42, 36, p => {
+    const Y = 4;   // chừa chỗ phía trên cho tai & bờm
+    const R = (x: number, y: number, w: number, h: number, col: string) => p.rect(x, y + Y, w, h, col);
+    const D = (x: number, y: number, col: string) => p.px(x, y + Y, col);
+    // chân + móng (khung bước)
     const legs = f ? [[9, 1], [13, -1], [23, -1], [27, 1]] : [[9, 0], [13, 0], [23, 0], [27, 0]];
-    legs.forEach(([x, dx], i) => { const col = i % 2 ? c.dark : c.body; p.rect(x + dx, 20, 3, 9, col); p.rect(x + dx, 28, 3, 2, c.hoof); });
+    legs.forEach(([x, dx], i) => { const col = i % 2 ? c.dark : c.body; R(x + dx, 20, 3, 9, col); R(x + dx, 28, 3, 2, c.hoof); });
     // thân
-    ellipse(p, 18, 17, 12, 6.5, c.body); ellipse(p, 18, 14.5, 10, 3, c.light); ellipse(p, 18, 21, 10, 2, c.dark);
-    // cổ nghiêng chéo lên phía trước (dày ở vai, thon dần)
-    for (let i = 0; i < 7; i++) p.rect(24 + i, 14 - i * 1.4, 6 - Math.floor(i / 3), 6, c.body);
-    // đầu ngựa dài: trán → mõm chúc xuống phía trước (vẽ theo từng hàng)
-    const head: [number, number, number][] = [[1, 31, 34], [2, 30, 35], [3, 30, 36], [4, 30, 37], [5, 31, 38], [6, 32, 39], [7, 33, 39], [8, 34, 39], [9, 35, 38]];
-    for (const [y, x0, x1] of head) p.rect(x0, y, x1 - x0 + 1, 1, c.body);
-    p.rect(36, 8, 3, 2, c.light); p.px(38, 8, c.nose); p.px(37, 9, c.dark);                 // mõm sáng màu, lỗ mũi, miệng
-    p.rect(32, 3, 2, 2, '#1a1418'); p.px(32, 3, '#ffffff');                                // mắt
-    p.rect(30, -1, 2, 3, c.body); p.px(30, -1, c.dark); p.rect(32, 0, 1, 2, c.dark);        // tai
-    // bờm dọc gáy (mép sau cổ) + chỏm lông trước trán
-    for (let i = 0; i < 8; i++) p.rect(23 + i, 12 - i * 1.4, 2, 4, c.mane);
-    p.rect(31, 1, 2, 2, c.mane);
-    // đuôi
-    p.rect(5, 13, 3, 3, c.mane); p.rect(3, 14, 3, 8, c.mane); p.rect(4, 21, 2, 4, c.mane); p.px(3, 24 + f, c.mane);
-    if (saddle) { p.rect(13, 9, 10, 3, '#8a3a32'); p.rect(13, 9, 10, 1, '#c8583a'); p.rect(17, 12, 2, 5, '#5a3a2a'); p.rect(16, 16, 4, 1, '#c8c8d8'); }
+    ellipse(p, 18, 17 + Y, 12, 6.5, c.body); ellipse(p, 18, 14.5 + Y, 10, 3, c.light); ellipse(p, 18, 21 + Y, 10, 2, c.dark);
+    // cổ nghiêng
+    for (let i = 0; i < 7; i++) R(24 + i, Math.round(14 - i * 1.4), 6 - Math.floor(i / 3), 6, c.body);
+    // đầu dài, mõm chúc xuống
+    const head: [number, number, number][] = [[1, 31, 35], [2, 30, 36], [3, 30, 37], [4, 30, 37], [5, 31, 38], [6, 32, 39], [7, 33, 40], [8, 34, 40], [9, 35, 39]];
+    for (const [y, x0, x1] of head) R(x0, y, x1 - x0 + 1, 1, c.body);
+    R(36, 8, 4, 2, c.light); D(39, 8, c.nose); D(37, 9, c.dark);              // mõm, lỗ mũi, miệng
+    R(33, 3, 2, 2, '#1a1418'); D(34, 3, '#ffffff');                        // mắt giữa đầu
+    // hai tai nhọn
+    R(31, -2, 2, 3, c.body); D(31, -3, c.body); D(32, -1, c.nose);
+    R(34, -1, 2, 2, c.body); D(34, -2, c.body);
+    // bờm bồng bềnh: nhiều lọn gợn sóng rủ xuống cổ, có ánh sáng
+    for (let i = 0; i < 9; i++) {
+      const x = 22 + i, y = Math.round(12 - i * 1.35), w = i % 3 === 0 ? 3 : 2;
+      R(x - 1, y, w, 5 + (i % 2), c.mane); D(x, y + 1, maneL);
+      if (i % 2 === 0) R(x - 2, y + 3, 2, 3, c.mane);                         // lọn rủ ra ngoài
+    }
+    R(30, 0, 3, 2, c.mane); R(32, 1, 2, 3, c.mane); D(31, 0, maneL);       // chỏm lông trước trán
+    // đuôi xù nhiều lọn
+    R(5, 12, 4, 3, c.mane); R(2, 13, 5, 6, c.mane); R(1, 18, 4, 5, c.mane); R(3, 22, 3, 3, c.mane); D(1, 24 + f, c.mane); D(4, 15, maneL); D(3, 19, maneL);
+    if (saddle) { R(13, 9, 10, 3, '#8a3a32'); R(13, 9, 10, 1, '#c8583a'); R(17, 12, 2, 5, '#5a3a2a'); R(16, 16, 4, 1, '#c8c8d8'); }
   });
 }
