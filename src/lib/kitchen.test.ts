@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { act, CHAIRS, CHOP_N, COLS, dishOf, HEAT, LAYOUT, MEAL_MS, newRoom, ROWS, stageOf, tick, walkable, WASH_N, type Room } from './kitchen';
+import { act, setKitchenVariant, CHAIRS, CHOP_N, COLS, dishOf, HEAT, LAYOUT, MEAL_MS, newRoom, ROWS, stageOf, tick, walkable, WASH_N, type Room } from './kitchen';
 
 const A = 'a', B = 'b';
 const find = (c: string) => { for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) if (LAYOUT[y][x] === c) return [x, y] as const; throw c; };
@@ -115,5 +115,29 @@ describe('phòng bếp', () => {
     r = doAll(r, [[A, [0, 0], 0, { stand: true }], [A, D, 0], [A, K, 0], ...Array.from({ length: WASH_N }, () => [A, K, 0] as [string, readonly [number, number], number])]).r;
     expect(r.sink.n).toBe(0);
     expect(r.clean).toBe(clean0 + 1);
+  });
+
+  it('tiệm bánh: nhào bột → lò → bày đĩa → xịt kem → đặt lên quầy là khách mua; bánh khét bấm là đổ đi', () => {
+    setKitchenVariant('bakery');
+    try {
+      const at = (c: string) => { const L = ['CFFCBBBCSSCSSC', 'C............C', 'P............L', 'C...CCBB.....L', 'K............C', 'K............T', 'C............C', 'CDDDDDDDDDDDDC']; for (let y = 0; y < L.length; y++) { const x = L[y].indexOf(c); if (x >= 0) return [x, y] as const; } throw c; };
+      const [Fb, Bb, Sb, Pb, Lb, Db] = ['F', 'B', 'S', 'P', 'L', 'D'].map(at);
+      let r = newRoom(A);
+      const knead = (id: string, t: number) => [[A, Fb, t, { pick: id }], [A, Bb, t], ...Array.from({ length: CHOP_N + 1 }, () => [A, Bb, t]), [A, Sb, t]] as [string, readonly [number, number], number, object?][];
+      r = doAll(r, [...knead('butter', 1000), ...knead('egg', 1000)]).r;
+      const okAt = 1000 + (HEAT.S.raw + 1) * 1000;
+      r = doAll(r, [[A, Pb, okAt], [A, Sb, okAt]]).r;
+      const pl = r.hands[A]!;
+      expect(pl.k === 'plate' && dishOf(pl)?.id).toBe('cookie');
+      r = act(r, A, ...Lb, okAt).r;
+      expect((r.hands[A] as { cream?: boolean }).cream).toBe(true);
+      const sold = act(r, A, ...Db, okAt);
+      expect(sold.r.last?.coins).toBeGreaterThan(0);
+      // bánh khét: bấm vào lò là đổ đi
+      let b = doAll(newRoom(A), knead('butter', 1000)).r;
+      b = act(b, A, ...Sb, 1000 + (HEAT.S.over + 5) * 1000).r;
+      const oven = b.cells[`${Sb[0]},${Sb[1]}`]!;
+      expect(oven.k === 'pot' && oven.parts.length).toBe(0);
+    } finally { setKitchenVariant('home'); }
   });
 });

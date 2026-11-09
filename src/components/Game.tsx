@@ -1158,6 +1158,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         return playing === 'golf' ? <Golf {...pp} /> : playing === 'snow' ? <Snowball {...pp} theme={winter ? 'snow' : 'water'} />
           : playing === 'boat' ? <Boat {...pp} /> : playing === 'hide' ? <HideSeek {...pp} /> : null;
       })()}
+      {scene === 'bakery' && !kitchenOpen && <KitchenRoom variant="bakery" me={me} partner={partner} inventory={inventory} date={myTime.date} onLeave={() => enter('street', { x: 186, y: 108 })} />}
       {kitchenOpen && <KitchenRoom me={me} partner={partner} inventory={inventory} date={myTime.date} onLeave={() => setKitchenOpen(false)} />}
       {sheet?.kind === 'shop' && <ShopSheet coins={couple?.coins ?? 0} inventory={inventory} onClose={close} />}
       {sheet?.kind === 'seed' && <SeedSheet inventory={inventory} onPick={c => sow(sheet.cell, c)} onClose={close} />}

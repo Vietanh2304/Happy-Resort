@@ -8,7 +8,7 @@ import { content, item } from './content';
  * . sàn · C quầy · F tủ lạnh · B thớt · S bếp nấu (có nồi) · L máy xay · P kệ đĩa sạch
  * K bồn rửa bát · T thùng rác · D bàn ăn · h ghế
  */
-export const LAYOUT = [
+const HOME_LAYOUT = [
   'CCFFCBBCSSCSSC',
   'C............C',
   'P............L',
@@ -19,17 +19,32 @@ export const LAYOUT = [
   'C............C',
   'CCCCCCCCCCCCCC',
 ];
-export const COLS = LAYOUT[0].length, ROWS = LAYOUT.length;
-export type Tile = '.' | 'C' | 'F' | 'B' | 'S' | 'L' | 'P' | 'K' | 'T' | 'D' | 'h';
+/** Tiệm bánh: quầy bao quanh; trên là tủ nguyên liệu, bàn nhào, lò nướng; hàng dưới là quầy bán (khách đứng ngoài 'o') */
+const BAKERY_LAYOUT = [
+  'CFFCBBBCSSCSSC',
+  'C............C',
+  'P............L',
+  'C...CCBB.....L',
+  'K............C',
+  'K............T',
+  'C............C',
+  'CDDDDDDDDDDDDC',
+  'oooooooooooooo',
+];
+export let LAYOUT = HOME_LAYOUT;
+export let COLS = LAYOUT[0].length, ROWS = LAYOUT.length;
+export type Tile = '.' | 'C' | 'F' | 'B' | 'S' | 'L' | 'P' | 'K' | 'T' | 'D' | 'h' | 'o';
 export const tileAt = (x: number, y: number): Tile | null => (x < 0 || y < 0 || x >= COLS || y >= ROWS ? null : (LAYOUT[y][x] as Tile));
 export const walkable = (x: number, y: number) => tileAt(x, y) === '.';
 export const key = (x: number, y: number) => `${x},${y}`;
 export const CHAIRS: [number, number][] = [];
 LAYOUT.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'h') CHAIRS.push([x, y]); }));
 
-export const TILE_NAME: Record<Tile, string> = {
-  '.': 'Sàn', C: 'Quầy bếp', F: 'Tủ lạnh chung', B: 'Thớt', S: 'Bếp nấu', L: 'Máy xay', P: 'Kệ đĩa sạch', K: 'Bồn rửa bát', T: 'Thùng rác', D: 'Bàn ăn', h: 'Ghế',
+const HOME_NAMES: Record<Tile, string> = {
+  '.': 'Sàn', C: 'Quầy bếp', F: 'Tủ lạnh chung', B: 'Thớt', S: 'Bếp nấu', L: 'Máy xay', P: 'Kệ đĩa sạch', K: 'Bồn rửa bát', T: 'Thùng rác', D: 'Bàn ăn', h: 'Ghế', o: 'Vỉa hè',
 };
+const BAKERY_NAMES: Record<Tile, string> = { ...HOME_NAMES, F: 'Tủ nguyên liệu', B: 'Bàn nhào bột', S: 'Lò nướng', L: 'Máy xịt kem', D: 'Quầy bán bánh (khách chờ)', C: 'Quầy' };
+export const TILE_NAME: Record<Tile, string> = { ...HOME_NAMES };
 
 // ───────── Công thức ─────────
 export type Method = 'S' | 'L' | 'plate';
@@ -38,18 +53,39 @@ const BLEND = new Set(['grape_juice', 'watermelon_juice', 'peach_tea']);
 const RAW = new Set(['salad', 'sushi']);
 /** Nguyên liệu không cần thái */
 export const NOCUT = new Set(['rice', 'grape', 'shrimp', 'corn']);
-export const needsCut = (id: string) => !NOCUT.has(id);
-export const KRECIPES: KRecipe[] = content.recipes
+/** Tiệm bánh: bơ và trứng phải đem ra bàn nhào cùng bột; sữa, mật ong, phô mai, dâu cho thẳng vào */
+const NOKNEAD = new Set(['milk', 'honey', 'cheese', 'strawberry']);
+export const needsCut = (id: string) => (variant === 'bakery' ? !NOKNEAD.has(id) : !NOCUT.has(id));
+const HOME_RECIPES: KRecipe[] = content.recipes
   .filter(r => item(r.id).kind === 'dish' && r.id !== 'bouquet')
   .map(r => ({ id: r.id, needs: r.needs.flatMap(n => Array<string>(n.n).fill(n.id)), m: BLEND.has(r.id) ? 'L' : RAW.has(r.id) ? 'plate' : 'S' }));
-export const INGREDIENTS = [...new Set(KRECIPES.flatMap(r => r.needs))];
+const BAKERY_RECIPES: KRecipe[] = [
+  { id: 'cookie', needs: ['butter', 'egg'], m: 'S' }, { id: 'croissant', needs: ['butter', 'milk'], m: 'S' },
+  { id: 'cupcake', needs: ['butter', 'egg', 'milk'], m: 'S' }, { id: 'honey_cake', needs: ['egg', 'egg', 'honey', 'milk'], m: 'S' },
+  { id: 'cheesecake', needs: ['butter', 'cheese', 'egg'], m: 'S' },
+];
+export let KRECIPES: KRecipe[] = HOME_RECIPES;
+export let INGREDIENTS = [...new Set(KRECIPES.flatMap(r => r.needs))];
+let variant: 'home' | 'bakery' = 'home';
+export const kitchenVariant = () => variant;
+/** Đổi sơ đồ & công thức (bếp nhà ↔ tiệm bánh) trước khi vẽ phòng */
+export function setKitchenVariant(v: 'home' | 'bakery') {
+  if (v === variant) return;
+  variant = v;
+  LAYOUT = v === 'bakery' ? BAKERY_LAYOUT : HOME_LAYOUT;
+  COLS = LAYOUT[0].length; ROWS = LAYOUT.length;
+  CHAIRS.length = 0; LAYOUT.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'h') CHAIRS.push([x, y]); }));
+  KRECIPES = v === 'bakery' ? BAKERY_RECIPES : HOME_RECIPES;
+  INGREDIENTS = [...new Set(KRECIPES.flatMap(r => r.needs))];
+  Object.assign(TILE_NAME, v === 'bakery' ? BAKERY_NAMES : HOME_NAMES);
+}
 export const METHOD_LABEL: Record<Method, string> = { S: '🔥 nấu trên bếp', L: '🥤 cho vào máy xay', plate: '🍽️ bày thẳng ra đĩa' };
 
 // ───────── Đồ vật ─────────
 export interface Part { id: string; cut: boolean; cook?: 'S' | 'L' }
 /** fresh: vừa lấy trong tủ, chưa dùng — cất lại tủ được (tủ chỉ bị trừ khi bắt đầu thái/nấu/bày) */
 export interface Ing { k: 'ing'; id: string; cut: boolean; chop?: number; fresh?: boolean }
-export interface Plate { k: 'plate'; parts: Part[]; q: number }
+export interface Plate { k: 'plate'; parts: Part[]; q: number; cream?: boolean }
 /** Nồi (bếp nấu, bưng đi được) hoặc cối máy xay (gắn cố định). heat: giây đã đun, on: lúc bắt đầu đun (0 = không đun) */
 export interface Pot { k: 'pot'; t: 'S' | 'L'; parts: Part[]; heat: number; on: number }
 export interface Dirty { k: 'dirty'; n: number }
@@ -81,7 +117,7 @@ export const COINS_BY_Q = [0, 10, 25, 40];
 export function newRoom(host: string): Room {
   const cells: Room['cells'] = {};
   LAYOUT.forEach((row, y) => [...row].forEach((c, x) => {
-    if (c === 'S' || c === 'L') cells[key(x, y)] = { k: 'pot', t: c, parts: [], heat: 0, on: 0 };
+    if (c === 'S' || (c === 'L' && variant !== 'bakery')) cells[key(x, y)] = { k: 'pot', t: c, parts: [], heat: 0, on: 0 };
   }));
   return { host, v: 0, cells, hands: {}, clean: 4, sink: { n: 0, wash: 0 }, seats: {}, meal: null, last: null, give: null, note: null };
 }
@@ -174,6 +210,13 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
       return no('Đĩa bẩn thì mang ra bồn rửa nhé');
     }
     case 'S': case 'L': {
+      // Tiệm bánh: máy xịt kem — mang đĩa bánh đã nướng tới để xịt kem lên (bán được giá hơn)
+      if (variant === 'bakery' && t === 'L') {
+        if (hand?.k !== 'plate' || !dishOf(hand)) return no('🍦 Máy xịt kem — bày bánh nướng xong ra đĩa rồi mang tới đây');
+        if (hand.cream) return no('Bánh này xịt kem rồi 🍦');
+        setHand({ ...hand, cream: true });
+        return done(`🍦 Xịt kem lên ${item(dishOf(hand)!.id).name} — xinh quá!`);
+      }
       const pot = cell?.k === 'pot' ? cell : null;
       // Khét rồi: bấm vào nồi / máy xay (tay không hoặc đang cầm đĩa) là đổ phần khét đi ngay — máy xay gắn cố định không bưng ra thùng rác được
       if (pot && pot.parts.length && stageOf(pot, now) === 'burnt' && (!hand || hand.k === 'plate')) {
@@ -226,6 +269,14 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
         }
         setHand(cell); setCell(null);
         return done();
+      }
+      // Tiệm bánh: đặt đĩa bánh lên quầy bán → khách đứng ngoài mua ngay, để lại đĩa bẩn
+      if (variant === 'bakery' && t === 'D' && hand.k === 'plate' && !cell) {
+        const d = dishOf(hand);
+        if (!d) return no('🧁 Bày bánh nướng xong lên đĩa rồi mới bán được');
+        r.cells[k] = { k: 'dirty', n: 1 }; setHand(null);
+        r.last = { id: `sale:${now}:${k}`, dishes: [d.id], q: hand.q, both: false, coins: Math.round(COINS_BY_Q[hand.q] * 3 * (hand.cream ? 1.5 : 1)) };
+        return done(`🛎️ Khách mua ${item(d.id).icon} ${item(d.id).name}${hand.cream ? ' phủ kem' : ''} — cảm ơn tiệm nhé!`);
       }
       if (!cell) { setCell(hand); setHand(null); return done(); }
       if (r.meal && t === 'D') return no('Đang ăn mà 😋');

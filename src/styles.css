@@ -1669,3 +1669,5 @@ textarea { resize: vertical; }
 .cake-base { font-size: 90px; }
 .cake-cream { position: absolute; left: 50%; top: 22%; width: 96px; height: 30px; margin-left: -48px; border-radius: 50% 50% 40% 40%; box-shadow: inset 0 -4px 0 #0001; }
 .cake-fruit { position: absolute; font-size: 22px; }
+
+.k-customer { position: absolute; transform: translateX(-50%); z-index: 50; pointer-events: none; animation: sprbob 1.6s ease-in-out infinite; }

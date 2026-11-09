@@ -6,7 +6,7 @@ import * as api from '../lib/api';
 import { item } from '../lib/content';
 import { useSynced } from '../lib/hooks';
 import {
-  act, CHAIRS, COLS, dishOf, freshCount, HEAT, heatOf, INGREDIENTS, KRECIPES, LAYOUT, MEAL_MS, METHOD_LABEL, needsCut, newRoom,
+  act, CHAIRS, kitchenVariant, setKitchenVariant, COLS, dishOf, freshCount, HEAT, heatOf, INGREDIENTS, KRECIPES, LAYOUT, MEAL_MS, METHOD_LABEL, needsCut, newRoom,
   ROWS, stageOf, STAGE_LABEL, tick, tileAt, walkable, CHOP_N, WASH_N, type Opt, type Room, type Thing,
 } from '../lib/kitchen';
 import { emojiSprite, makeSprite, type Pen } from '../lib/pixel';
@@ -26,9 +26,11 @@ const DV: Record<Dir, [number, number]> = { u: [0, -1], d: [0, 1], l: [-1, 0], r
 const KEYS: Record<string, Dir> = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', w: 'u', s: 'd', a: 'l', d: 'r', W: 'u', S: 'd', A: 'l', D: 'r' };
 interface Pos { x: number; y: number; f: Dir; mv: boolean }
 
-export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
+export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = 'home' }: {
+  variant?: 'home' | 'bakery';
   me: api.Profile; partner: api.Profile | null; inventory: api.InvRow[]; date: string; onLeave: () => void;
 }) {
+  setKitchenVariant(variant);
   const them = partner?.id ?? '';
   const [fridge] = useSynced('fridge', api.loadFridge, [] as api.InvRow[]);
   const [room, setRoom] = useState<Room>(() => newRoom(me.id));
@@ -58,7 +60,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
       api.fridgeUse(Object.entries(n).map(([id, k]) => ({ id, n: k }))).then(() => notify('fridge'), e => console.error('fridge', e));
     }
   };
-  const send = useGameChannel('cook', me.id, m => {
+  const send = useGameChannel((variant === 'bakery' ? 'bake' : 'cook') as 'cook', me.id, m => {
     const mine = m.by === me.id;
     if (m.t === 'act' && roomRef.current.host === me.id) { hostAct(m.by, m); return; }
     if (mine) return;
@@ -309,13 +311,13 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
   return createPortal(
     <div className="kitchen-full" role="dialog" aria-label="Phòng bếp">
       <div className="k-top">
-        <b>👩‍🍳 Phòng bếp</b>
+        <b>{variant === 'bakery' ? '🍰 Bếp tiệm bánh' : '👩‍🍳 Phòng bếp'}</b>
         <span className="k-who">{them && theirPos ? `🟢 ${partner?.display_name} đang trong bếp` : `💤 ${partner?.display_name ?? 'Người ấy'} chưa vào bếp`}</span>
         <span className="row">
           {small && <button className="btn small ghost" onClick={() => setWide(v => !v)}>{wide ? '🔎 Phóng to' : '🔍 Xem cả bếp'}</button>}
           <button className={`btn small ${panel === 'book' ? '' : 'ghost'}`} onClick={() => setPanel(panel === 'book' ? null : 'book')}>📖 Công thức</button>
-          <button className={`btn small ${panel === 'fridge' ? '' : 'ghost'}`} onClick={() => { setAtFridge(null); setPanel(panel === 'fridge' ? null : 'fridge'); }}>🧊 Tủ lạnh</button>
-          <button className="btn small ghost" onClick={onLeave}>🚪 Ra khỏi bếp</button>
+          <button className={`btn small ${panel === 'fridge' ? '' : 'ghost'}`} onClick={() => { setAtFridge(null); setPanel(panel === 'fridge' ? null : 'fridge'); }}>{variant === 'bakery' ? '🧊 Tủ nguyên liệu' : '🧊 Tủ lạnh'}</button>
+          <button className="btn small ghost" onClick={onLeave}>{variant === 'bakery' ? '🚪 Ra phố' : '🚪 Ra khỏi bếp'}</button>
         </span>
       </div>
       <div className="k-view" style={{ width: viewW, height: viewH }}>
@@ -338,6 +340,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave }: {
             {room.sink.wash > 0 && <Bar v={room.sink.wash / WASH_N} s={s} color="#7fd0f0" />}
           </div>
         ) : null))}
+        {variant === 'bakery' && [1, 4, 7, 10, 12].map((x, i) => <span key={x} className="k-customer" style={{ left: (x + 0.5) * T * s, top: (ROWS - 0.95) * T * s, fontSize: Math.max(14, 9 * s), animationDelay: `${-i * 0.6}s` }}>{['🧑', '👩', '👧', '👴', '👩‍🦰'][i]}</span>)}
         {avatar('me', me.avatar, pos, mySeat, hand, undefined)}
         {theirShown && partner && avatar('them', partner.avatar, theirShown, theirSeat, room.hands[them] ?? null, partner.display_name)}
         {room.meal && <div className="k-meal" style={{ left: 10 * T * s, top: 4.2 * T * s }}>😋 {Math.ceil((room.meal.until - hostNow) / 1000)}s</div>}
@@ -443,7 +446,7 @@ function thingName(t: Thing) {
   if (t.k === 'dirty') return `🍽️ ${t.n} đĩa bẩn`;
   if (t.k === 'pot') return `🍲 Nồi${t.parts.length ? ` (${t.parts.map(p => item(p.id).icon).join('')})` : ' trống'}`;
   const d = dishOf(t);
-  return d ? `${item(d.id).icon} ${item(d.id).name}` : t.parts.length ? `Đĩa ${t.parts.map(p => item(p.id).icon).join('')}` : 'Đĩa sạch';
+  return d ? `${item(d.id).icon} ${item(d.id).name}${t.cream ? ' 🍦' : ''}` : t.parts.length ? `Đĩa ${t.parts.map(p => item(p.id).icon).join('')}` : 'Đĩa sạch';
 }
 
 function Bar({ v, s, color, inline }: { v: number; s: number; color: string; inline?: boolean }) {
@@ -536,11 +539,11 @@ function potSprite() {
 }
 
 function roomSprite() {
-  return makeSprite('kitchen-room', COLS * T, ROWS * T, p => {
+  return makeSprite(`kitchen-room:${kitchenVariant()}`, COLS * T, ROWS * T, p => {
     LAYOUT.forEach((row, y) => [...row].forEach((c, x) => drawTile(p, c, x * T, y * T, x, y)));
   }, null);
 }
-const rug = (x: number, y: number) => x >= 7 && x <= 12 && y >= 4 && y <= 6;
+const rug = (x: number, y: number) => kitchenVariant() === 'home' && x >= 7 && x <= 12 && y >= 4 && y <= 6;
 function drawTile(p: Pen, c: string, X: number, Y: number, x: number, y: number) {
   const floor = () => {
     if (rug(x, y)) { p.rect(X, Y, T, T, '#f6c8d4'); if (y === 4) p.rect(X, Y, T, 1, '#e295ac'); if (y === 6) p.rect(X, Y + T - 1, T, 1, '#e295ac'); if (x === 7) p.rect(X, Y, 1, T, '#e295ac'); if (x === 12) p.rect(X + T - 1, Y, 1, T, '#e295ac'); return; }
@@ -561,10 +564,16 @@ function drawTile(p: Pen, c: string, X: number, Y: number, x: number, y: number)
       counter(); p.rect(X + 2, Y + 2, 12, 9, '#f0cf8e'); p.rect(X + 2, Y + 10, 12, 1, '#d4a85e'); p.rect(X + 10, Y + 3, 3, 1, '#d8dee6'); p.rect(X + 13, Y + 3, 1, 1, '#6a4a32');
       break;
     case 'S':
+      if (kitchenVariant() === 'bakery') {   // lò gạch nướng bánh
+        p.rect(X, Y, T, T, '#b8583a'); for (let yy = 0; yy < T; yy += 4) for (let xx = (yy / 4) % 2 ? 0 : 3; xx < T; xx += 6) p.rect(X + xx, Y + yy, 5, 3, '#c8684a');
+        p.rect(X + 3, Y + 5, 10, 8, '#3a2020'); p.rect(X + 4, Y + 9, 8, 3, '#f6a03a'); p.rect(X + 5, Y + 10, 6, 1, '#ffe08a'); p.rect(X, Y + T - 1, T, 1, '#7a3020');
+        break;
+      }
       p.rect(X, Y, T, T, '#4a4e5a'); p.rect(X, Y, T, 2, '#5e6270'); p.rect(X + 3, Y + 3, 10, 8, '#2a2c34'); p.rect(X + 5, Y + 5, 6, 4, '#4a2a2a');
       p.rect(X + 3, Y + 13, 2, 2, '#e8604a'); p.rect(X + 11, Y + 13, 2, 2, '#e8604a'); p.rect(X, Y + T - 1, T, 1, '#30323a');
       break;
     case 'L':
+      if (kitchenVariant() === 'bakery') { counter(); p.rect(X + 4, Y + 2, 8, 9, '#f8f0f4'); p.rect(X + 5, Y + 3, 6, 3, '#f8b8cc'); p.rect(X + 7, Y + 11, 2, 3, '#c8c8d8'); p.rect(X + 3, Y + 12, 10, 1, '#e8b8c8'); break; }
       counter(); p.rect(X + 4, Y + 9, 8, 4, '#d0605f'); p.rect(X + 5, Y + 1, 6, 8, '#c8ecf6'); p.rect(X + 5, Y + 1, 6, 1, '#8a9aa8'); p.rect(X + 6, Y + 2, 1, 6, '#ffffff');
       break;
     case 'P':
@@ -576,7 +585,14 @@ function drawTile(p: Pen, c: string, X: number, Y: number, x: number, y: number)
     case 'T':
       floor(); p.rect(X + 3, Y + 3, 10, 12, '#8a929c'); p.rect(X + 2, Y + 2, 12, 3, '#6a7280'); p.rect(X + 6, Y + 8, 4, 3, '#7cc86a');
       break;
+    case 'o':   // vỉa hè ngoài quầy bán, khách đứng chờ
+      p.rect(X, Y, T, T, (x % 2) ? '#d8d0c4' : '#cfc6b8'); p.rect(X, Y, T, 1, '#b8b0a8');
+      break;
     case 'D':
+      if (kitchenVariant() === 'bakery') {   // quầy kính bày bánh
+        p.rect(X, Y, T, T, '#e8d4b0'); p.rect(X, Y + 2, T, 9, '#d8f0ff'); p.rect(X, Y + 6, T, 1, '#ffffff'); p.rect(X + 3, Y + 8, 4, 2, '#e8b070'); p.rect(X + 9, Y + 3, 4, 2, '#f59ab3'); p.rect(X, Y + T - 3, T, 3, '#a8703f');
+        break;
+      }
       floor(); p.rect(X, Y + 1, T, 13, '#c98d58'); p.rect(X, Y + 2, T, 10, '#fff4f0');
       for (let i = 0; i < T; i += 4) p.rect(X + i, Y + 2, 2, 10, '#f8d4d8');
       p.rect(X, Y + 12, T, 2, '#9a6038');
