@@ -92,15 +92,31 @@ const BEATS: Record<string, string> = { rock: 'scissors', paper: 'rock', scissor
 interface RpsState { round: number; picks: Record<number, Record<string, string>>; game: number }
 function Rps(p: GP) {
   const [st, dispatch] = useReducer((s: RpsState, m: Msg): RpsState => {
-    if (m.t === 'new') return { round: 0, picks: {}, game: s.game + 1 };
+    if (m.t === 'new') return { round: 0, picks: {}, game: (m.game ?? s.game + 1) };
+    // Lựa chọn đến trễ / sớm một lượt vẫn được ghi đúng lượt của nó (trước đây bị bỏ → hai máy đứng chờ nhau)
     if (m.t === 'pick') {
-      if (m.round !== s.round || s.picks[s.round]?.[m.by]) return s;
-      return { ...s, picks: { ...s.picks, [s.round]: { ...s.picks[s.round], [m.by]: m.hand } } };
+      if ((m.game ?? s.game) !== s.game || s.picks[m.round]?.[m.by]) return s;
+      return { ...s, picks: { ...s.picks, [m.round]: { ...s.picks[m.round], [m.by]: m.hand } } };
+    }
+    // Đồng bộ cả ván khi vừa mở hoặc mất gói tin: lấy bản đi xa hơn
+    if (m.t === 'state' && m.by !== '') {
+      const o = m.st as RpsState;
+      if (o.game > s.game) return o;
+      if (o.game < s.game) return s;
+      const picks = { ...s.picks };
+      for (const [r, pk] of Object.entries(o.picks)) picks[Number(r)] = { ...pk, ...picks[Number(r)] };
+      return { ...s, round: Math.max(s.round, o.round), picks };
     }
     if (m.t === 'next') return m.round === s.round ? { ...s, round: s.round + 1 } : s;
     return s;
   }, { round: 0, picks: {}, game: 0 });
-  const send = useGameChannel('rps', p.me.id, dispatch);
+  const stRef = useRef(st);
+  stRef.current = st;
+  const send = useGameChannel('rps', p.me.id, m => {
+    if (m.t === 'hello' && m.by !== p.me.id) send('state', { st: stRef.current });
+    dispatch(m);
+  });
+  useEffect(() => { send('hello'); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const score = useMemo(() => {
     const sc: Record<string, number> = { [p.me.id]: 0, [p.them]: 0 };
     Object.entries(st.picks).forEach(([r, pk]) => {
@@ -118,6 +134,12 @@ function Rps(p: GP) {
     const t = setTimeout(() => dispatch({ g: 'rps', t: 'next', by: '', round: st.round }), 1800);
     return () => clearTimeout(t);
   }, [both, st.round]);
+  // Chờ người kia quá 2 giây: gửi lại trạng thái ván (phòng gói tin bị rớt)
+  useEffect(() => {
+    if (both || !cur[p.me.id]) return;
+    const t = setInterval(() => send('state', { st: stRef.current }), 2000);
+    return () => clearInterval(t);
+  }, [both, st.round, cur[p.me.id]]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (done) reward('rps', p.date); }, [done]); // eslint-disable-line react-hooks/exhaustive-deps
   const hand = (id?: string) => HANDS.find(h => h.id === id)?.icon ?? '❔';
   const result = both ? (cur[p.me.id] === cur[p.them] ? 'Hòa!' : BEATS[cur[p.me.id]] === cur[p.them] ? 'Bạn thắng lượt này 🎉' : `${nameOf(p, p.them)} thắng lượt này`) : '';
@@ -137,12 +159,12 @@ function Rps(p: GP) {
           <p className="game-status">{result || (cur[p.me.id] ? `Chờ ${nameOf(p, p.them)} chọn…` : cur[p.them] ? `${nameOf(p, p.them)} chọn xong rồi, tới bạn!` : 'Chọn tay của bạn:')}</p>
           <div className="row center">
             {HANDS.map(h => (
-              <button key={h.id} className="btn rps-btn" disabled={!!cur[p.me.id]} onClick={() => send('pick', { round: st.round, hand: h.id })}>{h.icon}<small>{h.name}</small></button>
+              <button key={h.id} className="btn rps-btn" disabled={!!cur[p.me.id]} onClick={() => send('pick', { round: st.round, hand: h.id, game: st.game })}>{h.icon}<small>{h.name}</small></button>
             ))}
           </div>
         </>
       )}
-      <button className="btn small ghost" onClick={() => send('new')}>🔄 Chơi lại</button>
+      <button className="btn small ghost" onClick={() => send('new', { game: st.game + 1 })}>🔄 Chơi lại</button>
     </div>
   );
 }
