@@ -379,8 +379,8 @@ function SceneContent(p: WorldProps) {
           onSit={seat => go({ x: seat.x, y: seat.y - 6 }, () => live.update({ pos: seat, act: 'sit' }))} />
       )}
       {scene === 'street' && <StreetContent go={go} enter={enter} />}
-      {scene === 'florist' && p.shops && <ShopInside kind="florist" go={go} onOpen={p.shops.flower} />}
-      {scene === 'bakery' && p.shops && <ShopInside kind="bakery" go={go} onOpen={p.shops.bakery} />}
+      {scene === 'florist' && p.shops && <ShopInside kind="florist" go={go} onOpen={p.shops.flower} onExit={() => enter('street', { x: 70, y: 108 })} />}
+      {scene === 'bakery' && p.shops && <ShopInside kind="bakery" go={go} onOpen={p.shops.bakery} onExit={() => enter('street', { x: 186, y: 108 })} />}
       {scene === 'reef' && <ReefContent phase={phase} go={go} onSee={id => p.onSee?.(id)} chestOpen={!!p.chestOpen} onChest={() => p.onChest?.()} />}
       {scene === 'sky' && (
         <SkyContent phase={phase} firstSeat={p.firstSeat}
@@ -1569,27 +1569,51 @@ function StreetContent({ go, enter }: { go: (to: Pt, then?: () => void) => void;
     <>
       <Tag x={STREET.florist.x} y={54} className="label" onClick={door('florist')}>🌸 Tiệm hoa của Hy</Tag>
       <Tag x={STREET.bakery.x} y={54} className="label" onClick={door('bakery')}>🍰 Tiệm bánh</Tag>
+      {[[160, 118, 1, '🍰 Đợi bánh ra lò…'], [212, 120, 3, '☕ Chờ chút nha'], [96, 116, 2, '💐 Tiệm hoa mở chưa ta?']].map(([x, y, k, say], i) => {
+        const look = SHOP_NPC[k as number], sp = characterSprite(look, 'idle'), ps = avatarPx(s);
+        return <div key={i}><img src={sp.url} alt="Khách" title="Khách đang chờ" className="spr" style={{ left: (x as number) * s - (sp.w * ps) / 2, top: (y as number) * s - sp.h * ps, width: sp.w * ps, height: sp.h * ps, zIndex: y as number }} />
+          <Tag x={x as number} y={(y as number) - 30} className="bed-bubble">{say}</Tag></div>;
+      })}
       <button className="hot" title="Vào tiệm hoa" style={{ left: 58 * s, top: 62 * s, width: 24 * s, height: 40 * s }} onClick={e => { e.stopPropagation(); door('florist')(); }} />
       <button className="hot" title="Vào tiệm bánh" style={{ left: 174 * s, top: 62 * s, width: 24 * s, height: 40 * s }} onClick={e => { e.stopPropagation(); door('bakery')(); }} />
     </>
   );
 }
-/** Bên trong tiệm: khách NPC đứng chờ, bấm quầy để xem đơn */
-const SHOP_NPC = [{ gender: 'f' as const, hair: 5, hairColor: 2, skin: 1, shirt: 8, outfit: 1 }, { gender: 'm' as const, hair: 2, hairColor: 0, skin: 2, shirt: 10, outfit: 4 }];
-function ShopInside({ kind, go, onOpen }: { kind: 'florist' | 'bakery'; go: (to: Pt, then?: () => void) => void; onOpen: () => void }) {
+/** Bên trong tiệm: vài khách NPC đi lại xem hàng; bấm quầy/bàn để làm; bấm cửa để ra phố */
+const SHOP_NPC = [
+  { gender: 'f' as const, hair: 5, hairColor: 2, skin: 1, shirt: 8, outfit: 1 }, { gender: 'm' as const, hair: 2, hairColor: 0, skin: 2, shirt: 10, outfit: 4 },
+  { gender: 'f' as const, hair: 1, hairColor: 3, skin: 0, shirt: 4, outfit: 14 }, { gender: 'm' as const, hair: 6, hairColor: 6, skin: 3, shirt: 2, outfit: 7 },
+];
+const SHOP_CHAT = { florist: ['Hoa tươi quá ta 🌷', 'Bó này xinh ghê!', 'Mùi oải hương dễ chịu thật', 'Mai tớ mua tặng mẹ'], bakery: ['Thơm mùi bơ quá 😋', 'Bánh mới ra lò kìa!', 'Cho tớ một cái cupcake', 'Ở đây có bánh mật ong ngon lắm'] };
+function ShopNpc({ i, kind }: { i: number; kind: 'florist' | 'bakery' }) {
   const s = useScale(), ps = avatarPx(s);
-  const spots = kind === 'florist' ? [FLORIST.counter, FLORIST.bench] : [BAKERY.oven, BAKERY.case];
-  const npc = characterSprite(SHOP_NPC[kind === 'florist' ? 0 : 1], 'idle');
-  const at = kind === 'florist' ? { x: 70, y: 112 } : { x: 168, y: 112 };
+  const [at, setAt] = useState({ x: 40 + i * 50, y: 112 + (i % 2) * 12 });
+  const [say, setSay] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    const step = () => { if (!alive) return; setAt({ x: 20 + Math.random() * 150, y: 104 + Math.random() * 30 }); if (Math.random() < 0.25) { setSay(SHOP_CHAT[kind][Math.floor(Math.random() * 4)]); setTimeout(() => alive && setSay(null), 2500); } setTimeout(step, 3500 + Math.random() * 3000); };
+    const t = setTimeout(step, 800 + i * 700);
+    return () => { alive = false; clearTimeout(t); };
+  }, [i, kind]);
+  const look = SHOP_NPC[(i + (kind === 'bakery' ? 1 : 0)) % SHOP_NPC.length];
   return (
     <>
-      {spots.map((sp, i) => (
-        <Tag key={i} x={sp.x} y={sp.y - (kind === 'bakery' && i === 0 ? 66 : 30)} className="label" onClick={() => go(sp.stand, onOpen)}>
-          {kind === 'florist' ? (i ? '💐 Bàn cắm hoa' : '🎀 Quầy · đơn khách') : i ? '🧁 Tủ bánh · khách đặt' : '🔥 Lò nướng'}
-        </Tag>
-      ))}
-      <img src={npc.url} alt="Khách" title="🛎️ Khách đang chờ — bấm quầy để xem đơn" className="spr tappable" onClick={e => { e.stopPropagation(); go(spots[0].stand, onOpen); }}
-        style={{ left: at.x * s - (npc.w * ps) / 2, top: at.y * s - npc.h * ps, width: npc.w * ps, height: npc.h * ps, zIndex: at.y }} />
+      <Follower sprite={characterSprite(look, 'idle', undefined, 'side')} walk={characterSprite(look, 'walk', undefined, 'side', 1)} x={at.x} y={at.y} ps={ps} title="Khách" onClick={() => setSay(SHOP_CHAT[kind][i % 4])} />
+      {say && <Tag x={at.x} y={at.y - 30} className="bed-bubble">{say}</Tag>}
+    </>
+  );
+}
+function ShopInside({ kind, go, onOpen, onExit }: { kind: 'florist' | 'bakery'; go: (to: Pt, then?: () => void) => void; onOpen: () => void; onExit: () => void }) {
+  const s = useScale();
+  const spots: { x: number; y: number; stand: Pt; label: string; dy: number }[] = kind === 'florist'
+    ? [{ ...FLORIST.counter, label: '🎀 Quầy · đơn khách', dy: 30 }, { ...FLORIST.bench, label: '💐 Lẵng hoa · cắm bó', dy: 34 }]
+    : [{ ...BAKERY.oven, label: '🔥 Lò nướng', dy: 66 }, { ...BAKERY.prep, label: '🥣 Bàn nhào bột', dy: 20 }, { ...BAKERY.case, label: '🧁 Tủ bánh · khách đặt', dy: 30 }];
+  return (
+    <>
+      {spots.map((sp, i) => <Tag key={i} x={sp.x} y={sp.y - sp.dy} className="label" onClick={() => go(sp.stand, onOpen)}>{sp.label}</Tag>)}
+      {[0, 1, 2].map(i => <ShopNpc key={i} i={i} kind={kind} />)}
+      <button className="hot" title="🚪 Ra phố" style={{ left: 82 * s, top: 132 * s, width: 28 * s, height: 12 * s }} onClick={e => { e.stopPropagation(); go({ x: 96, y: 138 }, onExit); }} />
+      <Tag x={96} y={128} className="label" onClick={() => go({ x: 96, y: 138 }, onExit)}>🚪 Cửa ra</Tag>
     </>
   );
 }

@@ -9,7 +9,7 @@ export const STREET = {
   toTown: { x: 128, y: 180 },
 };
 export const FLORIST = { counter: { x: 96, y: 84, stand: { x: 96, y: 100 } }, bench: { x: 150, y: 96, stand: { x: 150, y: 110 } }, door: { x: 96, y: 140 } };
-export const BAKERY = { oven: { x: 44, y: 76, stand: { x: 50, y: 100 } }, case: { x: 120, y: 92, stand: { x: 120, y: 108 } }, door: { x: 96, y: 140 } };
+export const BAKERY = { prep: { x: 44, y: 94, stand: { x: 44, y: 106 } }, oven: { x: 44, y: 76, stand: { x: 50, y: 100 } }, case: { x: 120, y: 92, stand: { x: 120, y: 108 } }, door: { x: 96, y: 140 } };
 
 const win = (p: Pen, x: number, y: number, w: number, h: number, glass: string) => {
   p.rect(x, y, w, h, '#ffffff'); p.rect(x + 1, y + 1, w - 2, h - 2, glass); p.rect(x + Math.floor(w / 2), y + 1, 1, h - 2, '#ffffff');
@@ -55,7 +55,7 @@ export function streetBackground(phase: 'day' | 'night' | 'sunset' | 'dawn') {
 
 /** Bên trong tiệm hoa: tường hồng, kệ xô hoa nhiều màu, quầy gói hoa, bàn cắm, tủ mát */
 export function floristRoom() {
-  return makeSprite('florist-room:v1', 192, 144, p => {
+  return makeSprite('florist-room:v2', 192, 144, p => {
     p.rect(0, 0, 192, 76, '#ffe0ea'); for (let x = 0; x < 192; x += 10) p.rect(x, 0, 1, 76, '#f8d0dc');
     p.rect(0, 70, 192, 6, '#e8a8b8');
     for (let y = 76; y < 144; y++) p.rect(0, y, 192, 1, (y - 76) % 8 === 0 ? '#c8a080' : mix('#ecd0b0', '#dcc0a0', (y - 76) / 68));
@@ -73,7 +73,10 @@ export function floristRoom() {
     p.rect(66, 72, 60, 14, '#c88a5a'); p.rect(66, 72, 60, 3, '#e8b07a'); p.rect(70, 70, 14, 3, '#f8d0dc'); p.rect(88, 70, 10, 2, '#fff8e0'); p.rect(104, 69, 3, 4, '#e8304a');
     // bàn cắm hoa (phải dưới) có bình
     p.rect(132, 88, 40, 8, '#e8c890'); p.rect(134, 96, 2, 10, '#a8703f'); p.rect(168, 96, 2, 10, '#a8703f');
-    p.rect(146, 80, 8, 8, '#a8d8f0'); for (let k = 0; k < 5; k++) ellipse(p, 145 + k * 2.5, 77 - (k % 2) * 2, 2, 2, ['#e8304a', '#ffffff', '#f6c64e', '#f59ab3', '#c8a2e8'][k]);
+    // lẵng hoa mây đan trên bàn cắm
+    ellipse(p, 152, 86, 11, 4, '#b8864a'); p.rect(141, 80, 22, 6, '#c8965a'); for (let x = 142; x < 162; x += 3) p.rect(x, 80, 1, 6, '#a8763a');
+    for (let i = 0; i < 12; i++) p.px(141 + (i * 7) % 22, 70 + (i * 5) % 14, '#e8a0b8');
+    for (let k = 0; k < 7; k++) { ellipse(p, 143 + k * 3, 77 - (k % 3) * 2, 2.2, 2, ['#e8304a', '#ffffff', '#f6c64e', '#f59ab3', '#c8a2e8', '#ff8a5a', '#e8304a'][k]); p.rect(143 + k * 3, 79, 1, 2, '#5aa84a'); }
     // chậu cây lớn góc trái + cửa
     ellipse(p, 14, 98, 9, 8, '#4a9a4a'); p.rect(8, 100, 12, 10, '#e8905a');
     p.rect(82, 134, 28, 10, '#d8b088');
@@ -82,7 +85,7 @@ export function floristRoom() {
 
 /** Bên trong tiệm bánh: tường kem gạch, lò gạch có lửa, tủ kính bày bánh, quầy, bàn ghế nhỏ */
 export function bakeryRoom(baking: boolean) {
-  return makeSprite(`bakery-room:v1:${baking}`, 192, 144, p => {
+  return makeSprite(`bakery-room:v2:${baking}`, 192, 144, p => {
     p.rect(0, 0, 192, 76, '#fff0d8'); for (let y = 6; y < 70; y += 6) for (let x = (y / 6) % 2 ? 0 : 6; x < 192; x += 12) p.rect(x, y, 11, 5, '#f8e4c4');
     p.rect(0, 70, 192, 6, '#c8905a');
     for (let y = 76; y < 144; y++) p.rect(0, y, 192, 1, (y - 76) % 9 === 0 ? '#a8703f' : mix('#d8a068', '#c8905a', (y - 76) / 68));
@@ -91,13 +94,16 @@ export function bakeryRoom(baking: boolean) {
     ellipse(p, 44, 52, 16, 13, '#3a2020'); p.rect(28, 52, 32, 14, '#3a2020');
     if (baking) { ellipse(p, 44, 60, 12, 6, '#f6a03a'); ellipse(p, 44, 61, 8, 4, '#ffe08a'); ellipse(p, 38, 56, 3, 2, '#e8b070'); ellipse(p, 50, 56, 3, 2, '#e8b070'); }
     p.rect(26, 66, 36, 4, '#8a5a3c'); p.rect(40, 10, 8, 10, '#8a8098');
-    // kệ bột, hũ
+    // khu nhào bột như bếp: bàn đá, thau trộn, cây cán bột, rây bột
     p.rect(84, 22, 34, 3, '#a8693f'); for (let i = 0; i < 4; i++) { p.rect(86 + i * 8, 14, 6, 8, ['#fffaf0', '#f6e0b0', '#e8c890', '#f8d0dc'][i]); p.rect(86 + i * 8, 13, 6, 1, '#a8693f'); }
     // tủ kính bày bánh
     p.rect(92, 64, 64, 26, '#e8d4b0'); p.rect(94, 66, 60, 16, '#d8f0ff'); p.rect(94, 74, 60, 1, '#ffffff');
     for (let i = 0; i < 6; i++) { const x = 98 + i * 9; if (i % 2) { p.rect(x, 69, 6, 4, '#f59ab3'); p.rect(x, 68, 6, 1, '#fffaf0'); } else ellipse(p, x + 3, 71, 3, 1.8, '#e8b070'); ellipse(p, x + 3, 79, 3, 1.8, i % 3 ? '#d8a050' : '#fff0c0'); }
     // quầy thu ngân + chuông
     p.rect(160, 70, 28, 18, '#a8703f'); p.rect(160, 70, 28, 3, '#c88a5a'); ellipse(p, 174, 68, 2.5, 2, '#f6c64e');
+    p.rect(4, 82, 80, 12, '#e8e4dc'); p.rect(4, 82, 80, 2, '#ffffff'); p.rect(6, 94, 76, 6, '#a8703f');
+    ellipse(p, 24, 81, 8, 3, '#f0f0f8'); ellipse(p, 24, 80, 6, 2, '#fff4d8'); p.rect(40, 79, 16, 2, '#d8a868'); ellipse(p, 40, 80, 1.5, 1.5, '#a8703f'); ellipse(p, 56, 80, 1.5, 1.5, '#a8703f');
+    ellipse(p, 70, 81, 5, 2, '#c8c8d8'); for (let i = 0; i < 8; i++) p.px(64 + (i * 3) % 12, 78 - (i % 2), '#ffffff');
     // bàn tròn nhỏ
     for (const x of [40, 150]) { ellipse(p, x, 112, 12, 4, '#e8c890'); p.rect(x - 1, 112, 2, 12, '#8a5a3c'); ellipse(p, x, 109, 3, 1.5, '#f59ab3'); }
     p.rect(82, 134, 28, 10, '#d8b088');

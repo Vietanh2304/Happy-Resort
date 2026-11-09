@@ -19,8 +19,11 @@ const OCCASIONS: Omit<FlowerOrder, 'who' | 'reward'>[] = [
   { icon: '🌤️', occasion: 'Thăm người ốm', want: [['sunflower_bloom', 1], ['lavender', 1]], line: 'Nhìn bó hoa là thấy khoẻ hẳn ra rồi! 🌻' },
   { icon: '🌸', occasion: 'Ngắm hoa mùa xuân', want: [['sakura_bloom', 2]], line: 'Đẹp như cả mùa xuân thu nhỏ vậy đó 🌸' },
 ];
-export function flowerOrders(date: string): FlowerOrder[] {
-  const r = seeded(`flowers:${date}`);
+/** Mỗi 4 tiếng một lượt khách mới (6 lượt/ngày) */
+export const orderBlock = (hour: number) => Math.floor(hour / 4);
+export const nextBlockIn = (hour: number, minute: number) => (orderBlock(hour) + 1) * 4 * 60 - (hour * 60 + minute);
+export function flowerOrders(date: string, block = 0): FlowerOrder[] {
+  const r = seeded(`flowers:${date}:${block}`);
   const pool = [...OCCASIONS];
   return Array.from({ length: 3 }, (_, i) => {
     const o = pool.splice(Math.floor(r() * pool.length), 1)[0];
@@ -42,8 +45,8 @@ export const bakeOf = (id: string) => BAKES.find(b => b.id === id)!;
 export const OVEN_SLOTS = 2;
 export interface BakeOrder { who: string; want: string; n: number; reward: number; line: string }
 const BAKE_LINES = ['Thơm quá, con tớ mê bánh tiệm này lắm! 🧁', 'Cho tớ gói mang về nhé, cảm ơn nha ☕', 'Bánh nướng vừa tới, ngon xỉu luôn 😋', 'Tiệm dễ thương ghê, mai tớ lại ghé! 💕'];
-export function bakeOrders(date: string): BakeOrder[] {
-  const r = seeded(`bakery:${date}`);
+export function bakeOrders(date: string, block = 0): BakeOrder[] {
+  const r = seeded(`bakery:${date}:${block}`);
   return Array.from({ length: 3 }, () => {
     const b = BAKES[Math.floor(r() * BAKES.length)], n = 1 + Math.floor(r() * 2);
     return { who: CUSTOMERS[Math.floor(r() * CUSTOMERS.length)], want: b.id, n, reward: Math.round(val(b.id) * n * 1.5), line: BAKE_LINES[Math.floor(r() * BAKE_LINES.length)] };

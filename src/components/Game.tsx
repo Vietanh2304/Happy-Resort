@@ -1100,8 +1100,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       )}
       {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={myTime.date} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
       {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} riding={live.mine.horse === sheet.id} onDismount={() => { close(); dismount(); }} onRide={() => { close(); live.update({ horse: sheet.id }); live.say('🐎 Hí hí! Đi dạo nào!'); enter('town', TOWN.toFarm); }} />}
-      {sheet?.kind === 'flowershop' && <FlowerShopSheet date={myTime.date} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
-      {sheet?.kind === 'bakery' && <BakerySheet me={me} date={myTime.date} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
+      {sheet?.kind === 'flowershop' && <FlowerShopSheet date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
+      {sheet?.kind === 'bakery' && <BakerySheet me={me} date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
       {sheet?.kind === 'bugbook' && <BugBookSheet me={me} onClose={close} />}
       {sheet?.kind === 'pen' && <PenSheet pen={sheet.pen} animals={animals} inventory={inventory} onAnimal={id => setSheet({ kind: 'animal', id })} onShop={() => { close(); enter('ranch'); }} onClose={close} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
