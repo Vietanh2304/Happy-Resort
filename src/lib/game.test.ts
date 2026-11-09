@@ -137,7 +137,7 @@ describe('câu cá, vườn, nấu ăn', () => {
   it('giá bán theo loại, đồ hiếm gấp đôi', () => {
     const sell = content.economy.sell;
     expect(sellPrice('shell')).toBe(sell.trinket);
-    expect(sellPrice('sushi')).toBe(sell.dish);
+    expect(sellPrice('birthday_cake')).toBe(sell.dish);
     expect(sellPrice('shark')).toBe(sell.fish * 2);
   });
   it('đủ nguyên liệu mới nấu được', () => {

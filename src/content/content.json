@@ -546,50 +546,58 @@
       "id": "sushi",
       "name": "Sushi cá bống",
       "icon": "🍣",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 201
     },
     {
       "id": "fried_shrimp",
       "name": "Tôm chiên",
       "icon": "🍤",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 183
     },
     {
       "id": "salad",
       "name": "Salad vườn",
       "icon": "🥗",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 234
     },
     {
       "id": "corn_soup",
       "name": "Súp ngô",
       "icon": "🥣",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 234
     },
     {
       "id": "strawberry_cake",
       "name": "Bánh dâu dừa",
       "icon": "🍰",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 324
     },
     {
       "id": "noodles",
       "name": "Mì hải sản",
       "icon": "🍜",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 276
     },
     {
       "id": "squid_bbq",
       "name": "Mực nướng",
       "icon": "🍢",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 201
     },
     {
       "id": "curry",
       "name": "Cà ri tôm hùm",
       "icon": "🍛",
       "kind": "dish",
-      "rarity": "rare"
+      "rarity": "rare",
+      "price": 309
     },
     {
       "id": "wardrobe",
@@ -920,7 +928,8 @@
       "id": "bouquet",
       "name": "Bó hoa",
       "icon": "💐",
-      "kind": "decor"
+      "kind": "decor",
+      "price": 468
     },
     {
       "id": "cabbage",
@@ -1017,55 +1026,64 @@
       "id": "kimchi_stew",
       "name": "Canh kim chi",
       "icon": "🍲",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 342
     },
     {
       "id": "tteokbokki",
       "name": "Bánh gạo cay",
       "icon": "🍢",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 342
     },
     {
       "id": "bibimbap",
       "name": "Cơm trộn",
       "icon": "🍱",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 360
     },
     {
       "id": "grape_juice",
       "name": "Nước nho",
       "icon": "🧃",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 288
     },
     {
       "id": "watermelon_juice",
       "name": "Sinh tố dưa hấu",
       "icon": "🍹",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 144
     },
     {
       "id": "pumpkin_pie",
       "name": "Bánh bí đỏ",
       "icon": "🥧",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 288
     },
     {
       "id": "garlic_shrimp",
       "name": "Tôm bơ tỏi",
       "icon": "🍤",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 183
     },
     {
       "id": "eggplant_bake",
       "name": "Cà tím nướng",
       "icon": "🍆",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 234
     },
     {
       "id": "peach_tea",
       "name": "Trà đào",
       "icon": "🧋",
-      "kind": "dish"
+      "kind": "dish",
+      "price": 162
     },
     {
       "id": "chocolate",
@@ -1343,105 +1361,105 @@
       "name": "Phô mai",
       "icon": "🧀",
       "kind": "dish",
-      "price": 90
+      "price": 180
     },
     {
       "id": "butter",
       "name": "Bơ",
       "icon": "🧈",
       "kind": "dish",
-      "price": 80
+      "price": 180
     },
     {
       "id": "yogurt",
       "name": "Sữa chua mật ong",
       "icon": "🥣",
       "kind": "dish",
-      "price": 70
+      "price": 128
     },
     {
       "id": "goat_cheese",
       "name": "Phô mai dê",
       "icon": "🧀",
       "kind": "dish",
-      "price": 110
+      "price": 240
     },
     {
       "id": "fried_egg",
       "name": "Trứng ốp la",
       "icon": "🍳",
       "kind": "dish",
-      "price": 45
+      "price": 60
     },
     {
       "id": "omelette",
       "name": "Trứng cuộn phô mai",
       "icon": "🍳",
       "kind": "dish",
-      "price": 150
+      "price": 660
     },
     {
       "id": "flan",
       "name": "Bánh flan",
       "icon": "🍮",
       "kind": "dish",
-      "price": 70
+      "price": 105
     },
     {
       "id": "egg_tart",
       "name": "Bánh tart trứng",
       "icon": "🥧",
       "kind": "dish",
-      "price": 110
+      "price": 375
     },
     {
       "id": "salted_egg",
       "name": "Trứng muối",
       "icon": "🥚",
       "kind": "dish",
-      "price": 60
+      "price": 120
     },
     {
       "id": "pancake",
       "name": "Bánh pancake mật ong",
       "icon": "🥞",
       "kind": "dish",
-      "price": 95
+      "price": 143
     },
     {
       "id": "sponge_cake",
       "name": "Bánh bông lan",
       "icon": "🍰",
       "kind": "dish",
-      "price": 190
+      "price": 810
     },
     {
       "id": "strawberry_milk",
       "name": "Sữa dâu",
       "icon": "🍓",
       "kind": "dish",
-      "price": 60
+      "price": 117
     },
     {
       "id": "honey_tea",
       "name": "Trà mật ong oải hương",
       "icon": "🍵",
       "kind": "dish",
-      "price": 85
+      "price": 131
     },
     {
       "id": "yarn",
       "name": "Cuộn len",
       "icon": "🧶",
       "kind": "goods",
-      "price": 100
+      "price": 240
     },
     {
       "id": "silk",
       "name": "Tấm lụa",
       "icon": "🧵",
       "kind": "goods",
-      "price": 90
+      "price": 198
     },
     {
       "id": "certificate",
