@@ -8,6 +8,7 @@ import { makeSprite } from '../lib/pixel';
 const tankSprite = () => makeSprite('dive-tank', 4, 10, p => { p.rect(0, 1, 4, 9, '#f6c64e'); p.rect(1, 0, 2, 1, '#8a8098'); p.rect(0, 3, 4, 1, '#c8a020'); p.rect(1, 2, 1, 7, '#ffe08a'); });
 import { useScale } from './Stage';
 import { actFrame, actMs, type Act } from '../lib/acts';
+import { critterSprite } from '../lib/critters';
 
 const SPEED = 45; // pixel logic mỗi giây
 
@@ -51,10 +52,12 @@ interface Props {
   faceBack?: boolean;
   /** Đang ngồi trang điểm: tay đưa lên mặt theo nhịp */
   makeup?: boolean;
+  /** Đang cưỡi ngựa */
+  riding?: boolean;
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom, faceBack, makeup }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom, faceBack, makeup, riding }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -141,6 +144,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
       onClick={onClick && (e => { e.stopPropagation(); onClick(); })}
     >
       {dancing && dance!.both && <span key={`h${dance!.at}`} className="dance-hearts">💞</span>}
+      {riding && (() => { const h = critterSprite('horse', moving && step % 2 ? 1 : 0), k = 1.8; return <img src={h.url} alt="" draggable={false} className="mount" style={{ position: 'absolute', width: h.w * ps * k, height: h.h * ps * k, left: -h.w * ps * k / 2, top: -h.h * ps * k + 2 * ps, transform: shown.left ? 'scaleX(-1)' : undefined }} />; })()}
       <img
         key={dancing ? `d${dance!.at}` : 'still'} className={pair ? `duo duo-${pair.cls} duo-${duo!.side}` : dancing ? `dancing dm-${dance!.m}` : undefined}
         src={sprite.url} alt={name ?? ''} draggable={false}
@@ -149,6 +153,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
           marginLeft: -Math.round(ax * ps), transformOrigin: `${Math.round(ax * ps)}px 50%`, marginTop: -Math.round(sprite.h * ps),
           transform: pair ? undefined : shown.left ? 'scaleX(-1)' : undefined,
           scale: pair?.f === 'side' && duo!.side === 'R' ? '-1 1' : undefined,
+          translate: riding ? `0 ${-Math.round(13 * ps)}px` : undefined, position: riding ? 'relative' : undefined,
         }}
       />
       {umbrella && !hold && (() => {

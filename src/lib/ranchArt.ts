@@ -64,3 +64,11 @@ export const hiveSprite = () => makeSprite('hive:v1', 14, 16, p => {
 export const ranchSignSprite = () => makeSprite('ranch-sign', 22, 18, p => {
   p.rect(10, 8, 2, 10, '#8a5a3c'); p.rect(1, 1, 20, 9, '#e8c890'); p.rect(1, 1, 20, 1, '#fff2d0'); p.rect(4, 4, 3, 3, '#f59ab3'); p.rect(9, 4, 3, 3, '#f6c64e'); p.rect(14, 4, 3, 3, '#a5d470');
 });
+
+/** Chuồng ngựa nhỏ: mái gỗ đỏ, máng cỏ */
+export const stableSprite = () => makeSprite('stable', 30, 26, p => {
+  for (let i = 0; i < 7; i++) p.rect(1 + i, i, 28 - i * 2, 1, i % 2 ? '#c8483a' : '#e8604a');
+  p.rect(3, 7, 24, 19, '#c88a5a'); for (let x = 4; x < 27; x += 4) p.rect(x, 7, 1, 19, '#a8693f');
+  p.rect(10, 13, 10, 13, '#5a3a2a'); p.rect(11, 14, 8, 12, '#3a2a20');
+  p.rect(1, 22, 8, 4, '#a8693f'); p.rect(2, 21, 6, 2, '#e8d070');
+});

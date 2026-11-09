@@ -867,6 +867,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <span className={`hud-more ${hudOpen ? 'open' : ''}`} onClick={e => { if ((e.target as HTMLElement).closest('button:not([data-keep])')) setHudOpen(false); }}>
         <span title="Số ngày cả hai cùng ghé">💞 {bridge.planks}</span>
         <span title="Điểm thiện cảm — mỗi lần ăn một món +1">💗 {affection}</span>
+        {live.mine.horse && <button className="chip glow" onClick={() => { live.update({ horse: false }); live.say('🐴 Cảm ơn bạn ngựa!'); }}>🐴 Xuống ngựa</button>}
         <button className={`chip ${quizLeft ? 'glow' : ''}`} onClick={() => setSheet({ kind: 'quizday' })}>🧠 Đố vui {quizRight}/5</button>
         <span title="Trời trong làng">{wxIcon(myView)} {myWeather.temp}° · {clock(myTime)}</span>
         {combos.map(c => {
@@ -1092,7 +1093,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onInvite={() => askBed('love', sheet.bed)} onBaby={() => askBed('baby', sheet.bed)} onClose={close} />
       )}
       {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={myTime.date} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
-      {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} />}
+      {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} onRide={() => { close(); live.update({ horse: true }); live.say('🐎 Hí hí! Đi dạo nào!'); enter('town', TOWN.toFarm); }} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'workshop' && <WorkshopSheet inventory={inventory} together={!!partnerHere} partnerName={partnerName} onClose={close} />}

@@ -2,12 +2,12 @@
 // vải (len, lụa) để may đồ. Giá & thời gian ở đây; máy chủ chỉ chặn số vô lý.
 import type { Pt } from './world';
 
-export type AnimalKind = 'chicken' | 'duck' | 'cow' | 'goat' | 'sheep' | 'silkworm' | 'bee';
+export type AnimalKind = 'chicken' | 'duck' | 'cow' | 'goat' | 'sheep' | 'silkworm' | 'bee' | 'horse' | 'carp' | 'tilapia' | 'catfish' | 'koi';
 export interface AnimalDef {
   kind: AnimalKind; name: string; icon: string; price: number;
   product: string; n: number; hours: number;         // thu được gì, bao nhiêu, mấy tiếng một lần
   eats: string[];                                    // thức ăn chấp nhận (món đầu tiên có trong túi sẽ được dùng)
-  pen: 'coop' | 'barn' | 'meadow' | 'hut' | 'hive';
+  pen: 'coop' | 'barn' | 'meadow' | 'hut' | 'hive' | 'stable' | 'pond';
   verb: string;                                      // động từ thu hoạch
 }
 const GRAINS = ['feed', 'corn', 'rice'], GREENS = ['feed', 'carrot', 'cabbage', 'corn', 'potato'], FLOWERS = ['feed', 'rose_bloom', 'tulip_bloom', 'lavender', 'sunflower_bloom', 'daisy_bloom', 'sakura_bloom'];
@@ -18,6 +18,12 @@ export const ANIMALS: AnimalDef[] = [
   { kind: 'goat', name: 'Dê', icon: '🐐', price: 300, product: 'goat_milk', n: 1, hours: 10, eats: GREENS, pen: 'barn', verb: 'Vắt sữa dê' },
   { kind: 'sheep', name: 'Cừu', icon: '🐑', price: 360, product: 'wool', n: 2, hours: 24, eats: GREENS, pen: 'meadow', verb: 'Xén lông' },
   { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 90, product: 'cocoon', n: 3, hours: 24, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
+  // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (giá bán ≥ 3 lần vốn: cám + tiền giống chia 5 lứa)
+  { kind: 'horse', name: 'Ngựa', icon: '🐴', price: 600, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
+  { kind: 'carp', name: 'Cá chép giống', icon: '🐟', price: 80, product: 'carp', n: 2, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá chép' },
+  { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 60, product: 'tilapia', n: 3, hours: 10, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
+  { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 70, product: 'catfish', n: 2, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
+  { kind: 'koi', name: 'Cá koi giống', icon: '🎏', price: 300, product: 'koi', n: 1, hours: 24, eats: ['feed'], pen: 'pond', verb: 'Vớt cá koi' },
   { kind: 'bee', name: 'Tổ ong', icon: '🐝', price: 260, product: 'honey', n: 1, hours: 24, eats: FLOWERS, pen: 'hive', verb: 'Lấy mật' },
 ];
 export const animalDef = (k: string) => ANIMALS.find(a => a.kind === k) ?? ANIMALS[0];
@@ -69,6 +75,9 @@ export const RANCH = {
     meadow: { x0: 14, x1: 100, y0: 132, y1: 178 },
     hut: { x0: 150, x1: 186, y0: 140, y1: 164 },
     hive: { x0: 196, x1: 244, y0: 146, y1: 176 },
+    // hai chuồng này nằm trên bản đồ NÔNG TRẠI
+    stable: { x0: 98, x1: 176, y0: 18, y1: 50 },
+    pond: { x0: 192, x1: 244, y0: 22, y1: 42 },
   } as Record<AnimalDef['pen'], { x0: number; x1: number; y0: number; y1: number }>,
 };
 export function homeIn(pen: AnimalDef['pen'], i: number): Pt {

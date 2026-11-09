@@ -1742,6 +1742,41 @@
       "icon": "🌰",
       "kind": "goods",
       "price": 12
+    },
+    {
+      "id": "horse_hair",
+      "name": "Bờm ngựa",
+      "icon": "🐴",
+      "kind": "goods",
+      "price": 150
+    },
+    {
+      "id": "carp",
+      "name": "Cá chép",
+      "icon": "🐟",
+      "kind": "goods",
+      "price": 39
+    },
+    {
+      "id": "tilapia",
+      "name": "Cá rô phi",
+      "icon": "🐟",
+      "kind": "goods",
+      "price": 22
+    },
+    {
+      "id": "catfish",
+      "name": "Cá trê",
+      "icon": "🐟",
+      "kind": "goods",
+      "price": 36
+    },
+    {
+      "id": "koi",
+      "name": "Cá koi",
+      "icon": "🎏",
+      "kind": "goods",
+      "price": 210
     }
   ],
   "animals": [

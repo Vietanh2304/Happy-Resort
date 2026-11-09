@@ -25,6 +25,7 @@ const SPECS: Record<string, Spec> = {
   chicken: { kind: 'bird', body: '#fffaf0', wing: '#e8dcc8', belly: '#ffffff', beak: '#f6a03a', legs: '#f6a03a', head: '#fffaf0', comb: true },
   cow: { kind: 'four', body: '#fffaf0', light: '#ffe0e8', dark: '#3a3448', ear: 'round', tail: 'long', long: true, spots: '#3a3448', big: true },
   goat: { kind: 'four', body: '#e8e0d4', light: '#fffaf0', dark: '#8a7a6a', ear: 'antler', tail: 'puff', beard: true },
+  horse: { kind: 'four', body: '#a8693f', light: '#d8a878', dark: '#5a3a2a', ear: 'point', tail: 'long', long: true, big: true },
   sheep: { kind: 'four', body: '#fffaf0', light: '#ffffff', dark: '#5a4a4a', ear: 'flop', tail: 'puff', fluffy: true },
   crab: { kind: 'crab' }, turtle: { kind: 'turtle' }, frog: { kind: 'frog' }, butterfly: { kind: 'butterfly' },
   fish: { kind: 'fish' }, octopus: { kind: 'octopus' }, seal: { kind: 'seal' },

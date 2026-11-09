@@ -8,15 +8,15 @@ import { sellPrice } from '../lib/game';
 import { emojiSprite } from '../lib/pixel';
 import { notify } from '../lib/realtime';
 import { animalDef, animalState, ANIMALS, FEED_PRICE, GROUPS, homeIn, RANCH, RECIPES, waitText, type AnimalDef } from '../lib/ranch';
-import { hiveSprite, ranchSignSprite, silkTraySprite } from '../lib/ranchArt';
+import { hiveSprite, ranchSignSprite, silkTraySprite, stableSprite } from '../lib/ranchArt';
 import { toast, toastError } from '../lib/toast';
 import type { Pt } from '../lib/world';
 import { Sheet } from './Sheet';
 import { Spr, Tag, useScale } from './Stage';
 import { Wanderer } from './Wander';
 
-const PEN_NAME: Record<AnimalDef['pen'], string> = { coop: '🐔 Chuồng gà vịt', barn: '🐄 Chuồng bò dê', meadow: '🐑 Đồng cỏ cừu', hut: '🐛 Nhà tằm', hive: '🐝 Tổ ong' };
-const PEN_TAG: Record<AnimalDef['pen'], Pt> = { coop: { x: 52, y: 40 }, barn: { x: 202, y: 24 }, meadow: { x: 57, y: 128 }, hut: { x: 168, y: 122 }, hive: { x: 220, y: 142 } };
+const PEN_NAME: Record<AnimalDef['pen'], string> = { coop: '🐔 Chuồng gà vịt', barn: '🐄 Chuồng bò dê', meadow: '🐑 Đồng cỏ cừu', hut: '🐛 Nhà tằm', hive: '🐝 Tổ ong', stable: '🐴 Chuồng ngựa', pond: '🐟 Ao cá' };
+const PEN_TAG: Partial<Record<AnimalDef['pen'], Pt>> = { coop: { x: 52, y: 40 }, barn: { x: 202, y: 24 }, meadow: { x: 57, y: 128 }, hut: { x: 168, y: 122 }, hive: { x: 220, y: 142 } };
 
 export function RanchContent({ animals, go, onAnimal, onShop, onWorkshop, onTailor }: {
   animals: api.Animal[]; go: (to: Pt, then?: () => void) => void; onAnimal: (id: string) => void; onShop: () => void; onWorkshop: () => void; onTailor: () => void;
@@ -28,7 +28,7 @@ export function RanchContent({ animals, go, onAnimal, onShop, onWorkshop, onTail
   const hotStyle = (x: number, y: number, ww: number, h: number) => ({ left: x * s, top: y * s, width: ww * s, height: h * s });
   return (
     <>
-      {(Object.keys(PEN_TAG) as AnimalDef['pen'][]).map(pen => <Tag key={pen} x={PEN_TAG[pen].x} y={PEN_TAG[pen].y} className="label">{PEN_NAME[pen]}</Tag>)}
+      {(Object.keys(PEN_TAG) as AnimalDef['pen'][]).map(pen => <Tag key={pen} x={PEN_TAG[pen]!.x} y={PEN_TAG[pen]!.y} className="label">{PEN_NAME[pen]}</Tag>)}
       <Tag x={w.x - 15} y={w.y - 44} className="label" onClick={() => go(w.door, onWorkshop)}>🧀 Chế biến</Tag>
       <Tag x={w.x + 15} y={w.y - 44} className="label" onClick={() => go(w.tailor, onTailor)}>🧵 Xưởng may</Tag>
       <button className="hot" title="Nhà chế biến" style={hotStyle(w.x - 30, w.y - 30, 30, 30)} onClick={e => { e.stopPropagation(); go(w.door, onWorkshop); }} />
@@ -58,7 +58,7 @@ function feedFrom(def: AnimalDef, inv: api.InvRow[]) {
   return def.eats.find(id => inv.some(r => r.item_id === id && r.qty > 0)) ?? null;
 }
 
-export function AnimalSheet({ animal, inventory, onClose }: { animal: api.Animal; inventory: api.InvRow[]; onClose: () => void }) {
+export function AnimalSheet({ animal, inventory, onClose, onRide }: { animal: api.Animal; inventory: api.InvRow[]; onClose: () => void; onRide?: () => void }) {
   const st = animalState(animal);
   const def = st.def;
   const food = feedFrom(def, inventory);
@@ -86,6 +86,7 @@ export function AnimalSheet({ animal, inventory, onClose }: { animal: api.Animal
   const left = st.nextAt - Date.now();
   return (
     <Sheet title={`${def.icon} ${animal.name || def.name}`} onClose={onClose}>
+      {def.kind === 'horse' && onRide && <button className="btn" onClick={onRide}>🐎 Cưỡi ngựa dạo làng</button>}
       <p className="muted">
         {st.hungry ? '🍽️ Đang đói — cho ăn để có sản phẩm.' : '😊 No bụng rồi.'}{' '}
         {st.ready ? `✨ ${def.verb} được rồi!` : st.fed ? `Đợi ${waitText(left)} nữa để ${def.verb.toLowerCase()}.` : ''}
@@ -155,5 +156,23 @@ export function WorkshopSheet({ inventory, together, partnerName, onClose }: { i
         })}
       </ul>
     </Sheet>
+  );
+}
+
+/** Trên nông trại: chuồng ngựa (giữa nhà kho và ao) + cá bơi trong ao */
+export function FarmAnimals({ animals, go, onAnimal }: { animals: api.Animal[]; go: (to: Pt, then?: () => void) => void; onAnimal: (id: string) => void }) {
+  const badge = (a: api.Animal) => { const st = animalState(a); return st.ready ? '✨' : st.hungry ? '🍽️' : undefined; };
+  const horses = animals.filter(a => animalDef(a.kind).pen === 'stable'), fish = animals.filter(a => animalDef(a.kind).pen === 'pond');
+  const S = RANCH.pens.stable, P = RANCH.pens.pond;
+  return (
+    <>
+      <Spr sprite={stableSprite()} x={110} y={44} title="🐴 Chuồng ngựa" />
+      <Tag x={110} y={28} className="label">🐴 Chuồng ngựa{horses.length ? ` · ${horses.length}` : ''}</Tag>
+      <Tag x={218} y={46} className="label">🐟 Ao cá{fish.length ? ` · ${fish.length}` : ''}</Tag>
+      {horses.map((a, i) => <Wanderer key={a.id} id="horse" home={{ x: S.x0 + 34 + i * 14, y: S.y0 + 22 }} r={14} box={{ ...S, x0: S.x0 + 22 }} name={`🐴 ${a.name || 'Ngựa'}`} badge={badge(a)}
+        onClick={() => go({ x: S.x0 + 40 + i * 10, y: 62 }, () => onAnimal(a.id))} />)}
+      {fish.map((a, i) => <Wanderer key={a.id} id="fish" home={{ x: P.x0 + 10 + (i % 4) * 11, y: P.y0 + 10 + Math.floor(i / 4) * 6 }} r={8} box={P} scale={0.45} name={`${animalDef(a.kind).icon} ${animalDef(a.kind).name.replace(' giống', '')}`} badge={badge(a)}
+        onClick={() => go({ x: 220, y: 62 }, () => onAnimal(a.id))} />)}
+    </>
   );
 }
