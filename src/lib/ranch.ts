@@ -12,19 +12,19 @@ export interface AnimalDef {
 }
 const GRAINS = ['feed', 'corn', 'rice'], GREENS = ['feed', 'carrot', 'cabbage', 'corn', 'potato'], FLOWERS = ['feed', 'rose_bloom', 'tulip_bloom', 'lavender', 'sunflower_bloom', 'daisy_bloom', 'sakura_bloom'];
 export const ANIMALS: AnimalDef[] = [
-  { kind: 'chicken', name: 'Gà mái', icon: '🐔', price: 13, product: 'egg', n: 2, hours: 6, eats: GRAINS, pen: 'coop', verb: 'Nhặt trứng' },
-  { kind: 'duck', name: 'Vịt', icon: '🦆', price: 13, product: 'duck_egg', n: 1, hours: 8, eats: GRAINS, pen: 'coop', verb: 'Nhặt trứng vịt' },
-  { kind: 'cow', name: 'Bò sữa', icon: '🐄', price: 20, product: 'milk', n: 2, hours: 12, eats: GREENS, pen: 'barn', verb: 'Vắt sữa' },
-  { kind: 'goat', name: 'Dê', icon: '🐐', price: 13, product: 'goat_milk', n: 1, hours: 10, eats: GREENS, pen: 'barn', verb: 'Vắt sữa dê' },
-  { kind: 'sheep', name: 'Cừu', icon: '🐑', price: 26, product: 'wool', n: 2, hours: 24, eats: GREENS, pen: 'meadow', verb: 'Xén lông' },
-  { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 22, product: 'cocoon', n: 3, hours: 24, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
+  { kind: 'chicken', name: 'Gà mái', icon: '🐔', price: 50, product: 'egg', n: 2, hours: 6, eats: GRAINS, pen: 'coop', verb: 'Nhặt trứng' },
+  { kind: 'duck', name: 'Vịt', icon: '🦆', price: 50, product: 'duck_egg', n: 1, hours: 8, eats: GRAINS, pen: 'coop', verb: 'Nhặt trứng vịt' },
+  { kind: 'cow', name: 'Bò sữa', icon: '🐄', price: 60, product: 'milk', n: 2, hours: 12, eats: GREENS, pen: 'barn', verb: 'Vắt sữa' },
+  { kind: 'goat', name: 'Dê', icon: '🐐', price: 55, product: 'goat_milk', n: 1, hours: 10, eats: GREENS, pen: 'barn', verb: 'Vắt sữa dê' },
+  { kind: 'sheep', name: 'Cừu', icon: '🐑', price: 60, product: 'wool', n: 2, hours: 24, eats: GREENS, pen: 'meadow', verb: 'Xén lông' },
+  { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 50, product: 'cocoon', n: 3, hours: 24, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
   // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (mỗi lần thu 1 con, bán gấp 3 lần tiền giống)
-  { kind: 'horse', name: 'Ngựa', icon: '🐴', price: 50, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
+  { kind: 'horse', name: 'Ngựa', icon: '🐴', price: 60, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
   { kind: 'carp', name: 'Cá chép giống', icon: '🐟', price: 80, product: 'carp', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá chép' },
   { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 60, product: 'tilapia', n: 1, hours: 10, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
   { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 70, product: 'catfish', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
   { kind: 'koi', name: 'Cá koi giống', icon: '🎏', price: 300, product: 'koi', n: 1, hours: 24, eats: ['feed'], pen: 'pond', verb: 'Vớt cá koi' },
-  { kind: 'bee', name: 'Tổ ong', icon: '🐝', price: 15, product: 'honey', n: 1, hours: 24, eats: FLOWERS, pen: 'hive', verb: 'Lấy mật' },
+  { kind: 'bee', name: 'Tổ ong', icon: '🐝', price: 55, product: 'honey', n: 1, hours: 24, eats: FLOWERS, pen: 'hive', verb: 'Lấy mật' },
 ];
 export const animalDef = (k: string) => ANIMALS.find(a => a.kind === k) ?? ANIMALS[0];
 export const FEED_PRICE = 10;   // một bao cám ở trang trại
