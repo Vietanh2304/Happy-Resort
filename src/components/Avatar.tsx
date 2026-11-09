@@ -111,6 +111,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
   const pair = duo && !moving && !sitting ? duoPose(duo, dancing ? dance!.m : null) : null;
   const sprite = af !== null ? characterSprite(look, sitting ? 'actsit' : 'act', undefined, 'front', af)
     : pair ? (pair.f === 'side' ? characterSprite(look, pair.cls === 'hug' ? 'embrace' : pair.cls === 'kiss' ? 'kiss' : 'idle', undefined, 'side') : characterSprite(look, 'act', undefined, 'front', pair.f))
+    : riding ? characterSprite(look, 'sit', undefined, 'side', 0)            // ngồi yên trên lưng ngựa, chỉ ngựa bước
     : makeup && !moving ? characterSprite(look, 'makeup', undefined, faceBack ? 'back' : 'front', step)
     : dancing ? characterSprite(look, 'dance', undefined, 'front', dance!.m) : characterSprite(look, sitting ? 'sit' : moving ? 'walk' : 'idle', hold && !moving ? { ...hold, phase } : undefined, sitting ? (faceBack ? 'back' : 'front') : faceBack && !moving ? 'back' : view, step);
   const ax = sprite.ax ?? sprite.w / 2;

@@ -38,12 +38,23 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
   const [ribbon, setRibbon] = useState(RIBBONS[0]);
   const flowers = ['rose_bloom', 'tulip_bloom', 'lavender', 'daisy_bloom', 'sunflower_bloom', 'sakura_bloom'];
   const cnt = (id: string) => stems.filter(x => x === id).length;
-  const o = sel === null ? null : orders[sel];
-  const match = !!o && o.want.every(([id, n]) => cnt(id) === n) && stems.length === o.want.reduce((s, [, n]) => s + n, 0);
+  // sel = -1: cắm tự do (không theo đơn) — cắm xong thành một bó hoa trong túi đồ
+  const FREE = { who: 'Bạn', icon: '🌸', occasion: 'Bó hoa tự do', want: [] as [string, number][], line: '', reward: 0 };
+  const o = sel === null ? null : sel === -1 ? FREE : orders[sel];
+  const match = !!o && (sel === -1 ? stems.length >= 3 : o.want.every(([id, n]) => cnt(id) === n) && stems.length === o.want.reduce((s, [, n]) => s + n, 0));
   const keyOf = (i: number) => `flower:${date}:${block}:${i}`;
   const deliver = async () => {
     if (!o || sel === null) return;
     setBusy(true);
+    if (sel === -1) {
+      try {
+        const take = flowers.map(id => ({ id, n: cnt(id) })).filter(x => x.n);
+        await api.craft(take, [{ id: 'bouquet', n: 1 }]);
+        toast('💐 Bó hoa xinh quá! Đã cất vào túi đồ — tặng người ấy hoặc bán đều được');
+        notify('inventory', 'collection'); setSel(null); setStems([]);
+      } catch (e) { toastError(e); }
+      setBusy(false); return;
+    }
     try {
       await api.craft(o.want.map(([id, n]) => ({ id, n })));
       if (await api.grantCoins(keyOf(sel), o.reward)) { live.say(`💐 ${o.who}: “${o.line}”`); toast(`💝 Giao bó hoa ${o.occasion} cho ${o.who} · +${o.reward} xu`); }
@@ -56,7 +67,7 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
   const SLOTS = [[50, 18], [34, 24], [66, 24], [20, 36], [80, 36], [42, 40], [58, 40], [50, 52]];
   if (o && sel !== null) return (
     <Sheet title={`💐 Cắm hoa · ${o.occasion}`} onClose={onClose}>
-      <p className="muted small-note">{o.icon} {o.who} muốn: <b>{o.want.map(([id, n]) => `${item(id).icon} ${item(id).name} ×${n}`).join(' + ')}</b></p>
+      <p className="muted small-note">{sel === -1 ? '🌸 Cắm tự do: chọn hoa nào cũng được, từ 3 cành trở lên' : <>{o.icon} {o.who} muốn: <b>{o.want.map(([id, n]) => `${item(id).icon} ${item(id).name} ×${n}`).join(' + ')}</b></>}</p>
       {!doneView ? (
         <>
           <div className="fp-table">
@@ -75,7 +86,7 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
             ); })}
           </div>
           <div className="row wrap">
-            <button className="btn" disabled={!match} onClick={() => setDoneView(true)}>{match ? '✨ Cắm xong, gói lại' : `🌷 Cắm đủ hoa khách muốn (${stems.length}/${o.want.reduce((s, [, n]) => s + n, 0)})`}</button>
+            <button className="btn" disabled={!match} onClick={() => setDoneView(true)}>{match ? '✨ Cắm xong, gói lại' : sel === -1 ? `🌷 Cắm ít nhất 3 cành (${stems.length})` : `🌷 Cắm đủ hoa khách muốn (${stems.length}/${o.want.reduce((s, [, n]) => s + n, 0)})`}</button>
             <button className="btn ghost" onClick={() => setStems([])}>↺ Cắm lại</button>
             <button className="btn ghost" onClick={() => { setSel(null); setStems([]); }}>← Đơn khác</button>
           </div>
@@ -95,7 +106,7 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
             {RIBBONS.map(c => <button key={c} className={`chip ${ribbon === c ? 'on' : ''}`} onClick={() => setRibbon(c)}><i className="swatch" style={{ background: c }} /> Nơ</button>)}
           </div>
           <div className="row wrap">
-            <button className="btn" disabled={busy} onClick={async () => { await deliver(); setDoneView(false); }}>💝 Giao cho khách · +{o.reward} xu</button>
+            <button className="btn" disabled={busy} onClick={async () => { await deliver(); setDoneView(false); }}>{sel === -1 ? '🎁 Cất bó hoa vào túi' : `💝 Giao cho khách · +${o.reward} xu`}</button>
             <button className="btn ghost" onClick={() => setDoneView(false)}>← Cắm lại</button>
           </div>
         </>
@@ -105,6 +116,7 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
   return (
     <Sheet title="🌸 Tiệm hoa của Hy" onClose={onClose}>
       <p className="muted">Hoa tự trồng ở nông trại đem cắm thành bó. Cứ 4 tiếng lại có 3 khách mới (lượt sau: {left(nextBlockIn(hour, minute))}). Khách trả gấp 3 tiền hoa.</p>
+      <button className="btn" onClick={() => { setSel(-1); setStems([]); }}>🌸 Cắm tự do — ra lẵng hoa</button>
       <ul className="task-list">
         {orders.map((ord, i) => {
           const done = claimed.includes(keyOf(i));
@@ -114,7 +126,7 @@ export function FlowerShopSheet({ date, hour, minute, inventory, claimed, live, 
               <b>{ord.icon} {ord.who} · {ord.occasion}</b>
               <small className="muted">Muốn: {ord.want.map(([id, n]) => `${label(id, n)} (có ${have(inventory, id)})`).join(' + ')}</small>
               {done ? <span>✅ Đã giao — khách cảm ơn rối rít 💕</span>
-                : <button className="btn small" disabled={!ok} onClick={() => { setSel(i); setStems([]); }}>{ok ? '💐 Ra bàn cắm hoa' : '🌱 Chưa đủ hoa'}</button>}
+                : <button className="btn small" onClick={() => { setSel(i); setStems([]); }}>{ok ? '💐 Ra bàn cắm hoa' : '💐 Cắm thử (chưa đủ hoa)'}</button>}
             </li>
           );
         })}
