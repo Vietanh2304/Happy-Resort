@@ -19,7 +19,7 @@ export const ANIMALS: AnimalDef[] = [
   { kind: 'sheep', name: 'Cừu', icon: '🐑', price: 60, product: 'wool', n: 2, hours: 24, eats: GREENS, pen: 'meadow', verb: 'Xén lông' },
   { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 50, product: 'cocoon', n: 3, hours: 24, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
   // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (mỗi lần thu 1 con, bán gấp 3 lần tiền giống)
-  { kind: 'horse', name: 'Ngựa', icon: '🐴', price: 60, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
+  { kind: 'horse', name: 'Ngựa', icon: '🐴', price: 100, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
   { kind: 'carp', name: 'Cá chép giống', icon: '🐟', price: 80, product: 'carp', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá chép' },
   { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 60, product: 'tilapia', n: 1, hours: 10, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
   { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 70, product: 'catfish', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
