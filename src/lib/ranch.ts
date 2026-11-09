@@ -18,11 +18,11 @@ export const ANIMALS: AnimalDef[] = [
   { kind: 'goat', name: 'Dê', icon: '🐐', price: 300, product: 'goat_milk', n: 1, hours: 10, eats: GREENS, pen: 'barn', verb: 'Vắt sữa dê' },
   { kind: 'sheep', name: 'Cừu', icon: '🐑', price: 360, product: 'wool', n: 2, hours: 24, eats: GREENS, pen: 'meadow', verb: 'Xén lông' },
   { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 90, product: 'cocoon', n: 3, hours: 24, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
-  // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (giá bán ≥ 3 lần vốn: cám + tiền giống chia 5 lứa)
+  // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (mỗi lần thu 1 con, bán gấp 3 lần tiền giống)
   { kind: 'horse', name: 'Ngựa', icon: '🐴', price: 600, product: 'horse_hair', n: 1, hours: 6, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
-  { kind: 'carp', name: 'Cá chép giống', icon: '🐟', price: 80, product: 'carp', n: 2, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá chép' },
-  { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 60, product: 'tilapia', n: 3, hours: 10, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
-  { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 70, product: 'catfish', n: 2, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
+  { kind: 'carp', name: 'Cá chép giống', icon: '🐟', price: 80, product: 'carp', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá chép' },
+  { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 60, product: 'tilapia', n: 1, hours: 10, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
+  { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 70, product: 'catfish', n: 1, hours: 12, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
   { kind: 'koi', name: 'Cá koi giống', icon: '🎏', price: 300, product: 'koi', n: 1, hours: 24, eats: ['feed'], pen: 'pond', verb: 'Vớt cá koi' },
   { kind: 'bee', name: 'Tổ ong', icon: '🐝', price: 260, product: 'honey', n: 1, hours: 24, eats: FLOWERS, pen: 'hive', verb: 'Lấy mật' },
 ];
