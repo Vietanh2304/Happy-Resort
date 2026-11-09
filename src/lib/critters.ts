@@ -39,6 +39,7 @@ export const FLIERS = new Set(['butterfly']);
 export function critterSprite(id: string, f: 0 | 1) {
   if (id.startsWith('horse')) return horseSprite(id, f);
   if (id.startsWith('bird_')) return birdSprite(id, f);
+  if (id.startsWith('bf_')) return butterflySprite(id, f);
   const sp = SPECS[id] ?? SPECS.cat;
   return makeSprite(`critter:${id}:${f}`, 16, 14, p => draw(p, sp, f));
 }
@@ -150,5 +151,29 @@ export function birdSprite(id: string, f: 0 | 1) {
       p.rect(x, yy, w, 1, c.dark); p.px(x + w - 1, yy, wl);
     }
     p.rect(14, 4, 2, 2, '#1a1418'); p.px(14, 4, '#ffffff');                      // mắt to long lanh
+  });
+}
+
+/** Bướm vẽ riêng từng loài (nhìn từ trên, 2 khung: cánh mở / cánh khép) */
+const BUTTERFLIES: Record<string, { a: string; b: string; dot: string; edge: string }> = {
+  bf_red: { a: '#e8304a', b: '#a81830', dot: '#ffffff', edge: '#3a1418' },
+  bf_white: { a: '#fffaf0', b: '#e0dcd4', dot: '#a8b0c0', edge: '#6a6a7a' },
+  bf_purple: { a: '#b07ae0', b: '#7a48b0', dot: '#f0d8ff', edge: '#3a2050' },
+  bf_yellow: { a: '#f6d84a', b: '#e0a020', dot: '#fff8d0', edge: '#5a4010' },
+  bf_morpho: { a: '#3ab8f0', b: '#1a6ad0', dot: '#c8f4ff', edge: '#0a2040' },
+};
+export function butterflySprite(id: string, f: 0 | 1) {
+  const c = BUTTERFLIES[id] ?? BUTTERFLIES.bf_red;
+  return makeSprite(`bf:v3:${id}:${f}`, 18, 14, p => {
+    // cánh trái theo hàng [y, x0, x1]; cánh phải đối xứng qua thân (x 8..9). Cánh trên vểnh rộng, khe hở, cánh dưới nhỏ thuôn
+    const open: [number, number, number][] = [[1, 1, 4], [2, 0, 6], [3, 0, 7], [4, 1, 7], [5, 2, 7], [6, 4, 7], [8, 4, 7], [9, 3, 7], [10, 3, 7], [11, 4, 6], [12, 5, 6]];
+    const shut: [number, number, number][] = [[1, 5, 6], [2, 5, 7], [3, 5, 7], [4, 6, 7], [5, 6, 7], [6, 6, 7], [8, 6, 7], [9, 6, 7], [10, 6, 7]];
+    const rows = f ? shut : open;
+    for (const [y, x0, x1] of rows) for (let x = x0; x <= x1; x++) {
+      const col = x === x0 ? c.edge : y >= 8 ? c.b : x >= x1 - 1 ? c.b : c.a;
+      p.px(x, y, col); p.px(17 - x, y, col);
+    }
+    if (!f) for (const [x, y] of [[2, 3], [4, 2], [5, 9]]) { p.px(x, y, c.dot); p.px(17 - x, y, c.dot); }
+    p.rect(8, 3, 2, 9, '#2a2030'); p.px(7, 1, '#2a2030'); p.px(6, 0, '#2a2030'); p.px(10, 1, '#2a2030'); p.px(11, 0, '#2a2030');   // thân + râu
   });
 }

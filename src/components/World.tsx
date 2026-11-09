@@ -1548,7 +1548,7 @@ function FarmVisitors({ farm, date }: { farm: { cell: number; crop_id: string }[
         const near = flowers.find(r => r.crop_id === v.flower) ?? flowers[i % Math.max(1, flowers.length)];
         if (!near) return null;
         const home = { x: FARM.x + ((near.cell % FARM.cols) + 0.5) * FARM.cw, y: FARM.y + Math.floor(near.cell / FARM.cols) * FARM.ch + 4 };
-        return <FlyingVisitor key={v.id} id={v.bird ? v.id : 'butterfly'} home={home} name={`📸 ${v.name}`} className={`visitor hue-${v.id}`}
+        return <FlyingVisitor key={v.id} id={v.id} home={home} name={`📸 ${v.name}`} className={`visitor hue-${v.id}`}
           onClick={() => api.collect([`bug:${v.id}`]).then(() => { toast(`📸 Đã chụp ảnh ${v.name}! Xem trong 🦋 Sổ bướm & chim`); notify('collection'); }, toastError)} />;
       })}
     </>
@@ -1630,5 +1630,6 @@ function FlyingVisitor({ id, home, name, className, onClick }: { id: string; hom
     const t = setInterval(() => setAt({ x: home.x + (Math.random() * 2 - 1) * 30, y: home.y - 10 - Math.random() * 18 }), 1600);
     return () => clearInterval(t);
   }, [home.x, home.y]);
-  return <Follower sprite={critterSprite(id, 0)} walk={critterSprite(id, 1)} x={at.x} y={at.y} title={name} className={className} onClick={onClick} flap speed={18} />;
+  const s = useScale();   // nhỏ bằng nửa cỡ cảnh: chim sẻ / bướm nhỏ xíu so với người
+  return <Follower sprite={critterSprite(id, 0)} walk={critterSprite(id, 1)} x={at.x} y={at.y} title={name} className={className} onClick={onClick} flap speed={18} ps={s * (id.startsWith('bird_') ? 0.5 : 0.55)} />;
 }

@@ -1609,13 +1609,13 @@ textarea { resize: vertical; }
 
 /* Bướm & chim ghé vườn: tô màu theo loài */
 .spr.visitor { filter: drop-shadow(0 1px 0 #0003); }
-.spr.hue-bf_red { filter: hue-rotate(-40deg); }
-.spr.hue-bf_white { filter: hue-rotate(160deg) brightness(1.6) saturate(0.4); }
-.spr.hue-bf_purple { filter: hue-rotate(60deg); }
-.spr.hue-bf_yellow { filter: hue-rotate(-120deg); }
+.spr.hue-bf_red { filter: none; }
+.spr.hue-bf_white { filter: none; }
+.spr.hue-bf_purple { filter: none; }
+.spr.hue-bf_yellow { filter: none; }
 .spr.hue-bird_sparrow { filter: none; }
 .spr.hue-bird_robin { filter: none; }
-.spr.hue-bf_morpho { filter: hue-rotate(200deg); }
+.spr.hue-bf_morpho { filter: none; }
 .spr.pet.trick-sit { animation: pet-sit 0.8s ease-in-out 3; transform-origin: 50% 100%; }
 .spr.pet.trick-shake { animation: pet-shake 0.4s ease-in-out 6; transform-origin: 50% 100%; }
 .spr.pet.trick-roll { animation: pet-roll 1s linear 3; transform-origin: 50% 70%; }
