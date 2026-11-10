@@ -17,7 +17,7 @@ export const ANIMALS: AnimalDef[] = [
   { kind: 'cow', name: 'Bò sữa', icon: '🐄', price: 60, product: 'milk', n: 10, hours: 5 / 60, eats: GREENS, pen: 'barn', verb: 'Vắt sữa' },
   { kind: 'goat', name: 'Dê', icon: '🐐', price: 55, product: 'goat_milk', n: 5, hours: 5 / 60, eats: GREENS, pen: 'barn', verb: 'Vắt sữa dê' },
   { kind: 'sheep', name: 'Cừu', icon: '🐑', price: 60, product: 'wool', n: 10, hours: 5 / 60, eats: GREENS, pen: 'meadow', verb: 'Xén lông' },
-  { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 50, product: 'cocoon', n: 18, hours: 5 / 60, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
+  { kind: 'silkworm', name: 'Nong tằm', icon: '🐛', price: 50, product: 'cocoon', n: 15, hours: 5 / 60, eats: ['leaf', 'feed'], pen: 'hut', verb: 'Lấy kén' },
   // Ở nông trại: ngựa (chải lông lấy bờm, cưỡi dạo làng) và cá nước ngọt thả ao (giống 50–60 xu; lần thu nào cũng được 1 con bán gấp 3 tiền giống)
   { kind: 'horse', name: 'Ngựa nâu', icon: '🐴', price: 100, product: 'horse_hair', n: 5, hours: 5 / 60, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
   { kind: 'horse_white', name: 'Ngựa bạch', icon: '🐴', price: 120, product: 'horse_hair', n: 5, hours: 5 / 60, eats: GREENS, pen: 'stable', verb: 'Chải lông' },
@@ -26,7 +26,7 @@ export const ANIMALS: AnimalDef[] = [
   { kind: 'tilapia', name: 'Cá rô phi giống', icon: '🐟', price: 50, product: 'tilapia', n: 5, hours: 5 / 60, eats: ['feed'], pen: 'pond', verb: 'Kéo lưới cá rô phi' },
   { kind: 'catfish', name: 'Cá trê giống', icon: '🐟', price: 55, product: 'catfish', n: 5, hours: 5 / 60, eats: ['feed'], pen: 'pond', verb: 'Bắt cá trê' },
   { kind: 'koi', name: 'Cá koi giống', icon: '🎏', price: 60, product: 'koi', n: 5, hours: 5 / 60, eats: ['feed'], pen: 'pond', verb: 'Vớt cá koi' },
-  { kind: 'bee', name: 'Tổ ong', icon: '🐝', price: 55, product: 'honey', n: 6, hours: 5 / 60, eats: FLOWERS, pen: 'hive', verb: 'Lấy mật' },
+  { kind: 'bee', name: 'Tổ ong', icon: '🐝', price: 55, product: 'honey', n: 5, hours: 5 / 60, eats: FLOWERS, pen: 'hive', verb: 'Lấy mật' },
 ];
 export const animalDef = (k: string) => ANIMALS.find(a => a.kind === k) ?? ANIMALS[0];
 export const FEED_PRICE = 10;   // một bao cám ở trang trại
@@ -37,7 +37,7 @@ export function animalState(a: { kind: string; fed_at: string | null; collected_
   const fed = !!a.fed_at && now - Date.parse(a.fed_at) < 30 * 3.6e6;
   const hungry = !a.fed_at || now - Date.parse(a.fed_at) > 20 * 3.6e6;     // 20 tiếng thì đói lại (cho ăn mỗi ngày)
   const nextAt = a.collected_at ? Date.parse(a.collected_at) + d.hours * 3.6e6 : 0;
-  const ready = fed && now >= nextAt;
+  const ready = fed && now >= nextAt && d.pen !== 'pond';   // cá không thu sản phẩm: nuôi lớn rồi bán
   return { fed, hungry, ready, nextAt, def: d };
 }
 export const waitText = (ms: number) => { const h = ms / 3.6e6; return h >= 1 ? `${Math.ceil(h)} tiếng` : `${Math.max(1, Math.ceil(h * 60))} phút`; };
@@ -114,4 +114,13 @@ export const animalResale = (a: { kind: string; created_at?: string }, now = Dat
   return a.created_at && now - Date.parse(a.created_at) >= 24 * 3.6e6 ? Math.round(d.price * 1.5) : d.price;
 };
 
+/** Cá: không thu sản phẩm — cho ăn đủ 3 lần (mỗi lần cách 20 tiếng) là lớn, bán được gấp 3 giá giống; cứ 2 lần ăn đẻ 1 lứa cá con */
+export const FISH_GROWN = 3, FISH_SPAWN = 2;
+export const isFish = (kind: string) => animalDef(kind).pen === 'pond';
+export const fishInfo = (a: { kind: string; feeds?: number; spawned?: number }) => {
+  const feeds = a.feeds ?? 0, d = animalDef(a.kind);
+  return { feeds, grown: feeds >= FISH_GROWN, canSpawn: Math.floor(feeds / FISH_SPAWN) > (a.spawned ?? 0), price: feeds >= FISH_GROWN ? d.price * 3 : d.price };
+};
+/** Mỗi loại tối đa bao nhiêu (nong tằm, tổ ong: 2) */
+export const MAX_KIND: Partial<Record<string, number>> = { silkworm: 2, bee: 2 };
 export const isHorse = (kind: string) => kind.startsWith('horse');

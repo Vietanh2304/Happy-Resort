@@ -7,7 +7,7 @@ import { item } from '../lib/content';
 import { sellPrice } from '../lib/game';
 import { emojiSprite } from '../lib/pixel';
 import { notify } from '../lib/realtime';
-import { animalDef, animalResale, animalState, ANIMALS, FEED_PRICE, GROUPS, homeIn, RANCH, RECIPES, waitText, type AnimalDef } from '../lib/ranch';
+import { animalDef, animalResale, animalState, ANIMALS, FEED_PRICE, fishInfo, FISH_GROWN, FISH_SPAWN, GROUPS, isFish, MAX_KIND, homeIn, RANCH, RECIPES, waitText, type AnimalDef } from '../lib/ranch';
 import { hiveSprite, ranchSignSprite, silkTraySprite } from '../lib/ranchArt';
 import { toast, toastError } from '../lib/toast';
 import type { Pt } from '../lib/world';
@@ -42,11 +42,11 @@ export function RanchContent({ animals, go, onAnimal, onShop, onWorkshop, onTail
           onClick={at => go({ x: at.x, y: at.y + 8 }, () => onAnimal(a.id))} />;
       }))}
       {byPen('hut').map((a, i) => {
-        const b = RANCH.pens.hut, x = b.x0 + 10 + (i % 2) * 16, y = b.y0 + 10 + Math.floor(i / 2) * 8;
+        const b = RANCH.pens.hut, x = b.x0 + 9 + (i % 2) * 19, y = b.y0 + 10 + Math.floor(i / 2) * 12;
         return <div key={a.id}><Spr sprite={silkTraySprite(3)} x={x} y={y} title="🐛 Nong tằm" onClick={() => go({ x, y: y + 8 }, () => onAnimal(a.id))} />{badge(a) && <Tag x={x} y={y - 12} className="hint">{badge(a)}</Tag>}</div>;
       })}
       {byPen('hive').map((a, i) => {
-        const b = RANCH.pens.hive, x = b.x0 + 8 + (i % 3) * 16, y = b.y0 + 14 + Math.floor(i / 3) * 14;
+        const b = RANCH.pens.hive, x = b.x0 + 12 + (i % 2) * 24, y = b.y0 + 14 + Math.floor(i / 2) * 14;
         return <div key={a.id}><Spr sprite={hiveSprite()} x={x} y={y} title="🐝 Tổ ong" onClick={() => go({ x, y: y + 8 }, () => onAnimal(a.id))} />{badge(a) && <Tag x={x} y={y - 18} className="hint">{badge(a)}</Tag>}</div>;
       })}
     </>
@@ -85,6 +85,25 @@ export function AnimalSheet({ animal, inventory, onClose, onRide, riding, onDism
     notify('ranch', 'profiles'); toast(`💰 Đã bán ${def.name}`); onClose();
   });
   const left = st.nextAt - Date.now();
+  if (isFish(def.kind)) {
+    const f = fishInfo(animal);
+    const spawn = () => run(async () => { await api.ranchSpawn(animal.id); notify('ranch'); toast(`🐣 Cá đẻ lứa mới — thêm 1 con giống trong ao!`); });
+    const sellFish = () => run(async () => {
+      if (!confirm(f.grown ? `Bán con cá đã lớn này lấy ${f.price} xu?` : `Cá chưa lớn (mới ăn ${f.feeds}/${FISH_GROWN} lần) — bán chỉ được ${f.price} xu. Vẫn bán?`)) return;
+      await api.ranchSell(animal.id, f.price); notify('ranch', 'profiles'); toast(`💰 Bán cá được ${f.price} xu`); onClose();
+    });
+    return (
+      <Sheet title={`${def.icon} ${animal.name || def.name.replace(' giống', '')}`} onClose={onClose}>
+        <p className="muted">{f.grown ? '🐟 Cá đã lớn — đem bán được giá gấp 3!' : `🍽️ Đã ăn ${f.feeds}/${FISH_GROWN} lần — ăn đủ ${FISH_GROWN} lần là lớn.`} {st.hungry ? 'Đang đói.' : 'Vừa ăn xong, khoảng 20 tiếng sau cho ăn tiếp.'}</p>
+        <p className="muted small-note">Cứ {FISH_SPAWN} lần cho ăn cá đẻ 1 lứa cá con · mỗi lần cho ăn cách nhau ~20 tiếng</p>
+        <div className="row wrap">
+          <button className="btn" disabled={!st.hungry} onClick={() => void feed()}>🍽️ Cho ăn{food ? ` (${item(food).icon})` : ` (mua cám ${FEED_PRICE} xu)`}</button>
+          {f.canSpawn && <button className="btn" onClick={() => void spawn()}>🐣 Vớt cá con</button>}
+          <button className={`btn ${f.grown ? '' : 'small ghost'}`} onClick={() => void sellFish()}>💰 Bán cá ({f.price} xu)</button>
+        </div>
+      </Sheet>
+    );
+  }
   return (
     <Sheet title={`${def.icon} ${animal.name || def.name}`} onClose={onClose}>
       {def.kind.startsWith('horse') && (riding ? <button className="btn" onClick={onDismount}>🏠 Xuống ngựa, đưa về chuồng</button> : onRide && <button className="btn" onClick={onRide}>🐎 Cưỡi ngựa dạo làng</button>)}
@@ -102,7 +121,7 @@ export function AnimalSheet({ animal, inventory, onClose, onRide, riding, onDism
   );
 }
 
-export function RanchShopSheet({ count, coins, onClose }: { count: number; coins: number; onClose: () => void }) {
+export function RanchShopSheet({ count, coins, onClose, kinds = {} }: { count: number; coins: number; onClose: () => void; kinds?: Record<string, number> }) {
   const buy = async (d: AnimalDef) => {
     try { await api.ranchBuy(d.kind, d.price); notify('ranch', 'profiles'); toast(`${d.icon} Chào mừng ${d.name} về trang trại!`); }
     catch (e) { toastError(e); }
@@ -116,9 +135,9 @@ export function RanchShopSheet({ count, coins, onClose }: { count: number; coins
       <p className="muted small-note">Hũ xu: 🪙 {coins} · trang trại đang có {count}/24 con</p>
       <div className="bag-grid">
         {ANIMALS.map(d => (
-          <button key={d.kind} className="bag-item" disabled={coins < d.price} onClick={() => void buy(d)}>
+          <button key={d.kind} className="bag-item" disabled={coins < d.price || (kinds[d.kind] ?? 0) >= (MAX_KIND[d.kind] ?? 99)} onClick={() => void buy(d)}>
             <img src={emojiSprite(d.icon).url} className="px-img" alt="" /><small>{d.name}</small><small>🪙 {d.price}</small>
-            <small className="muted">{item(d.product).icon} mỗi {d.hours}h</small>
+            <small className="muted">{isFish(d.kind) ? `ăn ${FISH_GROWN} lần → bán ×3` : MAX_KIND[d.kind] ? `tối đa ${MAX_KIND[d.kind]} · đang có ${kinds[d.kind] ?? 0}` : `${item(d.product).icon} mỗi 5 phút`}</small>
           </button>
         ))}
       </div>
@@ -199,6 +218,13 @@ export function PenSheet({ pen, animals, inventory, onAnimal, onShop, onClose }:
   });
   const collectAll = () => run(async () => {
     let n = 0;
+    if (pen === 'pond') {
+      for (const a of list) if (fishInfo(a).canSpawn) { await api.ranchSpawn(a.id).catch(() => {}); n++; }
+      let sold = 0;
+      for (const a of list) { const f = fishInfo(a); if (f.grown) { await api.ranchSell(a.id, f.price); sold += f.price; } }
+      notify('ranch', 'profiles');
+      return toast(n || sold ? `${n ? `🐣 Vớt ${n} lứa cá con. ` : ''}${sold ? `💰 Bán cá lớn được ${sold} xu` : ''}` : 'Chưa có cá lớn hay lứa mới — cho ăn đủ lần nhé');
+    }
     for (const a of list.filter(x => animalState(x).ready)) { const d = animalDef(a.kind); if (await api.ranchCollect(a.id, d.product, d.n, d.hours)) n += d.n; }
     notify('ranch', 'inventory', 'collection');
     toast(n ? `✨ Thu được ${n} món` : 'Chưa có con nào thu được — cho ăn rồi đợi đủ giờ nhé');
@@ -212,12 +238,12 @@ export function PenSheet({ pen, animals, inventory, onAnimal, onShop, onClose }:
         <>
           <div className="row wrap">
             <button className="btn" disabled={busy} onClick={feedAll}>🍽️ Cho tất cả ăn</button>
-            <button className="btn ghost" disabled={busy} onClick={collectAll}>✨ {pen === 'stable' ? 'Chải lông hết' : 'Kéo lưới thu hết'}</button>
+            <button className="btn ghost" disabled={busy} onClick={collectAll}>✨ {pen === 'stable' ? 'Chải lông hết' : 'Vớt cá con + bán cá lớn'}</button>
           </div>
           <ul className="task-list">
             {list.map(a => { const st = animalState(a), d = st.def; return (
               <li key={a.id}><b>{d.icon} {a.name || d.name.replace(' giống', '')}</b>
-                <small className="muted">{st.ready ? `✨ ${d.verb} được rồi` : st.hungry ? '🍽️ Đang đói' : `⏳ ${waitText(st.nextAt - Date.now())} nữa`}</small>
+                <small className="muted">{isFish(a.kind) ? `${fishInfo(a).grown ? '🐟 Lớn rồi' : `ăn ${fishInfo(a).feeds}/${FISH_GROWN}`}${fishInfo(a).canSpawn ? ' · 🐣 có lứa mới' : ''}${st.hungry ? ' · 🍽️ đói' : ''}` : st.ready ? `✨ ${d.verb} được rồi` : st.hungry ? '🍽️ Đang đói' : `⏳ ${waitText(st.nextAt - Date.now())} nữa`}</small>
                 <button className="btn small ghost" onClick={() => onAnimal(a.id)}>Xem</button></li>
             ); })}
           </ul>

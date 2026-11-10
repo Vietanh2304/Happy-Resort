@@ -1123,7 +1123,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'bugbook' && <BugBookSheet me={me} onClose={close} />}
       {sheet?.kind === 'pen' && <PenSheet pen={sheet.pen} animals={animals} inventory={inventory} onAnimal={id => setSheet({ kind: 'animal', id })} onShop={() => { close(); enter('ranch'); }} onClose={close} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
-      {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} coins={couple?.coins ?? 0} onClose={close} />}
+      {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} kinds={animals.reduce<Record<string, number>>((m, a) => ({ ...m, [a.kind]: (m[a.kind] ?? 0) + 1 }), {})} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'workshop' && <WorkshopSheet inventory={inventory} together={!!partnerHere} partnerName={partnerName} onClose={close} />}
       {sheet?.kind === 'tailor' && <TailorSheet me={me} partnerName={partnerName} inventory={inventory} outfits={outfits} wearing={me.avatar.design}
         onWear={d => run(async () => { await api.updateProfile(me.id, { avatar: { ...me.avatar, design: d } }); reloadMe(); notify('profiles'); toast(d ? '👕 Đã mặc bộ đồ tự may' : '↩️ Đã mặc lại đồ cũ'); })} onClose={close} />}
