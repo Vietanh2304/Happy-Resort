@@ -3,7 +3,29 @@ import type { WeatherType } from './content';
 
 export interface Weather { type: WeatherType; temp: number; code: number }
 /** Thời tiết ngoài trời của cảnh đang xem — NPC ngoài trời mặc theo (World cập nhật mỗi lần vẽ) */
-export const outWx = { on: false, type: 'clear' as WeatherType, temp: 20 };
+export const outWx = { on: false, type: 'clear' as WeatherType, temp: 20, hour: 12, fest: '' };
+/** Câu nói vu vơ hợp hoàn cảnh: thời tiết, giờ giấc, lễ hội. kid = lời trẻ con */
+export function wxChatter(kid = false): string[] {
+  const o: string[] = [];
+  if (outWx.on) {
+    if (outWx.type === 'rain') o.push(...(kid ? ['Mưa rồi, nhảy vũng nước đi! 💦', 'Tớ quên áo mưa 😢', 'Ô của tớ màu vàng nè ☂️'] : ['Mưa to quá, may mà có ô ☂️', 'Mưa thế này phơi đồ không khô mất', 'Chạy nhanh vào trú mưa thôi!']));
+    if (outWx.type === 'snow') o.push(...(kid ? ['Ném tuyết không? ❄️', 'Nặn người tuyết đi!', 'Tuyết lạnh buốt tay luôn ⛄'] : ['Tuyết rơi đẹp ghê ❄️', 'Cẩn thận đường trơn nha', 'Về nhà uống gì nóng thôi']));
+    if (outWx.type === 'fog') o.push(kid ? 'Sương mù như trong phim ma 👻' : 'Sương dày thế, lái xe phải chậm');
+    if (outWx.temp < 10) o.push(kid ? 'Mẹ bắt tớ quàng khăn đó 🧣' : 'Lạnh quá, nhớ quàng khăn 🧣');
+    if (outWx.temp >= 32) o.push(kid ? 'Nóng quá, muốn ăn kem 🍦' : 'Nắng chang chang, uống nước nhiều vào ☀️');
+  }
+  const h = outWx.hour;
+  if (h < 10) o.push(kid ? 'Chào buổi sáng! 🌅' : 'Sáng sớm đã đông người ghê');
+  else if (h >= 11 && h < 13) o.push(kid ? 'Đói bụng quá, sắp tới giờ ăn trưa' : 'Trưa rồi, đi ăn thôi 🍜');
+  else if (h >= 21) o.push(kid ? 'Khuya rồi mà chưa ngủ hả?' : 'Khuya rồi, về sớm nghỉ ngơi đi 🌙');
+  if (outWx.fest) o.push(kid ? `Hôm nay ${outWx.fest} đó, vui quá! 🎉` : `${outWx.fest} vui vẻ nha! 🎉`);
+  return o;
+}
+/** Trộn câu theo hoàn cảnh vào câu thường (hoàn cảnh hay được nói hơn) */
+export function pickChatter(base: string[], n: number, kid = false) {
+  const c = wxChatter(kid);
+  return c.length && n % 3 !== 2 ? c[n % c.length] : base[n % base.length];
+}
 /** NPC: lạnh quàng khăn, rét mặc áo khoác */
 export function wxLook<T extends { outfit?: number; acc?: number; design?: unknown }>(look: T): T {
   if (!outWx.on) return look;

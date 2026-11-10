@@ -6,7 +6,7 @@ import { characterSprite } from '../lib/sprites';
 import type { Pt } from '../lib/world';
 import { Tag, useScale } from './Stage';
 import { Follower } from './Wander';
-import { wxLook, wxRain } from '../lib/weather';
+import { pickChatter, wxLook, wxRain } from '../lib/weather';
 const UMB = ['#5aa8e0', '#f6c445', '#8bc87a', '#e07a7a', '#b08ae0'];
 import { avatarPx } from './Avatar';
 
@@ -27,7 +27,7 @@ function Walker({ i }: { i: number }) {
       if (!alive) return;
       // đi một quãng tới điểm mới trên vỉa hè, đôi khi dừng lại nói vu vơ
       setAt(a => ({ x: Math.max(-6, Math.min(262, a.x + (Math.random() < 0.5 ? -1 : 1) * (40 + Math.random() * 90))), y: CITY.sidewalk.y0 + 6 + Math.floor(Math.random() * 20) }));
-      if (Math.random() < 0.15) { setSay(CHATTER[Math.floor(Math.random() * CHATTER.length)]); setTimeout(() => alive && setSay(null), 2600); }
+      if (Math.random() < 0.15) { setSay(pickChatter(CHATTER, Math.floor(Math.random() * 99))); setTimeout(() => alive && setSay(null), 2600); }
       setTimeout(step, 3000 + Math.random() * 3000);
     };
     const t = setTimeout(step, 400 + i * 350);
@@ -35,7 +35,7 @@ function Walker({ i }: { i: number }) {
   }, [i]);
   return (
     <>
-      <Follower sprite={characterSprite(wxLook(look), 'idle', undefined, 'side')} walk={characterSprite(wxLook(look), 'walk', undefined, 'side', 1)} umbrella={wxRain() ? UMB[i % UMB.length] : undefined} x={at.x} y={at.y} title="Người đi đường" ps={ps} onClick={() => setSay(CHATTER[i % CHATTER.length])} />
+      <Follower sprite={characterSprite(wxLook(look), 'idle', undefined, 'side')} walk={characterSprite(wxLook(look), 'walk', undefined, 'side', 1)} umbrella={wxRain() ? UMB[i % UMB.length] : undefined} x={at.x} y={at.y} title="Người đi đường" ps={ps} onClick={() => setSay(pickChatter(CHATTER, i + Math.floor(Date.now() / 3000)))} />
       {say && <Tag x={at.x} y={at.y - 30} className="bed-bubble">{say}</Tag>}
     </>
   );

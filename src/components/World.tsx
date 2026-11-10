@@ -65,6 +65,8 @@ import { cityBackground } from '../lib/cityArt';
 import { officeBackground } from '../lib/officeArt';
 import { ranchBackground } from '../lib/ranchArt';
 import { beachSetSprite, loungeBackground, type SeaSpot } from '../lib/seaView';
+/** Vũng nước khi mưa: [x, y, rộng] (toạ độ cảnh) */
+const PUDDLES: [number, number, number][] = [[30, 150, 18], [88, 128, 14], [140, 170, 20], [205, 140, 16], [60, 200, 15], [170, 215, 18]];
 import { liveStatus } from './SeedSheet';
 
 export interface Lantern { id: number; x: number; text: string; mine: boolean }
@@ -130,6 +132,7 @@ export interface WorldProps {
   shops?: { flower: () => void; bakery: (station?: string) => void; bugbook: () => void };
   /** Đang ôm / hôn nhau (cả hai cùng thấy): bên trái/phải của mình */
   couple?: { kind: 'hug' | 'kiss'; at: number; mySide: 'L' | 'R' } | null;
+  snowball?: { from: Pt; to: Pt; at: number } | null;
   hillReal: boolean;             // đang chọn "Giờ thật" (theo thời tiết thật)
   bath: BathWater;               // nước tắm đang chọn
   cinemaMode: 'movie' | 'karaoke';
@@ -325,7 +328,7 @@ function SceneContent(p: WorldProps) {
     else if (w.temp >= 30 && w.type === 'clear') l = { ...look, acc: look.acc ? look.acc : 6 };
     return { look: l, umbrella: w.type === 'rain' };
   };
-  { const w = p.myView.weather; outWx.on = !!w && def.outdoor && scene !== 'sky' && scene !== 'reef' && !(scene === 'hill' && !p.hillReal); if (w) { outWx.type = w.type; outWx.temp = w.temp; } }
+  { const w = p.myView.weather; outWx.on = !!w && def.outdoor && scene !== 'sky' && scene !== 'reef' && !(scene === 'hill' && !p.hillReal); if (w) { outWx.type = w.type; outWx.temp = w.temp; } outWx.hour = p.myView.time.hour; outWx.fest = p.theme ? ({ romantic: 'ngày đặc biệt', party: 'ngày hội', calm: 'ngày đáng nhớ', tet: 'Tết', lantern: 'Trung Thu', winter: 'Giáng Sinh' } as Record<string, string>)[p.theme] ?? '' : ''; }
   const myDress = dress(me.avatar, p.myView), theirDress = dress(partner?.avatar ?? {}, p.myView);
   const bedOf = (who: typeof live.mine | null) => (who && (who.act === 'sleep' || who.act === 'intimate') && who.bed ? p.decor.find(d => d.id === who.bed && d.island === scene) : undefined);
   const myBed = bedOf(live.mine), theirBed = p.partnerHere ? bedOf(theirs) : undefined;
@@ -496,6 +499,8 @@ function SceneContent(p: WorldProps) {
       )}
 
       {def.outdoor && realSky && wx === 'rain' && <div className="px-rain" style={{ '--s': s } as CSSProperties} />}
+      {def.outdoor && realSky && wx === 'rain' && PUDDLES.map(([x, y, w], i) => <i key={i} className="puddle" style={{ left: x * s, top: y * s, width: w * s, height: w * 0.32 * s, zIndex: y }} />)}
+      {p.snowball && Date.now() - p.snowball.at < 1500 && <i key={p.snowball.at} className="snowball" style={{ left: p.snowball.from.x * s, top: (p.snowball.from.y - 14) * s, '--dx': `${(p.snowball.to.x - p.snowball.from.x) * s}px`, '--dy': `${(p.snowball.to.y - p.snowball.from.y) * s}px`, width: 4 * s, height: 4 * s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'snow' && <div className="px-snow" style={{ '--s': s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'fog' && <div className="px-fog" />}
       {def.outdoor && scene !== 'hill' && <div className={`tint tint-${phase}`} />}

@@ -1676,3 +1676,12 @@ textarea { resize: vertical; }
 .bq-img.big { width: 216px; height: 279px; }
 .fp-table { cursor: pointer; min-height: 180px; align-items: center; }
 .k-ask { position: absolute; transform: translateX(-30%); z-index: 60; background: #fff; border: 2px solid var(--ink); border-radius: 8px; padding: 1px 6px; font-size: 12px; white-space: nowrap; }
+
+/* Vũng nước khi mưa: gợn sóng lan ra */
+.puddle { position: absolute; border-radius: 50%; background: rgba(120,150,190,.45); box-shadow: inset 0 1px 0 rgba(255,255,255,.35); pointer-events: none; transform: translate(-50%, -50%); }
+.puddle::after { content: ''; position: absolute; inset: 25%; border-radius: 50%; border: 1px solid rgba(255,255,255,.55); animation: ripple 1.6s ease-out infinite; }
+@keyframes ripple { from { transform: scale(.2); opacity: 1; } to { transform: scale(1.6); opacity: 0; } }
+/* Quả tuyết bay theo đường cong */
+.snowball { position: absolute; border-radius: 50%; background: #fff; box-shadow: 0 0 2px #9ab; z-index: 450; pointer-events: none; animation: snowfly .6s ease-in forwards, snowpop .4s .6s forwards; }
+@keyframes snowfly { 0% { transform: translate(0, 0); } 50% { transform: translate(calc(var(--dx) / 2), calc(var(--dy) / 2 - 30px)); } 100% { transform: translate(var(--dx), var(--dy)); } }
+@keyframes snowpop { to { transform: translate(var(--dx), var(--dy)) scale(3); opacity: 0; } }

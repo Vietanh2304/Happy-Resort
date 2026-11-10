@@ -44,6 +44,10 @@ export function festivalsOn(date: string, p: People): Festival[] {
       out.push({ id: `custom:${c.id}:${year}`, theme: c.theme, name: c.title, icon: c.icon, greet: `Hôm nay là ngày "${c.title}" ${c.icon}`, gift: [], custom: true });
     }
   }
+  if (md === '03-08' || md === '10-20') out.push({ id: `women${md}:${year}`, theme: 'romantic', name: md === '03-08' ? 'Quốc tế Phụ nữ' : 'Phụ nữ Việt Nam', icon: '🌷', greet: 'Ngày của phái đẹp — nhớ tặng hoa cho người ấy nha 🌷', gift: [{ id: 'bouquet', n: 1 }] });
+  if (md === '06-01') out.push({ id: `kids:${year}`, theme: 'party', name: 'Quốc tế Thiếu nhi', icon: '🎈', greet: 'Tết thiếu nhi! Các bé trong nhà được quà nè 🎈🍬', gift: [{ id: 'candy_box', n: 2 }] });
+  if (md === '10-31') out.push({ id: `halloween:${year}`, theme: 'party', name: 'Halloween', icon: '🎃', greet: 'Halloween vui vẻ! Không cho kẹo là bị ghẹo đó 🎃👻', gift: [{ id: 'pumpkin', n: 2 }, { id: 'candy_box', n: 1 }] });
+  if (md === '12-31' || md === '01-01') out.push({ id: `newyear:${md === '01-01' ? year : year + 1}`, theme: 'party', name: 'Năm mới dương lịch', icon: '🎆', greet: 'Đếm ngược nào! Năm mới cũng đi cùng nhau nhé 🎆', gift: [{ id: 'gift_box', n: 1 }] });
   return out;
 }
 

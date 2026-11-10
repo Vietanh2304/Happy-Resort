@@ -75,6 +75,7 @@ import { ShopSheet } from './ShopSheet';
 import { WishSheet } from './WishSheet';
 import { World, type Lantern, type View } from './World';
 import { CallButtons, CallTiles, EnterGate, RemoteAudio } from './Call';
+import { outWx } from '../lib/weather';
 import { ChatDock } from './ChatDock';
 
 type SheetState =
@@ -418,6 +419,20 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       sendEvent('couple-act', { kind, side });
       live.say(kind === 'hug' ? '🤗💕' : '💋');
     });
+  }
+  // Ném tuyết: chỉ khi tuyết rơi ngoài trời; quả tuyết bay từ mình sang người ấy (người ấy cũng thấy)
+  const [snowball, setSnowball] = useState<{ from: { x: number; y: number }; to: { x: number; y: number }; at: number } | null>(null);
+  useEffect(() => onEvent('snowball', (d: { from: { x: number; y: number }; to: { x: number; y: number } }) => {
+    setSnowball({ ...d, at: Date.now() });
+    setTimeout(() => { live.say('🥶 Á lạnh quá!'); toast(`❄️ ${partnerName} ném tuyết trúng bạn!`); }, 600);
+  }), [partnerName]); // eslint-disable-line react-hooks/exhaustive-deps
+  function throwSnow() {
+    if (!outWx.on || outWx.type !== 'snow') return toast('❄️ Chỉ ném tuyết được khi tuyết đang rơi ngoài trời');
+    if (!partnerHere || !theirs) return toast(`❄️ ${partnerName} cần ở cùng chỗ với bạn`);
+    const d = { from: { ...live.mine.pos }, to: { ...theirs.pos } };
+    setSnowball({ ...d, at: Date.now() });
+    sendEvent('snowball', d);
+    live.say('❄️ Hứng này!');
   }
   const [kitchenOpen, setKitchenOpen] = useState(false);
   const [playing, setPlaying] = useState<GameId | null>(null);
@@ -909,7 +924,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <World
           scene={scene} me={me} partner={partner} myView={myView} realView={realView} partnerView={partnerView}
           live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
-          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: (station?: string) => setSheet({ kind: 'bakery', station: (station ?? 'case') as BakeStation }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
+          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} snowball={snowball} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: (station?: string) => setSheet({ kind: 'bakery', station: (station ?? 'case') as BakeStation }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
           farm={farm} guests={activeGuests} pickups={pickups} fishing={fishing} combos={combos}
           daysTogether={bridge.planks}
@@ -1148,7 +1163,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <Settings me={me} couple={couple} onSaved={reloadMe} onClose={close} onAvatar={() => setSheet({ kind: 'avatar' })} />
       )}
       {sheet?.kind === 'avatar' && <AvatarEditor me={me} onSaved={reloadMe} onClose={close} />}
-      {sheet?.kind === 'emote' && <EmoteMenu onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)} onCouple={partner ? coupleDo : undefined}
+      {sheet?.kind === 'emote' && <EmoteMenu onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)} onCouple={partner ? coupleDo : undefined} onSnow={partner && outWx.on && outWx.type === 'snow' ? throwSnow : undefined}
         onStatus={st => run(async () => { await api.setStatus(me, st); reloadMe(); notify('profiles'); if (st) toast(`💭 ${partnerName} sẽ thấy: ${st}`); })} />}
       {sheet?.kind === 'bag' && <BagSheet inventory={inventory} partner={partner} onClose={close} />}
       {playing && (() => {

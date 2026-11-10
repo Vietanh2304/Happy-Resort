@@ -10,7 +10,8 @@ export function liveStatus(p?: { status?: string | null; status_at?: string | nu
 }
 
 /** Bảng khi chạm vào nhân vật của mình: biểu cảm + trạng thái "đang làm gì" */
-export function EmoteMenu({ onPick, onClose, onEdit, status, onStatus, onCouple }: {
+export function EmoteMenu({ onPick, onClose, onEdit, status, onStatus, onCouple, onSnow }: {
+  onSnow?: () => void;
   onPick: (e: string) => void; onClose: () => void; onEdit: () => void; status: string | null; onStatus: (s: string | null) => void;
   onCouple?: (kind: 'hug' | 'kiss') => void;
 }) {
@@ -22,6 +23,7 @@ export function EmoteMenu({ onPick, onClose, onEdit, status, onStatus, onCouple 
           <div className="couple-acts">
             <button className="btn small" onClick={() => { onCouple('hug'); onClose(); }}>🤗 Ôm người ấy</button>
             <button className="btn small" onClick={() => { onCouple('kiss'); onClose(); }}>😘 Hôn người ấy</button>
+            {onSnow && <button className="btn small" onClick={() => { onSnow(); onClose(); }}>❄️ Ném tuyết</button>}
           </div>
         )}
         {content.emotes.map(e => <button key={e} onClick={() => { onPick(e); onClose(); }}>{e}</button>)}
