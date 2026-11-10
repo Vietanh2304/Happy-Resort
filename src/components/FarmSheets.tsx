@@ -13,7 +13,7 @@ export function SeedSheet({ inventory, onPick, onClose }: { inventory: InvRow[];
   ];
   return (
     <Sheet title="🌱 Gieo hạt" onClose={onClose}>
-      <p className="muted">Gieo tốn 1 hạt giống (mua ở cửa hàng, mục 🌱 Hạt giống). Cây lớn qua 3 cấp — mỗi cấp cần tưới đủ nước (mỗi lần cách nhau 1 tiếng), bón 1 lần phân và đủ thời gian. Trời thật mưa thì ruộng tự được tưới.</p>
+      <p className="muted">Gieo tốn 1 hạt giống (mua ở cửa hàng, mục 🌱 Hạt giống). Mỗi cây chỉ cần tưới 1 lần và bón phân 1 lần, khoảng 8 tiếng là thu hoạch. Trời thật mưa thì ruộng tự được tưới.</p>
       {groups.map(g => (
         <div key={g.title}>
           <h4 className="group-title">{g.title}</h4>
@@ -22,7 +22,7 @@ export function SeedSheet({ inventory, onPick, onClose }: { inventory: InvRow[];
               <button key={c.id} className="bag-item" disabled={!seeds(c.id)} onClick={() => onPick(c.id)}>
                 <img src={emojiSprite(item(c.id).icon).url} className="px-img" alt="" />
                 <small>{item(c.id).name}</small>
-                <i>🌱 {seeds(c.id)} hạt · {c.days * 6}h</i>
+                <i>🌱 {seeds(c.id)} hạt · 8h</i>
               </button>
             ))}
           </div>

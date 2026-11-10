@@ -121,18 +121,16 @@ describe('câu cá, vườn, nấu ăn', () => {
     expect(caught.has('fish_clown')).toBe(false);  // cá hề chỉ ban ngày
     expect(caught.has('lobster')).toBe(false);     // tôm hùm cần mưa/tuyết
   });
-  it('cây lên 3 cấp: mỗi cấp cần tưới + bón phân + đủ giờ', () => {
+  it('cây: tưới 1 lần + bón 1 lần, 8 tiếng là thu', () => {
     const now = Date.parse('2026-11-08T12:00:00Z');
     const ago = (h: number) => new Date(now - h * 3.6e6).toISOString();
-    const p = { plot: 0, crop_id: 'carrot', water_days: 0, last_watered: null, planted_at: ago(1), fert_n: 0 };   // cà rốt: 12 tiếng, 2 lần tưới/cấp
+    const p = { plot: 0, crop_id: 'carrot', water_days: 0, last_watered: null, planted_at: ago(9), fert_n: 0 };
     expect(plotStage(p, now)).toBe('seed');
-    expect(plotLevel({ ...p, water_days: 2, fert_n: 1, planted_at: ago(5) }, now)).toBe(1);
-    expect(plotLevel({ ...p, water_days: 2, fert_n: 0, planted_at: ago(5) }, now)).toBe(0);       // thiếu phân
-    expect(plotLevel({ ...p, water_days: 6, fert_n: 3, planted_at: ago(5) }, now)).toBe(1);       // chưa đủ giờ
-    expect(plotStage({ ...p, water_days: 6, fert_n: 3, planted_at: ago(13) }, now)).toBe('ripe');
-    expect(needsWater({ ...p, water_days: 1, watered_at: ago(0.5) }, '', now)).toBe(false);       // mới tưới nửa tiếng
-    expect(needsWater({ ...p, water_days: 1, watered_at: ago(2) }, '', now)).toBe(true);
-    expect(needsWater({ ...p, water_days: 2, watered_at: ago(2) }, '', now)).toBe(false);        // đủ nước cấp này, chờ bón phân/giờ
+    expect(plotStage({ ...p, water_days: 1 }, now)).toBe('sprout');                    // thiếu phân
+    expect(plotStage({ ...p, water_days: 1, fert_n: 1, planted_at: ago(5) }, now)).toBe('sprout');   // chưa đủ 8 tiếng
+    expect(plotStage({ ...p, water_days: 1, fert_n: 1 }, now)).toBe('ripe');
+    expect(plotLevel({ ...p, water_days: 1, fert_n: 1 }, now)).toBe(1);
+    expect(needsWater({ ...p, water_days: 1 }, '', now)).toBe(false);
   });
   it('giá bán theo loại, đồ hiếm gấp đôi', () => {
     const sell = content.economy.sell;

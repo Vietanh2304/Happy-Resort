@@ -117,12 +117,12 @@ export interface Plot { plot?: number; crop_id: string; water_days: number; last
 // Cây lớn qua 3 cấp. Mỗi cấp cần: đủ số lần tưới (mỗi lần cách nhau ≥ 1 tiếng), 1 lần bón phân, và đủ thời gian
 // (mỗi cấp = 1/3 tổng thời gian của loại cây; mỗi "ngày" trong danh sách cây = 6 tiếng). Đủ 3 cấp là chín.
 export const GROW_H = 6;
-export const LEVELS = 3;
+export const LEVELS = 1;
 export const WATER_GAP_MS = 55 * 60 * 1000;
-const cropBase = (cropId: string) => content.garden.crops.find(c => c.id === cropId)?.days ?? 3;
-export const cropHours = (cropId: string) => cropBase(cropId) * GROW_H;
+
+export const cropHours = (_cropId: string) => 8;   // mọi cây: tưới 1 lần + bón 1 lần, 8 tiếng là thu
 /** Số lần tưới cho mỗi cấp: cây nhanh 2, cây lâu 3 */
-export const waterPerLevel = (cropId: string) => (cropBase(cropId) >= 4 ? 3 : 2);
+export const waterPerLevel = (_cropId: string) => 1;
 export const waterNeed = (cropId: string) => waterPerLevel(cropId) * LEVELS;
 export const cropDays = waterNeed;
 const hoursOf = (p: Plot & { planted_at?: string }, now: number) => (p.planted_at ? (now - Date.parse(p.planted_at)) / 3.6e6 : 0);

@@ -259,7 +259,7 @@ export function act(r0: Room, who: string, x: number, y: number, now: number, o:
     }
     case 'C': case 'B': case 'D': {
       if (!hand) {
-        if (!cell) return no(t === 'B' ? '🔪 Thớt — đặt nguyên liệu lên rồi bấm liên tục để thái' : t === 'D' ? '🍽️ Bàn ăn — bày món lên đây rồi cùng ngồi ăn' : 'Quầy trống');
+        if (!cell) return no(t === 'B' ? (variant === 'bakery' ? '👐 Bàn nhào bột — đặt bơ/trứng lên rồi bấm liên tục để nhào' : '🔪 Thớt — đặt nguyên liệu lên rồi bấm liên tục để thái') : t === 'D' ? '🍽️ Bàn ăn — bày món lên đây rồi cùng ngồi ăn' : 'Quầy trống');
         if (r.meal && t === 'D') return no('Đang ăn mà 😋');
         if (t === 'B' && cell.k === 'ing' && needsCut(cell.id) && !cell.cut) {
           const chop = (cell.chop ?? 0) + 1;

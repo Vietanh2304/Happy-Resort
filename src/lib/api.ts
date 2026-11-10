@@ -284,7 +284,12 @@ export interface Animal { id: string; couple_id: string; kind: string; name: str
 export const loadRanch = () => soft(run<Animal[]>(supabase.from('ranch').select('*').order('created_at')), [] as Animal[]);
 export const ranchBuy = (kind: string, price: number, name = '') => run<string>(supabase.rpc('ranch_buy', { p_kind: kind, p_price: price, p_name: name }));
 export const ranchFeed = (id: string) => run(supabase.rpc('ranch_feed', { p_id: id }));
-export const ranchCollect = (id: string, item: string, n: number, hours: number) => run<boolean>(supabase.rpc('ranch_collect', { p_id: id, p_item: item, p_n: n, p_hours: hours }));
+export const ranchCollect = async (id: string, item: string, n: number, hours: number) => {
+  const r = await supabase.rpc('ranch_collect2', { p_id: id, p_item: item, p_n: n, p_minutes: Math.max(1, Math.round(hours * 60)) });
+  if (!r.error) return r.data as boolean;
+  if (!/ranch_collect2|function/i.test(r.error.message)) throw new Error(r.error.message);
+  return run<boolean>(supabase.rpc('ranch_collect', { p_id: id, p_item: item, p_n: Math.min(5, n), p_hours: Math.max(2, Math.round(hours)) }));   // chưa chạy 018
+};
 export const ranchSell = (id: string, price: number) => run(supabase.rpc('ranch_sell', { p_id: id, p_price: price }));
 export interface OutfitRow { id: string; couple_id: string; user_id: string; name: string; spec: import('./ranch').Design; created_at: string }
 export const loadOutfits = () => soft(run<OutfitRow[]>(supabase.from('outfits').select('*').order('created_at')), [] as OutfitRow[]);
