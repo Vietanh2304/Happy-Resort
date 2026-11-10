@@ -35,7 +35,10 @@ export class RtcRoom {
     // Ai vào phòng sau thì chào; cả hai cùng làm lại kết nối để bên đang có hình gửi lại
     this.off.push(onEvent('rtc-hello', d => {
       if (d.room !== room) return;
-      this.later(false, !d.reply);
+      // Lời đáp KHÔNG được làm lại kết nối: bên kia vừa làm mới và đã gửi offer (kèm màn hình) —
+      // nếu mình làm lại nữa thì offer đó trả lời bằng kết nối đã bỏ → bên xem màn đen mãi.
+      if (d.reply) return;
+      this.later(false, true);
     }));
     this.reset();
     sendEvent('rtc-hello', { room });
