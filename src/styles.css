@@ -1715,3 +1715,26 @@ textarea { resize: vertical; }
 @keyframes fly { 0% { left: -15%; transform: translateY(30px) rotate(-10deg); } 40% { transform: translateY(-10px) rotate(0); } 75% { transform: translateY(0) rotate(0); } 100% { left: 110%; transform: translateY(20px) rotate(8deg); } }
 .flight .cloud { position: absolute; right: -30%; width: 120px; height: 36px; border-radius: 30px; background: #fff; opacity: .85; animation: cloud 1.2s linear infinite; }
 @keyframes cloud { to { right: 130%; } }
+
+/* Map tham quan du lịch */
+.fx { position: absolute; pointer-events: none; overflow: hidden; }
+.fx i, i.fx-sway, i.fx-steam, i.fx-glow, i.fx-screen, .fx-bird, .fx-lotus { position: absolute; pointer-events: none; display: block; }
+.fx-shim { opacity: 0; animation: fxshim 3s ease-in-out infinite; }
+.fx-fall { animation: fxfall 10s linear infinite; }
+.fx-sway { transform-origin: 50% -40%; animation: fxsway 2s ease-in-out infinite alternate; border-top: 1px solid #3a2a1a; border-bottom: 1px solid #3a2a1a; }
+.fx-sway.lit { box-shadow: 0 0 10px 4px var(--g); }
+.fx-steam { border-radius: 50%; background: #ffffffa0; filter: blur(2px); animation: steam 3s ease-out infinite; }
+.fx-glow { border-radius: 50%; animation: flicker 2.4s ease-in-out infinite; mix-blend-mode: screen; }
+.spr.fx-move { animation: fxmove 20s linear infinite; }
+.fx-bird { animation: flutter 6s ease-in-out infinite; }
+.fx-aurora { position: absolute; inset: 0 -10%; background: linear-gradient(90deg, transparent, #3af0a088 20%, #8affc8aa 40%, #8a6af088 65%, #3af0a066 85%, transparent); filter: blur(6px); mix-blend-mode: screen; border-radius: 50%; animation: aurora 7s ease-in-out infinite alternate; }
+.fx-aurora.b { top: 30%; opacity: .7; animation-duration: 11s; animation-direction: alternate-reverse; }
+.fx-spark { background: #fff8d0; animation: twinkle2 1.4s ease-in-out infinite; }
+.fx-screen { background: linear-gradient(135deg, #ff4a8a, #4af0ff, #ffe04a); animation: fxscreen 6s linear infinite; opacity: .9; }
+.fx-lotus { z-index: 160; font-size: 14px; filter: drop-shadow(0 0 6px #ffd27a); animation: fxlotus 18s linear forwards; }
+@keyframes fxshim { 0%, 100% { opacity: 0; translate: 0 0; } 50% { opacity: .9; translate: var(--m) 0; } }
+@keyframes fxfall { from { transform: translate(0, 0) rotate(0); } to { transform: translate(var(--dx), var(--dy)) rotate(420deg); } }
+@keyframes fxsway { from { rotate: -9deg; } to { rotate: 9deg; } }
+@keyframes fxmove { from { translate: 0 0; } to { translate: var(--dx) 0; } }
+@keyframes fxscreen { to { filter: hue-rotate(360deg); } }
+@keyframes fxlotus { from { translate: 0 0; opacity: 1; } 85% { opacity: 1; } to { translate: 140px -30px; opacity: 0; } }

@@ -80,6 +80,7 @@ import { DiarySheet, FestivalSheet, festKindOf, LanternParade, TravelSheet } fro
 import { seeded } from '../lib/rng';
 import { tripCtx, tripOf, type TripId } from '../lib/trips';
 import { FlightOverlay } from './Trip';
+import { spotOf } from '../lib/tripSpots';
 import { ChatDock } from './ChatDock';
 
 type SheetState =
@@ -843,6 +844,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   };
   if (tripCtx.at && scene === 'restaurant') EXITS.restaurant = [`trip_${tripCtx.at}`, { x: 44, y: 166 }, '🚪 Ra phố'];
   if (scene.startsWith('trip_')) EXITS[scene] = ['town', SCENES.town.spawn, '✈️ Bay về làng'];
+  { const sp = spotOf(scene); if (sp) EXITS[scene] = [`trip_${sp.trip}`, { x: sp.at, y: 112 }, '🏙️ Về phố chính']; }
   const liveNow = useRef(live);
   liveNow.current = live;
   // Rửa tay ở bồn rửa mặt (đứng quay lưng, xà phòng + nước)
