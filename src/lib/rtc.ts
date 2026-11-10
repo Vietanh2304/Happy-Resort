@@ -81,7 +81,22 @@ export class RtcRoom {
         this.makingOffer = false;
       }
     };
-    this.local?.getTracks().forEach(t => pc.addTrack(t, this.local!));
+    this.local?.getTracks().forEach(t => this.add(pc, t, this.local!));
+  }
+
+  /** Thêm track; hình thì giới hạn bitrate/khung để mạng yếu (4G, TURN) vẫn gửi kịp, ưu tiên giảm độ nét thay vì đứng hình */
+  private add(pc: RTCPeerConnection, t: MediaStreamTrack, s: MediaStream) {
+    const sender = pc.addTrack(t, s);
+    if (t.kind !== 'video') return;
+    try { (t as MediaStreamTrack & { contentHint: string }).contentHint = 'motion'; } catch { /* */ }
+    const tune = () => {
+      const p = sender.getParameters();
+      if (!p.encodings?.length) return void setTimeout(tune, 500);
+      p.encodings[0].maxBitrate = 1_200_000; p.encodings[0].maxFramerate = 20; p.encodings[0].scaleResolutionDownBy = Math.max(1, (t.getSettings().height ?? 720) / 720);
+      (p as RTCRtpSendParameters & { degradationPreference?: string }).degradationPreference = 'maintain-framerate';
+      sender.setParameters(p).catch(() => {});
+    };
+    setTimeout(tune, 300);
   }
 
   private async signal({ description, candidate }: { description?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit }) {
@@ -112,7 +127,7 @@ export class RtcRoom {
     this.local = stream;
     this.onLocal(stream);
     stream.getTracks().forEach(t => {
-      this.pc.addTrack(t, stream);
+      this.add(this.pc, t, stream);
       t.onended = () => this.stop(); // bấm "Dừng chia sẻ" của trình duyệt
     });
   }
