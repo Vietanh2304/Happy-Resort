@@ -499,7 +499,7 @@ function SceneContent(p: WorldProps) {
       )}
 
       {def.outdoor && realSky && wx === 'rain' && <div className="px-rain" style={{ '--s': s } as CSSProperties} />}
-      {def.outdoor && realSky && wx === 'rain' && PUDDLES.map(([x, y, w], i) => <i key={i} className="puddle" style={{ left: x * s, top: y * s, width: w * s, height: w * 0.32 * s, zIndex: y }} />)}
+      {def.outdoor && realSky && wx === 'rain' && PUDDLES.map(([x, y, w], i) => <i key={i} className="puddle" style={{ left: x * s, top: y * s, width: w * s, height: w * 0.32 * s, zIndex: 1 }} />)}
       {p.snowball && Date.now() - p.snowball.at < 1500 && <i key={p.snowball.at} className="snowball" style={{ left: p.snowball.from.x * s, top: (p.snowball.from.y - 14) * s, '--dx': `${(p.snowball.to.x - p.snowball.from.x) * s}px`, '--dy': `${(p.snowball.to.y - p.snowball.from.y) * s}px`, width: 4 * s, height: 4 * s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'snow' && <div className="px-snow" style={{ '--s': s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'fog' && <div className="px-fog" />}
