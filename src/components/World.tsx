@@ -346,7 +346,8 @@ function SceneContent(p: WorldProps) {
     return { look: l, umbrella: w.type === 'rain' };
   };
   { const w = p.myView.weather; outWx.on = !!w && def.outdoor && scene !== 'sky' && scene !== 'reef' && !(scene === 'hill' && !p.hillReal); if (w) { outWx.type = w.type; outWx.temp = w.temp; } outWx.hour = p.myView.time.hour; outWx.fest = p.theme ? ({ romantic: 'ngày đặc biệt', party: 'ngày hội', calm: 'ngày đáng nhớ', tet: 'Tết', lantern: 'Trung Thu', winter: 'Giáng Sinh' } as Record<string, string>)[p.theme] ?? '' : ''; }
-  const myDress = dress(me.avatar, p.myView), theirDress = dress(partner?.avatar ?? {}, p.myView);
+  const rent = (look: Profile['avatar'], o?: number | null) => (scene.startsWith('trip_') && o != null ? { ...look, outfit: o, design: null } : look);
+  const myDress = dress(rent(me.avatar, live.mine.outfit), p.myView), theirDress = dress(rent(partner?.avatar ?? {}, live.theirs?.outfit), p.myView);
   const bedOf = (who: typeof live.mine | null) => (who && (who.act === 'sleep' || who.act === 'intimate') && who.bed ? p.decor.find(d => d.id === who.bed && d.island === scene) : undefined);
   const myBed = bedOf(live.mine), theirBed = p.partnerHere ? bedOf(theirs) : undefined;
   // Trong phòng: đứng ở phía trước một món (bên phải hoặc bên dưới chân đồ) thì luôn vẽ đè lên món đó
@@ -377,7 +378,7 @@ function SceneContent(p: WorldProps) {
 
       {spotOf(scene) && <SpotContent spot={spotOf(scene)!} scene={scene as SpotScene} me={me} live={live} partnerHere={!!p.partnerHere} looks={{ me: myDress.look, them: theirDress.look }} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} today={p.myView.time.date} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland_aurora'} go={go} />}
       {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <FxList fx={mainOf(scene.slice(5) as TripId).fx} scene={scene} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland'} />}
-      {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <TripContent trip={tripOf(scene.slice(5))!} me={me} today={p.myView.time.date} go={go} enter={enter} />}
+      {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <TripContent trip={tripOf(scene.slice(5))!} me={me} today={p.myView.time.date} go={go} enter={enter} live={live} onAnim={n => p.onAnim?.(n)} />}
       {scene === 'city' && <CityContent go={go} night={phase === 'night'} onStall={id => p.stall?.(id)} onOffice={() => enter('office')} onHome={() => enter('town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 })} />}
       {scene === 'office' && p.job && p.work && (
         <>

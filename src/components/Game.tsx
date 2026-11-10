@@ -247,7 +247,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     route.current = [];
     setEditing(false);
     editor.setSelection(null);
-    live.update({ scene: target, pos: at ?? SCENES[target].spawn, act: null, dish: null, jump: null });
+    live.update({ scene: target, pos: at ?? SCENES[target].spawn, act: null, dish: null, jump: null, ...(target.startsWith('trip_') ? {} : { outfit: null }) });
   }
 
   async function run(f: () => Promise<unknown>) {

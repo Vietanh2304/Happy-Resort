@@ -9,6 +9,8 @@ import { toast, toastError } from '../lib/toast';
 import { TRIP_WALK, tripCtx, type Trip } from '../lib/trips';
 import type { Pt, SceneId } from '../lib/world';
 import { spotsOf } from '../lib/tripSpots';
+import type { AnimName } from '../lib/acts';
+import type { Live } from '../lib/useLive';
 import { mainOf } from '../lib/tripMain';
 import { planeSprite } from '../lib/skydive';
 import { avatarPx } from './Avatar';
@@ -43,14 +45,16 @@ export function Stroller({ seed, i, box = TRIP_WALK, lines = TOURIST }: { seed: 
   );
 }
 
-export function TripContent({ trip, me, today, go, enter }: { trip: Trip; me: api.Profile; today: string; go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void }) {
+export function TripContent({ trip, me, today, go, enter, live, onAnim }: { trip: Trip; me: api.Profile; today: string; go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void; live: Live; onAnim: (n: AnimName) => void }) {
+  const [flash, setFlash] = useState(0);
   const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
   const souvenir = () => run(async () => {
     const it = item(trip.souvenir), price = 10;
     if (!confirm(`Mua quà lưu niệm ${it.icon} ${it.name} (${price} xu)?`)) return;
-    await api.buyItem(trip.souvenir, price); notify('inventory', 'profiles'); toast(`🛍️ Mua ${it.icon} ${it.name} làm kỷ niệm`);
+    await api.buyItem(trip.souvenir, price); notify('inventory', 'profiles'); onAnim('cheer'); live.say(`${it.icon} Quà ${trip.name} nè!`); toast(`🛍️ Mua ${it.icon} ${it.name} làm kỷ niệm`);
   });
   const photo = () => run(async () => {
+    live.say(live.theirs ? '📸 Cười lên nào… 1, 2, 3!' : '📸 Cheese!'); onAnim('cheer'); setTimeout(() => setFlash(Date.now()), 700);
     const ok = await api.claim(`postcard:${trip.id}:${today}:${me.id}`);
     if (!ok) return toast('📸 Hôm nay chụp ở đây rồi — bưu thiếp đã trong ✈️ Du lịch');
     await api.addMemory(me, 'postcard', { trip: trip.id }, today); notify('memories', 'claims');
@@ -58,6 +62,7 @@ export function TripContent({ trip, me, today, go, enter }: { trip: Trip; me: ap
   });
   return (
     <>
+      {flash > 0 && <div key={flash} className="trip-flash" />}
       {spotsOf(trip.id).map((s, k) => (
         <Tag key={s.scene} x={s.at} y={92 + (k % 2) * 8} className="label" onClick={() => go({ x: s.at, y: TRIP_WALK.y0 + 6 }, () => enter(s.scene))}>{s.icon} {s.name} ➜</Tag>
       ))}

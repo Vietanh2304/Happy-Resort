@@ -33,9 +33,9 @@ export type Act =
   | { k: 'fortune'; x: number; y: number; label: string }
   | { k: 'ride'; x: number; y: number; label: string; spr: MiniId; ry: number; say: string }
   | { k: 'float'; x: number; y: number; label: string; ry: number }
-  | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind };
+  | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind; res?: { icon: string; x: number; y: number }; outfit?: number };
 /** Hành động nhân vật: ngồi, khấn, ngâm nước, chui lều, cho chim ăn, vẽ, hát, hôn… */
-export type DoKind = 'sit' | 'craft' | 'cheer' | 'pray' | 'feed' | 'paint' | 'cross' | 'love' | 'tent' | 'soak' | 'pick' | 'sing';
+export type DoKind = 'dress' | 'sit' | 'craft' | 'cheer' | 'pray' | 'feed' | 'paint' | 'cross' | 'love' | 'tent' | 'soak' | 'pick' | 'sing';
 
 export interface SpotDef {
   trip: TripId; id: string; name: string; icon: string;
@@ -157,7 +157,7 @@ export function miniSprite(id: MiniId): Sprite {
 // ───────── danh sách map ─────────
 const ph = (x: number, y: number): Act => ({ k: 'photo', x, y });
 const buy = (x: number, y: number, item: string, price: number, label: string): Act => ({ k: 'buy', x, y, item, price, label });
-const say = (x: number, y: number, label: string, s: string, d: DoKind): Act => ({ k: 'do', x, y, label, say: s, do: d });
+const say = (x: number, y: number, label: string, s: string, d: DoKind): Extract<Act, { k: 'do' }> => ({ k: 'do', x, y, label, say: s, do: d });
 const W = (y0: number, y1 = 186, x0 = 8, x1 = 248) => ({ x0, x1, y0, y1 });
 const RAINBOW = ['#e8443a', '#f6a83a', '#f6e04a', '#6ac86a', '#4a9ae8', '#9a6ae0', '#f59ab3'];
 
@@ -193,7 +193,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(226, 140, 10, 7, '#f0f0f0'); p.rect(227, 138, 8, 2, '#e8443a'); p.rect(238, 142, 6, 5, '#4a9ae8');
     },
     fx: [{ k: 'bird', x: 60, y: 60, icon: '🦋', n: 3 }, { k: 'sparkle', x: 0, y: 50, w: 256, h: 60, n: 8 }],
-    acts: [ph(70, 130), buy(150, 150, 'keo_bong', 6, '🍭 Kẹo bông'), say(220, 132, '👴 Ông Cầu Vồng', 'Ông Hoàng vẽ từ năm 86 tuổi đó, nhờ vậy cả làng được giữ lại 🌈', 'cheer'), say(30, 170, '🖌️ Vẽ thêm một bông hoa', 'Hai bạn vẽ chung một bông hoa nhỏ lên tường — dễ thương ghê 🌸', 'craft')],
+    acts: [ph(70, 130), buy(150, 150, 'keo_bong', 6, '🍭 Kẹo bông'), say(220, 132, '👴 Ông Cầu Vồng', 'Ông Hoàng vẽ từ năm 86 tuổi đó, nhờ vậy cả làng được giữ lại 🌈', 'cheer'), { ...say(30, 170, '🖌️ Vẽ thêm một bông hoa', 'Hai bạn vẽ chung một bông hoa nhỏ lên tường — dễ thương ghê 🌸', 'craft'), res: { icon: '🌼', x: 60, y: 96 } }],
     lines: ['Bức tường này đẹp quá!', '📸 Đứng đây chụp nè', 'Màu sắc rực rỡ ghê', 'Ông vẽ hết cả làng đó', 'Wow 🌈'],
   },
   trip_taichung_fengjia: {
@@ -297,7 +297,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(30, 160, 8, 12, '#2a2a3a'); p.rect(32, 163, 4, 8, '#ffffff'); p.rect(33, 160, 2, 1, '#f6a83a'); p.px(32, 161, '#ffffff'); p.px(35, 161, '#ffffff');
     },
     fx: [{ k: 'sway', x: 150, y: 74, c: '#e8443a' }, { k: 'sway', x: 86, y: 74, c: '#3a6ad0' }, { k: 'fall', n: 8, c: ['#e8743a', '#f6c445'], size: 2, slow: true }],
-    acts: [buy(70, 140, 'clock', 15, '🕰️ Đồng hồ cổ'), buy(150, 150, 'tteokbokki', 8, '🌶️ Tteokbokki'), ph(34, 150), say(210, 160, '🏺 Chum tương', 'Bà cụ ủ tương đậu ở đây mấy chục năm rồi, thơm lừng', 'craft')],
+    acts: [buy(70, 140, 'clock', 15, '🕰️ Đồng hồ cổ'), { ...say(110, 128, '👘 Thuê hanbok', 'Mặc hanbok dạo phố cổ, như phim cổ trang luôn 👘', 'dress'), outfit: 13 }, buy(150, 150, 'tteokbokki', 8, '🌶️ Tteokbokki'), ph(34, 150), { ...say(210, 160, '🏺 Chum tương', 'Bà cụ ủ tương đậu ở đây mấy chục năm rồi, thơm lừng', 'craft'), res: { icon: '🫙', x: 214, y: 168 } }],
     lines: ['Đồ cổ dễ thương quá', 'Nhà hanok mát ghê', 'Chụp với chú cánh cụt nè 🐧', 'Hồi xưa ông bà dùng cái này', 'Cổ kính ghê'],
   },
   trip_gwangju_chungjang: {
@@ -344,7 +344,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(194, 148, 56, 4, '#6a3a22');
     },
     fx: [{ k: 'sway', x: 20, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 60, y: 86, c: '#f6c445', big: true }, { k: 'sway', x: 100, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 186, y: 86, c: '#f59ab3', big: true }, { k: 'sway', x: 226, y: 86, c: '#e8443a', big: true }, { k: 'shim', x: 0, y: 104, w: 256, h: 10, n: 8 }],
-    acts: [buy(220, 160, 'lantern', 10, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 5, '🥖 Bánh mì'), ph(148, 124), say(130, 170, '👗 May áo dài', 'Tiệm may đo áo dài lấy liền trong ngày — hai đứa mặc đôi nha', 'cheer')],
+    acts: [buy(220, 160, 'lantern', 10, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 5, '🥖 Bánh mì'), ph(148, 124), { ...say(130, 170, '👗 May áo dài', 'Áo dài may xong rồi, mặc vào xinh quá trời 👗', 'dress'), outfit: 12 }],
     lines: ['Đèn lồng đẹp quá', 'Phố cổ yên bình ghê', 'Cầu này trên tờ 20 nghìn đó', 'Ăn cao lầu chưa?', 'Chụp áo dài đi'],
   },
   trip_hoian_river: {
@@ -599,7 +599,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 100; x < 256; x += 50) L.lamps.push({ x, y: 116, c: '#ffe8a0' });
     },
     fx: [{ k: 'move', spr: 'train', x: -80, y: 136, dx: 420, dur: 16, loop: true }, { k: 'fall', n: 10, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 10, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), say(220, 170, '🐄 Bò sữa đeo chuông', 'Leng keng~ đàn bò đeo chuông gặm cỏ trên đồi 🐄', 'craft')],
+    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 10, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), { ...say(220, 170, '🐄 Bò sữa đeo chuông', 'Leng keng~ đàn bò đeo chuông gặm cỏ trên đồi 🐄', 'craft'), res: { icon: '🔔', x: 170, y: 166 } }],
     lines: ['Tàu tới rồi!', 'Núi tuyết đẹp quá', 'Grüezi!', 'Lạnh ghê', 'Uống sô-cô-la nóng đi'],
   },
   trip_swiss_chalet: {

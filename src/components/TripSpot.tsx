@@ -71,6 +71,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   const [flash, setFlash] = useState(0);
   const [fx, setFx] = useState<{ x: number; y: number; icon: string; n: number }[]>([]);
   const [art, setArt] = useState<{ x: number; y: number } | null>(null);
+  const [made, setMade] = useState<{ icon: string; x: number; y: number }[]>([]);
   const L = useRef(live); L.current = live;
   const mine = live.mine, theirs = partnerHere ? live.theirs : null;
   const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
@@ -120,7 +121,8 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     live.say(a.say);
     switch (a.do) {
       case 'sit': hold({ act: 'sit' }, 20000); break;
-      case 'craft': anim('rummage', 3); setTimeout(() => pop(at.x, at.y - 34, '✨', 2), 2000); break;
+      case 'craft': anim('rummage', 3); setTimeout(() => { pop(at.x, at.y - 34, '✨', 2); const r = a.res; if (r) setMade(m => [...m.filter(e => e.icon !== r.icon || e.x !== r.x), r]); }, 2200); break;
+      case 'dress': anim('rummage', 2); setTimeout(() => { setFlash(Date.now()); live.update({ outfit: L.current.mine.outfit === a.outfit ? null : a.outfit ?? null }); anim('cheer'); pop(at.x, at.y - 34, '✨', 3); }, 1600); break;
       case 'pick': anim('rummage', 2); setTimeout(() => pop(at.x, at.y - 30, '🍁', 3), 1200); break;
       case 'cheer': anim('cheer', 2); pop(at.x, at.y - 34, '✨', 3); break;
       case 'sing': hold({ act: 'sing' }, 9000); for (let k = 0; k < 6; k++) setTimeout(() => pop(at.x, at.y - 34, k % 2 ? '🎵' : '🎶'), k * 1400); setTimeout(() => pop(at.x, at.y - 10, '👏', 4), 8000); break;
@@ -143,6 +145,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       {floats.map(f => <span key={f.n} className="fx-lotus" style={{ left: f.x * s, top: f.y * s }}>🪷</span>)}
       {fx.map(e => <span key={e.n} className="fx-pop" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>)}
       {flash > 0 && <div key={flash} className="trip-flash" />}
+      {made.map(e => <span key={e.icon + e.x} className="fx-art" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>)}
       {art && <span className="fx-art" style={{ left: art.x * s - 10, top: (art.y - 30) * s }}>🖼️</span>}
       <Rider spot={spot} who={mine} look={looks.me} />
       {theirs && <Rider spot={spot} who={theirs} look={looks.them} />}
