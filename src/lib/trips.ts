@@ -2,7 +2,7 @@
 import { makeSprite, mix, type Pen } from './pixel';
 import { seeded } from './rng';
 
-export type TripId = 'taichung' | 'gwangju' | 'hoian' | 'dalat' | 'seoul' | 'tokyo' | 'paris' | 'venice' | 'santorini' | 'swiss' | 'iceland' | 'maldives' | 'newyork' | 'bali';
+export type TripId = 'taichung' | 'gwangju' | 'hoian' | 'dalat' | 'tokyo' | 'paris' | 'venice' | 'swiss' | 'iceland';
 export interface Spot { x: number; y: number; icon: string; name: string; say: string }
 export interface Trip {
   id: TripId; name: string; icon: string; bg: string; price: number; souvenir: string; line: string;
@@ -24,9 +24,6 @@ export const TRIPS: Trip[] = [
   { id: 'dalat', name: 'Đà Lạt', icon: '🌲', bg: 'linear-gradient(#9ad0f0,#6a9a7a)', price: 100, souvenir: 'peach_tea', line: 'Sương mù buổi sáng, một ly trà nóng và hai đôi tay đan vào nhau.',
     sky: ['#a8c8e0', '#e8f0f0'], ground: ['#8ab878', '#7aa868'], far: 'hills', food: { name: 'Bánh tráng nướng', icon: '🫓' },
     spots: [S(80, 98, '🌸', 'Vườn hoa', 'Hoa cẩm tú cầu nở khắp đồi'), S(190, 98, '☕', 'Quán cà phê view đồi', 'Một ly sữa đậu nành nóng không?')] },
-  { id: 'seoul', name: 'Seoul', icon: '🗼', bg: 'linear-gradient(#f5b0c8,#7a6ad0)', price: 300, souvenir: 'teapot', line: 'Mặc hanbok dạo cung điện, tối lên tháp Namsan ngắm thành phố.',
-    sky: ['#8ab8f0', '#e0e8ff'], ground: ['#c8c0b8', '#b8b0a8'], far: 'hills', food: { name: 'Tteokbokki', icon: '🌶️' },
-    spots: [S(70, 96, '🏯', 'Cung Gyeongbok', 'Mặc hanbok vào cung miễn phí đó!'), S(196, 92, '🔒', 'Ổ khoá tình yêu Namsan', 'Khoá hai đứa lại ở đây mãi mãi 💞')] },
   { id: 'tokyo', name: 'Tokyo', icon: '🗾', bg: 'linear-gradient(#ffd8e8,#f08aa6)', price: 320, souvenir: 'sakura_bloom', line: 'Hoa anh đào rơi trên vai, tụi mình ăn ramen đến no căng.',
     sky: ['#9ad0f8', '#ffe8f0'], ground: ['#d8d0c0', '#c8c0b0'], far: 'skyline', food: { name: 'Ramen', icon: '🍜' },
     spots: [S(64, 96, '⛩️', 'Đền Asakusa', 'Rút một quẻ xăm thử vận may nha'), S(190, 98, '🌸', 'Công viên Ueno', 'Ngồi picnic dưới gốc anh đào 🌸')] },
@@ -36,24 +33,12 @@ export const TRIPS: Trip[] = [
   { id: 'venice', name: 'Venice', icon: '🛶', bg: 'linear-gradient(#f8e0a8,#4a8ab8)', price: 420, souvenir: 'bouquet', line: 'Ngồi thuyền gondola qua những cây cầu nhỏ, người lái thuyền hát cho tụi mình nghe.',
     sky: ['#8ac8f0', '#fff0d8'], ground: ['#d8b890', '#c8a880'], far: 'none', food: { name: 'Gelato', icon: '🍨' },
     spots: [S(128, 98, '🛶', 'Bến gondola', 'O sole mio~ 🎶 lên thuyền đi hai bạn'), S(214, 96, '🎭', 'Tiệm mặt nạ', 'Mặt nạ lễ hội Carnival, đeo thử không?')] },
-  { id: 'santorini', name: 'Santorini', icon: '🏛️', bg: 'linear-gradient(#ffffff,#3a7ad0)', price: 480, souvenir: 'coral', line: 'Nhà trắng mái xanh, ngắm hoàng hôn đẹp nhất thế giới ở Oia.',
-    sky: ['#6ab0f0', '#d8f0ff'], ground: ['#f0ece4', '#e0dcd4'], far: 'sea', food: { name: 'Gyros', icon: '🥙' },
-    spots: [S(90, 96, '🔔', 'Nhà thờ mái xanh', 'Chụp ảnh cưới ở đây là chuẩn bài 💍'), S(200, 100, '🌅', 'Điểm ngắm hoàng hôn Oia', 'Cả trăm người vỗ tay khi mặt trời lặn đó')] },
   { id: 'swiss', name: 'Thuỵ Sĩ', icon: '🏔️', bg: 'linear-gradient(#e8f4ff,#5a9a6a)', price: 500, souvenir: 'chocolate', line: 'Tàu đỏ chạy qua núi tuyết, uống sô-cô-la nóng trong nhà gỗ.',
     sky: ['#7ab8f0', '#e8f4ff'], ground: ['#8ac878', '#7ab868'], far: 'snow', food: { name: 'Fondue phô mai', icon: '🫕' },
     spots: [S(60, 98, '🚂', 'Ga tàu núi', 'Tàu Glacier Express chạy qua 291 cây cầu!'), S(196, 98, '🏠', 'Nhà gỗ chalet', 'Vào đây uống sô-cô-la nóng cho ấm ☕')] },
   { id: 'iceland', name: 'Iceland', icon: '🌌', bg: 'linear-gradient(#0a1a3a,#3ac88a)', price: 550, souvenir: 'star_lantern', line: 'Nằm giữa trời lạnh ngắm cực quang nhảy múa, tay trong tay.',
     sky: ['#0a1030', '#1a3060'], ground: ['#e8f0f8', '#d8e4f0'], far: 'snow', food: { name: 'Súp thịt cừu', icon: '🍲' },
     spots: [S(80, 98, '🌌', 'Đồi ngắm cực quang', 'Cực quang hiện rồi kìa!! Ước đi 💚'), S(200, 100, '♨️', 'Suối nước nóng Blue Lagoon', 'Ngâm mình nước ấm giữa trời tuyết, sướng ghê')] },
-  { id: 'maldives', name: 'Maldives', icon: '🏝️', bg: 'linear-gradient(#a8f0f0,#2ab8c8)', price: 520, souvenir: 'coral', line: 'Nhà gỗ trên mặt nước trong vắt, cá nhỏ bơi ngay dưới sàn kính.',
-    sky: ['#5ac0f0', '#d8f8ff'], ground: ['#f8ecc8', '#f0e0b8'], far: 'sea', food: { name: 'Nước dừa', icon: '🥥' },
-    spots: [S(120, 92, '🛖', 'Nhà trên mặt nước', 'Nhìn qua sàn kính thấy cả cá đuối bơi 🐠'), S(210, 100, '🤿', 'Điểm lặn ngắm san hô', 'Nước trong như thuỷ tinh luôn')] },
-  { id: 'newyork', name: 'New York', icon: '🗽', bg: 'linear-gradient(#f8d878,#5a5a8a)', price: 480, souvenir: 'gift_box', line: 'Trượt băng ở Central Park, đêm giao thừa đếm ngược ở Quảng trường Thời Đại.',
-    sky: ['#7ab0e8', '#e0ecf8'], ground: ['#a8a8b0', '#9898a0'], far: 'skyline', food: { name: 'Pizza lát to', icon: '🍕' },
-    spots: [S(40, 96, '🗽', 'Tượng Nữ thần Tự do', 'Đi phà ra đảo xem tượng gần hơn nha'), S(170, 100, '🚕', 'Taxi vàng', 'Where to? Quảng trường Thời Đại hả? 🚕')] },
-  { id: 'bali', name: 'Bali', icon: '🌴', bg: 'linear-gradient(#b8f0a8,#e8a04a)', price: 380, souvenir: 'lotus', line: 'Ruộng bậc thang Tegallalang, xích đu giữa rừng dừa và massage đôi.',
-    sky: ['#7ac8f0', '#f0f8e0'], ground: ['#c8b080', '#b8a070'], far: 'hills', food: { name: 'Nasi goreng', icon: '🍛' },
-    spots: [S(128, 94, '🛕', 'Cổng đền Bali', 'Cổng trời Lempuyang — xếp hàng chụp ảnh nào'), S(210, 100, '🌴', 'Xích đu rừng dừa', 'Đu thật cao, hét thật to! 🌴')] },
 ];
 export const tripOf = (id: string) => TRIPS.find(t => t.id === id);
 export const TRIP_WALK = { x0: 8, x1: 248, y0: 104, y1: 186 };
@@ -98,7 +83,6 @@ const house = (p: Pen, x: number, y: number, w: number, h: number, wall: string,
   p.rect(x + w / 2 - 2, y - 7, 5, 7, mix(wall, '#000000', 0.4));
 };
 const tree = (p: Pen, x: number, y: number, c: string, h = 14) => { p.rect(x, y - 5, 2, 5, '#7a5a3a'); for (let i = 0; i < h - 4; i++) { const w = Math.max(1, Math.round((h - 4 - i) * 0.6)); p.rect(x + 1 - w, y - 5 - i, w * 2, 1, c); } };
-const palm = (p: Pen, x: number, y: number) => { for (let i = 0; i < 22; i++) p.px(x + Math.round(Math.sin(i / 8) * 2), y - i, '#a8784a'); for (const [dx, dy] of [[-8, 2], [8, 2], [-6, -2], [6, -2], [0, -3]]) for (let k = 0; k < 7; k++) p.px(x + Math.round((dx * k) / 7), y - 22 + Math.round((dy * k) / 7 + (k * k) / 12), '#3a9a4a'); };
 const lantern = (p: Pen, x: number, y: number, c = '#e8443a') => { p.rect(x, y, 3, 4, c); p.px(x + 1, y - 1, '#3a2a1a'); p.px(x + 1, y + 1, '#ffd27a'); };
 const sakura = (p: Pen, x: number, y: number) => { p.rect(x, y - 8, 2, 8, '#6a4a3a'); for (let i = 0; i < 30; i++) { const a = i * 2.4, d = (i % 6) + 1; p.px(x + Math.round(Math.cos(a) * d * 1.4), y - 12 + Math.round(Math.sin(a) * d * 0.8), i % 3 ? '#f8b8cc' : '#ffd8e4'); } };
 
@@ -117,10 +101,6 @@ const LANDMARK: Record<TripId, (p: Pen, night: boolean, r: () => number) => void
     for (let i = 0; i < 14; i++) tree(p, 6 + i * 18 + Math.floor(r() * 6), 100, '#2a6a4a', 22);
     p.rect(150, 86, 60, 14, '#f8e8c8'); p.rect(146, 80, 68, 6, '#c8503a'); p.rect(176, 90, 8, 10, '#8a5a3c');
   },
-  seoul: p => {
-    p.rect(194, 18, 4, 50, '#e8e8f0'); p.rect(188, 26, 16, 6, '#c8c8d8'); p.rect(195, 8, 2, 10, '#e84a4a');
-    p.rect(30, 82, 70, 18, '#c84a3a'); p.rect(24, 74, 82, 8, '#3a5a4a'); p.rect(20, 72, 6, 2, '#3a5a4a'); p.rect(104, 72, 6, 2, '#3a5a4a'); p.rect(56, 88, 18, 12, '#5a3a2a');
-  },
   tokyo: p => {
     p.rect(40, 70, 4, 30, '#e8443a'); p.rect(70, 70, 4, 30, '#e8443a'); p.rect(34, 66, 46, 4, '#e8443a'); p.rect(38, 74, 38, 2, '#e8443a');
     for (let k = 0; k < 4; k++) { const w = 30 - k * 6; p.rect(150 - w / 2 + 15, 92 - k * 12, w, 8, '#c8503a'); p.rect(150 - w / 2 + 11, 90 - k * 12, w + 8, 2, '#3a3a4a'); }
@@ -138,28 +118,11 @@ const LANDMARK: Record<TripId, (p: Pen, night: boolean, r: () => number) => void
     p.rect(0, 92, 256, 10, '#3a8ab0'); for (let x = 0; x < 256; x += 8) p.rect(x, 95, 4, 1, '#8ad0f0');
     p.rect(110, 94, 30, 3, '#1a1a2a'); p.px(108, 92, '#1a1a2a'); p.px(141, 92, '#1a1a2a'); p.rect(124, 88, 2, 6, '#e8e8e8');
   },
-  santorini: p => {
-    for (let i = 0; i < 7; i++) { const x = 6 + i * 36, h = 16 + (i % 3) * 6; p.rect(x, 100 - h, 30, h, '#ffffff'); p.rect(x + 6, 104 - h, 6, 6, '#3a7ad0'); if (i % 2 === 0) { p.rect(x + 8, 92 - h, 14, 8, '#2a5ac0'); p.rect(x + 10, 89 - h, 10, 3, '#2a5ac0'); p.rect(x + 14, 85 - h, 2, 4, '#ffffff'); } }
-  },
   swiss: p => {
     house(p, 170, 100, 40, 20, '#a8683a', '#7a3a2a', '#fff0c8'); p.rect(166, 76, 48, 4, '#ffffff');
     p.rect(0, 96, 256, 2, '#5a4a3a'); for (let i = 0; i < 4; i++) { p.rect(20 + i * 22, 86, 20, 10, '#d8302a'); p.rect(22 + i * 22, 88, 16, 4, '#c8e8ff'); }
   },
   iceland: p => { for (let i = 0; i < 4; i++) house(p, 150 + i * 24, 100, 18, 12, ['#d8302a', '#f6c445', '#3a6ad0', '#ffffff'][i], '#2a2a3a', '#ffe08a'); },
-  maldives: p => {
-    p.rect(0, 84, 256, 16, '#3ac8e0'); for (let x = 0; x < 256; x += 7) p.rect(x, 88 + (x % 3), 4, 1, '#c8f8ff');
-    for (let i = 0; i < 4; i++) { const x = 60 + i * 34; p.rect(x + 4, 86, 2, 12, '#7a5a3a'); p.rect(x + 18, 86, 2, 12, '#7a5a3a'); p.rect(x, 74, 24, 12, '#d8b888'); p.rect(x - 2, 70, 28, 4, '#a8783a'); } p.rect(40, 90, 200, 2, '#a8783a');
-    palm(p, 20, 102); palm(p, 236, 104);
-  },
-  newyork: p => {
-    p.rect(36, 50, 6, 50, '#5ab8a0'); p.rect(32, 60, 14, 22, '#5ab8a0'); p.rect(30, 40, 4, 14, '#5ab8a0'); p.rect(29, 36, 6, 4, '#ffd27a'); p.rect(34, 46, 10, 4, '#5ab8a0');
-    for (let i = 0; i < 3; i++) { const x = 150 + i * 30; p.rect(x, 92, 22, 8, '#f6c445'); p.rect(x + 4, 88, 14, 4, '#f6c445'); p.rect(x + 6, 89, 10, 2, '#a8d0f0'); p.rect(x + 3, 99, 4, 2, '#1a1a1a'); p.rect(x + 15, 99, 4, 2, '#1a1a1a'); }
-  },
-  bali: p => {
-    for (let k = 0; k < 5; k++) p.rect(0, 66 + k * 7, 256, 3, k % 2 ? '#8ad06a' : '#6ab84a');
-    p.rect(104, 56, 16, 44, '#7a6a5a'); p.rect(136, 56, 16, 44, '#7a6a5a'); for (let y = 56; y < 70; y += 4) { p.rect(102, y, 20, 2, '#5a4a3a'); p.rect(134, y, 20, 2, '#5a4a3a'); }
-    palm(p, 30, 102); palm(p, 220, 102);
-  },
 };
 // Hội An: dãy nhà vàng mái ngói, đèn lồng giăng, Chùa Cầu ở giữa
 LANDMARK.hoian = p => {
@@ -177,14 +140,9 @@ export const TRIP_MENU: Record<TripId, Dish[]> = {
   gwangju: [D('Tteokgalbi nướng', '🍖'), D('Cơm trộn bibimbap', '🍲'), D('Kimchi', '🥬'), D('Gà rán Hàn', '🍗'), D('Soju đào', '🍶', true)],
   hoian: [D('Cao lầu', '🍜'), D('Bánh mì Phượng', '🥖'), D('Cơm gà', '🍛'), D('Bánh bao bánh vạc', '🥟'), D('Nước mót', '🍵', true)],
   dalat: [D('Bánh tráng nướng', '🫓'), D('Lẩu gà lá é', '🍲'), D('Bánh căn', '🥞'), D('Dâu tây', '🍓'), D('Sữa đậu nành nóng', '🥛', true)],
-  seoul: [D('Tteokbokki', '🌶️'), D('Thịt nướng BBQ', '🥩'), D('Kimbap', '🍙'), D('Mì lạnh', '🍜'), D('Sữa chuối', '🍌', true)],
   tokyo: [D('Ramen', '🍜'), D('Sushi', '🍣'), D('Tempura', '🍤'), D('Bánh mochi', '🍡'), D('Trà matcha', '🍵', true)],
   paris: [D('Croissant', '🥐'), D('Bánh macaron', '🧁'), D('Súp hành', '🥣'), D('Bít tết khoai tây', '🥩'), D('Vang đỏ', '🍷', true)],
   venice: [D('Pizza', '🍕'), D('Mì Ý mực đen', '🍝'), D('Gelato', '🍨'), D('Tiramisu', '🍰'), D('Cà phê espresso', '☕', true)],
-  santorini: [D('Gyros', '🥙'), D('Salad Hy Lạp', '🥗'), D('Bạch tuộc nướng', '🐙'), D('Sữa chua mật ong', '🍯'), D('Nước cam', '🍊', true)],
   swiss: [D('Fondue phô mai', '🫕'), D('Rösti khoai tây', '🥔'), D('Sô-cô-la Thuỵ Sĩ', '🍫'), D('Xúc xích nướng', '🌭'), D('Sô-cô-la nóng', '☕', true)],
   iceland: [D('Súp thịt cừu', '🍲'), D('Cá hồi nướng', '🐟'), D('Skyr', '🥛'), D('Xúc xích Pylsur', '🌭'), D('Trà nóng', '🍵', true)],
-  maldives: [D('Cà ri cá ngừ', '🍛'), D('Tôm hùm nướng', '🦞'), D('Bánh dừa', '🥥'), D('Trái cây nhiệt đới', '🍍'), D('Nước dừa', '🥥', true)],
-  newyork: [D('Pizza lát to', '🍕'), D('Hamburger', '🍔'), D('Bánh bagel', '🥯'), D('Cheesecake', '🍰'), D('Milkshake', '🥤', true)],
-  bali: [D('Nasi goreng', '🍛'), D('Sate gà', '🍢'), D('Babi guling', '🍖'), D('Bánh chuối', '🍌'), D('Cà phê Luwak', '☕', true)],
 };
