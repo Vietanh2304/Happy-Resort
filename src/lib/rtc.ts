@@ -68,6 +68,7 @@ export class RtcRoom {
     this.pc = pc;
     this.onRemote(null);
     pc.onicecandidate = e => e.candidate && this.send({ candidate: e.candidate.toJSON() });
+    pc.oniceconnectionstatechange = () => { if (pc.iceConnectionState === 'failed') pc.restartIce(); };
     // Mỗi lần có thêm hình/tiếng: tạo luồng mới để giao diện vẽ lại (mic rồi mới bật cam...)
     pc.ontrack = e => this.onRemote(new MediaStream(e.streams[0]?.getTracks() ?? [e.track]));
     pc.onnegotiationneeded = async () => {

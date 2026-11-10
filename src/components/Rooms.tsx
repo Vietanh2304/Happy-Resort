@@ -90,8 +90,24 @@ export type Rtc = ReturnType<typeof useRtc>;
 
 export function StreamVideo({ stream, muted, className }: { stream: MediaStream; muted?: boolean; className?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
-  useEffect(() => { if (ref.current) ref.current.srcObject = stream; }, [stream]);
-  return <video ref={ref} className={className} autoPlay playsInline muted={muted} />;
+  const [blocked, setBlocked] = useState(false);
+  // Chrome chặn tự phát video CÓ TIẾNG khi chưa bấm gì → màn đen. Phát tắt tiếng trước, bấm để bật tiếng.
+  useEffect(() => {
+    const v = ref.current; if (!v) return;
+    v.srcObject = stream; v.muted = !!muted;
+    const go = () => v.play().catch(() => { v.muted = true; setBlocked(!muted); return v.play().catch(() => {}); });
+    void go();
+    // Track hình tới sau (thương lượng lại) → phát lại
+    stream.onaddtrack = () => void go();
+    return () => { stream.onaddtrack = null; };
+  }, [stream, muted]);
+  const unmute = () => { const v = ref.current; if (v) { v.muted = false; void v.play(); } setBlocked(false); };
+  return (
+    <div style={{ position: 'relative' }} className={className} onClick={blocked ? unmute : undefined}>
+      <video ref={ref} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} autoPlay playsInline muted={muted} />
+      {blocked && <button className="btn small" style={{ position: 'absolute', left: '50%', top: 8, transform: 'translateX(-50%)' }} onClick={unmute}>🔊 Bấm để bật tiếng</button>}
+    </div>
+  );
 }
 
 /** Màn hình rạp phim (vẽ trong cảnh): phóng to trong rạp, hoặc xem toàn màn hình kèm thả cảm xúc */
