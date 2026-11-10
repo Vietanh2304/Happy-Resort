@@ -506,6 +506,16 @@ function accessory(P: HiPen, acc: number, view: View, y: number, H: string, Hd: 
 
 function glassesOn(P: HiPen, g: number, view: View, y: number) {
   if (!g) return;
+  if (g === 5) {
+    const M = '#eef2f2', D = '#cfd8da', x0 = view === 'side' ? 15 : 6, w = view === 'side' ? 13 : 20;
+    P.rect(x0, y + 12, w, 4, M); P.rect(x0, y + 19, w, 5, M);
+    const eyes = view === 'side' ? [[21, 5]] : [[9, 4], [19, 4]];
+    let cx = x0;
+    for (const [ex, ew] of eyes) { P.rect(cx, y + 16, ex - cx, 3, M); cx = ex + ew; }
+    P.rect(cx, y + 16, x0 + w - cx, 3, M);
+    for (let k = 0; k < 6; k++) P.rect(x0 + 2 + k * 3, y + 13 + (k % 2) * 8, 1, 1, D);
+    return;
+  }
   const fr = g === 3 ? '#1a1424' : g === 4 ? '#c0305a' : g === 2 ? '#2a2438' : '#5a3a40';
   const lens = (x: number, w: number) => {
     if (g === 4) { P.map(['.RR.RR.', 'RRWRRRR', 'RRRRRRR', '.RRRRR.', '..RRR..', '...R...'], { R: '#f0507a', W: '#ffd0dc' }, x - 1, y + 14); return; }

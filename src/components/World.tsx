@@ -321,6 +321,7 @@ function SceneContent(p: WorldProps) {
     if (scene === 'cafe' && who.act === 'read') return { spec: { kind: 'book', color: '#8db8ef' }, mode: 'read' };
     if (scene.startsWith('trip_')) {
       if (who.act === 'omikuji') return { spec: { kind: 'book', color: '#f8f0e0' }, mode: 'read' };
+      if (who.act === 'wall') return { spec: { kind: 'stick', color: '#e8443a' }, mode: 'pour' };
       if (who.act === 'feed') return { spec: { kind: 'can', color: '#e8d8a0' }, mode: 'pour' };
       if (who.act === 'sing') return { spec: { kind: 'stick', color: '#3a3a3a' }, mode: 'sip' };
       if (who.dish) return { spec: foodProp(who.dish).utensil, mode: 'eat' };
@@ -347,7 +348,12 @@ function SceneContent(p: WorldProps) {
   };
   { const w = p.myView.weather; outWx.on = !!w && def.outdoor && scene !== 'sky' && scene !== 'reef' && !(scene === 'hill' && !p.hillReal); if (w) { outWx.type = w.type; outWx.temp = w.temp; } outWx.hour = p.myView.time.hour; outWx.fest = p.theme ? ({ romantic: 'ngày đặc biệt', party: 'ngày hội', calm: 'ngày đáng nhớ', tet: 'Tết', lantern: 'Trung Thu', winter: 'Giáng Sinh' } as Record<string, string>)[p.theme] ?? '' : ''; }
   const rent = (look: Profile['avatar'], o?: number | null) => (scene.startsWith('trip_') && o != null ? { ...look, outfit: o, design: null } : look);
-  const myDress = dress(rent(me.avatar, live.mine.outfit), p.myView), theirDress = dress(rent(partner?.avatar ?? {}, live.theirs?.outfit), p.myView);
+  const tripDress = (d: { look: Profile['avatar']; umbrella: boolean }, act?: string | null) => {
+    if (!scene.startsWith('trip_')) return d;
+    if (act === 'soak' || act === 'mask') return { look: { ...d.look, outfit: 18, acc: 0, design: null, glasses: act === 'mask' ? 5 : 0 }, umbrella: false };
+    return ['tent', 'ride', 'sit', 'paint'].includes(act ?? '') ? { ...d, umbrella: false } : d;
+  };
+  const myDress = tripDress(dress(rent(me.avatar, live.mine.outfit), p.myView), live.mine.act), theirDress = tripDress(dress(rent(partner?.avatar ?? {}, live.theirs?.outfit), p.myView), live.theirs?.act);
   const bedOf = (who: typeof live.mine | null) => (who && (who.act === 'sleep' || who.act === 'intimate') && who.bed ? p.decor.find(d => d.id === who.bed && d.island === scene) : undefined);
   const myBed = bedOf(live.mine), theirBed = p.partnerHere ? bedOf(theirs) : undefined;
   // Trong phòng: đứng ở phía trước một món (bên phải hoặc bên dưới chân đồ) thì luôn vẽ đè lên món đó

@@ -196,7 +196,7 @@ export function walkTarget(scene: SceneId, p: Pt): Pt | null {
 }
 
 /** Động tác ngồi (ghế ngoài sân trường, bồn cầu) */
-export const SIT_ACTS = ['sit', 'soak', 'paint', 'poop', 'peesit', 'makeup'];
+export const SIT_ACTS = ['sit', 'soak', 'mask', 'paint', 'poop', 'peesit', 'makeup'];
 /** Đứng ở bồn rửa mặt (sau lưng bồn tắm) */
 export const SINK_ACTS = ['wash', 'brush', 'face'];
 /** Ghế đôn ngay giữa phía trước bàn trang điểm (đồ 'dresser' chiếm ô x-1..x; xoay thì chiếm y-1..y, mặt quay về +x) */
@@ -204,7 +204,7 @@ export const vanitySeat = (d: { x: number; y: number; rot?: number }) => (d.rot 
 /** Tâm gương của bàn trang điểm (cao ~19 px trên mặt sàn) */
 export const vanityMirror = (d: { x: number; y: number; rot?: number }) => (d.rot ? roomPt(d.x + 0.3, d.y, 19) : roomPt(d.x, d.y + 0.3, 19));
 /** Động tác đứng quay lưng (đi tè, rửa tay) */
-export const BACK_ACTS = ['pray', 'pee', 'wash', 'brush', 'face', 'makeup'];
+export const BACK_ACTS = ['pray', 'wall', 'pee', 'wash', 'brush', 'face', 'makeup'];
 
 /** Chăm bé sơ sinh: nôi (phòng ngủ) + chỗ đứng cạnh nôi; bồn tắm em bé (phòng tắm) + chỗ đứng */
 export const NURSERY = {

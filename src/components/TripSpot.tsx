@@ -9,7 +9,7 @@ import { item } from '../lib/content';
 import { notify } from '../lib/realtime';
 import { seeded } from '../lib/rng';
 import { toast, toastError } from '../lib/toast';
-import { FORTUNES, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
+import { FORTUNES, lotusSprite, wallFlowerSprite, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
 import type { Pt } from '../lib/world';
 import { Spr, Tag, useScale } from './Stage';
 import { Stroller } from './Trip';
@@ -72,6 +72,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   const [fx, setFx] = useState<{ x: number; y: number; icon: string; n: number }[]>([]);
   const [art, setArt] = useState<{ x: number; y: number } | null>(null);
   const [made, setMade] = useState<{ icon: string; x: number; y: number }[]>([]);
+  const [flowers, setFlowers] = useState<{ x: number; y: number }[]>([]);
   const L = useRef(live); L.current = live;
   const mine = live.mine, theirs = partnerHere ? live.theirs : null;
   const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
@@ -89,7 +90,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     setTimeout(() => setFx(f => f.filter(e => e.n < t || e.n >= t + 1)), 2600);
   };
   const anim = (n: AnimName, times = 1) => { for (let k = 0; k < times; k++) setTimeout(() => onAnim(n), k * 800); };
-  const doAct = (a: Act, i: number) => go(near(a), () => {
+  const doAct = (a: Act, i: number) => go(a.k === 'do' && a.at ? a.at : near(a), () => {
     const at = L.current.mine.pos;
     if (a.k === 'buy') return void run(async () => {
       const it = item(a.item);
@@ -121,6 +122,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     live.say(a.say);
     switch (a.do) {
       case 'sit': hold({ act: 'sit' }, 20000); break;
+      case 'wall': hold({ act: 'wall' }, 5000); for (let k = 0; k < 4; k++) setTimeout(() => onAnim('wash'), k * 900); setTimeout(() => { setFlowers(f => [...f.slice(-11), { x: at.x - 5 + Math.round(Math.random() * 10), y: 92 + Math.round(Math.random() * 14) }]); pop(at.x, at.y - 40, '✨', 2); }, 4200); break;
       case 'craft': anim('rummage', 3); setTimeout(() => { pop(at.x, at.y - 34, '✨', 2); const r = a.res; if (r) setMade(m => [...m.filter(e => e.icon !== r.icon || e.x !== r.x), r]); }, 2200); break;
       case 'dress': anim('rummage', 2); setTimeout(() => { setFlash(Date.now()); live.update({ outfit: L.current.mine.outfit === a.outfit ? null : a.outfit ?? null }); anim('cheer'); pop(at.x, at.y - 34, '✨', 3); }, 1600); break;
       case 'pick': anim('rummage', 2); setTimeout(() => pop(at.x, at.y - 30, '🍁', 3), 1200); break;
@@ -131,25 +133,26 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       case 'paint': hold({ act: 'paint' }, 9000); setArt(null); setTimeout(() => { setArt({ x: a.x, y: a.y }); pop(a.x, a.y - 20, '✨', 2); }, 8000); break;
       case 'cross': go({ x: spot.walk.x0 + 14, y: 148 }, () => go({ x: spot.walk.x1 - 14, y: 180 }, () => { anim('cheer'); pop(L.current.mine.pos.x, L.current.mine.pos.y - 34, '🎉', 2); })); break;
       case 'love': if (theirs) onKiss(); else live.say('💭 Ước gì người ấy ở đây…'); pop(at.x, at.y - 36, '💕', 3); break;
-      case 'tent': live.update({ act: 'tent', pos: { x: a.x + 6, y: a.y + 14 } }); break;
-      case 'soak': live.update({ act: 'soak', pos: { x: a.x, y: a.y - 6 }, dish: null, drink: null }); break;
+      case 'tent': live.update({ act: 'tent', pos: { x: 66, y: 176 }, dish: null, drink: null }); break;
+      case 'soak': case 'mask': live.update({ act: a.do, pos: { x: a.x, y: a.y - 6 }, dish: null, drink: null }); break;
     }
   });
   const lbl = (a: Act) => a.k === 'photo' ? '📸 Chụp bưu thiếp' : a.label;
   const tented = [mine, theirs].filter(w => w?.act === 'tent').length;
   const tent = spot.acts.find(a => a.k === 'do' && a.do === 'tent');
-  const soaking = mine.act === 'soak';
+  const soaking = mine.act === 'soak' || mine.act === 'mask';
   return (
     <>
       <FxList fx={spot.fx} scene={scene} night={night} />
-      {floats.map(f => <span key={f.n} className="fx-lotus" style={{ left: f.x * s, top: f.y * s }}>🪷</span>)}
+      {floats.map(f => <Spr key={f.n} sprite={lotusSprite()} x={f.x} y={f.y} z={Math.round(f.y)} className="fx-lotus" />)}
+      {flowers.map((f, k) => <Spr key={k} sprite={wallFlowerSprite(k)} x={f.x} y={f.y} z={5} className="pop" />)}
       {fx.map(e => <span key={e.n} className="fx-pop" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>)}
       {flash > 0 && <div key={flash} className="trip-flash" />}
       {made.map(e => <span key={e.icon + e.x} className="fx-art" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>)}
       {art && <span className="fx-art" style={{ left: art.x * s - 10, top: (art.y - 30) * s }}>🖼️</span>}
       <Rider spot={spot} who={mine} look={looks.me} />
       {theirs && <Rider spot={spot} who={theirs} look={looks.them} />}
-      {[mine, theirs].map((w, k) => w?.act === 'soak' && <i key={k} className="fx-soak" style={{ left: (w.pos.x - 11) * s, top: (w.pos.y - 10) * s, width: 22 * s, height: 11 * s, zIndex: Math.round(w.pos.y) + 2 }} />)}
+      {[mine, theirs].map((w, k) => (w?.act === 'soak' || w?.act === 'mask') && <i key={k} className="fx-soak" style={{ left: (w.pos.x - 11) * s, top: (w.pos.y - 10) * s, width: 22 * s, height: 11 * s, zIndex: Math.round(w.pos.y) + 2 }} />)}
       {soaking && <Tag x={mine.pos.x} y={mine.pos.y + 4} className="label" onClick={() => live.update({ act: null, pos: { x: mine.pos.x, y: spot.walk.y0 + 4 } })}>🚶 Lên bờ</Tag>}
       {tent && tented > 0 && <Tag x={tent.x + 6} y={tent.y - 6} className="bed-bubble" onClick={() => mine.act === 'tent' && live.update({ act: null, pos: near(tent) })}>{tented > 1 ? '💑 Hai đứa trong lều' : '⛺ Có người trong lều'}{mine.act === 'tent' ? ' · bấm để ra' : ''}</Tag>}
       {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className="label" onClick={() => doAct(a, i)}>{lbl(a)}</Tag>)}

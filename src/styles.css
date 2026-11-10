@@ -1731,7 +1731,7 @@ textarea { resize: vertical; }
 .fx-aurora.b { top: 30%; opacity: .7; animation-duration: 11s; animation-direction: alternate-reverse; }
 .fx-spark { background: #fff8d0; animation: twinkle2 1.4s ease-in-out infinite; }
 .fx-screen { background: linear-gradient(135deg, #ff4a8a, #4af0ff, #ffe04a); animation: fxscreen 6s linear infinite; opacity: .9; }
-.fx-lotus { z-index: 160; font-size: 14px; filter: drop-shadow(0 0 6px #ffd27a); animation: fxlotus 18s linear forwards; }
+.spr.fx-lotus { filter: drop-shadow(0 0 4px #ffd27a) drop-shadow(0 0 10px #ff9a5a); animation: fxlotus 22s linear forwards; }
 @keyframes fxshim { 0%, 100% { opacity: 0; translate: 0 0; } 50% { opacity: .9; translate: var(--m) 0; } }
 @keyframes fxfall { from { transform: translate(0, 0) rotate(0); } to { transform: translate(var(--dx), var(--dy)) rotate(420deg); } }
 @keyframes fxsway { from { rotate: -9deg; } to { rotate: 9deg; } }
