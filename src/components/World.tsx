@@ -325,6 +325,7 @@ function SceneContent(p: WorldProps) {
       if (who.act === 'pick') return { spec: { kind: 'leaf', color: '#e8443a' }, mode: 'read' };
       if (who.act === 'paint') return { spec: { kind: 'brush', color: '#4a9ae8' }, mode: 'pour' };
       if (who.act === 'wall') return { spec: { kind: 'brush', color: '#e8443a' }, mode: 'pour' };
+      if (who.act === 'selfie') return { spec: { kind: 'phone', color: '#2a2a3a' }, mode: 'sip' };
       if (who.act === 'feed') return { spec: { kind: 'seed', color: '#d8c090' }, mode: 'pour' };
       if (who.act === 'sing') return { spec: { kind: 'mic', color: '#9a9aa8' }, mode: 'sip' };
       if (who.dish && snackProp(who.dish)) return { spec: snackProp(who.dish)!, mode: 'eat' };
@@ -1043,7 +1044,7 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
     const walker = live.mine.walkKid === k.id ? 'me' : live.theirs?.walkKid === k.id ? 'partner' : null;
     if (walker) {
       const who = walker === 'me' ? live.mine : theirs;
-      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom') continue;
+      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom' || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask'].includes(who.act ?? ''))) continue;
       const seat = walker === 'me' ? p.mySeat : p.theirSeat;
       const at = seat ? { x: seat.x + (seat.left ? -12 : 12), y: seat.y + 3 } : { x: who.pos.x + 10, y: who.pos.y + 1 };
       out.push(<Follower key={k.id} sprite={stage === 'baby' ? strollerSprite() : kidSprite(stage, look, 'idle', girl)} walk={stage === 'baby' ? undefined : kidSprite(stage, look, 'walk', girl)} x={at.x} y={at.y} title={`👶 ${k.name}`} onClick={() => p.on.kid(k.id)} />);

@@ -13,7 +13,7 @@ import { drinkProp, snackProp } from '../lib/props';
 import type { AnimName } from '../lib/acts';
 import type { Live } from '../lib/useLive';
 import { mainOf } from '../lib/tripMain';
-import { planeSprite } from '../lib/skydive';
+import { makeSprite } from '../lib/pixel';
 import { avatarPx } from './Avatar';
 import { Tag, useScale } from './Stage';
 import { Follower } from './Wander';
@@ -101,13 +101,29 @@ export function TripContent({ trip, me, today, go, enter, live, onAnim }: { trip
   );
 }
 
+/** Máy bay chở khách (cửa đóng kín) */
+export const airliner = () => makeSprite('airliner:v1', 132, 40, p => {
+  const W = '#f6f6fa', S = '#d0d0dc', B = '#3a6ad0', P = '#f0507a';
+  for (let x = 10; x < 122; x++) { const t = x < 22 ? (x - 10) / 12 : 1; const h = Math.round(4 + t * 5); p.rect(x, 22 - h, 1, h * 2, W); p.px(x, 21 + h, S); }
+  for (let x = 122; x < 131; x++) { const h = Math.max(1, Math.round(9 - (x - 122) * 1.0)); p.rect(x, 22 - h + Math.round((x - 122) * 0.3), 1, h * 2, W); }
+  p.rect(14, 24, 112, 2, B); p.rect(14, 26, 110, 1, P);
+  for (let x = 30; x < 116; x += 5) { p.rect(x, 17, 3, 3, '#5a8ac8'); p.px(x, 17, '#a8d0f0'); }
+  p.rect(121, 16, 3, 3, '#2a3a5a'); p.rect(125, 16, 3, 3, '#2a3a5a'); p.px(125, 16, '#8ab0e0');
+  for (const dx of [24, 110]) { p.rect(dx, 15, 5, 9, S); p.rect(dx + 1, 16, 3, 7, W); p.px(dx + 3, 20, '#8a8a9a'); }
+  for (let y = 0; y < 14; y++) p.rect(8 + Math.round(y * 0.7), 2 + y, 10 - Math.round(y * 0.45), 1, y < 4 ? B : W);
+  p.rect(8, 6, 6, 5, P); p.px(9, 6, W); p.px(12, 6, W); p.rect(10, 10, 2, 1, P);
+  p.rect(2, 19, 18, 3, W); p.rect(2, 19, 18, 1, B);
+  for (let x = 54; x < 90; x++) p.rect(x, 27 + Math.round((x - 54) * 0.28), 1, 3, x % 7 ? '#e0e0ea' : S);
+  for (const ex of [62, 78]) { p.rect(ex, 33, 12, 5, '#c8c8d4'); p.rect(ex + 10, 33, 2, 5, '#5a5a6a'); p.rect(ex, 33, 12, 1, W); }
+}, '#3a3a50');
+
 /** Máy bay cất cánh → bay qua mây → hạ cánh (2.6 giây), xong mới tới nơi */
 export function FlightOverlay({ to, onDone }: { to: string; onDone: () => void }) {
   useEffect(() => { const t = setTimeout(onDone, 2600); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="flight">
       {[0, 1, 2, 3, 4, 5, 6].map(i => <i key={i} className="cloud" style={{ top: `${8 + i * 13}%`, animationDelay: `${-i * 0.35}s`, animationDuration: `${0.9 + (i % 3) * 0.3}s` }} />)}
-      <img className="plane px-img" src={planeSprite().url} alt="" draggable={false} style={{ width: planeSprite().w * 3, height: planeSprite().h * 3 }} />
+      <img className="plane px-img" src={airliner().url} alt="" draggable={false} style={{ width: airliner().w * 3, height: airliner().h * 3 }} />
       <b>Đang bay tới {to}…</b>
     </div>
   );

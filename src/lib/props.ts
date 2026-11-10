@@ -4,7 +4,7 @@ import { makeSprite, mix, type Pen } from './pixel';
 export type PropKind = 'mug' | 'iced' | 'boba' | 'teacup' | 'milk' | 'wine' | 'flute' | 'cocktail' | 'soju' | 'juice'
   | 'chopsticks' | 'fork' | 'spoon' | 'stick' | 'book' | 'rod' | 'can' | 'baby'
   | 'cotton' | 'skewer' | 'drum' | 'cone' | 'pop' | 'bread' | 'pastry' | 'rice' | 'cake' | 'cupnoodle' | 'sandwich' | 'tub' | 'box' | 'choco'
-  | 'omikuji' | 'paper' | 'mic' | 'brush' | 'seed' | 'leaf';
+  | 'omikuji' | 'paper' | 'mic' | 'brush' | 'seed' | 'leaf' | 'phone';
 export interface PropSpec { kind: PropKind; color: string }
 export type HoldMode = 'sip' | 'eat' | 'roast' | 'read' | 'fish' | 'pour' | 'carry';
 export interface Hold { spec: PropSpec; mode: HoldMode }
@@ -215,6 +215,9 @@ export function drawProp(p: Pen, s: PropSpec, gx: number, gy: number, phase: 0 |
       break;
     case 'leaf':     // lá phong đỏ
       p.rect(gx + 1, gy - 5, 3, 3, c); p.px(gx, gy - 4, c); p.px(gx + 4, gy - 4, c); p.px(gx + 2, gy - 6, c); p.px(gx + 2, gy - 2, '#6a3a22'); p.px(gx + 2, gy - 1, '#6a3a22');
+      break;
+    case 'phone':    // điện thoại giơ lên chụp tự sướng
+      p.rect(gx + 1, gy - 7, 4, 6, '#2a2a3a'); p.rect(gx + 2, gy - 6, 2, 4, phase ? '#ffffff' : '#8ac0e8');
       break;
     case 'book':
       p.rect(gx, gy - 3, 7, 4, c); p.rect(gx + 1, gy - 3, 2, 3, WHITE); p.rect(gx + 4, gy - 3, 2, 3, WHITE); p.px(gx + 3, gy - 3, cd);

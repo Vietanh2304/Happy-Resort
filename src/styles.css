@@ -1749,3 +1749,4 @@ textarea { resize: vertical; }
 .spr.fx-dove { animation: fxland .9s ease-out both, peck .5s steps(2) .9s infinite; }
 @keyframes fxland { from { translate: var(--dx) -60px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
 @keyframes peck { 50% { transform: translateY(1px) rotate(12deg); } }
+.spr.fx-ring { transform-origin: 50% 0; animation: fxsway .25s ease-in-out infinite alternate; }

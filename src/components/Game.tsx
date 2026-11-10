@@ -1143,7 +1143,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'diary' && <DiarySheet me={me} partner={partner} today={myTime.date} mems={mems} onClose={close} />}
       {sheet?.kind === 'festival' && festKind && <FestivalSheet kind={festKind} me={me} partner={partner} today={myTime.date} mems={mems} inventory={inventory} kids={kids} onClose={close} />}
-      {sheet?.kind === 'travel' && <TravelSheet me={me} partner={partner} coins={couple?.coins ?? 0} mems={mems} today={myTime.date} onClose={close} onFly={id => setFlight({ to: `trip_${id}` as SceneId, name: tripOf(id)?.name ?? '' })} />}
+      {sheet?.kind === 'travel' && <TravelSheet me={me} partner={partner} coins={couple?.coins ?? 0} mems={mems} today={myTime.date} onClose={close} kids={kids.filter(k => k.name).map(k => ({ id: k.id, name: k.name }))} kidWith={live.mine.walkKid ?? null} onFly={(id, kid) => { live.update({ walkKid: kid }); setFlight({ to: `trip_${id}` as SceneId, name: tripOf(id)?.name ?? '' }); }} />}
       {flight && <FlightOverlay to={flight.name} onDone={() => { const f = flight; setFlight(null); tripCtx.at = f.to.startsWith('trip_') ? (f.to.slice(5) as TripId) : ''; enter(f.to); }} />}
       {festKind === 'midautumn' && myTime.hour >= 18 && <LanternParade mems={mems} year={myTime.date.slice(0, 4)} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} kinds={animals.reduce<Record<string, number>>((m, a) => ({ ...m, [a.kind]: (m[a.kind] ?? 0) + 1 }), {})} coins={couple?.coins ?? 0} onClose={close} />}

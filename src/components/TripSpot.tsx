@@ -1,5 +1,5 @@
 // Map tham quan: hiệu ứng động (nước gợn, đèn lồng, lá rơi, cực quang…), du khách đi dạo, hoạt động bấm được.
-import { useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import type { AnimName } from '../lib/acts';
 import { characterSprite, type AvatarLook } from '../lib/sprites';
 import type { Live } from '../lib/useLive';
@@ -9,13 +9,23 @@ import { item } from '../lib/content';
 import { notify } from '../lib/realtime';
 import { seeded } from '../lib/rng';
 import { toast, toastError } from '../lib/toast';
-import { FORTUNES, knotSprite, pigeonSprite, popSprite, lotusSprite, wallFlowerSprite, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
+import { FORTUNES, cowbellSprite, flySprite, lidSprite, knotSprite, pigeonSprite, popSprite, lotusSprite, wallFlowerSprite, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
 import type { Pt } from '../lib/world';
 import { Spr, Tag, useScale } from './Stage';
 import { Stroller, type NpcJob } from './Trip';
+import { Follower } from './Wander';
 import { drinkProp, snackProp } from '../lib/props';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
+
+/** Chim / bướm pixel vỗ cánh, bay lượn */
+function Flier({ icon, x, y, delay }: { icon: string; x: number; y: number; delay: number }) {
+  const s = useScale();
+  const [f, setF] = useState<0 | 1>(0);
+  useEffect(() => { const t = setInterval(() => setF(v => (v ? 0 : 1)), icon === '🦅' ? 420 : 180); return () => clearInterval(t); }, [icon]);
+  const sp = flySprite(icon, f), k = icon === '🦅' ? 1.4 : 1;
+  return <img src={sp.url} alt="" className="fx-bird spr" style={{ left: x * s, top: y * s, width: sp.w * s * k, height: sp.h * s * k, animationDelay: `${delay}s`, zIndex: 600 }} />;
+}
 
 function FxLayer({ fx, scene, night }: { fx: Fx; scene: string; night: boolean }) {
   const s = useScale();
@@ -28,7 +38,7 @@ function FxLayer({ fx, scene, night }: { fx: Fx; scene: string; night: boolean }
     case 'steam': return <>{Array.from({ length: fx.n ?? 2 }, (_, i) => <i key={i} className="fx-steam" style={{ left: (fx.x + i * 4 - 4) * s, top: fx.y * s, width: 5 * s, height: 5 * s, animationDelay: `${-i * 0.9 - r()}s`, zIndex: 400 }} />)}</>;
     case 'glow': return fx.night && !night ? null : <i className="fx-glow" style={{ left: (fx.x - fx.r) * s, top: (fx.y - fx.r / 2) * s, width: fx.r * 2 * s, height: fx.r * s, background: `radial-gradient(${fx.c}55, transparent 70%)`, zIndex: 2 }} />;
     case 'move': { const sp = miniSprite(fx.spr); return <Spr sprite={sp} x={fx.x} y={fx.y} z={fx.y < 100 ? 3 : Math.round(fx.y)} className="fx-move" style={v({ '--dx': `${fx.dx * s}px`, animationDuration: `${fx.dur}s`, animationDirection: fx.loop ? 'normal' : 'alternate', animationIterationCount: 'infinite' })} />; }
-    case 'bird': return <>{Array.from({ length: fx.n }, (_, i) => <span key={i} className="fx-bird" style={{ left: (fx.x + r() * 60) * s, top: (fx.y + r() * 30) * s, fontSize: 7 * s, animationDelay: `${-r() * 6}s`, zIndex: 600 }}>{fx.icon}</span>)}</>;
+    case 'bird': return <>{Array.from({ length: fx.n }, (_, i) => <Flier key={i} icon={fx.icon} x={fx.x + r() * 60} y={fx.y + r() * 30} delay={-r() * 6} />)}</>;
     case 'aurora': return <div className="fx" style={box(0, fx.y, 256, 70, 1)}><i className="fx-aurora" /><i className="fx-aurora b" /></div>;
     case 'sparkle': return fx.night && !night ? null : <div className="fx" style={box(fx.x, fx.y, fx.w, fx.h, 3)}>{Array.from({ length: fx.n }, (_, i) => <i key={i} className="fx-spark" style={{ left: r() * fx.w * s, top: r() * fx.h * s, width: s, height: s, animationDelay: `${-r() * 2}s`, animationDuration: `${0.8 + r() * 1.6}s` }} />)}</div>;
     case 'screen': return <i className="fx-screen" style={box(fx.x, fx.y, fx.w, fx.h, 3)} />;
@@ -101,6 +111,9 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   const [flowers, setFlowers] = useState<{ x: number; y: number }[]>([]);
   const [call, setCall] = useState<{ job: NpcJob; n: number } | null>(null);
   const jobs = useMemo(() => npcJobs(spot), [spot]);
+  const [lid, setLid] = useState(false);
+  const [bell, setBell] = useState(0);
+  const [paintN, setPaintN] = useState(0);
   const [knots, setKnots] = useState<{ x: number; y: number }[]>([]);
   const [doves, setDoves] = useState<{ x: number; y: number; n: number; dx: number }[]>([]);
   const L = useRef(live); L.current = live;
@@ -163,12 +176,16 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       case 'dress': anim('rummage', 2); setTimeout(() => { setFlash(Date.now()); live.update({ outfit: L.current.mine.outfit === a.outfit ? null : a.outfit ?? null }); anim('cheer'); pop(at.x, at.y - 34, '✨', 3); }, 1600); break;
       case 'pick': hold({ act: 'sit' }, 1800); setTimeout(() => { hold({ act: 'pick' }, 8000); pop(at.x, at.y - 30, '✨', 2); }, 1800); break;
       case 'cheer': anim('cheer', 2); pop(at.x, at.y - 34, '✨', 3); break;
+      case 'watch': hold({ act: 'watch' }, 9000); setPaintN(Date.now()); setTimeout(() => { setFlowers(f => [...f.slice(-11), { x: 200 + Math.round(Math.random() * 30), y: 96 + Math.round(Math.random() * 12) }]); anim('cheer'); live.say('👏 Ông vẽ đẹp quá!'); }, 7000); break;
+      case 'gaze': hold({ act: 'gaze' }, 8000); setTimeout(() => live.say('🛶 Gondola đi qua dưới cầu kìa…'), 3000); break;
+      case 'jar': hold({ act: 'jar' }, 6000); setTimeout(() => { setLid(true); pop(214, 160, '✨', 2); }, 1500); setTimeout(() => setLid(false), 6500); break;
+      case 'cow': hold({ act: 'cow' }, 6000); for (let k = 0; k < 5; k++) setTimeout(() => onAnim('wash'), k * 800); setBell(Date.now()); setTimeout(() => live.say('🔔 Leng keng~ leng keng~'), 1200); break;
       case 'sing': hold({ act: 'sing' }, 9000); for (let k = 0; k < 6; k++) setTimeout(() => pop(at.x, at.y - 34, k % 2 ? '🎵' : '🎶'), k * 1400); setTimeout(() => pop(at.x, at.y - 10, '👏', 4), 8000); break;
       case 'pray': hold({ act: 'pray' }, 6000); for (let k = 0; k < 3; k++) setTimeout(() => pop(at.x, at.y - 34, scene === 'trip_iceland_aurora' ? '🌠' : '🙏'), k * 1500); break;
       case 'feed': hold({ act: 'feed' }, 9000); for (let k = 0; k < 7; k++) setTimeout(() => setDoves(d => [...d.slice(-9), { x: at.x + (k % 2 ? 1 : -1) * (8 + (k * 5) % 16), y: at.y + 2 + (k % 3) * 3, n: Date.now() + k, dx: (k % 2 ? 1 : -1) * 60 }]), 500 + k * 600); setTimeout(() => setDoves([]), 16000); break;
       case 'paint': hold({ act: 'paint' }, 9000); setArt(null); setTimeout(() => { setArt({ x: a.x, y: a.y }); pop(a.x, a.y - 20, '✨', 2); }, 8000); break;
       case 'cross': go({ x: spot.walk.x0 + 14, y: 148 }, () => go({ x: spot.walk.x1 - 14, y: 180 }, () => { anim('cheer'); pop(L.current.mine.pos.x, L.current.mine.pos.y - 34, '🎉', 2); })); break;
-      case 'love': if (theirs) onKiss(); else live.say('💭 Ước gì người ấy ở đây…'); pop(at.x, at.y - 36, '💕', 3); break;
+      case 'love': if (theirs) { onKiss(); pop(at.x, at.y - 36, '💕', 3); } else { hold({ act: 'gaze' }, 3500); setTimeout(() => { hold({ act: 'selfie' }, 3500); live.say('🤳 Chụp tự sướng với tháp gửi người ấy nè'); setTimeout(() => setFlash(Date.now()), 1800); }, 3500); } break;
       case 'tent': live.update({ act: 'tent', pos: { x: 66, y: 176 }, dish: null, drink: null }); break;
       case 'soak': case 'mask': live.update({ act: a.do, pos: { x: a.x, y: a.y - 6 }, dish: null, drink: null }); break;
     }
@@ -181,6 +198,9 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     <>
       <FxList fx={spot.fx} scene={scene} night={night} />
       {floats.map(f => <Spr key={f.n} sprite={lotusSprite()} x={f.x} y={f.y} z={Math.round(f.y)} className="fx-lotus" />)}
+      {scene === 'trip_taichung_rainbow' && <Grandpa painting={Date.now() - paintN < 9000} />}
+      {scene === 'trip_gwangju_penguin' && lid && <Spr sprite={lidSprite()} x={214} y={164} z={190} className="fx-rise" />}
+      {scene === 'trip_swiss_station' && <Spr key={bell} sprite={cowbellSprite()} x={176} y={176} z={185} className={Date.now() - bell < 6000 ? 'fx-ring' : ''} />}
       {knots.map((k, i) => <Spr key={`k${i}`} sprite={knotSprite()} x={k.x} y={k.y + 5} z={6} className="pop" />)}
       {doves.map(d => <Spr key={d.n} sprite={pigeonSprite(0)} x={d.x} y={d.y} z={Math.round(d.y)} className="fx-dove" style={v({ '--dx': `${d.dx * s}px` })} />)}
       {flowers.map((f, k) => <Spr key={k} sprite={wallFlowerSprite(k)} x={f.x} y={f.y} z={5} className="pop" />)}
@@ -197,4 +217,13 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       {[0, 1, 2, 3, 4, 5, 6].map(i => <Stroller key={i} seed={scene} i={i} box={spot.walk} lines={spot.lines} jobs={jobs} call={i < 2 ? call : null} />)}
     </>
   );
+}
+
+/** Ông Cầu Vồng: ông cụ tóc bạc cầm cọ vẽ tường ở góc làng */
+const GRANDPA = { gender: 'm' as const, hair: 0, hairColor: 6, skin: 1, shirt: 6, outfit: 0 };
+function Grandpa({ painting }: { painting: boolean }) {
+  const [f, setF] = useState<0 | 1>(0);
+  useEffect(() => { const t = setInterval(() => setF(v => (v ? 0 : 1)), painting ? 350 : 1200); return () => clearInterval(t); }, [painting]);
+  const sp = characterSprite(GRANDPA, 'idle', { spec: { kind: 'brush', color: ['#e8443a', '#4a9ae8', '#f6c445'][f] }, mode: 'pour', phase: f }, 'back');
+  return <Follower sprite={sp} x={228} y={126} title="Ông Cầu Vồng" ps={avatarPx(useScale())} onClick={() => undefined} />;
 }

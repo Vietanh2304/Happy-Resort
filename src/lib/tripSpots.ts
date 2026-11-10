@@ -35,7 +35,7 @@ export type Act =
   | { k: 'float'; x: number; y: number; label: string; ry: number }
   | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind; res?: { icon: string; x: number; y: number }; outfit?: number; at?: { x: number; y: number } };
 /** Hành động nhân vật: ngồi, khấn, ngâm nước, chui lều, cho chim ăn, vẽ, hát, hôn… */
-export type DoKind = 'wall' | 'mask' | 'dress' | 'sit' | 'craft' | 'cheer' | 'pray' | 'feed' | 'paint' | 'cross' | 'love' | 'tent' | 'soak' | 'pick' | 'sing';
+export type DoKind = 'watch' | 'gaze' | 'jar' | 'cow' | 'wall' | 'mask' | 'dress' | 'sit' | 'craft' | 'cheer' | 'pray' | 'feed' | 'paint' | 'cross' | 'love' | 'tent' | 'soak' | 'pick' | 'sing';
 
 export interface SpotDef {
   trip: TripId; id: string; name: string; icon: string;
@@ -193,7 +193,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(226, 140, 10, 7, '#f0f0f0'); p.rect(227, 138, 8, 2, '#e8443a'); p.rect(238, 142, 6, 5, '#4a9ae8');
     },
     fx: [{ k: 'bird', x: 60, y: 60, icon: '🦋', n: 3 }, { k: 'sparkle', x: 0, y: 50, w: 256, h: 60, n: 8 }],
-    acts: [ph(70, 130), buy(150, 150, 'keo_bong', 6, '🍭 Kẹo bông'), say(220, 132, '👴 Ông Cầu Vồng', 'Ông Hoàng vẽ từ năm 86 tuổi đó, nhờ vậy cả làng được giữ lại 🌈', 'cheer'), { ...say(30, 170, '🖌️ Vẽ thêm một bông hoa', 'Hai bạn vẽ chung một bông hoa nhỏ lên tường — dễ thương ghê 🌸', 'wall') }],
+    acts: [ph(70, 130), buy(150, 150, 'keo_bong', 6, '🍭 Kẹo bông'), say(220, 132, '👴 Ông Cầu Vồng', 'Ông Hoàng vẽ từ năm 86 tuổi đó, nhờ vậy cả làng được giữ lại 🌈', 'watch'), { ...say(30, 170, '🖌️ Vẽ thêm một bông hoa', 'Hai bạn vẽ chung một bông hoa nhỏ lên tường — dễ thương ghê 🌸', 'wall') }],
     lines: ['Bức tường này đẹp quá!', '📸 Đứng đây chụp nè', 'Màu sắc rực rỡ ghê', 'Ông vẽ hết cả làng đó', 'Wow 🌈'],
   },
   trip_taichung_fengjia: {
@@ -292,12 +292,12 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let i = 0; i < 70; i++) { const x = Math.floor(L.r() * 252), y = 126 + Math.floor(L.r() * 62); p.rect(x, y, 4, 2, mix('#b09878', '#8a7058', L.r())); }
       // tường gạch thấp, chum tương
       for (let x = 0; x < 256; x += 8) p.rect(x, 120, 7, 4, '#8a7a6a');
-      for (let i = 0; i < 4; i++) { circle(p, 200 + i * 12, 176, 5, '#6a3a22'); p.rect(196 + i * 12, 170, 9, 2, '#4a2a18'); }
+      for (let i = 0; i < 4; i++) { circle(p, 200 + i * 12, 176, 5, '#6a3a22'); p.rect(196 + i * 12, 170, 9, 2, '#4a2a18'); p.px(199 + i * 12, 173, '#9a6a4a'); }
       // chim cánh cụt gỗ (biểu tượng làng)
       p.rect(30, 160, 8, 12, '#2a2a3a'); p.rect(32, 163, 4, 8, '#ffffff'); p.rect(33, 160, 2, 1, '#f6a83a'); p.px(32, 161, '#ffffff'); p.px(35, 161, '#ffffff');
     },
     fx: [{ k: 'sway', x: 150, y: 74, c: '#e8443a' }, { k: 'sway', x: 86, y: 74, c: '#3a6ad0' }, { k: 'fall', n: 8, c: ['#e8743a', '#f6c445'], size: 2, slow: true }],
-    acts: [buy(70, 140, 'clock', 15, '🕰️ Đồng hồ cổ'), { ...say(110, 128, '👘 Thuê hanbok', 'Mặc hanbok dạo phố cổ, như phim cổ trang luôn 👘', 'dress'), outfit: 13 }, buy(150, 150, 'tteokbokki', 8, '🌶️ Tteokbokki'), ph(34, 150), { ...say(210, 160, '🏺 Chum tương', 'Bà cụ ủ tương đậu ở đây mấy chục năm rồi, thơm lừng', 'craft'), res: { icon: '🫙', x: 214, y: 168 } }],
+    acts: [buy(70, 140, 'clock', 15, '🕰️ Đồng hồ cổ'), { ...say(110, 128, '👘 Thuê hanbok', 'Mặc hanbok dạo phố cổ, như phim cổ trang luôn 👘', 'dress'), outfit: 13 }, buy(150, 150, 'tteokbokki', 8, '🌶️ Tteokbokki'), ph(34, 150), { ...say(210, 160, '🏺 Chum tương', 'Mở nắp chum ra… mùi tương đậu thơm lừng!', 'jar') }],
     lines: ['Đồ cổ dễ thương quá', 'Nhà hanok mát ghê', 'Chụp với chú cánh cụt nè 🐧', 'Hồi xưa ông bà dùng cái này', 'Cổ kính ghê'],
   },
   trip_gwangju_chungjang: {
@@ -548,7 +548,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 0; x < 256; x += 64) L.lamps.push({ x: x + 30, y: 150, c: '#ffd88a' });
     },
     fx: [{ k: 'shim', x: 0, y: 110, w: 256, h: 50, n: 26 }, { k: 'move', spr: 'gondola', x: 20, y: 150, dx: 180, dur: 24 }, { k: 'move', spr: 'gondola', x: 210, y: 128, dx: -170, dur: 30 }],
-    acts: [{ k: 'ride', x: 128, y: 172, label: '🛶 Đi gondola', spr: 'gondola', ry: 146, say: 'O sole mio~ 🎶 Anh lái thuyền hát vang dưới cầu Rialto' }, buy(40, 178, 'kem_que', 6, '🍨 Gelato'), ph(210, 178), say(128, 90, '🌉 Cầu Rialto', 'Cây cầu đá 400 năm — đứng giữa cầu ngắm kênh đẹp nhất', 'cheer')],
+    acts: [{ k: 'ride', x: 128, y: 172, label: '🛶 Đi gondola', spr: 'gondola', ry: 146, say: 'O sole mio~ 🎶 Anh lái thuyền hát vang dưới cầu Rialto' }, buy(40, 178, 'kem_que', 6, '🍨 Gelato'), ph(210, 178), say(128, 90, '🌉 Cầu Rialto', 'Cây cầu đá 400 năm — đứng bờ kênh ngắm gondola lướt qua dưới cầu', 'gaze')],
     lines: ['Ciao!', 'Gondola đẹp ghê', 'Nước trong xanh quá', 'Gelato ngon tuyệt', 'Lạc đường rồi 😂'],
   },
   trip_venice_sanmarco: {
@@ -601,7 +601,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 100; x < 256; x += 50) L.lamps.push({ x, y: 116, c: '#ffe8a0' });
     },
     fx: [{ k: 'move', spr: 'train', x: -80, y: 136, dx: 420, dur: 16, loop: true }, { k: 'fall', n: 10, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 10, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), { ...say(220, 170, '🐄 Bò sữa đeo chuông', 'Leng keng~ đàn bò đeo chuông gặm cỏ trên đồi 🐄', 'craft'), res: { icon: '🔔', x: 170, y: 166 } }],
+    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 10, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), { ...say(220, 170, '🐄 Bò sữa đeo chuông', 'Vuốt ve chú bò, chuông kêu leng keng~ 🐄', 'cow'), at: { x: 152, y: 176 } }],
     lines: ['Tàu tới rồi!', 'Núi tuyết đẹp quá', 'Grüezi!', 'Lạnh ghê', 'Uống sô-cô-la nóng đi'],
   },
   trip_swiss_chalet: {
@@ -730,3 +730,16 @@ export const popSprite = (icon: string): Sprite | null => {
 export const pigeonSprite = (f: 0 | 1) => makeSprite(`pigeon:${f}`, 10, 8, p => p.map(f ? ['..........', '..........', '.GGWWWW...', 'GGWWWWWW..', '.GWWWWWWW.', '..WWWWWWWK', '...O.O..OO', '..........'] : ['.......WW.', '......WKWO', '.GGWWWWWW.', 'GGWWWWWW..', '.GWWWWWW..', '..WWWWW...', '...O.O....', '..........'], { W: '#d8d8e4', G: '#7a8aa8', K: '#2a2a3a', O: '#f08a3a' }));
 /** Tờ quẻ buộc trên giá */
 export const knotSprite = () => makeSprite('omikuji-knot', 3, 5, p => { p.rect(0, 0, 3, 2, '#fffaf0'); p.px(1, 2, '#e8e0d0'); p.rect(0, 3, 3, 2, '#fffaf0'); });
+
+/** Chim / bướm bay nền (2 khung vỗ cánh) */
+const FLY: Record<string, [string[], string[], Record<string, string>]> = {
+  '🦋': [['B..B', 'BBBB', '.KK.', 'PBBP'], ['....', 'BBBB', 'BKKB', '....'], { B: '#f08ac8', P: '#f6c445', K: '#3a2a3a' }],
+  '🕊️': [['W.....W', 'WW...WW', '.WWWWWK', '..WWW..'], ['.......', '.WWWWWK', 'WWWWW..', 'W.....W'], { W: '#eeeef4', K: '#f08a3a' }],
+  '🐦': [['K...K', 'KK.KK', '.BBBO', '..B..'], ['.....', '.BBBO', 'KKBKK', 'K...K'], { K: '#3a3a4a', B: '#6a5a4a', O: '#f6a83a' }],
+  '🦅': [['K.......K', 'KK.....KK', '.KKBBBKKW', '...BBB..O', '....K....'], ['.........', '...BBB..W', 'KKKBBBKKO', 'K..K.K..K', '.........'], { K: '#3a2a1a', B: '#6a4a2a', W: '#ffffff', O: '#f6c445' }],
+};
+export const flySprite = (icon: string, f: 0 | 1) => { const a = FLY[icon] ?? FLY['🐦']; const rows = a[f]; return makeSprite(`fly:${icon}:${f}`, rows[0].length, rows.length, p => p.map(rows, a[2]), null); };
+/** Nắp chum tương mở hé */
+export const lidSprite = () => makeSprite('jar-lid', 11, 4, p => { p.rect(1, 1, 9, 2, '#4a2a18'); p.rect(4, 0, 3, 1, '#6a3a22'); p.rect(1, 3, 9, 1, '#2a1a10'); });
+/** Chuông bò lắc lư */
+export const cowbellSprite = () => makeSprite('cowbell', 5, 6, p => { p.rect(1, 0, 3, 1, '#8a5a2a'); p.rect(1, 1, 3, 3, '#f6c445'); p.rect(0, 4, 5, 1, '#c8902a'); p.px(2, 5, '#6a4a2a'); p.px(1, 2, '#fff4b0'); });

@@ -189,20 +189,31 @@ export function LanternParade({ mems, year }: { mems: api.Memory[]; year: string
 }
 
 // ───────── Du lịch: đi một chuyến, mang về bưu thiếp + quà lưu niệm ─────────
-export function TravelSheet({ me, partner, coins, mems, onClose, onFly }: { me: api.Profile; partner: api.Profile | null; coins: number; mems: api.Memory[]; today: string; onClose: () => void; onFly: (id: TripId) => void }) {
+export function TravelSheet({ me, partner, coins, mems, onClose, onFly, kids = [], kidWith = null }: { me: api.Profile; partner: api.Profile | null; coins: number; mems: api.Memory[]; today: string; onClose: () => void; onFly: (id: TripId, kid: string | null) => void; kids?: { id: string; name: string }[]; kidWith?: string | null }) {
   const cards = mems.filter(m => m.kind === 'postcard');
+  const [kid, setKid] = useState<string | null>(kidWith);
+  const kidName = kids.find(k => k.id === kid)?.name;
+  const cost = (t: Trip) => t.price + (kid ? Math.ceil(t.price / 2) : 0);
   const go = (t: Trip) => run(async () => {
-    if (!confirm(`✈️ Mua vé đi ${t.name} hết ${t.price} xu? (kèm quà lưu niệm ${item(t.souvenir).icon}, về làng miễn phí)`)) return;
+    if (!confirm(`✈️ Mua vé đi ${t.name} hết ${cost(t)} xu${kidName ? ` (gồm vé trẻ em cho bé ${kidName})` : ''}? (kèm quà lưu niệm ${item(t.souvenir).icon}, về làng miễn phí)`)) return;
     await api.buyItem(t.souvenir, t.price);
+    if (kid) await api.buyItem(t.souvenir, Math.ceil(t.price / 2));
     notify('inventory', 'profiles');
-    onClose(); onFly(t.id);
+    onClose(); onFly(t.id, kid);
   });
 
   return (
     <Sheet title="✈️ Du lịch cùng nhau" onClose={onClose}>
       <p className="muted small-note">Hũ xu: 🪙 {coins} · bay tới nơi dạo chơi, ăn đặc sản, chụp bưu thiếp 📸</p>
+      {kids.length > 0 && (
+        <div className="chips" style={{ display: 'flex', flexWrap: 'wrap', gap: 6, margin: '6px 0' }}>
+          <span className="muted small-note">👶 Đưa bé đi cùng:</span>
+          <button className={`btn small ${kid ? 'ghost' : ''}`} onClick={() => setKid(null)}>Không</button>
+          {kids.map(k => <button key={k.id} className={`btn small ${kid === k.id ? '' : 'ghost'}`} onClick={() => setKid(k.id)}>{k.name}</button>)}
+        </div>
+      )}
       <div className="bag-grid">
-        {TRIPS.map(t => <button key={t.id} className="bag-item" disabled={coins < t.price} onClick={() => void go(t)}><span style={{ fontSize: 26 }}>{t.icon}</span><small>{t.name}</small><small>🪙 {t.price}</small></button>)}
+        {TRIPS.map(t => <button key={t.id} className="bag-item" disabled={coins < cost(t)} onClick={() => void go(t)}><span style={{ fontSize: 26 }}>{t.icon}</span><small>{t.name}</small><small>🪙 {cost(t)}</small></button>)}
       </div>
       <h4>📮 Bưu thiếp ({cards.length})</h4>
       <div className="postcards">
