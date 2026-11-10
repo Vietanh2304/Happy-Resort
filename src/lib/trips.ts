@@ -2,7 +2,7 @@
 import { makeSprite, mix, type Pen } from './pixel';
 import { seeded } from './rng';
 
-export type TripId = 'taichung' | 'gwangju' | 'hoian' | 'dalat' | 'tokyo' | 'paris' | 'venice' | 'swiss' | 'iceland';
+export type TripId = 'taichung' | 'gwangju' | 'hoian' | 'tokyo' | 'paris' | 'venice' | 'swiss' | 'iceland';
 export interface Spot { x: number; y: number; icon: string; name: string; say: string }
 export interface Trip {
   id: TripId; name: string; icon: string; bg: string; price: number; souvenir: string; line: string;
@@ -21,9 +21,6 @@ export const TRIPS: Trip[] = [
   { id: 'hoian', name: 'Phố cổ Hội An', icon: '🏮', bg: 'linear-gradient(#f6c445,#e8743a)', price: 120, souvenir: 'lantern', line: 'Đèn lồng sáng cả con phố, tụi mình đi thuyền thả hoa đăng.',
     sky: ['#f6b06a', '#ffe0a8'], ground: ['#c8a878', '#b89868'], far: 'none', food: { name: 'Cao lầu', icon: '🍜' },
     spots: [S(128, 96, '🌉', 'Chùa Cầu', 'Cây cầu 400 năm tuổi nè'), S(210, 100, '🪷', 'Bến thả hoa đăng', 'Thả một chiếc đèn, ước một điều 🪷')] },
-  { id: 'dalat', name: 'Đà Lạt', icon: '🌲', bg: 'linear-gradient(#9ad0f0,#6a9a7a)', price: 100, souvenir: 'peach_tea', line: 'Sương mù buổi sáng, một ly trà nóng và hai đôi tay đan vào nhau.',
-    sky: ['#a8c8e0', '#e8f0f0'], ground: ['#8ab878', '#7aa868'], far: 'hills', food: { name: 'Bánh tráng nướng', icon: '🫓' },
-    spots: [S(80, 98, '🌸', 'Vườn hoa', 'Hoa cẩm tú cầu nở khắp đồi'), S(190, 98, '☕', 'Quán cà phê view đồi', 'Một ly sữa đậu nành nóng không?')] },
   { id: 'tokyo', name: 'Tokyo', icon: '🗾', bg: 'linear-gradient(#ffd8e8,#f08aa6)', price: 320, souvenir: 'sakura_bloom', line: 'Hoa anh đào rơi trên vai, tụi mình ăn ramen đến no căng.',
     sky: ['#9ad0f8', '#ffe8f0'], ground: ['#d8d0c0', '#c8c0b0'], far: 'skyline', food: { name: 'Ramen', icon: '🍜' },
     spots: [S(64, 96, '⛩️', 'Đền Asakusa', 'Rút một quẻ xăm thử vận may nha'), S(190, 98, '🌸', 'Công viên Ueno', 'Ngồi picnic dưới gốc anh đào 🌸')] },
@@ -97,10 +94,6 @@ const LANDMARK: Record<TripId, (p: Pen, night: boolean, r: () => number) => void
     for (let i = 0; i < 8; i++) tree(p, 10 + i * 18 + Math.floor(r() * 6), 100, i % 2 ? '#d8502a' : '#f08a3a', 16);
   },
   hoian: () => undefined,
-  dalat: (p, _n, r) => {
-    for (let i = 0; i < 14; i++) tree(p, 6 + i * 18 + Math.floor(r() * 6), 100, '#2a6a4a', 22);
-    p.rect(150, 86, 60, 14, '#f8e8c8'); p.rect(146, 80, 68, 6, '#c8503a'); p.rect(176, 90, 8, 10, '#8a5a3c');
-  },
   tokyo: p => {
     p.rect(40, 70, 4, 30, '#e8443a'); p.rect(70, 70, 4, 30, '#e8443a'); p.rect(34, 66, 46, 4, '#e8443a'); p.rect(38, 74, 38, 2, '#e8443a');
     for (let k = 0; k < 4; k++) { const w = 30 - k * 6; p.rect(150 - w / 2 + 15, 92 - k * 12, w, 8, '#c8503a'); p.rect(150 - w / 2 + 11, 90 - k * 12, w + 8, 2, '#3a3a4a'); }
@@ -139,7 +132,6 @@ export const TRIP_MENU: Record<TripId, Dish[]> = {
   taichung: [D('Trà sữa trân châu', '🧋', true), D('Gà rán khổng lồ', '🍗'), D('Bánh dứa', '🥮'), D('Mì bò Đài Loan', '🍜'), D('Bánh bao nước', '🥟')],
   gwangju: [D('Tteokgalbi nướng', '🍖'), D('Cơm trộn bibimbap', '🍲'), D('Kimchi', '🥬'), D('Gà rán Hàn', '🍗'), D('Soju đào', '🍶', true)],
   hoian: [D('Cao lầu', '🍜'), D('Bánh mì Phượng', '🥖'), D('Cơm gà', '🍛'), D('Bánh bao bánh vạc', '🥟'), D('Nước mót', '🍵', true)],
-  dalat: [D('Bánh tráng nướng', '🫓'), D('Lẩu gà lá é', '🍲'), D('Bánh căn', '🥞'), D('Dâu tây', '🍓'), D('Sữa đậu nành nóng', '🥛', true)],
   tokyo: [D('Ramen', '🍜'), D('Sushi', '🍣'), D('Tempura', '🍤'), D('Bánh mochi', '🍡'), D('Trà matcha', '🍵', true)],
   paris: [D('Croissant', '🥐'), D('Bánh macaron', '🧁'), D('Súp hành', '🥣'), D('Bít tết khoai tây', '🥩'), D('Vang đỏ', '🍷', true)],
   venice: [D('Pizza', '🍕'), D('Mì Ý mực đen', '🍝'), D('Gelato', '🍨'), D('Tiramisu', '🍰'), D('Cà phê espresso', '☕', true)],
