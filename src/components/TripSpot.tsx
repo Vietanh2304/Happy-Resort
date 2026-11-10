@@ -1,5 +1,9 @@
 // Map tham quan: hiệu ứng động (nước gợn, đèn lồng, lá rơi, cực quang…), du khách đi dạo, hoạt động bấm được.
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
+import type { AnimName } from '../lib/acts';
+import { characterSprite, type AvatarLook } from '../lib/sprites';
+import type { Live } from '../lib/useLive';
+import { avatarPx } from './Avatar';
 import * as api from '../lib/api';
 import { item } from '../lib/content';
 import { notify } from '../lib/realtime';
@@ -30,37 +34,123 @@ function FxLayer({ fx, scene, night }: { fx: Fx; scene: string; night: boolean }
   }
 }
 
-export function SpotContent({ spot, scene, me, today, night, go }: { spot: SpotDef; scene: SpotScene; me: api.Profile; today: string; night: boolean; go: (to: Pt, then?: () => void) => void }) {
+/** Danh sách hiệu ứng động của một cảnh */
+export function FxList({ fx, scene, night }: { fx: Fx[]; scene: string; night: boolean }) {
+  return <>{fx.map((f, i) => <FxLayer key={i} fx={f} scene={scene} night={night} />)}</>;
+}
+
+const RIDE_MS = 9000;
+const RIDE_ZOOM: Record<string, number> = { cable: 2, swan: 2, boat: 1.6, sampan: 1.4, gondola: 1.1, bateau: 1, train: 1 };
+const DRINKS = ['tra_sua', 'honey_tea', 'ca_phe_sua', 'peach_tea', 'yogurt'];
+const KEEP = ['clock', 'books', 'lantern', 'rose_bloom', 'chocolate', 'cheese'];
+
+/** Ngồi trên thuyền / cáp treo / tàu: xe chạy ngang map mang theo nhân vật */
+function Rider({ spot, who, look }: { spot: SpotDef; who: { act: string | null; trip?: { i: number; at: number } | null }; look: AvatarLook }) {
+  const s = useScale(), ps = avatarPx(s);
+  const a = who.trip ? spot.acts[who.trip.i] : undefined;
+  if (who.act !== 'ride' || !a || a.k !== 'ride') return null;
+  const veh = miniSprite(a.spr), z = RIDE_ZOOM[a.spr] ?? 1, vw = veh.w * ps * z, vh = veh.h * ps * z;
+  const ch = characterSprite(look, 'sit', undefined, 'side');
+  const wl = vw / s, ltr = a.x < 128, x0 = ltr ? 6 : 250 - wl, dx = (ltr ? 1 : -1) * (244 - wl) * s;
+  return (
+    <div className="fx-rider" style={v({ left: x0 * s, top: a.ry * s - vh - ch.h * ps * 0.55, width: vw, height: vh + ch.h * ps * 0.55, zIndex: Math.round(a.ry) + 2, '--dx': `${dx}px`, animationDuration: `${RIDE_MS}ms`, animationDelay: `${-(Date.now() - who.trip!.at)}ms` })}>
+      <div style={{ position: 'absolute', inset: 0, transform: ltr ? undefined : 'scaleX(-1)' }}>
+        <img src={ch.url} alt="" style={{ position: 'absolute', left: vw / 2 - (ch.w * ps) / 2, bottom: vh * 0.45, width: ch.w * ps, height: ch.h * ps }} />
+        <img src={veh.url} alt="" style={{ position: 'absolute', left: 0, bottom: 0, width: vw, height: vh }} />
+      </div>
+    </div>
+  );
+}
+
+export function SpotContent({ spot, scene, me, today, night, go, live, partnerHere, looks, onAnim, onKiss }: {
+  spot: SpotDef; scene: SpotScene; me: api.Profile; today: string; night: boolean; go: (to: Pt, then?: () => void) => void;
+  live: Live; partnerHere: boolean; looks: { me: AvatarLook; them: AvatarLook }; onAnim: (n: AnimName) => void; onKiss: () => void;
+}) {
   const s = useScale();
-  const [ride, setRide] = useState<{ act: Extract<Act, { k: 'ride' }>; n: number } | null>(null);
   const [floats, setFloats] = useState<{ x: number; y: number; n: number }[]>([]);
+  const [flash, setFlash] = useState(0);
+  const [fx, setFx] = useState<{ x: number; y: number; icon: string; n: number }[]>([]);
+  const [art, setArt] = useState<{ x: number; y: number } | null>(null);
+  const L = useRef(live); L.current = live;
+  const mine = live.mine, theirs = partnerHere ? live.theirs : null;
   const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
   const near = (a: Act): Pt => ({ x: Math.max(spot.walk.x0, Math.min(spot.walk.x1, a.x)), y: Math.max(spot.walk.y0 + 2, Math.min(spot.walk.y1, a.y + 8)) });
-  const doAct = (a: Act) => go(near(a), () => {
-    if (a.k === 'say') toast(`${a.label}: ${a.say}`);
-    if (a.k === 'fortune') toast(`🎋 Quẻ của bạn: ${FORTUNES[Math.floor(Math.random() * FORTUNES.length)]}`);
-    if (a.k === 'ride') { setRide({ act: a, n: Date.now() }); toast(a.say); setTimeout(() => setRide(null), 7000); }
-    if (a.k === 'float') { setFloats(f => [...f.slice(-7), { x: a.x - 20 + Math.random() * 40, y: a.ry - Math.random() * 30, n: Date.now() }]); toast('🪷 Hoa đăng trôi đi mang theo điều ước của hai bạn…'); }
-    if (a.k === 'buy') void run(async () => {
+  type Patch = Parameters<Live['update']>[0];
+  /** đặt trạng thái; hết giờ thì tự thôi (nếu vẫn đang làm việc đó) */
+  const hold = (patch: Patch, ms: number, end: Patch = { act: null }) => {
+    live.update(patch);
+    const tag = patch.act ?? null, dish = patch.dish ?? null, drink = patch.drink ?? null;
+    setTimeout(() => { const m = L.current.mine; if ((tag && m.act === tag) || (dish && m.dish === dish) || (drink && m.drink === drink)) L.current.update(end); }, ms);
+  };
+  const pop = (x: number, y: number, icon: string, n = 1) => {
+    const t = Date.now() + Math.random();
+    setFx(f => [...f.slice(-14), ...Array.from({ length: n }, (_, k) => ({ x: x + (k - (n - 1) / 2) * 7, y, icon, n: t + k / 10 }))]);
+    setTimeout(() => setFx(f => f.filter(e => e.n < t || e.n >= t + 1)), 2600);
+  };
+  const anim = (n: AnimName, times = 1) => { for (let k = 0; k < times; k++) setTimeout(() => onAnim(n), k * 800); };
+  const doAct = (a: Act, i: number) => go(near(a), () => {
+    const at = L.current.mine.pos;
+    if (a.k === 'buy') return void run(async () => {
       const it = item(a.item);
       if (!confirm(`Mua ${it.icon} ${it.name} (${a.price} xu)?`)) return;
-      await api.buyItem(a.item, a.price); notify('inventory', 'profiles'); toast(`🛍️ Đã mua ${it.icon} ${it.name} ở ${spot.name}`);
+      await api.buyItem(a.item, a.price); notify('inventory', 'profiles');
+      const name = a.label.replace(/^\S+\s/, '');
+      if (KEEP.includes(a.item)) { anim('cheer'); live.say(`${it.icon} Mua được ${name} rồi!`); return; }
+      if (DRINKS.includes(a.item)) hold({ drink: name, dish: null }, 14000, { drink: null });
+      else hold({ dish: name, drink: null }, 14000, { dish: null });
+      live.say(`${it.icon} Ngon quá!`);
     });
-    if (a.k === 'photo') void run(async () => {
+    if (a.k === 'photo') return void run(async () => {
+      live.say(theirs ? '📸 Cười lên nào… 1, 2, 3!' : '📸 Cheese!'); anim('cheer');
+      setTimeout(() => setFlash(Date.now()), 700);
       const ok = await api.claim(`postcard:${spot.trip}:${spot.id}:${today}:${me.id}`);
-      if (!ok) return toast('📸 Hôm nay chụp ở đây rồi');
+      if (!ok) return;
       await api.addMemory(me, 'postcard', { trip: spot.trip, spot: spot.id }, today); notify('memories', 'claims');
-      toast(`📸 Tách! Bưu thiếp ${spot.name} đã dán vào sổ du lịch`);
+      toast(`📸 Bưu thiếp ${spot.name} đã dán vào sổ du lịch`);
     });
+    if (a.k === 'fortune') { anim('rummage'); setTimeout(() => { hold({ act: 'omikuji' }, 6000); live.say(`🎋 ${FORTUNES[Math.floor(Math.random() * FORTUNES.length)]}`); }, 700); return; }
+    if (a.k === 'ride') {
+      live.update({ act: 'ride', trip: { i, at: Date.now() }, dish: null, drink: null }); live.say(a.say);
+      const end = { x: a.x < 128 ? spot.walk.x1 - 10 : spot.walk.x0 + 10, y: spot.walk.y0 + 4 };
+      setTimeout(() => { if (L.current.mine.act === 'ride') L.current.update({ act: null, trip: null, pos: end }); }, RIDE_MS);
+      return;
+    }
+    if (a.k === 'float') { hold({ act: 'sit' }, 2600); setTimeout(() => { setFloats(f => [...f.slice(-7), { x: at.x, y: a.ry, n: Date.now() }]); live.say('🪷 Ước gì mình mãi bên nhau…'); }, 1200); return; }
+    if (a.k !== 'do') return;
+    live.say(a.say);
+    switch (a.do) {
+      case 'sit': hold({ act: 'sit' }, 20000); break;
+      case 'craft': anim('rummage', 3); setTimeout(() => pop(at.x, at.y - 34, '✨', 2), 2000); break;
+      case 'pick': anim('rummage', 2); setTimeout(() => pop(at.x, at.y - 30, '🍁', 3), 1200); break;
+      case 'cheer': anim('cheer', 2); pop(at.x, at.y - 34, '✨', 3); break;
+      case 'sing': hold({ act: 'sing' }, 9000); for (let k = 0; k < 6; k++) setTimeout(() => pop(at.x, at.y - 34, k % 2 ? '🎵' : '🎶'), k * 1400); setTimeout(() => pop(at.x, at.y - 10, '👏', 4), 8000); break;
+      case 'pray': hold({ act: 'pray' }, 6000); for (let k = 0; k < 3; k++) setTimeout(() => pop(at.x, at.y - 34, scene === 'trip_iceland_aurora' ? '🌠' : '🙏'), k * 1500); break;
+      case 'feed': hold({ act: 'feed' }, 7000); for (let k = 0; k < 4; k++) setTimeout(() => pop(at.x + (k % 2 ? 14 : -14), at.y - 4, '🕊️', 2), 600 + k * 900); break;
+      case 'paint': hold({ act: 'paint' }, 9000); setArt(null); setTimeout(() => { setArt({ x: a.x, y: a.y }); pop(a.x, a.y - 20, '✨', 2); }, 8000); break;
+      case 'cross': go({ x: spot.walk.x0 + 14, y: 148 }, () => go({ x: spot.walk.x1 - 14, y: 180 }, () => { anim('cheer'); pop(L.current.mine.pos.x, L.current.mine.pos.y - 34, '🎉', 2); })); break;
+      case 'love': if (theirs) onKiss(); else live.say('💭 Ước gì người ấy ở đây…'); pop(at.x, at.y - 36, '💕', 3); break;
+      case 'tent': live.update({ act: 'tent', pos: { x: a.x + 6, y: a.y + 14 } }); break;
+      case 'soak': live.update({ act: 'soak', pos: { x: a.x, y: a.y - 6 }, dish: null, drink: null }); break;
+    }
   });
   const lbl = (a: Act) => a.k === 'photo' ? '📸 Chụp bưu thiếp' : a.label;
+  const tented = [mine, theirs].filter(w => w?.act === 'tent').length;
+  const tent = spot.acts.find(a => a.k === 'do' && a.do === 'tent');
+  const soaking = mine.act === 'soak';
   return (
     <>
-      {spot.fx.map((f, i) => <FxLayer key={i} fx={f} scene={scene} night={night} />)}
-      {floats.map(f => <span key={f.n} className="fx-lotus" style={{ left: `${(f.x / 256) * 100}%`, top: `${(f.y / 192) * 100}%` }}>🪷</span>)}
-      {ride && <Spr key={ride.n} sprite={miniSprite(ride.act.spr)} x={20} y={ride.act.ry} z={Math.round(ride.act.ry) + 1} className="fx-move ride" style={v({ '--dx': `${220 * s}px`, animationDuration: '7s', animationIterationCount: 1 })} />}
-      {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className="label" onClick={() => doAct(a)}>{lbl(a)}</Tag>)}
-      {[0, 1, 2, 3, 4].map(i => <Stroller key={i} seed={`${scene}`} i={i} box={spot.walk} lines={spot.lines} />)}
+      <FxList fx={spot.fx} scene={scene} night={night} />
+      {floats.map(f => <span key={f.n} className="fx-lotus" style={{ left: f.x * s, top: f.y * s }}>🪷</span>)}
+      {fx.map(e => <span key={e.n} className="fx-pop" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>)}
+      {flash > 0 && <div key={flash} className="trip-flash" />}
+      {art && <span className="fx-art" style={{ left: art.x * s - 10, top: (art.y - 30) * s }}>🖼️</span>}
+      <Rider spot={spot} who={mine} look={looks.me} />
+      {theirs && <Rider spot={spot} who={theirs} look={looks.them} />}
+      {[mine, theirs].map((w, k) => w?.act === 'soak' && <i key={k} className="fx-soak" style={{ left: (w.pos.x - 11) * s, top: (w.pos.y - 10) * s, width: 22 * s, height: 11 * s, zIndex: Math.round(w.pos.y) + 2 }} />)}
+      {soaking && <Tag x={mine.pos.x} y={mine.pos.y + 4} className="label" onClick={() => live.update({ act: null, pos: { x: mine.pos.x, y: spot.walk.y0 + 4 } })}>🚶 Lên bờ</Tag>}
+      {tent && tented > 0 && <Tag x={tent.x + 6} y={tent.y - 6} className="bed-bubble" onClick={() => mine.act === 'tent' && live.update({ act: null, pos: near(tent) })}>{tented > 1 ? '💑 Hai đứa trong lều' : '⛺ Có người trong lều'}{mine.act === 'tent' ? ' · bấm để ra' : ''}</Tag>}
+      {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className="label" onClick={() => doAct(a, i)}>{lbl(a)}</Tag>)}
+      {[0, 1, 2, 3, 4, 5, 6].map(i => <Stroller key={i} seed={scene} i={i} box={spot.walk} lines={spot.lines} />)}
     </>
   );
 }

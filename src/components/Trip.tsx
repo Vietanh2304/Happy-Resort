@@ -9,6 +9,8 @@ import { toast, toastError } from '../lib/toast';
 import { TRIP_WALK, tripCtx, type Trip } from '../lib/trips';
 import type { Pt, SceneId } from '../lib/world';
 import { spotsOf } from '../lib/tripSpots';
+import { mainOf } from '../lib/tripMain';
+import { planeSprite } from '../lib/skydive';
 import { avatarPx } from './Avatar';
 import { Tag, useScale } from './Stage';
 import { Follower } from './Wander';
@@ -62,7 +64,7 @@ export function TripContent({ trip, me, today, go, enter }: { trip: Trip; me: ap
       <Tag x={44} y={150} className="label" onClick={() => go({ x: 44, y: 160 }, () => { tripCtx.at = trip.id; enter('restaurant'); })}>🍽️ Quán {trip.food.icon} {trip.food.name}</Tag>
       <Tag x={128} y={150} className="label" onClick={() => go({ x: 128, y: 160 }, () => void photo())}>📸 Chụp bưu thiếp</Tag>
       <Tag x={212} y={150} className="label" onClick={() => go({ x: 212, y: 160 }, () => void souvenir())}>🛍️ Quà lưu niệm {item(trip.souvenir).icon}</Tag>
-      {[0, 1, 2, 3, 4].map(i => <Stroller key={i} seed={trip.id} i={i} />)}
+      {[0, 1, 2, 3, 4, 5, 6, 7].map(i => <Stroller key={i} seed={trip.id} i={i} lines={mainOf(trip.id).lines} />)}
     </>
   );
 }
@@ -72,8 +74,8 @@ export function FlightOverlay({ to, onDone }: { to: string; onDone: () => void }
   useEffect(() => { const t = setTimeout(onDone, 2600); return () => clearTimeout(t); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="flight">
-      {[0, 1, 2, 3, 4].map(i => <i key={i} className="cloud" style={{ top: `${15 + i * 16}%`, animationDelay: `${-i * 0.4}s` }} />)}
-      <span className="plane">✈️</span>
+      {[0, 1, 2, 3, 4, 5, 6].map(i => <i key={i} className="cloud" style={{ top: `${8 + i * 13}%`, animationDelay: `${-i * 0.35}s`, animationDuration: `${0.9 + (i % 3) * 0.3}s` }} />)}
+      <img className="plane px-img" src={planeSprite().url} alt="" draggable={false} style={{ width: planeSprite().w * 3, height: planeSprite().h * 3 }} />
       <b>Đang bay tới {to}…</b>
     </div>
   );

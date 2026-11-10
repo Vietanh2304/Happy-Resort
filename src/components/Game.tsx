@@ -947,7 +947,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           theme={theme} festDecor={festDecor} festIcon={scene === 'town' ? festIcon : null}
           twin={{ planes, touch }}
           dance={danceMv}
-          acts={acts}
+          acts={acts} onAnim={doAct} onKiss={() => coupleDo('kiss')}
           kids={kids} meetupLeft={meetupLeft} pet={pet} petWith={petWith} ride={ride} campHeat={live.mine.act === 'roast' ? campHeat : null}
           screen={scene === 'cinema' ? <CinemaScreen rtc={rtc} mode={cinemaMode} bubbles={live.bubbles} onReact={e => live.say(e)} yt={yt} onYt={setYt} /> : scene === 'restaurant' ? <DinnerTiles remote={call.remoteVideo ? call.remote : null} local={call.cam ? call.local : null} firstSeat={firstSeat} /> : null}
           go={go} enter={enter} arrived={arrived}

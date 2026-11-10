@@ -33,7 +33,9 @@ export type Act =
   | { k: 'fortune'; x: number; y: number; label: string }
   | { k: 'ride'; x: number; y: number; label: string; spr: MiniId; ry: number; say: string }
   | { k: 'float'; x: number; y: number; label: string; ry: number }
-  | { k: 'say'; x: number; y: number; label: string; say: string };
+  | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind };
+/** Hành động nhân vật: ngồi, khấn, ngâm nước, chui lều, cho chim ăn, vẽ, hát, hôn… */
+export type DoKind = 'sit' | 'craft' | 'cheer' | 'pray' | 'feed' | 'paint' | 'cross' | 'love' | 'tent' | 'soak' | 'pick' | 'sing';
 
 export interface SpotDef {
   trip: TripId; id: string; name: string; icon: string;
@@ -48,12 +50,13 @@ export interface SpotDef {
 export interface Light { ph: Phase; night: boolean; dusk: boolean; r: () => number; wins: number[][]; lamps: { x: number; y: number; c: string; big?: boolean }[]; neon: { x: number; y: number; w: number; h: number; c: string }[] }
 const SKY: Record<Phase, [string, string]> = { day: ['#7ac8f0', '#d8f0ff'], dawn: ['#f0a8c0', '#ffe2b0'], sunset: ['#5a4ab8', '#ff9a6a'], night: ['#0a1034', '#283070'] };
 
-function circle(p: Pen, cx: number, cy: number, r: number, c: string) {
+export function circle(p: Pen, cx: number, cy: number, r: number, c: string) {
   for (let dy = -r; dy <= r; dy++) { const w = Math.round(Math.sqrt(r * r - dy * dy)); p.rect(cx - w, cy + dy, w * 2 + 1, 1, c); }
 }
-function sky(p: Pen, L: Light, day: [string, string], h = 100, sunX = 200) {
+export function sky(p: Pen, L: Light, day: [string, string], h = 100, sunX = 200) {
   const c = L.ph === 'day' ? day : SKY[L.ph];
   for (let y = 0; y < h; y++) p.rect(0, y, 256, 1, mix(c[0], c[1], y / h));
+  p.rect(0, h, 256, 192 - h, c[1]);   // lót màu trời phía dưới để khe giữa các toà không bị đen
   if (L.night) {
     for (let i = 0; i < 60; i++) p.px(Math.floor(L.r() * 256), Math.floor(L.r() * h * 0.8), L.r() < 0.3 ? '#ffe8a8' : '#ffffff');
     circle(p, sunX, 18, 6, '#fff6d0'); circle(p, sunX + 3, 16, 5, mix(c[0], c[1], 0.15));
@@ -66,40 +69,40 @@ function sky(p: Pen, L: Light, day: [string, string], h = 100, sunX = 200) {
     for (let k = 0; k < 4; k++) circle(p, x + k * 6, y + (k % 2) * 2, 4 + (k % 2) * 2, cc);
   }
 }
-function ridge(p: Pen, base: number, h: number, f: number, c: string, seed: number, snow?: string) {
+export function ridge(p: Pen, base: number, h: number, f: number, c: string, seed: number, snow?: string) {
   for (let x = 0; x < 256; x++) {
     const hh = h * (0.55 + 0.3 * Math.sin(x / f + seed) + 0.15 * Math.sin(x / (f / 3) + seed * 2));
     p.rect(x, base - hh, 1, hh, c);
     if (snow && hh > h * 0.7) p.rect(x, base - hh, 1, Math.min(6, hh - h * 0.7), snow);
   }
 }
-function band(p: Pen, y0: number, y1: number, c0: string, c1: string) { for (let y = y0; y < y1; y++) p.rect(0, y, 256, 1, mix(c0, c1, (y - y0) / Math.max(1, y1 - y0))); }
-function water(p: Pen, L: Light, y0: number, y1: number, c0: string, c1: string) {
+export function band(p: Pen, y0: number, y1: number, c0: string, c1: string) { for (let y = y0; y < y1; y++) p.rect(0, y, 256, 1, mix(c0, c1, (y - y0) / Math.max(1, y1 - y0))); }
+export function water(p: Pen, L: Light, y0: number, y1: number, c0: string, c1: string) {
   const t = L.night ? '#0a1838' : L.dusk ? '#c86a6a' : null;
   band(p, y0, y1, t ? mix(c0, t, 0.5) : c0, t ? mix(c1, t, 0.5) : c1);
   for (let i = 0; i < 70; i++) p.rect(Math.floor(L.r() * 256), y0 + 2 + Math.floor(L.r() * (y1 - y0 - 3)), 3 + Math.floor(L.r() * 6), 1, mix(c0, '#ffffff', 0.45));
 }
-function tiles(p: Pen, y0: number, y1: number, c0: string, c1: string, step = 8) {
+export function tiles(p: Pen, y0: number, y1: number, c0: string, c1: string, step = 8) {
   band(p, y0, y1, c0, c1);
   for (let y = y0 + 4; y < y1; y += step) { p.rect(0, y, 256, 1, mix(c1, '#000000', 0.08)); for (let x = (y / step) % 2 ? 0 : step; x < 256; x += step * 2) p.rect(x, y - step + 1, 1, step - 1, mix(c1, '#000000', 0.06)); }
 }
-function bldg(p: Pen, L: Light, x: number, yb: number, w: number, h: number, wall: string, roof?: string, win = '#8ac0e0', gap = 7) {
+export function bldg(p: Pen, L: Light, x: number, yb: number, w: number, h: number, wall: string, roof?: string, win = '#8ac0e0', gap = 7) {
   p.rect(x, yb - h, w, h, wall); p.rect(x, yb - h, w, 1, mix(wall, '#ffffff', 0.3)); p.rect(x + w - 1, yb - h, 1, h, mix(wall, '#000000', 0.15));
   if (roof) p.rect(x - 1, yb - h - 3, w + 2, 3, roof);
   for (let yy = yb - h + 4; yy < yb - 8; yy += gap + 2) for (let xx = x + 3; xx < x + w - 4; xx += gap) { p.rect(xx, yy, 4, 5, win); L.wins.push([xx, yy, 4, 5]); }
   p.rect(x + Math.floor(w / 2) - 2, yb - 8, 5, 8, mix(wall, '#000000', 0.45));
 }
-function tree(p: Pen, x: number, y: number, r: number, c: string, trunk = '#6a4a32') {
+export function tree(p: Pen, x: number, y: number, r: number, c: string, trunk = '#6a4a32') {
   p.rect(x - 1, y - r - 4, 3, r + 4, trunk);
   circle(p, x, y - r - 6, r, c); circle(p, x - r / 2, y - r - 3, r * 0.7, mix(c, '#000000', 0.15)); circle(p, x + r / 3, y - r - 9, r * 0.6, mix(c, '#ffffff', 0.18));
 }
-function pine(p: Pen, x: number, y: number, h: number, c: string, snow?: string) {
+export function pine(p: Pen, x: number, y: number, h: number, c: string, snow?: string) {
   p.rect(x, y - 3, 2, 3, '#5a3a2a');
   for (let i = 0; i < h; i++) { const w = Math.max(1, Math.round((h - i) * 0.4 + ((i % 4) < 2 ? 1 : 0))); p.rect(x + 1 - w, y - 3 - i, w * 2, 1, c); if (snow && i % 4 === 0) p.rect(x + 1 - w, y - 3 - i, w, 1, snow); }
 }
-function speckle(p: Pen, L: Light, x0: number, y0: number, w: number, h: number, n: number, cs: string[]) { for (let i = 0; i < n; i++) p.px(x0 + Math.floor(L.r() * w), y0 + Math.floor(L.r() * h), cs[i % cs.length]); }
-function rail(p: Pen, y: number, c: string) { p.rect(0, y, 256, 1, c); for (let x = 2; x < 256; x += 8) p.rect(x, y, 1, 6, c); p.rect(0, y + 5, 256, 1, mix(c, '#000000', 0.2)); }
-function string(p: Pen, L: Light, x0: number, x1: number, y: number, sag: number, cs: string[], step = 9) {
+export function speckle(p: Pen, L: Light, x0: number, y0: number, w: number, h: number, n: number, cs: string[]) { for (let i = 0; i < n; i++) p.px(x0 + Math.floor(L.r() * w), y0 + Math.floor(L.r() * h), cs[i % cs.length]); }
+export function rail(p: Pen, y: number, c: string) { p.rect(0, y, 256, 1, c); for (let x = 2; x < 256; x += 8) p.rect(x, y, 1, 6, c); p.rect(0, y + 5, 256, 1, mix(c, '#000000', 0.2)); }
+export function string(p: Pen, L: Light, x0: number, x1: number, y: number, sag: number, cs: string[], step = 9) {
   for (let x = x0; x <= x1; x++) { const t = (x - x0) / (x1 - x0); p.px(x, y + Math.round(Math.sin(t * Math.PI) * sag), '#3a2a2a'); }
   for (let x = x0 + 4; x < x1; x += step) { const t = (x - x0) / (x1 - x0); L.lamps.push({ x, y: y + Math.round(Math.sin(t * Math.PI) * sag) + 1, c: cs[(x / step | 0) % cs.length] }); }
 }
@@ -107,9 +110,13 @@ function string(p: Pen, L: Light, x0: number, x1: number, y: number, sag: number
 /** Vẽ nền một map tham quan (có cache theo phase) */
 export function spotBackground(scene: SpotScene, ph: Phase): Sprite {
   const s = SPOTS[scene];
-  return makeSprite(`spot:v1:${scene}:${ph}`, 256, 192, p => {
-    const L: Light = { ph, night: ph === 'night' || s.trip === 'iceland' && s.id === 'aurora', dusk: ph === 'sunset', r: seeded(scene), wins: [], lamps: [], neon: [] };
-    s.draw(p, L);
+  return paint(`spot:v1:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora');
+}
+/** Vẽ một cảnh: nền → phủ màu theo giờ → cửa sổ sáng, neon, đèn lồng có quầng */
+export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => void, ph: Phase, alwaysNight = false): Sprite {
+  return makeSprite(key, 256, 192, p => {
+    const L: Light = { ph, night: ph === 'night' || alwaysNight, dusk: ph === 'sunset' && !alwaysNight, r: seeded(seed), wins: [], lamps: [], neon: [] };
+    draw(p, L);
     if (L.night) p.rect(0, 0, 256, 192, '#08103a70'); else if (L.dusk) p.rect(0, 0, 256, 192, '#ff70401c'); else if (ph === 'dawn') p.rect(0, 0, 256, 192, '#ffb0c014');
     const lit = L.night || L.dusk;
     if (lit) for (const [x, y, w, h] of L.wins) if (L.r() < 0.75) { p.rect(x, y, w, h, L.r() < 0.5 ? '#ffd88a' : '#ffe8b0'); p.rect(x - 1, y - 1, w + 2, h + 2, '#ffd88a22'); }
@@ -124,9 +131,9 @@ export function spotBackground(scene: SpotScene, ph: Phase): Sprite {
 }
 
 // ───────── sprite nhỏ chuyển động ─────────
-export type MiniId = 'boat' | 'gondola' | 'swan' | 'cable' | 'train' | 'bateau' | 'sampan';
+export type MiniId = 'boat' | 'gondola' | 'swan' | 'cable' | 'train' | 'bateau' | 'sampan' | 'scooter' | 'vespa' | 'bus' | 'car' | 'cyclo';
 export function miniSprite(id: MiniId): Sprite {
-  const W: Record<MiniId, [number, number]> = { boat: [22, 10], gondola: [34, 16], swan: [16, 14], cable: [12, 14], train: [72, 16], bateau: [48, 14], sampan: [26, 12] };
+  const W: Record<MiniId, [number, number]> = { boat: [22, 10], gondola: [34, 16], swan: [16, 14], cable: [12, 14], train: [72, 16], bateau: [48, 14], sampan: [26, 12], scooter: [16, 16], vespa: [16, 16], bus: [56, 22], car: [30, 14], cyclo: [22, 18] };
   const [w, h] = W[id];
   return makeSprite(`mini:${id}`, w, h, p => {
     if (id === 'boat') { p.rect(2, 6, 18, 3, '#f0f0f0'); p.rect(0, 5, 22, 1, '#d8302a'); p.rect(6, 1, 9, 4, '#5aa8e0'); p.rect(7, 2, 3, 2, '#d8f0ff'); p.rect(11, 2, 3, 2, '#d8f0ff'); }
@@ -135,6 +142,14 @@ export function miniSprite(id: MiniId): Sprite {
     if (id === 'swan') { p.rect(2, 8, 12, 5, '#ffffff'); p.rect(0, 7, 4, 3, '#ffffff'); p.rect(11, 2, 3, 7, '#ffffff'); p.rect(13, 2, 3, 2, '#f6a83a'); p.px(12, 3, '#1a1a1a'); p.rect(5, 6, 6, 2, '#f8b8cc'); }
     if (id === 'cable') { p.rect(5, 0, 2, 4, '#4a4a5a'); p.rect(1, 4, 10, 9, '#e8443a'); p.rect(2, 6, 8, 4, '#c8e8ff'); p.rect(1, 12, 10, 1, '#8a2a2a'); }
     if (id === 'train') for (let c = 0; c < 3; c++) { const x = c * 24; p.rect(x + 1, 2, 22, 11, '#d8302a'); p.rect(x + 1, 2, 22, 2, '#f0f0f0'); for (let k = 0; k < 4; k++) p.rect(x + 3 + k * 5, 5, 4, 4, '#c8e8ff'); p.rect(x + 1, 11, 22, 1, '#8a1a1a'); p.rect(x + 4, 13, 3, 3, '#2a2a2a'); p.rect(x + 17, 13, 3, 3, '#2a2a2a'); }
+    if (id === 'scooter' || id === 'vespa') {
+      const c = id === 'vespa' ? '#8ad0c0' : '#e8443a';
+      p.rect(3, 9, 10, 3, c); p.rect(11, 4, 2, 6, '#3a3a3a'); p.rect(10, 3, 4, 1, '#3a3a3a'); circle(p, 3, 13, 2, '#2a2a2a'); circle(p, 12, 13, 2, '#2a2a2a');
+      p.rect(5, 2, 4, 7, id === 'vespa' ? '#f0e0c0' : '#3a6ad0'); circle(p, 7, 1, 2, id === 'vespa' ? '#e8443a' : '#f6c445'); p.px(14, 9, '#fff0a0');
+    }
+    if (id === 'bus') { p.rect(1, 2, 54, 15, '#3a9a5a'); p.rect(1, 2, 54, 2, '#f0f0f0'); for (let k = 0; k < 7; k++) p.rect(4 + k * 7, 5, 5, 6, '#c8e8ff'); p.rect(50, 5, 4, 10, '#c8e8ff'); p.rect(1, 14, 54, 1, '#2a6a3a'); circle(p, 10, 18, 3, '#2a2a2a'); circle(p, 44, 18, 3, '#2a2a2a'); p.px(54, 15, '#fff0a0'); }
+    if (id === 'car') { p.rect(1, 6, 28, 5, '#f6c445'); p.rect(7, 1, 15, 5, '#f6c445'); p.rect(9, 2, 5, 4, '#c8e8ff'); p.rect(15, 2, 5, 4, '#c8e8ff'); circle(p, 7, 11, 2, '#2a2a2a'); circle(p, 23, 11, 2, '#2a2a2a'); p.px(28, 7, '#fff0a0'); }
+    if (id === 'cyclo') { circle(p, 4, 14, 3, '#2a2a2a'); circle(p, 18, 14, 3, '#2a2a2a'); p.rect(1, 6, 10, 6, '#3a6a9a'); p.rect(0, 2, 12, 2, '#e8443a'); p.rect(11, 9, 8, 1, '#3a3a3a'); p.rect(15, 3, 3, 6, '#f0f0f0'); circle(p, 16, 2, 2, '#e8d8a0'); }
     if (id === 'bateau') { p.rect(2, 9, 44, 4, '#f0f0f0'); p.rect(0, 8, 48, 1, '#2a4a8a'); p.rect(6, 3, 34, 5, '#c8e8ff'); p.rect(6, 2, 34, 1, '#ffffff'); for (let k = 8; k < 40; k += 5) p.rect(k, 3, 1, 5, '#8aa0b8'); }
   });
 }
@@ -142,7 +157,7 @@ export function miniSprite(id: MiniId): Sprite {
 // ───────── danh sách map ─────────
 const ph = (x: number, y: number): Act => ({ k: 'photo', x, y });
 const buy = (x: number, y: number, item: string, price: number, label: string): Act => ({ k: 'buy', x, y, item, price, label });
-const say = (x: number, y: number, label: string, s: string): Act => ({ k: 'say', x, y, label, say: s });
+const say = (x: number, y: number, label: string, s: string, d: DoKind): Act => ({ k: 'do', x, y, label, say: s, do: d });
 const W = (y0: number, y1 = 186, x0 = 8, x1 = 248) => ({ x0, x1, y0, y1 });
 const RAINBOW = ['#e8443a', '#f6a83a', '#f6e04a', '#6ac86a', '#4a9ae8', '#9a6ae0', '#f59ab3'];
 
@@ -178,7 +193,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(226, 140, 10, 7, '#f0f0f0'); p.rect(227, 138, 8, 2, '#e8443a'); p.rect(238, 142, 6, 5, '#4a9ae8');
     },
     fx: [{ k: 'bird', x: 60, y: 60, icon: '🦋', n: 3 }, { k: 'sparkle', x: 0, y: 50, w: 256, h: 60, n: 8 }],
-    acts: [ph(70, 130), buy(150, 150, 'keo_bong', 25, '🍭 Kẹo bông'), say(220, 132, '👴 Ông Cầu Vồng', 'Ông Hoàng vẽ từ năm 86 tuổi đó, nhờ vậy cả làng được giữ lại 🌈'), say(30, 170, '🖌️ Vẽ thêm một bông hoa', 'Hai bạn vẽ chung một bông hoa nhỏ lên tường — dễ thương ghê 🌸')],
+    acts: [ph(70, 130), buy(150, 150, 'keo_bong', 25, '🍭 Kẹo bông'), say(220, 132, '👴 Ông Cầu Vồng', 'Ông Hoàng vẽ từ năm 86 tuổi đó, nhờ vậy cả làng được giữ lại 🌈', 'cheer'), say(30, 170, '🖌️ Vẽ thêm một bông hoa', 'Hai bạn vẽ chung một bông hoa nhỏ lên tường — dễ thương ghê 🌸', 'craft')],
     lines: ['Bức tường này đẹp quá!', '📸 Đứng đây chụp nè', 'Màu sắc rực rỡ ghê', 'Ông vẽ hết cả làng đó', 'Wow 🌈'],
   },
   trip_taichung_fengjia: {
@@ -204,7 +219,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let i = 0; i < 40; i++) p.rect(Math.floor(L.r() * 256), 130 + Math.floor(L.r() * 60), 2, 1, '#ffd88a30');
     },
     fx: [{ k: 'steam', x: 40, y: 100, n: 3 }, { k: 'steam', x: 136, y: 100, n: 3 }, { k: 'steam', x: 200, y: 100, n: 2 }, { k: 'glow', x: 128, y: 110, r: 120, c: '#ffb04a', night: true }],
-    acts: [buy(30, 136, 'tra_sua', 30, '🧋 Trà sữa trân châu'), buy(110, 136, 'squid_bbq', 45, '🦑 Mực nướng'), buy(190, 136, 'keo_deo', 20, '🍬 Kẹo dẻo'), ph(128, 172), say(220, 170, '🍗 Gà rán khổng lồ', 'Miếng gà to bằng mặt luôn!! Chia đôi ăn nè 🍗')],
+    acts: [buy(30, 136, 'tra_sua', 30, '🧋 Trà sữa trân châu'), buy(110, 136, 'squid_bbq', 45, '🦑 Mực nướng'), buy(190, 136, 'keo_deo', 20, '🍬 Kẹo dẻo'), ph(128, 172), buy(220, 170, 'fried_shrimp', 40, '🍗 Gà rán khổng lồ')],
     lines: ['Thơm quá trời!', 'Thử đậu hũ thối không?', 'Đông vui ghê', 'Trà sữa ở đây ngon nhất', 'Mua thêm xiên nữa đi'],
   },
   trip_taichung_sunmoon: {
@@ -252,7 +267,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(20, 172, 14, 4, '#7a5a3a'); p.rect(21, 176, 2, 4, '#5a3a2a'); p.rect(31, 176, 2, 4, '#5a3a2a');
     },
     fx: [{ k: 'fall', n: 22, c: ['#e8443a', '#f6a83a', '#d8502a', '#ffc04a'], size: 2 }, { k: 'bird', x: 100, y: 30, icon: '🐦', n: 2 }],
-    acts: [ph(128, 120), say(200, 110, '🪨 Đá Seoseokdae', 'Cột đá núi lửa xếp như phím đàn — gọi là "bức bình phong của trời" đó'), buy(40, 160, 'honey_tea', 25, '🫚 Trà gừng mật ong'), say(220, 180, '🍁 Nhặt lá phong', 'Ép lá phong đỏ này vào sổ làm kỷ niệm nha 🍁')],
+    acts: [ph(128, 120), say(200, 110, '🪨 Đá Seoseokdae', 'Cột đá núi lửa xếp như phím đàn — gọi là "bức bình phong của trời" đó', 'sit'), buy(40, 160, 'honey_tea', 25, '🫚 Trà gừng mật ong'), say(220, 180, '🍁 Nhặt lá phong', 'Ép lá phong đỏ này vào sổ làm kỷ niệm nha 🍁', 'pick')],
     lines: ['Leo mệt mà đẹp quá', 'Lá đỏ hết rồi!', 'Còn bao xa tới đỉnh?', 'Nghỉ chút đi', 'Annyeong! 👋'],
   },
   trip_gwangju_penguin: {
@@ -282,7 +297,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(30, 160, 8, 12, '#2a2a3a'); p.rect(32, 163, 4, 8, '#ffffff'); p.rect(33, 160, 2, 1, '#f6a83a'); p.px(32, 161, '#ffffff'); p.px(35, 161, '#ffffff');
     },
     fx: [{ k: 'sway', x: 150, y: 74, c: '#e8443a' }, { k: 'sway', x: 86, y: 74, c: '#3a6ad0' }, { k: 'fall', n: 8, c: ['#e8743a', '#f6c445'], size: 2, slow: true }],
-    acts: [buy(70, 140, 'clock', 60, '🕰️ Đồng hồ cổ'), buy(150, 150, 'tteokbokki', 35, '🌶️ Tteokbokki'), ph(34, 150), say(210, 160, '🏺 Chum tương', 'Bà cụ ủ tương đậu ở đây mấy chục năm rồi, thơm lừng')],
+    acts: [buy(70, 140, 'clock', 60, '🕰️ Đồng hồ cổ'), buy(150, 150, 'tteokbokki', 35, '🌶️ Tteokbokki'), ph(34, 150), say(210, 160, '🏺 Chum tương', 'Bà cụ ủ tương đậu ở đây mấy chục năm rồi, thơm lừng', 'craft')],
     lines: ['Đồ cổ dễ thương quá', 'Nhà hanok mát ghê', 'Chụp với chú cánh cụt nè 🐧', 'Hồi xưa ông bà dùng cái này', 'Cổ kính ghê'],
   },
   trip_gwangju_chungjang: {
@@ -304,7 +319,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(60, 128, 136, 1, '#ffffff'); for (let x = 70; x < 190; x += 14) p.rect(x, 136, 8, 2, '#f0f0f0');
     },
     fx: [{ k: 'steam', x: 40, y: 150, n: 2 }, { k: 'steam', x: 200, y: 150, n: 2 }, { k: 'glow', x: 128, y: 80, r: 110, c: '#ff4a8a', night: true }, { k: 'sparkle', x: 0, y: 40, w: 256, h: 70, n: 10, night: true }],
-    acts: [buy(40, 140, 'tteokbokki', 35, '🌶️ Tteokbokki'), buy(120, 140, 'fried_shrimp', 40, '🍗 Gà/tôm chiên giòn'), buy(200, 140, 'kem_que', 20, '🍦 Kem que'), ph(128, 176), say(220, 178, '🎤 Hát busking', 'Hai bạn song ca một bài K-pop, mọi người vỗ tay rần rần 🎶')],
+    acts: [buy(40, 140, 'tteokbokki', 35, '🌶️ Tteokbokki'), buy(120, 140, 'fried_shrimp', 40, '🍗 Gà/tôm chiên giòn'), buy(200, 140, 'kem_que', 20, '🍦 Kem que'), ph(128, 176), say(220, 178, '🎤 Hát busking', 'Hai bạn song ca một bài K-pop, mọi người vỗ tay rần rần 🎶', 'sing')],
     lines: ['Chimaek đi!', 'Quán này đông ghê', 'Hát hay quá 🎤', 'Đi karaoke không?', 'Đèn đẹp ghê'],
   },
 
@@ -329,7 +344,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(194, 148, 56, 4, '#6a3a22');
     },
     fx: [{ k: 'sway', x: 20, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 60, y: 86, c: '#f6c445', big: true }, { k: 'sway', x: 100, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 186, y: 86, c: '#f59ab3', big: true }, { k: 'sway', x: 226, y: 86, c: '#e8443a', big: true }, { k: 'shim', x: 0, y: 104, w: 256, h: 10, n: 8 }],
-    acts: [buy(220, 160, 'lantern', 40, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 20, '🥖 Bánh mì'), ph(148, 124), say(130, 170, '👗 May áo dài', 'Tiệm may đo áo dài lấy liền trong ngày — hai đứa mặc đôi nha')],
+    acts: [buy(220, 160, 'lantern', 40, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 20, '🥖 Bánh mì'), ph(148, 124), say(130, 170, '👗 May áo dài', 'Tiệm may đo áo dài lấy liền trong ngày — hai đứa mặc đôi nha', 'cheer')],
     lines: ['Đèn lồng đẹp quá', 'Phố cổ yên bình ghê', 'Cầu này trên tờ 20 nghìn đó', 'Ăn cao lầu chưa?', 'Chụp áo dài đi'],
   },
   trip_hoian_river: {
@@ -375,7 +390,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(200, 150, 30, 18, '#8a5a3a'); p.rect(198, 146, 34, 4, '#c83a2a'); for (let k = 0; k < 5; k++) p.rect(203 + k * 5, 154, 3, 8, '#f0e8d0');
     },
     fx: [{ k: 'sway', x: 124, y: 62, c: '#e8302a', big: true }, { k: 'steam', x: 128, y: 146, n: 4 }, { k: 'fall', n: 10, c: ['#f8b8cc', '#ffd8e4'], size: 2, slow: true }],
-    acts: [{ k: 'fortune', x: 214, y: 140, label: '🎋 Rút quẻ omikuji' }, say(128, 140, '🪔 Xông khói nhang', 'Vẫy khói nhang lên người cho khoẻ mạnh nè'), buy(40, 140, 'onigiri', 25, '🍙 Onigiri'), ph(128, 176)],
+    acts: [{ k: 'fortune', x: 214, y: 140, label: '🎋 Rút quẻ omikuji' }, say(128, 140, '🪔 Xông khói nhang', 'Vẫy khói nhang lên người cho khoẻ mạnh nè', 'pray'), buy(40, 140, 'onigiri', 25, '🍙 Onigiri'), ph(128, 176)],
     lines: ['Cổng đỏ to quá', 'Rút quẻ chưa?', 'Mua bánh ningyo-yaki đi', 'Konnichiwa!', 'Đèn lồng khổng lồ kìa'],
   },
   trip_tokyo_ueno: {
@@ -404,7 +419,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 30; x < 256; x += 60) L.lamps.push({ x, y: 112, c: '#ffd8e4' });
     },
     fx: [{ k: 'fall', n: 28, c: ['#f8b8cc', '#ffd8e4', '#ffffff'], size: 2, slow: true }, { k: 'shim', x: 0, y: 72, w: 256, h: 24, n: 12 }, { k: 'move', spr: 'swan', x: 40, y: 92, dx: 120, dur: 20 }],
-    acts: [{ k: 'ride', x: 70, y: 120, label: '🦢 Đạp vịt thiên nga', spr: 'swan', ry: 96, say: 'Hai đứa đạp vịt thiên nga giữa hồ sen, cười muốn xỉu 🦢' }, buy(186, 160, 'sushi', 50, '🍣 Hộp sushi picnic'), say(120, 176, '🌸 Hanami', 'Nằm dưới gốc anh đào, cánh hoa rơi lên tóc em 🌸'), ph(30, 176)],
+    acts: [{ k: 'ride', x: 70, y: 120, label: '🦢 Đạp vịt thiên nga', spr: 'swan', ry: 96, say: 'Hai đứa đạp vịt thiên nga giữa hồ sen, cười muốn xỉu 🦢' }, buy(186, 160, 'sushi', 50, '🍣 Hộp sushi picnic'), say(120, 176, '🌸 Hanami', 'Nằm dưới gốc anh đào, cánh hoa rơi lên tóc em 🌸', 'sit'), ph(30, 176)],
     lines: ['Hoa nở rộ rồi!', 'Picnic ở đây đi', 'Cánh hoa rơi kìa 🌸', 'Kirei~', 'Đạp vịt không?'],
   },
   trip_tokyo_shibuya: {
@@ -427,7 +442,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(210, 156, 22, 6, '#8a8a8a'); p.rect(214, 146, 12, 10, '#7a6a4a'); p.rect(222, 140, 6, 8, '#7a6a4a'); p.rect(226, 142, 3, 2, '#5a4a3a'); p.px(223, 141, '#3a2a1a');
     },
     fx: [{ k: 'screen', x: 76, y: 42, w: 40, h: 24 }, { k: 'screen', x: 152, y: 82, w: 32, h: 18 }, { k: 'sparkle', x: 0, y: 30, w: 256, h: 90, n: 12, night: true }, { k: 'glow', x: 128, y: 70, r: 120, c: '#6a8aff', night: true }],
-    acts: [ph(220, 172), say(128, 150, '🚦 Băng qua ngã tư', 'Đèn xanh! Hàng nghìn người cùng băng qua một lúc — nắm tay chặt nha 🤝'), buy(60, 170, 'mi_ly', 15, '🍜 Mì ly konbini'), buy(180, 140, 'sandwich', 25, '🥪 Sandwich')],
+    acts: [ph(220, 172), say(128, 150, '🚦 Băng qua ngã tư', 'Đèn xanh! Hàng nghìn người cùng băng qua một lúc — nắm tay chặt nha 🤝', 'cross'), buy(60, 170, 'mi_ly', 15, '🍜 Mì ly konbini'), buy(180, 140, 'sandwich', 25, '🥪 Sandwich')],
     lines: ['Đông quá trời!', 'Chụp với Hachiko', 'Màn hình to ghê', 'Đi Shibuya Sky không?', 'Sumimasen~'],
   },
 
@@ -457,7 +472,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 20; x < 256; x += 54) L.lamps.push({ x, y: 128, c: '#ffe8a0' });
     },
     fx: [{ k: 'sparkle', x: 90, y: 4, w: 76, h: 124, n: 26, night: true }, { k: 'bird', x: 40, y: 50, icon: '🕊️', n: 2 }, { k: 'glow', x: 128, y: 60, r: 70, c: '#ffd070', night: true }],
-    acts: [buy(54, 160, 'croissant', 25, '🥐 Croissant picnic'), say(128, 150, '💋 Hôn dưới tháp', 'Đúng giờ tháp nhấp nháy… tụi mình hôn nhau ✨💋'), ph(200, 170), buy(220, 150, 'rose_bloom', 30, '🌹 Hoa hồng')],
+    acts: [buy(54, 160, 'croissant', 25, '🥐 Croissant picnic'), say(128, 150, '💋 Hôn dưới tháp', 'Đúng giờ tháp nhấp nháy… tụi mình hôn nhau ✨💋', 'love'), ph(200, 170), buy(220, 150, 'rose_bloom', 30, '🌹 Hoa hồng')],
     lines: ['Bonjour!', 'Tháp đẹp quá', 'Đợi tháp nhấp nháy nè ✨', 'Picnic thôi', 'Magnifique!'],
   },
   trip_paris_seine: {
@@ -482,7 +497,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 0; x < 256; x += 40) tree(p, x + 180, 128, 6, '#5a9a4a');
     },
     fx: [{ k: 'shim', x: 0, y: 92, w: 256, h: 34, n: 20 }, { k: 'move', spr: 'bateau', x: 220, y: 116, dx: -200, dur: 28, loop: true }, { k: 'fall', n: 8, c: ['#e8b84a', '#d8903a'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 128, y: 120, label: '🛳️ Du thuyền Bateau', spr: 'bateau', ry: 118, say: 'Du thuyền lướt dưới những cây cầu cổ, Paris lên đèn rực rỡ 🌃' }, buy(60, 156, 'books', 45, '📚 Sách cũ'), say(206, 176, '🎨 Vẽ chân dung', 'Hoạ sĩ vẽ hai bạn ngồi tựa vai nhau — tranh đẹp như mơ 🖼️'), ph(140, 176)],
+    acts: [{ k: 'ride', x: 128, y: 120, label: '🛳️ Du thuyền Bateau', spr: 'bateau', ry: 118, say: 'Du thuyền lướt dưới những cây cầu cổ, Paris lên đèn rực rỡ 🌃' }, buy(60, 156, 'books', 45, '📚 Sách cũ'), say(206, 176, '🎨 Vẽ chân dung', 'Hoạ sĩ vẽ hai bạn ngồi tựa vai nhau — tranh đẹp như mơ 🖼️', 'paint'), ph(140, 176)],
     lines: ['Sông Seine thơ mộng ghê', 'Mua sách không?', 'Tranh đẹp quá', 'Merci~', 'Đi thuyền tối nay nhé'],
   },
   trip_paris_cafe: {
@@ -509,7 +524,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let k = 0; k < 6; k++) { p.rect(200 + k * 8, 170, 6, 6, '#8a5a3a'); circle(p, 203 + k * 8, 167, 3, ['#e8443a', '#f6c445', '#f59ab3'][k % 3]); }
     },
     fx: [{ k: 'steam', x: 34, y: 146, n: 1 }, { k: 'steam', x: 80, y: 146, n: 1 }, { k: 'steam', x: 126, y: 146, n: 1 }, { k: 'bird', x: 200, y: 60, icon: '🕊️', n: 2 }],
-    acts: [buy(60, 140, 'ca_phe_sua', 25, '☕ Café au lait'), buy(140, 140, 'cupcake', 30, '🧁 Bánh macaron'), say(220, 160, '🪗 Nghệ sĩ accordion', 'La vie en rose~ 🎶 nhạc accordion vang khắp con phố'), ph(100, 176)],
+    acts: [buy(60, 140, 'ca_phe_sua', 25, '☕ Café au lait'), buy(140, 140, 'cupcake', 30, '🧁 Bánh macaron'), say(220, 160, '🪗 Nghệ sĩ accordion', 'La vie en rose~ 🎶 nhạc accordion vang khắp con phố', 'sit'), ph(100, 176)],
     lines: ['Un café, s\'il vous plaît', 'Ngồi đây ngắm phố đi', 'Bánh ngon quá', 'Lãng mạn ghê', 'Nhạc hay quá 🎶'],
   },
 
@@ -531,7 +546,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 0; x < 256; x += 64) L.lamps.push({ x: x + 30, y: 150, c: '#ffd88a' });
     },
     fx: [{ k: 'shim', x: 0, y: 110, w: 256, h: 50, n: 26 }, { k: 'move', spr: 'gondola', x: 20, y: 150, dx: 180, dur: 24 }, { k: 'move', spr: 'gondola', x: 210, y: 128, dx: -170, dur: 30 }],
-    acts: [{ k: 'ride', x: 128, y: 172, label: '🛶 Đi gondola', spr: 'gondola', ry: 146, say: 'O sole mio~ 🎶 Anh lái thuyền hát vang dưới cầu Rialto' }, buy(40, 178, 'kem_que', 25, '🍨 Gelato'), ph(210, 178), say(128, 90, '🌉 Cầu Rialto', 'Cây cầu đá 400 năm — đứng giữa cầu ngắm kênh đẹp nhất')],
+    acts: [{ k: 'ride', x: 128, y: 172, label: '🛶 Đi gondola', spr: 'gondola', ry: 146, say: 'O sole mio~ 🎶 Anh lái thuyền hát vang dưới cầu Rialto' }, buy(40, 178, 'kem_que', 25, '🍨 Gelato'), ph(210, 178), say(128, 90, '🌉 Cầu Rialto', 'Cây cầu đá 400 năm — đứng giữa cầu ngắm kênh đẹp nhất', 'cheer')],
     lines: ['Ciao!', 'Gondola đẹp ghê', 'Nước trong xanh quá', 'Gelato ngon tuyệt', 'Lạc đường rồi 😂'],
   },
   trip_venice_sanmarco: {
@@ -556,7 +571,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 50; x < 256; x += 60) L.lamps.push({ x, y: 118, c: '#ffe8a0' });
     },
     fx: [{ k: 'bird', x: 100, y: 140, icon: '🕊️', n: 6 }, { k: 'bird', x: 140, y: 40, icon: '🕊️', n: 3 }],
-    acts: [say(110, 160, '🌾 Cho bồ câu ăn', 'Cả đàn bồ câu sà xuống quanh hai bạn, một con đậu lên vai luôn 🕊️'), buy(210, 140, 'ca_phe_sua', 30, '☕ Espresso'), buy(60, 150, 'tiramisu', 40, '🍰 Tiramisu'), ph(150, 176)],
+    acts: [say(110, 160, '🌾 Cho bồ câu ăn', 'Cả đàn bồ câu sà xuống quanh hai bạn, một con đậu lên vai luôn 🕊️', 'feed'), buy(210, 140, 'ca_phe_sua', 30, '☕ Espresso'), buy(60, 150, 'tiramisu', 40, '🍰 Tiramisu'), ph(150, 176)],
     lines: ['Bồ câu nhiều quá', 'Nhà thờ lộng lẫy ghê', 'Nghe dàn nhạc đi 🎻', 'Bellissimo!', 'Leo tháp chuông không?'],
   },
 
@@ -584,7 +599,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 100; x < 256; x += 50) L.lamps.push({ x, y: 116, c: '#ffe8a0' });
     },
     fx: [{ k: 'move', spr: 'train', x: -80, y: 136, dx: 420, dur: 16, loop: true }, { k: 'fall', n: 10, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 40, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), say(220, 170, '🐄 Bò sữa đeo chuông', 'Leng keng~ đàn bò đeo chuông gặm cỏ trên đồi 🐄')],
+    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 40, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), say(220, 170, '🐄 Bò sữa đeo chuông', 'Leng keng~ đàn bò đeo chuông gặm cỏ trên đồi 🐄', 'craft')],
     lines: ['Tàu tới rồi!', 'Núi tuyết đẹp quá', 'Grüezi!', 'Lạnh ghê', 'Uống sô-cô-la nóng đi'],
   },
   trip_swiss_chalet: {
@@ -633,7 +648,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       circle(p, 100, 176, 3, '#5a4a3a'); L.lamps.push({ x: 99, y: 170, c: '#ff9a3a' });
     },
     fx: [{ k: 'aurora', y: 10 }, { k: 'sparkle', x: 0, y: 0, w: 256, h: 90, n: 30 }, { k: 'fall', n: 26, c: ['#ffffff', '#e8f4ff'], size: 2, slow: true }],
-    acts: [say(128, 150, '💚 Ước dưới cực quang', 'Tay trong tay ước một điều — cực quang nhảy múa ngay trên đầu 💚'), buy(100, 170, 'honey_tea', 25, '🍵 Trà nóng'), ph(190, 160), say(60, 156, '⛺ Chui vào lều', 'Đắp chung chăn, đếm sao băng tới sáng 🌠')],
+    acts: [say(128, 150, '💚 Ước dưới cực quang', 'Tay trong tay ước một điều — cực quang nhảy múa ngay trên đầu 💚', 'pray'), buy(100, 170, 'honey_tea', 25, '🍵 Trà nóng'), ph(190, 160), say(60, 156, '⛺ Chui vào lều', 'Đắp chung chăn, đếm sao băng tới sáng 🌠', 'tent')],
     lines: ['Cực quang kìa!!', 'Lạnh quá ôm em đi', 'Xanh lá đẹp quá 💚', 'Sao băng!', 'Ước gì đi'],
   },
   trip_iceland_lagoon: {
@@ -656,7 +671,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(40, 140, 14, 8, '#f0f0f0'); p.rect(42, 138, 10, 2, '#d8d8d8');
     },
     fx: [{ k: 'steam', x: 40, y: 120, n: 3 }, { k: 'steam', x: 110, y: 130, n: 3 }, { k: 'steam', x: 160, y: 110, n: 3 }, { k: 'steam', x: 230, y: 126, n: 3 }, { k: 'shim', x: 0, y: 92, w: 256, h: 56, n: 20, c: '#ffffff' }, { k: 'fall', n: 12, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [say(110, 140, '♨️ Ngâm nước khoáng', 'Nước ấm 38°C giữa trời tuyết, ôm nhau ngâm mình sướng rơn ♨️'), say(46, 130, '🤍 Đắp mặt nạ bùn', 'Hai đứa đắp mặt nạ silica trắng xoá, nhìn nhau cười lăn 😂'), buy(200, 140, 'yogurt', 25, '🥛 Skyr'), ph(128, 176)],
+    acts: [say(110, 140, '♨️ Ngâm nước khoáng', 'Nước ấm 38°C giữa trời tuyết, ôm nhau ngâm mình sướng rơn ♨️', 'soak'), say(46, 130, '🤍 Đắp mặt nạ bùn', 'Hai đứa đắp mặt nạ silica trắng xoá, nhìn nhau cười lăn 😂', 'soak'), buy(200, 140, 'yogurt', 25, '🥛 Skyr'), ph(128, 176)],
     lines: ['Nước ấm ghê', 'Hơi bốc lên mờ ảo', 'Đắp mặt nạ chưa?', 'Không muốn lên bờ', 'Xanh như sữa vậy'],
   },
 };

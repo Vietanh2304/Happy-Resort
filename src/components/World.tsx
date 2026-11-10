@@ -67,10 +67,11 @@ import { ranchBackground } from '../lib/ranchArt';
 import { beachSetSprite, loungeBackground, type SeaSpot } from '../lib/seaView';
 /** Vũng nước khi mưa: [x, y, rộng] (toạ độ cảnh) */
 const PUDDLES: [number, number, number][] = [[30, 150, 18], [88, 128, 14], [140, 170, 20], [205, 140, 16], [60, 200, 15], [170, 215, 18]];
-import { tripBackground, tripOf, type TripId } from '../lib/trips';
+import { tripOf, type TripId } from '../lib/trips';
 import { TripContent } from './Trip';
 import { spotBackground, spotOf, type SpotScene } from '../lib/tripSpots';
-import { SpotContent } from './TripSpot';
+import { FxList, SpotContent } from './TripSpot';
+import { mainBackground, mainOf } from '../lib/tripMain';
 import { liveStatus } from './SeedSheet';
 
 export interface Lantern { id: number; x: number; text: string; mine: boolean }
@@ -99,6 +100,8 @@ function cellBind(p: { edit: CellEdit; ghost: Ghost | null }, x: number, y: numb
 export interface View { weather: Weather | null; time: LocalTime; phase: Phase }
 
 export interface WorldProps {
+  onAnim?: (n: import('../lib/acts').AnimName) => void;
+  onKiss?: () => void;
   scene: SceneId;
   me: Profile;
   partner: Profile | null;
@@ -194,7 +197,7 @@ const TAN = 'skewY(26.565deg)', TAN_NEG = 'skewY(-26.565deg)';
 export function World(props: WorldProps) {
   const { scene, myView, editing } = props;
   const def = SCENES[scene];
-  const bg = spotOf(scene) ? spotBackground(scene as SpotScene, myView.phase) : scene.startsWith('trip_') ? tripBackground(scene.slice(5) as TripId, myView.phase) : ({
+  const bg = spotOf(scene) ? spotBackground(scene as SpotScene, myView.phase) : scene.startsWith('trip_') ? mainBackground(scene.slice(5) as TripId, myView.phase) : ({
     town: () => townBackground(),
     beach: () => beachBackground(myView.phase),
     lounge: () => loungeBackground(myView.phase, props.seaSpot ?? 'home'),
@@ -316,6 +319,13 @@ function SceneContent(p: WorldProps) {
     if (scene === 'beach' && who.act === 'fishing') return { spec: { kind: 'rod', color: '#c98a52' }, mode: 'fish' };
     if (scene === 'farm' && who.act === 'water') return { spec: { kind: 'can', color: '#7ac8e8' }, mode: 'pour' };
     if (scene === 'cafe' && who.act === 'read') return { spec: { kind: 'book', color: '#8db8ef' }, mode: 'read' };
+    if (scene.startsWith('trip_')) {
+      if (who.act === 'omikuji') return { spec: { kind: 'book', color: '#f8f0e0' }, mode: 'read' };
+      if (who.act === 'feed') return { spec: { kind: 'can', color: '#e8d8a0' }, mode: 'pour' };
+      if (who.act === 'sing') return { spec: { kind: 'stick', color: '#3a3a3a' }, mode: 'sip' };
+      if (who.dish) return { spec: foodProp(who.dish).utensil, mode: 'eat' };
+      if (who.drink) return { spec: drinkProp(who.drink), mode: 'sip' };
+    }
     if (scene === 'restaurant' || scene === 'cafe') {
       if (who.dish) return { spec: foodProp(who.dish).utensil, mode: 'eat' };
       if (who.drink) return { spec: drinkProp(who.drink), mode: 'sip' };
@@ -365,7 +375,8 @@ function SceneContent(p: WorldProps) {
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
 
-      {spotOf(scene) && <SpotContent spot={spotOf(scene)!} scene={scene as SpotScene} me={me} today={p.myView.time.date} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland_aurora'} go={go} />}
+      {spotOf(scene) && <SpotContent spot={spotOf(scene)!} scene={scene as SpotScene} me={me} live={live} partnerHere={!!p.partnerHere} looks={{ me: myDress.look, them: theirDress.look }} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} today={p.myView.time.date} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland_aurora'} go={go} />}
+      {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <FxList fx={mainOf(scene.slice(5) as TripId).fx} scene={scene} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland'} />}
       {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <TripContent trip={tripOf(scene.slice(5))!} me={me} today={p.myView.time.date} go={go} enter={enter} />}
       {scene === 'city' && <CityContent go={go} night={phase === 'night'} onStall={id => p.stall?.(id)} onOffice={() => enter('office')} onHome={() => enter('town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 })} />}
       {scene === 'office' && p.job && p.work && (
@@ -494,12 +505,12 @@ function SceneContent(p: WorldProps) {
       {/* Nhân vật */}
       {(myBed || theirBed) && <BedLayer {...p} myBed={myBed} theirBed={theirBed} />}
       <KidLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />
-      {!myBed && scene !== 'lounge' && scene !== 'sky' && <Avatar
+      {!myBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride'].includes(live.mine.act ?? '')) && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')} makeup={live.mine.act === 'makeup'} riding={live.mine.horse && SCENES[scene].outdoor ? horseKind(p.animals, live.mine.horse) : undefined}
         sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : SINK_ACTS.includes(live.mine.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
-      {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && (
+      {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride'].includes(theirs.act ?? '')) && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')} makeup={theirs.act === 'makeup'} riding={theirs.horse && SCENES[scene].outdoor ? horseKind(p.animals, theirs.horse) : undefined}
