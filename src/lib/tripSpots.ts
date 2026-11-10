@@ -132,6 +132,13 @@ export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => voi
 
 // ───────── sprite nhỏ chuyển động ─────────
 export type MiniId = 'boat' | 'gondola' | 'swan' | 'cable' | 'train' | 'bateau' | 'sampan' | 'scooter' | 'vespa' | 'bus' | 'car' | 'cyclo';
+export const MINI: Record<MiniId, { z: number; hull: number; seat: number }> = {
+  boat: { z: 2.4, hull: 5, seat: 0.78 }, sampan: { z: 2.2, hull: 7, seat: 0.5 }, gondola: { z: 1.7, hull: 10, seat: 0.45 }, swan: { z: 2.4, hull: 8, seat: 0.4 },
+  cable: { z: 2.6, hull: 10, seat: 0.5 }, train: { z: 2.2, hull: 9, seat: 0.12 }, bateau: { z: 1.8, hull: 8, seat: 0.55 },
+  scooter: { z: 1.6, hull: 9, seat: 0.45 }, vespa: { z: 1.6, hull: 9, seat: 0.45 }, bus: { z: 1.7, hull: 11, seat: 0.5 }, car: { z: 1.6, hull: 6, seat: 0.5 }, cyclo: { z: 1.6, hull: 8, seat: 0.25 },
+};
+/** Sprite xe/thuyền đã phóng theo tỉ lệ người */
+export const vehicleSprite = (id: MiniId): Sprite => { const sp = miniSprite(id), z = MINI[id].z; return { ...sp, w: sp.w * z, h: sp.h * z }; };
 export function miniSprite(id: MiniId): Sprite {
   const W: Record<MiniId, [number, number]> = { boat: [22, 10], gondola: [34, 16], swan: [16, 14], cable: [12, 14], train: [72, 16], bateau: [48, 14], sampan: [26, 12], scooter: [16, 16], vespa: [16, 16], bus: [56, 22], car: [30, 14], cyclo: [22, 18] };
   const [w, h] = W[id];

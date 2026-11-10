@@ -9,6 +9,7 @@ import { toast, toastError } from '../lib/toast';
 import { TRIP_WALK, tripCtx, type Trip } from '../lib/trips';
 import type { Pt, SceneId } from '../lib/world';
 import { spotsOf } from '../lib/tripSpots';
+import { wxLook, wxRain } from '../lib/weather';
 import { drinkProp, snackProp } from '../lib/props';
 import type { AnimName } from '../lib/acts';
 import type { Live } from '../lib/useLive';
@@ -18,6 +19,7 @@ import { avatarPx } from './Avatar';
 import { Tag, useScale } from './Stage';
 import { Follower } from './Wander';
 
+const UMB = ['#5aa8e0', '#f6c445', '#8bc87a', '#e07a7a', '#b08ae0'];
 const OUTFITS = [0, 1, 2, 6, 7, 8, 9, 14, 16, 3, 10];
 const TOURIST = ['Đẹp quá trời!', '📸 Chụp giùm mình tấm ảnh nha', 'Đi đâu ăn ngon ta?', 'Lần đầu tới đây luôn 😍', 'Hai bạn dễ thương ghê 💕', 'Mỏi chân quá…'];
 
@@ -60,11 +62,11 @@ export function Stroller({ seed, i, box = TRIP_WALK, lines = TOURIST, jobs, call
   useEffect(() => { if (call) work(call.job, (i % 2 ? 1 : -1) * (14 + i * 4)); }, [call?.n]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!doing?.hold) return; const t = setInterval(() => setTick(v => v + 1), 900); return () => clearInterval(t); }, [doing]);
   const talk = () => { setSay(lines[(i + Math.floor(Date.now() / 4000)) % lines.length]); setTimeout(() => setSay(null), 2600); };
-  const dl = doing?.swim ? { ...look, outfit: 18, acc: 0, glasses: doing.mask ? 5 : 0 } : look;
-  const still = doing ? characterSprite(dl, doing.frame, doing.hold ? { ...doing.hold, phase: (tick % 2) as 0 | 1 } : undefined, doing.view ?? 'front') : characterSprite(look, 'idle', undefined, 'side');
+  const wl = wxLook(look), dl = doing?.swim ? { ...look, outfit: 18, acc: 0, glasses: doing.mask ? 5 : 0 } : wl;
+  const still = doing ? characterSprite(dl, doing.frame, doing.hold ? { ...doing.hold, phase: (tick % 2) as 0 | 1 } : undefined, doing.view ?? 'front') : characterSprite(wl, 'idle', undefined, 'side');
   return (
     <>
-      <Follower sprite={still} walk={doing ? undefined : characterSprite(look, 'walk', undefined, 'side', 1)} x={at.x} y={at.y} title="Du khách" ps={ps} onClick={talk} />
+      <Follower sprite={still} walk={doing ? undefined : characterSprite(wl, 'walk', undefined, 'side', 1)} umbrella={wxRain() && !doing?.swim && doing?.frame !== 'sit' ? UMB[i % UMB.length] : undefined} x={at.x} y={at.y} title="Du khách" ps={ps} onClick={talk} />
       {doing?.swim && <i className="fx-soak" style={{ left: (at.x - 11) * s, top: (at.y - 10) * s, width: 22 * s, height: 11 * s, zIndex: Math.round(at.y) + 3 }} />}
       {say && <Tag x={at.x} y={at.y - 30} className="bed-bubble">{say}</Tag>}
     </>

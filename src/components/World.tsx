@@ -71,7 +71,7 @@ import { tripOf, type TripId } from '../lib/trips';
 import { TripContent } from './Trip';
 import { spotBackground, spotOf, type SpotScene } from '../lib/tripSpots';
 import { FxList, SpotContent } from './TripSpot';
-import { mainBackground, mainOf } from '../lib/tripMain';
+import { mainBackground, mainOf, tripWeather } from '../lib/tripMain';
 import { liveStatus } from './SeedSheet';
 
 export interface Lantern { id: number; x: number; text: string; mine: boolean }
@@ -194,7 +194,10 @@ const ZOOM: Partial<Record<SceneId, number>> = { wheel: 1.9, restaurant: 1.5, ca
 
 const TAN = 'skewY(26.565deg)', TAN_NEG = 'skewY(-26.565deg)';
 
-export function World(props: WorldProps) {
+export function World(raw: WorldProps) {
+  // Ở điểm du lịch dùng thời tiết riêng của nơi đó, không theo làng
+  const tripId = raw.scene.startsWith('trip_') ? (raw.scene.split('_')[1] as TripId) : null;
+  const props: WorldProps = tripId && tripOf(tripId) ? { ...raw, myView: { ...raw.myView, weather: tripWeather(tripId, raw.myView.time.date, raw.myView.time.hour) } } : raw;
   const { scene, myView, editing } = props;
   const def = SCENES[scene];
   const bg = spotOf(scene) ? spotBackground(scene as SpotScene, myView.phase) : scene.startsWith('trip_') ? mainBackground(scene.slice(5) as TripId, myView.phase) : ({

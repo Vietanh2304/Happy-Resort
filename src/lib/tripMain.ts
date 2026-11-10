@@ -1,5 +1,7 @@
 // Phố chính của 8 điểm đến: vẽ pixel chi tiết theo đặc trưng từng thành phố, xe cộ chạy, hiệu ứng động.
-import type { Phase } from './content';
+import type { Phase, WeatherType } from './content';
+import { seeded } from './rng';
+import type { Weather } from './weather';
 import type { Pen } from './pixel';
 import { band, bldg, circle, paint, pine, rail, ridge, sky, speckle, string, tiles, tree, water, type Fx, type Light } from './tripSpots';
 import type { TripId } from './trips';
@@ -221,4 +223,18 @@ const MAIN: Record<TripId, MainDef> = {
 };
 
 export const mainOf = (id: TripId) => MAIN[id];
+
+/** Khí hậu đặc trưng: [nhiệt độ thấp, cao], xác suất [nắng, mây, mưa, tuyết, sương] */
+const CLIMATE: Record<TripId, [number, number, number[]]> = {
+  taichung: [26, 31, [0.5, 0.3, 0.2, 0, 0]], gwangju: [9, 16, [0.5, 0.35, 0.15, 0, 0]], hoian: [27, 32, [0.6, 0.25, 0.15, 0, 0]],
+  tokyo: [13, 19, [0.55, 0.35, 0.1, 0, 0]], paris: [11, 17, [0.35, 0.45, 0.2, 0, 0]], venice: [18, 24, [0.6, 0.3, 0, 0, 0.1]],
+  swiss: [-3, 4, [0.45, 0.1, 0, 0.45, 0]], iceland: [-7, -1, [0.4, 0, 0, 0.5, 0.1]],
+};
+const WX: WeatherType[] = ['clear', 'cloudy', 'rain', 'snow', 'fog'];
+/** Thời tiết ở điểm du lịch theo ngày + buổi (đổi mỗi 6 tiếng) */
+export function tripWeather(id: TripId, date: string, hour: number): Weather {
+  const [lo, hi, pr] = CLIMATE[id], r = seeded(`tripwx:${id}:${date}:${Math.floor(hour / 6)}`);
+  let x = r(), k = 0; while (k < 4 && x >= pr[k]) { x -= pr[k]; k++; }
+  return { type: WX[k], temp: Math.round(lo + r() * (hi - lo)), code: 0 };
+}
 export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v2:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night);

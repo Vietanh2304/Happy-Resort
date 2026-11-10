@@ -9,7 +9,7 @@ import { item } from '../lib/content';
 import { notify } from '../lib/realtime';
 import { seeded } from '../lib/rng';
 import { toast, toastError } from '../lib/toast';
-import { FORTUNES, cowbellSprite, flySprite, lidSprite, knotSprite, pigeonSprite, popSprite, lotusSprite, wallFlowerSprite, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
+import { FORTUNES, MINI, vehicleSprite, cowbellSprite, flySprite, lidSprite, knotSprite, pigeonSprite, popSprite, lotusSprite, wallFlowerSprite, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
 import type { Pt } from '../lib/world';
 import { Spr, Tag, useScale } from './Stage';
 import { Stroller, type NpcJob } from './Trip';
@@ -37,7 +37,7 @@ function FxLayer({ fx, scene, night }: { fx: Fx; scene: string; night: boolean }
     case 'sway': { const z = fx.big ? 2 : 1; return <i className={`fx-sway ${night ? 'lit' : ''}`} style={v({ left: fx.x * s, top: fx.y * s, width: 4 * z * s, height: 6 * z * s, background: fx.c, zIndex: 3, '--g': fx.c, animationDuration: `${1.6 + r()}s` })} />; }
     case 'steam': return <>{Array.from({ length: fx.n ?? 2 }, (_, i) => <i key={i} className="fx-steam" style={{ left: (fx.x + i * 4 - 4) * s, top: fx.y * s, width: 5 * s, height: 5 * s, animationDelay: `${-i * 0.9 - r()}s`, zIndex: 400 }} />)}</>;
     case 'glow': return fx.night && !night ? null : <i className="fx-glow" style={{ left: (fx.x - fx.r) * s, top: (fx.y - fx.r / 2) * s, width: fx.r * 2 * s, height: fx.r * s, background: `radial-gradient(${fx.c}55, transparent 70%)`, zIndex: 2 }} />;
-    case 'move': { const sp = miniSprite(fx.spr); return <Spr sprite={sp} x={fx.x} y={fx.y} z={fx.y < 100 ? 3 : Math.round(fx.y)} className="fx-move" style={v({ '--dx': `${fx.dx * s}px`, animationDuration: `${fx.dur}s`, animationDirection: fx.loop ? 'normal' : 'alternate', animationIterationCount: 'infinite' })} />; }
+    case 'move': { const sp = vehicleSprite(fx.spr); return <Spr sprite={sp} x={fx.x} y={fx.y} z={fx.y < 100 ? 3 : Math.round(fx.y)} className="fx-move" style={v({ '--dx': `${fx.dx * s}px`, animationDuration: `${fx.dur}s`, animationDirection: fx.loop ? 'normal' : 'alternate', animationIterationCount: 'infinite' })} />; }
     case 'bird': return <>{Array.from({ length: fx.n }, (_, i) => <Flier key={i} icon={fx.icon} x={fx.x + r() * 60} y={fx.y + r() * 30} delay={-r() * 6} />)}</>;
     case 'aurora': return <div className="fx" style={box(0, fx.y, 256, 70, 1)}><i className="fx-aurora" /><i className="fx-aurora b" /></div>;
     case 'sparkle': return fx.night && !night ? null : <div className="fx" style={box(fx.x, fx.y, fx.w, fx.h, 3)}>{Array.from({ length: fx.n }, (_, i) => <i key={i} className="fx-spark" style={{ left: r() * fx.w * s, top: r() * fx.h * s, width: s, height: s, animationDelay: `${-r() * 2}s`, animationDuration: `${0.8 + r() * 1.6}s` }} />)}</div>;
@@ -76,7 +76,6 @@ function jobOf(a: Act): NpcJob | null {
 const npcJobs = (spot: SpotDef) => spot.acts.map(jobOf).filter((j): j is NpcJob => !!j);
 
 const RIDE_MS = 9000;
-const RIDE_ZOOM: Record<string, number> = { cable: 2, swan: 2, boat: 1.6, sampan: 1.4, gondola: 1.1, bateau: 1, train: 1 };
 const DRINKS = ['tra_sua', 'honey_tea', 'ca_phe_sua', 'peach_tea'];
 const KEEP = ['clock', 'books', 'lantern', 'rose_bloom', 'chocolate', 'cheese'];
 
@@ -85,14 +84,18 @@ function Rider({ spot, who, look }: { spot: SpotDef; who: { act: string | null; 
   const s = useScale(), ps = avatarPx(s);
   const a = who.trip ? spot.acts[who.trip.i] : undefined;
   if (who.act !== 'ride' || !a || a.k !== 'ride') return null;
-  const veh = miniSprite(a.spr), z = RIDE_ZOOM[a.spr] ?? 1, vw = veh.w * ps * z, vh = veh.h * ps * z;
-  const ch = characterSprite(look, 'sit', undefined, 'side');
-  const wl = vw / s, ltr = a.x < 128, x0 = ltr ? 6 : 250 - wl, dx = (ltr ? 1 : -1) * (244 - wl) * s;
+  // người ngồi TRONG thuyền/xe: vẽ thân xe → người → mạn xe phía trước che chân
+  const m = MINI[a.spr], raw = miniSprite(a.spr), veh = vehicleSprite(a.spr), vw = veh.w * s, vh = veh.h * s;
+  const ch = characterSprite(look, 'sit', undefined, 'side'), cw = ch.w * ps, chh = ch.h * ps;
+  const hullFrac = m.hull / raw.h, sink = (1 - hullFrac) * vh * 0.75;
+  const H = Math.max(vh, sink + chh);
+  const ltr = a.x < 128, x0 = ltr ? 6 : 250 - veh.w, dx = (ltr ? 1 : -1) * (244 - veh.w) * s;
   return (
-    <div className="fx-rider" style={v({ left: x0 * s, top: a.ry * s - vh - ch.h * ps * 0.55, width: vw, height: vh + ch.h * ps * 0.55, zIndex: Math.round(a.ry) + 2, '--dx': `${dx}px`, animationDuration: `${RIDE_MS}ms`, animationDelay: `${-(Date.now() - who.trip!.at)}ms` })}>
+    <div className="fx-rider" style={v({ left: x0 * s, top: a.ry * s - H, width: vw, height: H, zIndex: Math.round(a.ry) + 2, '--dx': `${dx}px`, animationDuration: `${RIDE_MS}ms`, animationDelay: `${-(Date.now() - who.trip!.at)}ms` })}>
       <div style={{ position: 'absolute', inset: 0, transform: ltr ? undefined : 'scaleX(-1)' }}>
-        <img src={ch.url} alt="" style={{ position: 'absolute', left: vw / 2 - (ch.w * ps) / 2, bottom: vh * 0.45, width: ch.w * ps, height: ch.h * ps }} />
         <img src={veh.url} alt="" style={{ position: 'absolute', left: 0, bottom: 0, width: vw, height: vh }} />
+        <img src={ch.url} alt="" style={{ position: 'absolute', left: vw * m.seat - cw / 2, bottom: sink - chh * 0.08, width: cw, height: chh }} />
+        <img src={veh.url} alt="" style={{ position: 'absolute', left: 0, bottom: 0, width: vw, height: vh, clipPath: `inset(${hullFrac * 100}% 0 0 0)` }} />
       </div>
     </div>
   );
