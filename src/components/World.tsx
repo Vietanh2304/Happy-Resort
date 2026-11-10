@@ -133,6 +133,9 @@ export interface WorldProps {
   /** Đang ôm / hôn nhau (cả hai cùng thấy): bên trái/phải của mình */
   couple?: { kind: 'hug' | 'kiss'; at: number; mySide: 'L' | 'R' } | null;
   snowball?: { from: Pt; to: Pt; at: number } | null;
+  skyFx?: { rainbow: boolean; meteor: boolean };
+  onRainbow?: () => void;
+  onMeteor?: () => void;
   hillReal: boolean;             // đang chọn "Giờ thật" (theo thời tiết thật)
   bath: BathWater;               // nước tắm đang chọn
   cinemaMode: 'movie' | 'karaoke';
@@ -498,6 +501,8 @@ function SceneContent(p: WorldProps) {
         />
       )}
 
+      {def.outdoor && realSky && p.skyFx?.rainbow && <button className="rainbow" aria-label="Cầu vồng" onClick={e => { e.stopPropagation(); p.onRainbow?.(); }} />}
+      {def.outdoor && realSky && p.skyFx?.meteor && [0, 1, 2].map(i => <button key={i} className="meteor" aria-label="Sao băng" style={{ left: `${20 + i * 27}%`, top: `${4 + (i % 2) * 8}%`, animationDelay: `${i * 2.7}s` }} onClick={e => { e.stopPropagation(); p.onMeteor?.(); }} />)}
       {def.outdoor && realSky && wx === 'rain' && <div className="px-rain" style={{ '--s': s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'rain' && PUDDLES.map(([x, y, w], i) => <i key={i} className="puddle" style={{ left: x * s, top: y * s, width: w * s, height: w * 0.32 * s, zIndex: 1 }} />)}
       {p.snowball && Date.now() - p.snowball.at < 1500 && <i key={p.snowball.at} className="snowball" style={{ left: p.snowball.from.x * s, top: (p.snowball.from.y - 14) * s, '--dx': `${(p.snowball.to.x - p.snowball.from.x) * s}px`, '--dy': `${(p.snowball.to.y - p.snowball.from.y) * s}px`, width: 4 * s, height: 4 * s } as CSSProperties} />}

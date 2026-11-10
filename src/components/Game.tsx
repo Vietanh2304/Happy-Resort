@@ -76,6 +76,8 @@ import { WishSheet } from './WishSheet';
 import { World, type Lantern, type View } from './World';
 import { CallButtons, CallTiles, EnterGate, RemoteAudio } from './Call';
 import { outWx } from '../lib/weather';
+import { DiarySheet, FestivalSheet, festKindOf, LanternParade, TravelSheet } from './Festive';
+import { seeded } from '../lib/rng';
 import { ChatDock } from './ChatDock';
 
 type SheetState =
@@ -89,7 +91,7 @@ type SheetState =
   | { kind: 'animal'; id: string }
   | { kind: 'ranchshop' }
   | { kind: 'stall'; id: StallId }
-  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'pen'; pen: 'stable' | 'pond' }
+  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'diary' } | { kind: 'festival' } | { kind: 'travel' } | { kind: 'pen'; pen: 'stable' | 'pond' }
   | { kind: 'workshop' }
   | { kind: 'tailor' }
   | { kind: 'work' }
@@ -138,6 +140,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const [meetup] = useSynced('meetup', api.loadMeetup, null as api.Meetup | null);
   const [farm, , farmLoaded] = useSynced('farm', api.loadFarm, [] as api.FarmRow[]);
   const [photos] = useSynced('photos', api.loadPhotos, [] as api.Photo[]);
+  const [mems] = useSynced('memories', api.loadMemories, [] as api.Memory[]);
   const [capsules] = useSynced('capsules', api.loadCapsules, [] as api.Capsule[]);
   const [pet, , petLoaded] = useSynced('pets', api.loadPet, null as api.Pet | null);
   const [days] = useSynced('days', api.loadDays, [] as CustomDay[]);
@@ -202,6 +205,9 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Trời chung trong làng: random theo mùa, hai người thấy giống nhau, quyết định ô/khăn/áo
   const myWeather = villageWeather(coupleId, now.getTime(), myTime.month);
   const myView: View = { ...realView, weather: myWeather };
+  // Cầu vồng: vừa tạnh mưa (khung 3 tiếng trước mưa, giờ hết) và trời còn sáng. Sao băng: khoảng 1/4 số đêm
+  const rainbow = villageWeather(coupleId, now.getTime() - 3 * 3600_000, myTime.month).type === 'rain' && !['rain', 'snow'].includes(myWeather.type) && myTime.hour >= 7 && myTime.hour < 18;
+  const meteor = (myTime.hour >= 20 || myTime.hour < 4) && myWeather.type !== 'rain' && myWeather.type !== 'cloudy' && seeded(`${coupleId}:meteor:${myTime.hour < 4 ? addDays(myTime.date, -1) : myTime.date}`)() < 0.25;
   const partnerTime = partner?.tz ? localTime(partner.tz, now) : null;
   const partnerView: View | null = partnerTime ? { weather: partnerWeather, time: partnerTime, phase: phaseOf(partnerTime.hour) } : null;
   const myShore = { weather: myWeather?.type ?? 'clear', phase: myView.phase } as const;
@@ -515,6 +521,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const fests = festivalsOn(myTime.date, people);
   const theme = mainTheme(fests);
   const festKey = fests.map(f => f.id).join(',');
+  const festKind = festKindOf(fests.map(f => f.id));
   useEffect(() => {
     for (const f of fests) {
       api.claim(`fest:${f.id}`, f.gift).then(ok => {
@@ -885,6 +892,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         {students.length > 0 && studyTime(myTime.hour) && <button className={`chip ${studyLeft ? 'glow' : ''}`} onClick={() => setSheet({ kind: 'study' })}>📚 Dạy con học{studyLeft ? ` (còn ${studyLeft})` : ' ✓'}</button>}
         {students.length > 0 && meetingDay(myTime.date) && myTime.hour >= 17 && <button className="chip glow" onClick={() => { if (scene !== 'school') enter('school'); setSheet({ kind: 'meeting' }); }}>📣 Họp phụ huynh</button>}
         {unnamed && <button className="chip glow ping" onClick={() => setSheet({ kind: 'kidname', id: unnamed.id })}>🐦 Đón bé về · đặt tên</button>}
+        {festKind && <button className="chip glow" onClick={() => setSheet({ kind: 'festival' })}>{({ tet: '🧧 Hoạt động Tết', midautumn: '🏮 Làm đèn Trung Thu', halloween: '🎃 Đi xin kẹo', xmas: '🎄 Cây thông & quà' } as const)[festKind]}</button>}
         {giftOpen && claimsLoaded && <button className="chip glow ping" onClick={() => setSheet({ kind: 'gift' })}>🎁 Quà hôm nay</button>}
         {/* Trên điện thoại gom phần còn lại vào nút ☰ cho gọn */}
         <button className={`chip hud-toggle ${fests.length || combos.length || expecting || quizLeft ? 'ping' : ''}`} onClick={() => setHudOpen(v => !v)} aria-label="Thêm">{hudOpen ? '✕' : '☰'}</button>
@@ -924,7 +932,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <World
           scene={scene} me={me} partner={partner} myView={myView} realView={realView} partnerView={partnerView}
           live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
-          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} snowball={snowball} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: (station?: string) => setSheet({ kind: 'bakery', station: (station ?? 'case') as BakeStation }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
+          decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} snowball={snowball} skyFx={{ rainbow, meteor }} onRainbow={() => run(async () => { const ok = await api.grantCoins(`rainbow:${myTime.date}:${me.id}`, 20); notify('profiles'); toast(ok ? '🌈 Ngắm cầu vồng sau mưa — may mắn cả ngày! +20 xu' : '🌈 Cầu vồng đẹp quá…'); })} onMeteor={() => { const w = prompt('🌠 Sao băng! Ước một điều đi:'); if (w?.trim()) void run(async () => { await api.addWish(me, `🌠 ${w.trim()}`); notify('wishes'); toast('🌠 Điều ước đã vào lọ “Muốn cùng làm”'); }); }} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: (station?: string) => setSheet({ kind: 'bakery', station: (station ?? 'case') as BakeStation }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
           farm={farm} guests={activeGuests} pickups={pickups} fishing={fishing} combos={combos}
           daysTogether={bridge.planks}
@@ -1087,6 +1095,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           <DockButton icon="📮" label="Thư" badge={unread} onClick={() => setSheet({ kind: 'mail' })} />
           <DockButton icon="💬" label="Câu hỏi" badge={answeredToday ? 0 : 1} onClick={() => setSheet({ kind: 'question' })} />
           <DockButton icon="📔" label="Album" onClick={() => setSheet({ kind: 'album' })} />
+          <DockButton icon="📓" label="Nhật ký" badge={mems.some(m => m.kind === 'diary' && m.user_id === me.id && m.day === myTime.date) ? 0 : 1} onClick={() => setSheet({ kind: 'diary' })} />
+          <DockButton icon="✈️" label="Du lịch" onClick={() => setSheet({ kind: 'travel' })} />
           <DockButton icon="📖" label="Sổ tay" onClick={() => setSheet({ kind: 'collection' })} />
           <DockButton icon="⚙️" label="Cài đặt" onClick={() => setSheet({ kind: 'settings' })} />
         </nav>
@@ -1123,6 +1133,10 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'bugbook' && <BugBookSheet me={me} onClose={close} />}
       {sheet?.kind === 'pen' && <PenSheet pen={sheet.pen} animals={animals} inventory={inventory} onAnimal={id => setSheet({ kind: 'animal', id })} onShop={() => { close(); enter('ranch'); }} onClose={close} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
+      {sheet?.kind === 'diary' && <DiarySheet me={me} partner={partner} today={myTime.date} mems={mems} onClose={close} />}
+      {sheet?.kind === 'festival' && festKind && <FestivalSheet kind={festKind} me={me} partner={partner} today={myTime.date} mems={mems} inventory={inventory} kids={kids} onClose={close} />}
+      {sheet?.kind === 'travel' && <TravelSheet me={me} partner={partner} coins={couple?.coins ?? 0} mems={mems} today={myTime.date} onClose={close} />}
+      {festKind === 'midautumn' && myTime.hour >= 18 && <LanternParade mems={mems} year={myTime.date.slice(0, 4)} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} kinds={animals.reduce<Record<string, number>>((m, a) => ({ ...m, [a.kind]: (m[a.kind] ?? 0) + 1 }), {})} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'workshop' && <WorkshopSheet inventory={inventory} together={!!partnerHere} partnerName={partnerName} onClose={close} />}
       {sheet?.kind === 'tailor' && <TailorSheet me={me} partnerName={partnerName} inventory={inventory} outfits={outfits} wearing={me.avatar.design}
