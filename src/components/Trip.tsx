@@ -46,7 +46,7 @@ export function Stroller({ seed, i, box = TRIP_WALK, lines = TOURIST }: { seed: 
 export function TripContent({ trip, me, today, go, enter }: { trip: Trip; me: api.Profile; today: string; go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void }) {
   const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
   const souvenir = () => run(async () => {
-    const it = item(trip.souvenir), price = 30;
+    const it = item(trip.souvenir), price = 10;
     if (!confirm(`Mua quà lưu niệm ${it.icon} ${it.name} (${price} xu)?`)) return;
     await api.buyItem(trip.souvenir, price); notify('inventory', 'profiles'); toast(`🛍️ Mua ${it.icon} ${it.name} làm kỷ niệm`);
   });

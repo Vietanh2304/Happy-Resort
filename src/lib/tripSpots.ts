@@ -193,7 +193,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(226, 140, 10, 7, '#f0f0f0'); p.rect(227, 138, 8, 2, '#e8443a'); p.rect(238, 142, 6, 5, '#4a9ae8');
     },
     fx: [{ k: 'bird', x: 60, y: 60, icon: '🦋', n: 3 }, { k: 'sparkle', x: 0, y: 50, w: 256, h: 60, n: 8 }],
-    acts: [ph(70, 130), buy(150, 150, 'keo_bong', 25, '🍭 Kẹo bông'), say(220, 132, '👴 Ông Cầu Vồng', 'Ông Hoàng vẽ từ năm 86 tuổi đó, nhờ vậy cả làng được giữ lại 🌈', 'cheer'), say(30, 170, '🖌️ Vẽ thêm một bông hoa', 'Hai bạn vẽ chung một bông hoa nhỏ lên tường — dễ thương ghê 🌸', 'craft')],
+    acts: [ph(70, 130), buy(150, 150, 'keo_bong', 6, '🍭 Kẹo bông'), say(220, 132, '👴 Ông Cầu Vồng', 'Ông Hoàng vẽ từ năm 86 tuổi đó, nhờ vậy cả làng được giữ lại 🌈', 'cheer'), say(30, 170, '🖌️ Vẽ thêm một bông hoa', 'Hai bạn vẽ chung một bông hoa nhỏ lên tường — dễ thương ghê 🌸', 'craft')],
     lines: ['Bức tường này đẹp quá!', '📸 Đứng đây chụp nè', 'Màu sắc rực rỡ ghê', 'Ông vẽ hết cả làng đó', 'Wow 🌈'],
   },
   trip_taichung_fengjia: {
@@ -219,7 +219,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let i = 0; i < 40; i++) p.rect(Math.floor(L.r() * 256), 130 + Math.floor(L.r() * 60), 2, 1, '#ffd88a30');
     },
     fx: [{ k: 'steam', x: 40, y: 100, n: 3 }, { k: 'steam', x: 136, y: 100, n: 3 }, { k: 'steam', x: 200, y: 100, n: 2 }, { k: 'glow', x: 128, y: 110, r: 120, c: '#ffb04a', night: true }],
-    acts: [buy(30, 136, 'tra_sua', 30, '🧋 Trà sữa trân châu'), buy(110, 136, 'squid_bbq', 45, '🦑 Mực nướng'), buy(190, 136, 'keo_deo', 20, '🍬 Kẹo dẻo'), ph(128, 172), buy(220, 170, 'fried_shrimp', 40, '🍗 Gà rán khổng lồ')],
+    acts: [buy(30, 136, 'tra_sua', 7, '🧋 Trà sữa trân châu'), buy(110, 136, 'squid_bbq', 11, '🦑 Mực nướng'), buy(190, 136, 'keo_deo', 5, '🍬 Kẹo dẻo'), ph(128, 172), buy(220, 170, 'fried_shrimp', 10, '🍗 Gà rán khổng lồ')],
     lines: ['Thơm quá trời!', 'Thử đậu hũ thối không?', 'Đông vui ghê', 'Trà sữa ở đây ngon nhất', 'Mua thêm xiên nữa đi'],
   },
   trip_taichung_sunmoon: {
@@ -244,7 +244,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       L.lamps.push({ x: 150, y: 150, c: '#ffd88a' }, { x: 210, y: 150, c: '#ffd88a' });
     },
     fx: [{ k: 'shim', x: 0, y: 88, w: 256, h: 56, n: 22 }, { k: 'move', spr: 'cable', x: 0, y: 46, dx: 256, dur: 30, loop: true }, { k: 'move', spr: 'boat', x: 140, y: 120, dx: -90, dur: 14 }, { k: 'bird', x: 60, y: 30, icon: '🕊️', n: 2 }],
-    acts: [{ k: 'ride', x: 80, y: 130, label: '⛵ Đi thuyền quanh hồ', spr: 'boat', ry: 116, say: 'Thuyền lướt qua đảo Lalu, gió hồ mát rượi 💙' }, { k: 'ride', x: 30, y: 60, label: '🚡 Đi cáp treo', spr: 'cable', ry: 50, say: 'Cáp treo bay qua rừng, nhìn xuống cả mặt hồ xanh biếc 🚡' }, buy(170, 166, 'honey_tea', 30, '🍵 Hồng trà Nhật Nguyệt'), ph(128, 176)],
+    acts: [{ k: 'ride', x: 80, y: 130, label: '⛵ Đi thuyền quanh hồ', spr: 'boat', ry: 116, say: 'Thuyền lướt qua đảo Lalu, gió hồ mát rượi 💙' }, { k: 'ride', x: 30, y: 60, label: '🚡 Đi cáp treo', spr: 'cable', ry: 50, say: 'Cáp treo bay qua rừng, nhìn xuống cả mặt hồ xanh biếc 🚡' }, buy(170, 166, 'honey_tea', 7, '🍵 Hồng trà Nhật Nguyệt'), ph(128, 176)],
     lines: ['Hồ trong xanh ghê', 'Đạp xe quanh hồ không?', 'Gió mát quá', 'Nhìn tháp kìa!', '🚡 Đi cáp treo đi'],
   },
 
@@ -267,7 +267,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(20, 172, 14, 4, '#7a5a3a'); p.rect(21, 176, 2, 4, '#5a3a2a'); p.rect(31, 176, 2, 4, '#5a3a2a');
     },
     fx: [{ k: 'fall', n: 22, c: ['#e8443a', '#f6a83a', '#d8502a', '#ffc04a'], size: 2 }, { k: 'bird', x: 100, y: 30, icon: '🐦', n: 2 }],
-    acts: [ph(128, 120), say(200, 110, '🪨 Đá Seoseokdae', 'Cột đá núi lửa xếp như phím đàn — gọi là "bức bình phong của trời" đó', 'sit'), buy(40, 160, 'honey_tea', 25, '🫚 Trà gừng mật ong'), say(220, 180, '🍁 Nhặt lá phong', 'Ép lá phong đỏ này vào sổ làm kỷ niệm nha 🍁', 'pick')],
+    acts: [ph(128, 120), say(200, 110, '🪨 Đá Seoseokdae', 'Cột đá núi lửa xếp như phím đàn — gọi là "bức bình phong của trời" đó', 'sit'), buy(40, 160, 'honey_tea', 6, '🫚 Trà gừng mật ong'), say(220, 180, '🍁 Nhặt lá phong', 'Ép lá phong đỏ này vào sổ làm kỷ niệm nha 🍁', 'pick')],
     lines: ['Leo mệt mà đẹp quá', 'Lá đỏ hết rồi!', 'Còn bao xa tới đỉnh?', 'Nghỉ chút đi', 'Annyeong! 👋'],
   },
   trip_gwangju_penguin: {
@@ -297,7 +297,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(30, 160, 8, 12, '#2a2a3a'); p.rect(32, 163, 4, 8, '#ffffff'); p.rect(33, 160, 2, 1, '#f6a83a'); p.px(32, 161, '#ffffff'); p.px(35, 161, '#ffffff');
     },
     fx: [{ k: 'sway', x: 150, y: 74, c: '#e8443a' }, { k: 'sway', x: 86, y: 74, c: '#3a6ad0' }, { k: 'fall', n: 8, c: ['#e8743a', '#f6c445'], size: 2, slow: true }],
-    acts: [buy(70, 140, 'clock', 60, '🕰️ Đồng hồ cổ'), buy(150, 150, 'tteokbokki', 35, '🌶️ Tteokbokki'), ph(34, 150), say(210, 160, '🏺 Chum tương', 'Bà cụ ủ tương đậu ở đây mấy chục năm rồi, thơm lừng', 'craft')],
+    acts: [buy(70, 140, 'clock', 15, '🕰️ Đồng hồ cổ'), buy(150, 150, 'tteokbokki', 8, '🌶️ Tteokbokki'), ph(34, 150), say(210, 160, '🏺 Chum tương', 'Bà cụ ủ tương đậu ở đây mấy chục năm rồi, thơm lừng', 'craft')],
     lines: ['Đồ cổ dễ thương quá', 'Nhà hanok mát ghê', 'Chụp với chú cánh cụt nè 🐧', 'Hồi xưa ông bà dùng cái này', 'Cổ kính ghê'],
   },
   trip_gwangju_chungjang: {
@@ -319,7 +319,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(60, 128, 136, 1, '#ffffff'); for (let x = 70; x < 190; x += 14) p.rect(x, 136, 8, 2, '#f0f0f0');
     },
     fx: [{ k: 'steam', x: 40, y: 150, n: 2 }, { k: 'steam', x: 200, y: 150, n: 2 }, { k: 'glow', x: 128, y: 80, r: 110, c: '#ff4a8a', night: true }, { k: 'sparkle', x: 0, y: 40, w: 256, h: 70, n: 10, night: true }],
-    acts: [buy(40, 140, 'tteokbokki', 35, '🌶️ Tteokbokki'), buy(120, 140, 'fried_shrimp', 40, '🍗 Gà/tôm chiên giòn'), buy(200, 140, 'kem_que', 20, '🍦 Kem que'), ph(128, 176), say(220, 178, '🎤 Hát busking', 'Hai bạn song ca một bài K-pop, mọi người vỗ tay rần rần 🎶', 'sing')],
+    acts: [buy(40, 140, 'tteokbokki', 8, '🌶️ Tteokbokki'), buy(120, 140, 'fried_shrimp', 10, '🍗 Gà/tôm chiên giòn'), buy(200, 140, 'kem_que', 5, '🍦 Kem que'), ph(128, 176), say(220, 178, '🎤 Hát busking', 'Hai bạn song ca một bài K-pop, mọi người vỗ tay rần rần 🎶', 'sing')],
     lines: ['Chimaek đi!', 'Quán này đông ghê', 'Hát hay quá 🎤', 'Đi karaoke không?', 'Đèn đẹp ghê'],
   },
 
@@ -344,7 +344,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(194, 148, 56, 4, '#6a3a22');
     },
     fx: [{ k: 'sway', x: 20, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 60, y: 86, c: '#f6c445', big: true }, { k: 'sway', x: 100, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 186, y: 86, c: '#f59ab3', big: true }, { k: 'sway', x: 226, y: 86, c: '#e8443a', big: true }, { k: 'shim', x: 0, y: 104, w: 256, h: 10, n: 8 }],
-    acts: [buy(220, 160, 'lantern', 40, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 20, '🥖 Bánh mì'), ph(148, 124), say(130, 170, '👗 May áo dài', 'Tiệm may đo áo dài lấy liền trong ngày — hai đứa mặc đôi nha', 'cheer')],
+    acts: [buy(220, 160, 'lantern', 10, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 5, '🥖 Bánh mì'), ph(148, 124), say(130, 170, '👗 May áo dài', 'Tiệm may đo áo dài lấy liền trong ngày — hai đứa mặc đôi nha', 'cheer')],
     lines: ['Đèn lồng đẹp quá', 'Phố cổ yên bình ghê', 'Cầu này trên tờ 20 nghìn đó', 'Ăn cao lầu chưa?', 'Chụp áo dài đi'],
   },
   trip_hoian_river: {
@@ -363,7 +363,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(28, 167, 38, 2, '#6a3a22');
     },
     fx: [{ k: 'shim', x: 0, y: 76, w: 256, h: 72, n: 30, c: '#ffe0a0' }, { k: 'move', spr: 'sampan', x: 30, y: 124, dx: 180, dur: 22 }, { k: 'move', spr: 'sampan', x: 220, y: 100, dx: -160, dur: 26 }, { k: 'glow', x: 128, y: 40, r: 90, c: '#ffa040', night: true }],
-    acts: [{ k: 'float', x: 120, y: 160, label: '🪷 Thả hoa đăng', ry: 146 }, { k: 'ride', x: 200, y: 160, label: '🛶 Đi thuyền sông Hoài', spr: 'sampan', ry: 130, say: 'Chú lái thuyền chèo chậm rãi, đèn lồng soi bóng lung linh 🏮' }, buy(46, 176, 'banh_trang', 15, '🫓 Bánh tráng nướng'), ph(140, 182)],
+    acts: [{ k: 'float', x: 120, y: 160, label: '🪷 Thả hoa đăng', ry: 146 }, { k: 'ride', x: 200, y: 160, label: '🛶 Đi thuyền sông Hoài', spr: 'sampan', ry: 130, say: 'Chú lái thuyền chèo chậm rãi, đèn lồng soi bóng lung linh 🏮' }, buy(46, 176, 'banh_trang', 5, '🫓 Bánh tráng nướng'), ph(140, 182)],
     lines: ['Thả đèn ước đi', 'Đi thuyền không em?', 'Lung linh quá', 'Ước gì cũng thành 🪷', 'Mua hoa đăng đi'],
   },
 
@@ -390,7 +390,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(200, 150, 30, 18, '#8a5a3a'); p.rect(198, 146, 34, 4, '#c83a2a'); for (let k = 0; k < 5; k++) p.rect(203 + k * 5, 154, 3, 8, '#f0e8d0');
     },
     fx: [{ k: 'sway', x: 124, y: 62, c: '#e8302a', big: true }, { k: 'steam', x: 128, y: 146, n: 4 }, { k: 'fall', n: 10, c: ['#f8b8cc', '#ffd8e4'], size: 2, slow: true }],
-    acts: [{ k: 'fortune', x: 214, y: 140, label: '🎋 Rút quẻ omikuji' }, say(128, 140, '🪔 Xông khói nhang', 'Vẫy khói nhang lên người cho khoẻ mạnh nè', 'pray'), buy(40, 140, 'onigiri', 25, '🍙 Onigiri'), ph(128, 176)],
+    acts: [{ k: 'fortune', x: 214, y: 140, label: '🎋 Rút quẻ omikuji' }, say(128, 140, '🪔 Xông khói nhang', 'Vẫy khói nhang lên người cho khoẻ mạnh nè', 'pray'), buy(40, 140, 'onigiri', 6, '🍙 Onigiri'), ph(128, 176)],
     lines: ['Cổng đỏ to quá', 'Rút quẻ chưa?', 'Mua bánh ningyo-yaki đi', 'Konnichiwa!', 'Đèn lồng khổng lồ kìa'],
   },
   trip_tokyo_ueno: {
@@ -419,7 +419,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 30; x < 256; x += 60) L.lamps.push({ x, y: 112, c: '#ffd8e4' });
     },
     fx: [{ k: 'fall', n: 28, c: ['#f8b8cc', '#ffd8e4', '#ffffff'], size: 2, slow: true }, { k: 'shim', x: 0, y: 72, w: 256, h: 24, n: 12 }, { k: 'move', spr: 'swan', x: 40, y: 92, dx: 120, dur: 20 }],
-    acts: [{ k: 'ride', x: 70, y: 120, label: '🦢 Đạp vịt thiên nga', spr: 'swan', ry: 96, say: 'Hai đứa đạp vịt thiên nga giữa hồ sen, cười muốn xỉu 🦢' }, buy(186, 160, 'sushi', 50, '🍣 Hộp sushi picnic'), say(120, 176, '🌸 Hanami', 'Nằm dưới gốc anh đào, cánh hoa rơi lên tóc em 🌸', 'sit'), ph(30, 176)],
+    acts: [{ k: 'ride', x: 70, y: 120, label: '🦢 Đạp vịt thiên nga', spr: 'swan', ry: 96, say: 'Hai đứa đạp vịt thiên nga giữa hồ sen, cười muốn xỉu 🦢' }, buy(186, 160, 'sushi', 12, '🍣 Hộp sushi picnic'), say(120, 176, '🌸 Hanami', 'Nằm dưới gốc anh đào, cánh hoa rơi lên tóc em 🌸', 'sit'), ph(30, 176)],
     lines: ['Hoa nở rộ rồi!', 'Picnic ở đây đi', 'Cánh hoa rơi kìa 🌸', 'Kirei~', 'Đạp vịt không?'],
   },
   trip_tokyo_shibuya: {
@@ -442,7 +442,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(210, 156, 22, 6, '#8a8a8a'); p.rect(214, 146, 12, 10, '#7a6a4a'); p.rect(222, 140, 6, 8, '#7a6a4a'); p.rect(226, 142, 3, 2, '#5a4a3a'); p.px(223, 141, '#3a2a1a');
     },
     fx: [{ k: 'screen', x: 76, y: 42, w: 40, h: 24 }, { k: 'screen', x: 152, y: 82, w: 32, h: 18 }, { k: 'sparkle', x: 0, y: 30, w: 256, h: 90, n: 12, night: true }, { k: 'glow', x: 128, y: 70, r: 120, c: '#6a8aff', night: true }],
-    acts: [ph(220, 172), say(128, 150, '🚦 Băng qua ngã tư', 'Đèn xanh! Hàng nghìn người cùng băng qua một lúc — nắm tay chặt nha 🤝', 'cross'), buy(60, 170, 'mi_ly', 15, '🍜 Mì ly konbini'), buy(180, 140, 'sandwich', 25, '🥪 Sandwich')],
+    acts: [ph(220, 172), say(128, 150, '🚦 Băng qua ngã tư', 'Đèn xanh! Hàng nghìn người cùng băng qua một lúc — nắm tay chặt nha 🤝', 'cross'), buy(60, 170, 'mi_ly', 5, '🍜 Mì ly konbini'), buy(180, 140, 'sandwich', 6, '🥪 Sandwich')],
     lines: ['Đông quá trời!', 'Chụp với Hachiko', 'Màn hình to ghê', 'Đi Shibuya Sky không?', 'Sumimasen~'],
   },
 
@@ -472,7 +472,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 20; x < 256; x += 54) L.lamps.push({ x, y: 128, c: '#ffe8a0' });
     },
     fx: [{ k: 'sparkle', x: 90, y: 4, w: 76, h: 124, n: 26, night: true }, { k: 'bird', x: 40, y: 50, icon: '🕊️', n: 2 }, { k: 'glow', x: 128, y: 60, r: 70, c: '#ffd070', night: true }],
-    acts: [buy(54, 160, 'croissant', 25, '🥐 Croissant picnic'), say(128, 150, '💋 Hôn dưới tháp', 'Đúng giờ tháp nhấp nháy… tụi mình hôn nhau ✨💋', 'love'), ph(200, 170), buy(220, 150, 'rose_bloom', 30, '🌹 Hoa hồng')],
+    acts: [buy(54, 160, 'croissant', 6, '🥐 Croissant picnic'), say(128, 150, '💋 Hôn dưới tháp', 'Đúng giờ tháp nhấp nháy… tụi mình hôn nhau ✨💋', 'love'), ph(200, 170), buy(220, 150, 'rose_bloom', 7, '🌹 Hoa hồng')],
     lines: ['Bonjour!', 'Tháp đẹp quá', 'Đợi tháp nhấp nháy nè ✨', 'Picnic thôi', 'Magnifique!'],
   },
   trip_paris_seine: {
@@ -497,7 +497,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 0; x < 256; x += 40) tree(p, x + 180, 128, 6, '#5a9a4a');
     },
     fx: [{ k: 'shim', x: 0, y: 92, w: 256, h: 34, n: 20 }, { k: 'move', spr: 'bateau', x: 220, y: 116, dx: -200, dur: 28, loop: true }, { k: 'fall', n: 8, c: ['#e8b84a', '#d8903a'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 128, y: 120, label: '🛳️ Du thuyền Bateau', spr: 'bateau', ry: 118, say: 'Du thuyền lướt dưới những cây cầu cổ, Paris lên đèn rực rỡ 🌃' }, buy(60, 156, 'books', 45, '📚 Sách cũ'), say(206, 176, '🎨 Vẽ chân dung', 'Hoạ sĩ vẽ hai bạn ngồi tựa vai nhau — tranh đẹp như mơ 🖼️', 'paint'), ph(140, 176)],
+    acts: [{ k: 'ride', x: 128, y: 120, label: '🛳️ Du thuyền Bateau', spr: 'bateau', ry: 118, say: 'Du thuyền lướt dưới những cây cầu cổ, Paris lên đèn rực rỡ 🌃' }, buy(60, 156, 'books', 11, '📚 Sách cũ'), say(206, 176, '🎨 Vẽ chân dung', 'Hoạ sĩ vẽ hai bạn ngồi tựa vai nhau — tranh đẹp như mơ 🖼️', 'paint'), ph(140, 176)],
     lines: ['Sông Seine thơ mộng ghê', 'Mua sách không?', 'Tranh đẹp quá', 'Merci~', 'Đi thuyền tối nay nhé'],
   },
   trip_paris_cafe: {
@@ -524,7 +524,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let k = 0; k < 6; k++) { p.rect(200 + k * 8, 170, 6, 6, '#8a5a3a'); circle(p, 203 + k * 8, 167, 3, ['#e8443a', '#f6c445', '#f59ab3'][k % 3]); }
     },
     fx: [{ k: 'steam', x: 34, y: 146, n: 1 }, { k: 'steam', x: 80, y: 146, n: 1 }, { k: 'steam', x: 126, y: 146, n: 1 }, { k: 'bird', x: 200, y: 60, icon: '🕊️', n: 2 }],
-    acts: [buy(60, 140, 'ca_phe_sua', 25, '☕ Café au lait'), buy(140, 140, 'cupcake', 30, '🧁 Bánh macaron'), say(220, 160, '🪗 Nghệ sĩ accordion', 'La vie en rose~ 🎶 nhạc accordion vang khắp con phố', 'sit'), ph(100, 176)],
+    acts: [buy(60, 140, 'ca_phe_sua', 6, '☕ Café au lait'), buy(140, 140, 'cupcake', 7, '🧁 Bánh macaron'), say(220, 160, '🪗 Nghệ sĩ accordion', 'La vie en rose~ 🎶 nhạc accordion vang khắp con phố', 'sit'), ph(100, 176)],
     lines: ['Un café, s\'il vous plaît', 'Ngồi đây ngắm phố đi', 'Bánh ngon quá', 'Lãng mạn ghê', 'Nhạc hay quá 🎶'],
   },
 
@@ -546,7 +546,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 0; x < 256; x += 64) L.lamps.push({ x: x + 30, y: 150, c: '#ffd88a' });
     },
     fx: [{ k: 'shim', x: 0, y: 110, w: 256, h: 50, n: 26 }, { k: 'move', spr: 'gondola', x: 20, y: 150, dx: 180, dur: 24 }, { k: 'move', spr: 'gondola', x: 210, y: 128, dx: -170, dur: 30 }],
-    acts: [{ k: 'ride', x: 128, y: 172, label: '🛶 Đi gondola', spr: 'gondola', ry: 146, say: 'O sole mio~ 🎶 Anh lái thuyền hát vang dưới cầu Rialto' }, buy(40, 178, 'kem_que', 25, '🍨 Gelato'), ph(210, 178), say(128, 90, '🌉 Cầu Rialto', 'Cây cầu đá 400 năm — đứng giữa cầu ngắm kênh đẹp nhất', 'cheer')],
+    acts: [{ k: 'ride', x: 128, y: 172, label: '🛶 Đi gondola', spr: 'gondola', ry: 146, say: 'O sole mio~ 🎶 Anh lái thuyền hát vang dưới cầu Rialto' }, buy(40, 178, 'kem_que', 6, '🍨 Gelato'), ph(210, 178), say(128, 90, '🌉 Cầu Rialto', 'Cây cầu đá 400 năm — đứng giữa cầu ngắm kênh đẹp nhất', 'cheer')],
     lines: ['Ciao!', 'Gondola đẹp ghê', 'Nước trong xanh quá', 'Gelato ngon tuyệt', 'Lạc đường rồi 😂'],
   },
   trip_venice_sanmarco: {
@@ -571,7 +571,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 50; x < 256; x += 60) L.lamps.push({ x, y: 118, c: '#ffe8a0' });
     },
     fx: [{ k: 'bird', x: 100, y: 140, icon: '🕊️', n: 6 }, { k: 'bird', x: 140, y: 40, icon: '🕊️', n: 3 }],
-    acts: [say(110, 160, '🌾 Cho bồ câu ăn', 'Cả đàn bồ câu sà xuống quanh hai bạn, một con đậu lên vai luôn 🕊️', 'feed'), buy(210, 140, 'ca_phe_sua', 30, '☕ Espresso'), buy(60, 150, 'tiramisu', 40, '🍰 Tiramisu'), ph(150, 176)],
+    acts: [say(110, 160, '🌾 Cho bồ câu ăn', 'Cả đàn bồ câu sà xuống quanh hai bạn, một con đậu lên vai luôn 🕊️', 'feed'), buy(210, 140, 'ca_phe_sua', 7, '☕ Espresso'), buy(60, 150, 'tiramisu', 10, '🍰 Tiramisu'), ph(150, 176)],
     lines: ['Bồ câu nhiều quá', 'Nhà thờ lộng lẫy ghê', 'Nghe dàn nhạc đi 🎻', 'Bellissimo!', 'Leo tháp chuông không?'],
   },
 
@@ -599,7 +599,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 100; x < 256; x += 50) L.lamps.push({ x, y: 116, c: '#ffe8a0' });
     },
     fx: [{ k: 'move', spr: 'train', x: -80, y: 136, dx: 420, dur: 16, loop: true }, { k: 'fall', n: 10, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 40, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), say(220, 170, '🐄 Bò sữa đeo chuông', 'Leng keng~ đàn bò đeo chuông gặm cỏ trên đồi 🐄', 'craft')],
+    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 10, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), say(220, 170, '🐄 Bò sữa đeo chuông', 'Leng keng~ đàn bò đeo chuông gặm cỏ trên đồi 🐄', 'craft')],
     lines: ['Tàu tới rồi!', 'Núi tuyết đẹp quá', 'Grüezi!', 'Lạnh ghê', 'Uống sô-cô-la nóng đi'],
   },
   trip_swiss_chalet: {
@@ -625,7 +625,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let i = 0; i < 6; i++) tree(p, 14 + i * 46, 186, 6, '#4a9a4a');
     },
     fx: [{ k: 'shim', x: 0, y: 84, w: 256, h: 30, n: 16 }, { k: 'move', spr: 'swan', x: 30, y: 108, dx: 60, dur: 18 }, { k: 'move', spr: 'boat', x: 200, y: 100, dx: -80, dur: 22 }, { k: 'steam', x: 44, y: 102, n: 2 }, { k: 'steam', x: 106, y: 102, n: 2 }, { k: 'steam', x: 168, y: 102, n: 2 }, { k: 'fall', n: 8, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 124, y: 126, label: '⛵ Thuyền dạo hồ', spr: 'boat', ry: 108, say: 'Thuyền trôi trên hồ gương, núi tuyết in bóng dưới nước 🏔️' }, buy(40, 160, 'cheese', 30, '🫕 Phô mai fondue'), buy(200, 160, 'chocolate', 40, '☕ Sô-cô-la nóng'), ph(128, 180)],
+    acts: [{ k: 'ride', x: 124, y: 126, label: '⛵ Thuyền dạo hồ', spr: 'boat', ry: 108, say: 'Thuyền trôi trên hồ gương, núi tuyết in bóng dưới nước 🏔️' }, buy(40, 160, 'cheese', 7, '🫕 Phô mai fondue'), buy(200, 160, 'chocolate', 10, '☕ Sô-cô-la nóng'), ph(128, 180)],
     lines: ['Nhà gỗ xinh quá', 'Hồ như gương vậy', 'Ăn fondue không?', 'Muốn ở đây luôn', 'Hít thở khí núi nào'],
   },
 
@@ -648,7 +648,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       circle(p, 100, 176, 3, '#5a4a3a'); L.lamps.push({ x: 99, y: 170, c: '#ff9a3a' });
     },
     fx: [{ k: 'aurora', y: 10 }, { k: 'sparkle', x: 0, y: 0, w: 256, h: 90, n: 30 }, { k: 'fall', n: 26, c: ['#ffffff', '#e8f4ff'], size: 2, slow: true }],
-    acts: [say(128, 150, '💚 Ước dưới cực quang', 'Tay trong tay ước một điều — cực quang nhảy múa ngay trên đầu 💚', 'pray'), buy(100, 170, 'honey_tea', 25, '🍵 Trà nóng'), ph(190, 160), say(60, 156, '⛺ Chui vào lều', 'Đắp chung chăn, đếm sao băng tới sáng 🌠', 'tent')],
+    acts: [say(128, 150, '💚 Ước dưới cực quang', 'Tay trong tay ước một điều — cực quang nhảy múa ngay trên đầu 💚', 'pray'), buy(100, 170, 'honey_tea', 6, '🍵 Trà nóng'), ph(190, 160), say(60, 156, '⛺ Chui vào lều', 'Đắp chung chăn, đếm sao băng tới sáng 🌠', 'tent')],
     lines: ['Cực quang kìa!!', 'Lạnh quá ôm em đi', 'Xanh lá đẹp quá 💚', 'Sao băng!', 'Ước gì đi'],
   },
   trip_iceland_lagoon: {
@@ -671,7 +671,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(40, 140, 14, 8, '#f0f0f0'); p.rect(42, 138, 10, 2, '#d8d8d8');
     },
     fx: [{ k: 'steam', x: 40, y: 120, n: 3 }, { k: 'steam', x: 110, y: 130, n: 3 }, { k: 'steam', x: 160, y: 110, n: 3 }, { k: 'steam', x: 230, y: 126, n: 3 }, { k: 'shim', x: 0, y: 92, w: 256, h: 56, n: 20, c: '#ffffff' }, { k: 'fall', n: 12, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [say(110, 140, '♨️ Ngâm nước khoáng', 'Nước ấm 38°C giữa trời tuyết, ôm nhau ngâm mình sướng rơn ♨️', 'soak'), say(46, 130, '🤍 Đắp mặt nạ bùn', 'Hai đứa đắp mặt nạ silica trắng xoá, nhìn nhau cười lăn 😂', 'soak'), buy(200, 140, 'yogurt', 25, '🥛 Skyr'), ph(128, 176)],
+    acts: [say(110, 140, '♨️ Ngâm nước khoáng', 'Nước ấm 38°C giữa trời tuyết, ôm nhau ngâm mình sướng rơn ♨️', 'soak'), say(46, 130, '🤍 Đắp mặt nạ bùn', 'Hai đứa đắp mặt nạ silica trắng xoá, nhìn nhau cười lăn 😂', 'soak'), buy(200, 140, 'yogurt', 6, '🥛 Skyr'), ph(128, 176)],
     lines: ['Nước ấm ghê', 'Hơi bốc lên mờ ảo', 'Đắp mặt nạ chưa?', 'Không muốn lên bờ', 'Xanh như sữa vậy'],
   },
 };
