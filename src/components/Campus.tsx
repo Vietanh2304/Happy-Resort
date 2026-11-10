@@ -15,6 +15,8 @@ import { avatarPx } from './Avatar';
 import { Chat, status } from './Places';
 import { Sheet } from './Sheet';
 import { Spr, Tag, useScale } from './Stage';
+import { wxLook, wxRain } from '../lib/weather';
+import { umbrellaSprite } from '../lib/places';
 import { Follower } from './Wander';
 
 interface When { date: string; hour: number; minute: number }
@@ -82,8 +84,11 @@ export function CampusContent({ gym, kids, me, partner, when, weather, walking, 
     ...CLASSMATE_NPC.slice(0, weekendPlay ? 3 : CLASSMATE_NPC.length).map(m => ({ id: m.name, name: m.name, girl: m.girl, look: m.look, mine: false })),
   ];
   const adult = (look: api.Profile['avatar'], at: Pt, title: string, pose: 'idle' | 'sit' = 'idle', z?: number) => {
-    const sp = characterSprite(look, pose);
-    return <img src={sp.url} alt={title} title={title} className="spr" style={{ left: at.x * s - (sp.w * ps) / 2, top: at.y * s - sp.h * ps, width: sp.w * ps, height: sp.h * ps, zIndex: z ?? Math.round(at.y) }} />;
+    const sp = characterSprite(wxLook(look), pose), u = wxRain() && pose === 'idle' ? umbrellaSprite('#5aa8e0') : null;
+    return <>
+      <img src={sp.url} alt={title} title={title} className="spr" style={{ left: at.x * s - (sp.w * ps) / 2, top: at.y * s - sp.h * ps, width: sp.w * ps, height: sp.h * ps, zIndex: z ?? Math.round(at.y) }} />
+      {u && <img src={u.url} alt="" className="spr" style={{ left: at.x * s - (u.w * ps) / 2 + 3 * ps, top: at.y * s - (u.h + 8) * ps, width: u.w * ps, height: u.h * ps, zIndex: (z ?? Math.round(at.y)) + 1, pointerEvents: 'none' }} />}
+    </>;
   };
   const vendors = when.hour >= 6 && when.hour < 19;
   const info = PERIOD[period];

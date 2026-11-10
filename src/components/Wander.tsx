@@ -4,6 +4,7 @@ import { critterSprite, FLIERS } from '../lib/critters';
 import type { Sprite } from '../lib/pixel';
 import type { Pt } from '../lib/world';
 import { useScale } from './Stage';
+import { umbrellaSprite } from '../lib/places';
 
 /** Khách thú đi lang thang quanh chỗ của nó (bước chân / vỗ cánh), chạm để chào */
 export function Wanderer({ id, home, r, name, onClick, badge, box, scale, className }: { id: string; home: Pt; r: number; name: string; onClick: (at: Pt) => void; badge?: string; box?: { x0: number; x1: number; y0: number; y1: number }; scale?: number; className?: string }) {
@@ -22,7 +23,7 @@ export function Wanderer({ id, home, r, name, onClick, badge, box, scale, classN
 }
 
 /** ps: cỡ một pixel của sprite (mặc định = cỡ cảnh; người lớn dùng avatarPx để bằng nhân vật chính) */
-export function Follower({ sprite, walk, x, y, title, onClick, flap, badge, ps, className, speed = 45 }: { sprite: Sprite; walk?: Sprite; x: number; y: number; title: string; onClick: () => void; flap?: boolean; badge?: string; ps?: number; className?: string; speed?: number }) {
+export function Follower({ sprite, walk, x, y, title, onClick, flap, badge, ps, className, speed = 45, umbrella }: { umbrella?: string; sprite: Sprite; walk?: Sprite; x: number; y: number; title: string; onClick: () => void; flap?: boolean; badge?: string; ps?: number; className?: string; speed?: number }) {
   const s = useScale();
   const px = ps ?? s;
   const [shown, setShown] = useState({ x, y, ms: 0, left: false });
@@ -53,6 +54,7 @@ export function Follower({ sprite, walk, x, y, title, onClick, flap, badge, ps, 
       <img src={sp.url} alt={title} title={title} draggable={false} className={`spr tappable ${className ?? ''}`}
         onClick={e => { e.stopPropagation(); onClick(); }}
         style={{ ...pos, width: sp.w * px, height: sp.h * px, zIndex: Math.round(shown.y) + 2, transform: shown.left ? 'scaleX(-1)' : undefined }} />
+      {umbrella && (() => { const u = umbrellaSprite(umbrella); return <img src={u.url} alt="" draggable={false} className="spr" style={{ ...pos, left: pos.left + ((sp.w - u.w) / 2 + (shown.left ? -3 : 3)) * px, top: pos.top - (u.h - sp.h + 8) * px, width: u.w * px, height: u.h * px, zIndex: Math.round(shown.y) + 3, pointerEvents: 'none', transform: shown.left ? 'scaleX(-1)' : undefined }} />; })()}
       {badge && <span className="crit-badge" style={{ ...pos, marginLeft: (sp.w / 2) * px, zIndex: 300 }}>{badge}</span>}
     </>
   );

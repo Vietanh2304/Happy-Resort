@@ -6,6 +6,8 @@ import { characterSprite } from '../lib/sprites';
 import type { Pt } from '../lib/world';
 import { Tag, useScale } from './Stage';
 import { Follower } from './Wander';
+import { wxLook, wxRain } from '../lib/weather';
+const UMB = ['#5aa8e0', '#f6c445', '#8bc87a', '#e07a7a', '#b08ae0'];
 import { avatarPx } from './Avatar';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
@@ -33,7 +35,7 @@ function Walker({ i }: { i: number }) {
   }, [i]);
   return (
     <>
-      <Follower sprite={characterSprite(look, 'idle', undefined, 'side')} walk={characterSprite(look, 'walk', undefined, 'side', 1)} x={at.x} y={at.y} title="Người đi đường" ps={ps} onClick={() => setSay(CHATTER[i % CHATTER.length])} />
+      <Follower sprite={characterSprite(wxLook(look), 'idle', undefined, 'side')} walk={characterSprite(wxLook(look), 'walk', undefined, 'side', 1)} umbrella={wxRain() ? UMB[i % UMB.length] : undefined} x={at.x} y={at.y} title="Người đi đường" ps={ps} onClick={() => setSay(CHATTER[i % CHATTER.length])} />
       {say && <Tag x={at.x} y={at.y - 30} className="bed-bubble">{say}</Tag>}
     </>
   );

@@ -2,6 +2,16 @@
 import type { WeatherType } from './content';
 
 export interface Weather { type: WeatherType; temp: number; code: number }
+/** Thời tiết ngoài trời của cảnh đang xem — NPC ngoài trời mặc theo (World cập nhật mỗi lần vẽ) */
+export const outWx = { on: false, type: 'clear' as WeatherType, temp: 20 };
+/** NPC: lạnh quàng khăn, rét mặc áo khoác */
+export function wxLook<T extends { outfit?: number; acc?: number; design?: unknown }>(look: T): T {
+  if (!outWx.on) return look;
+  if (outWx.temp < 3) return { ...look, outfit: 11, acc: 3, design: null };
+  if (outWx.temp < 10) return { ...look, acc: 10 };
+  return look;
+}
+export const wxRain = () => outWx.on && outWx.type === 'rain';
 export interface Place {
   name: string;
   admin1?: string;

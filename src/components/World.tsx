@@ -29,7 +29,7 @@ import {
   sparkleSprite, sunSprite, townBackground, treeSprite, type HillSky,
 } from '../lib/townSprites';
 import type { Live } from '../lib/useLive';
-import { weatherIcon, type Weather } from '../lib/weather';
+import { outWx, weatherIcon, type Weather } from '../lib/weather';
 import {
   ARCADE, BATH, BEACH, RIDE_MS, BUILDINGS, FARM, GARDEN, HOUSE, ROOM, SCENES, SEATS, SHOP, TOWN, WALL_L, WALL_R, RESERVED, farmCell, roomGrid, roomPt, walkTarget, wallSlot,
   type GameId, type Pt, type SceneId,
@@ -325,6 +325,7 @@ function SceneContent(p: WorldProps) {
     else if (w.temp >= 30 && w.type === 'clear') l = { ...look, acc: look.acc ? look.acc : 6 };
     return { look: l, umbrella: w.type === 'rain' };
   };
+  { const w = p.myView.weather; outWx.on = !!w && def.outdoor && scene !== 'sky' && scene !== 'reef' && !(scene === 'hill' && !p.hillReal); if (w) { outWx.type = w.type; outWx.temp = w.temp; } }
   const myDress = dress(me.avatar, p.myView), theirDress = dress(partner?.avatar ?? {}, p.myView);
   const bedOf = (who: typeof live.mine | null) => (who && (who.act === 'sleep' || who.act === 'intimate') && who.bed ? p.decor.find(d => d.id === who.bed && d.island === scene) : undefined);
   const myBed = bedOf(live.mine), theirBed = p.partnerHere ? bedOf(theirs) : undefined;
