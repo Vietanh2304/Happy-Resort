@@ -12,7 +12,8 @@ import { toast, toastError } from '../lib/toast';
 import { FORTUNES, knotSprite, pigeonSprite, popSprite, lotusSprite, wallFlowerSprite, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
 import type { Pt } from '../lib/world';
 import { Spr, Tag, useScale } from './Stage';
-import { Stroller } from './Trip';
+import { Stroller, type NpcJob } from './Trip';
+import { drinkProp, snackProp } from '../lib/props';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
 
@@ -38,6 +39,31 @@ function FxLayer({ fx, scene, night }: { fx: Fx; scene: string; night: boolean }
 export function FxList({ fx, scene, night }: { fx: Fx[]; scene: string; night: boolean }) {
   return <>{fx.map((f, i) => <FxLayer key={i} fx={f} scene={scene} night={night} />)}</>;
 }
+
+/** Hoạt động → việc NPC làm được (không có xe, lều, hồ riêng) */
+function jobOf(a: Act): NpcJob | null {
+  const near = { x: a.x, y: a.y + 10 };
+  if (a.k === 'buy') {
+    const name = a.label.replace(/^\S+\s/, ''), sn = snackProp(name);
+    return { ...near, frame: 'idle', hold: sn ? { spec: sn, mode: 'eat' } : ['tra_sua', 'honey_tea', 'ca_phe_sua', 'peach_tea'].includes(a.item) ? { spec: drinkProp(name), mode: 'sip' } : undefined, say: 'Ngon ghê!' };
+  }
+  if (a.k === 'fortune') return { ...near, frame: 'idle', hold: { spec: { kind: 'paper', color: '#ffffff' }, mode: 'read' }, say: 'Được quẻ cát nè!' };
+  if (a.k === 'float') return { x: a.x, y: a.y + 6, frame: 'sit', say: 'Ước gì nhỉ…' };
+  if (a.k !== 'do' || a.label.startsWith('🔒')) return null;
+  const at = a.at ?? near;
+  switch (a.do) {
+    case 'sit': case 'paint': return { ...at, frame: 'sit', say: 'Thư giãn ghê' };
+    case 'soak': return { x: a.x, y: a.y - 6, frame: 'sit', swim: true, say: 'Ấm quá~' };
+    case 'mask': return { x: a.x, y: a.y - 6, frame: 'sit', swim: true, mask: true, say: 'Da mịn liền 😆' };
+    case 'pray': return { ...at, frame: 'idle', view: 'back' };
+    case 'feed': return { ...near, frame: 'idle', hold: { spec: { kind: 'seed', color: '#d8c090' }, mode: 'pour' } };
+    case 'sing': return { ...near, frame: 'idle', say: '👏👏' };
+    case 'pick': return { ...near, frame: 'idle', hold: { spec: { kind: 'leaf', color: '#e8443a' }, mode: 'read' } };
+    case 'wall': return { ...near, frame: 'idle', view: 'back', hold: { spec: { kind: 'brush', color: '#4a9ae8' }, mode: 'pour' } };
+    default: return { ...near, frame: 'idle', view: 'front' };
+  }
+}
+const npcJobs = (spot: SpotDef) => spot.acts.map(jobOf).filter((j): j is NpcJob => !!j);
 
 const RIDE_MS = 9000;
 const RIDE_ZOOM: Record<string, number> = { cable: 2, swan: 2, boat: 1.6, sampan: 1.4, gondola: 1.1, bateau: 1, train: 1 };
@@ -73,6 +99,8 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   const [art, setArt] = useState<{ x: number; y: number } | null>(null);
   const [made, setMade] = useState<{ icon: string; x: number; y: number }[]>([]);
   const [flowers, setFlowers] = useState<{ x: number; y: number }[]>([]);
+  const [call, setCall] = useState<{ job: NpcJob; n: number } | null>(null);
+  const jobs = useMemo(() => npcJobs(spot), [spot]);
   const [knots, setKnots] = useState<{ x: number; y: number }[]>([]);
   const [doves, setDoves] = useState<{ x: number; y: number; n: number; dx: number }[]>([]);
   const L = useRef(live); L.current = live;
@@ -93,6 +121,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   };
   const anim = (n: AnimName, times = 1) => { for (let k = 0; k < times; k++) setTimeout(() => onAnim(n), k * 800); };
   const doAct = (a: Act, i: number) => go(a.k === 'do' && a.at ? a.at : near(a), () => {
+    const j = jobOf(a); if (j && !(a.k === 'do' && a.label.startsWith('🔒'))) setCall({ job: j, n: Date.now() });
     const at = L.current.mine.pos;
     if (a.k === 'buy') return void run(async () => {
       const it = item(a.item);
@@ -165,7 +194,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       {soaking && <Tag x={mine.pos.x} y={mine.pos.y + 4} className="label" onClick={() => live.update({ act: null, pos: { x: mine.pos.x, y: spot.walk.y0 + 4 } })}>🚶 Lên bờ</Tag>}
       {tent && tented > 0 && <Tag x={tent.x + 6} y={tent.y - 6} className="bed-bubble" onClick={() => mine.act === 'tent' && live.update({ act: null, pos: near(tent) })}>{tented > 1 ? '💑 Hai đứa trong lều' : '⛺ Có người trong lều'}{mine.act === 'tent' ? ' · bấm để ra' : ''}</Tag>}
       {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className="label" onClick={() => doAct(a, i)}>{lbl(a)}</Tag>)}
-      {[0, 1, 2, 3, 4, 5, 6].map(i => <Stroller key={i} seed={scene} i={i} box={spot.walk} lines={spot.lines} />)}
+      {[0, 1, 2, 3, 4, 5, 6].map(i => <Stroller key={i} seed={scene} i={i} box={spot.walk} lines={spot.lines} jobs={jobs} call={i < 2 ? call : null} />)}
     </>
   );
 }

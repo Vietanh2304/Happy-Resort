@@ -674,10 +674,16 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       for (let x = 0; x < 256; x += 12) p.rect(x, 154, 10, 34, '#7a5a3a'); for (let x = 0; x < 256; x += 12) p.rect(x + 10, 154, 2, 34, '#5a3a2a');
       for (let x = 30; x < 256; x += 70) L.lamps.push({ x, y: 146, c: '#ffe8a0' });
       // mặt nạ bùn khoáng (chậu trắng)
-      p.rect(40, 140, 14, 8, '#f0f0f0'); p.rect(42, 138, 10, 2, '#d8d8d8');
+      p.rect(70, 140, 14, 8, '#f0f0f0'); p.rect(72, 138, 10, 2, '#d8d8d8');
+      // hồ riêng: vách gỗ ba mặt, mái che, đèn lồng
+      for (let x = 0; x < 46; x += 3) { p.rect(x, 140, 2, 12, '#7a5a3a'); p.rect(x, 140, 2, 1, '#9a7a5a'); }
+      for (let y = 84; y < 152; y += 3) { p.rect(44, y, 3, 2, '#7a5a3a'); }
+      p.rect(0, 82, 48, 4, '#4a3a2a'); p.rect(0, 80, 48, 2, '#6a5a4a');
+      p.rect(46, 84, 1, 68, '#5a3a2a'); L.lamps.push({ x: 38, y: 88, c: '#ffd88a' });
+      p.rect(8, 146, 30, 5, '#5a3a2a'); p.rect(10, 147, 26, 3, '#e8d8b0');
     },
     fx: [{ k: 'steam', x: 40, y: 120, n: 3 }, { k: 'steam', x: 110, y: 130, n: 3 }, { k: 'steam', x: 160, y: 110, n: 3 }, { k: 'steam', x: 230, y: 126, n: 3 }, { k: 'shim', x: 0, y: 92, w: 256, h: 56, n: 20, c: '#ffffff' }, { k: 'fall', n: 12, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [say(110, 140, '♨️ Ngâm nước khoáng', 'Nước ấm 38°C giữa trời tuyết, ôm nhau ngâm mình sướng rơn ♨️', 'soak'), say(46, 130, '🤍 Đắp mặt nạ bùn', 'Hai đứa đắp mặt nạ silica trắng xoá, nhìn nhau cười lăn 😂', 'mask'), buy(200, 140, 'yogurt', 6, '🥛 Skyr'), ph(128, 176)],
+    acts: [say(110, 140, '♨️ Ngâm nước khoáng', 'Nước ấm 38°C giữa trời tuyết, ôm nhau ngâm mình sướng rơn ♨️', 'soak'), say(84, 130, '🤍 Đắp mặt nạ bùn', 'Hai đứa đắp mặt nạ silica trắng xoá, nhìn nhau cười lăn 😂', 'mask'), buy(200, 140, 'yogurt', 6, '🥛 Skyr'), ph(128, 176), say(22, 128, '🔒 Hồ riêng hai đứa', 'Hồ riêng có vách gỗ che kín, chỉ có hai đứa mình thôi 💑', 'soak')],
     lines: ['Nước ấm ghê', 'Hơi bốc lên mờ ảo', 'Đắp mặt nạ chưa?', 'Không muốn lên bờ', 'Xanh như sữa vậy'],
   },
 };
