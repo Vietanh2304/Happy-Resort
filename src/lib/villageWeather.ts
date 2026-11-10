@@ -11,7 +11,7 @@ const POOL: Record<Season, { type: WeatherType; w: number }[]> = {
   spring: [{ type: 'clear', w: 45 }, { type: 'cloudy', w: 30 }, { type: 'rain', w: 20 }, { type: 'fog', w: 5 }],
   summer: [{ type: 'clear', w: 58 }, { type: 'cloudy', w: 14 }, { type: 'rain', w: 28 }],
   autumn: [{ type: 'clear', w: 55 }, { type: 'cloudy', w: 25 }, { type: 'rain', w: 12 }, { type: 'fog', w: 8 }],
-  winter: [{ type: 'clear', w: 36 }, { type: 'cloudy', w: 22 }, { type: 'snow', w: 30 }, { type: 'rain', w: 7 }, { type: 'fog', w: 5 }],
+  winter: [{ type: 'cloudy', w: 48 }, { type: 'clear', w: 18 }, { type: 'fog', w: 18 }, { type: 'rain', w: 16 }],   // đông ít nắng; tuyết tính riêng theo ngày
 };
 /** Khoảng nhiệt độ theo mùa [thấp, cao] */
 const TEMP: Record<Season, [number, number]> = {
@@ -29,6 +29,9 @@ export function villageWeather(seed: string, now: number, month: number): Weathe
   // Trời hay kéo dài: một nửa số lần giữ nguyên trời của khung trước
   let { type, r } = roll(seed, block, season);
   if (seeded(`${seed}:village-keep:${block}`)() < 0.5) type = roll(seed, block - 1, season).type;
+  // Đông: thỉnh thoảng mới có một ngày tuyết rơi (khoảng 1/6 số ngày), tuyết cả ngày hôm đó
+  const day = Math.floor((now + 7 * 3600_000) / 86400_000);
+  if (season === 'winter' && seeded(`${seed}:village-snowday:${day}`)() < 0.17) type = 'snow';
   const [lo, hi] = TEMP[season];
   let temp = Math.round(lo + r * (hi - lo));
   if (type === 'snow') temp = Math.min(temp, 1);
