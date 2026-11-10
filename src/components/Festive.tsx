@@ -5,6 +5,7 @@ import { item } from '../lib/content';
 import { notify } from '../lib/realtime';
 import { toast, toastError } from '../lib/toast';
 import { Sheet } from './Sheet';
+import { TRIPS, type Trip, type TripId } from '../lib/trips';
 
 const run = async (f: () => Promise<unknown>) => { try { await f(); return true; } catch (e) { toastError(e); return false; } };
 const nameOf = (id: string, me: api.Profile, partner: api.Profile | null) => (id === me.id ? me.display_name : partner?.display_name ?? 'Người ấy');
@@ -188,36 +189,18 @@ export function LanternParade({ mems, year }: { mems: api.Memory[]; year: string
 }
 
 // ───────── Du lịch: đi một chuyến, mang về bưu thiếp + quà lưu niệm ─────────
-const TRIPS = [
-  { id: 'hoian', name: 'Phố cổ Hội An', icon: '🏮', bg: 'linear-gradient(#f6c445,#e8743a)', price: 120, souvenir: 'lantern', line: 'Đèn lồng sáng cả con phố, tụi mình đi thuyền thả hoa đăng.' },
-  { id: 'dalat', name: 'Đà Lạt mộng mơ', icon: '🌲', bg: 'linear-gradient(#9ad0f0,#6a9a7a)', price: 100, souvenir: 'peach_tea', line: 'Sương mù buổi sáng, một ly trà nóng và hai đôi tay đan vào nhau.' },
-  { id: 'halong', name: 'Vịnh Hạ Long', icon: '⛰️', bg: 'linear-gradient(#8ad0e8,#2a7a9a)', price: 150, souvenir: 'coral', line: 'Ngủ đêm trên du thuyền, sáng dậy thấy núi đá giữa biển.' },
-  { id: 'sapa', name: 'Sa Pa tuyết', icon: '🏔️', bg: 'linear-gradient(#e8f0ff,#8aa0c8)', price: 140, souvenir: 'fern', line: 'Ruộng bậc thang phủ mây, tối ngồi bên bếp lửa nướng khoai.' },
-  { id: 'seoul', name: 'Seoul', icon: '🗼', bg: 'linear-gradient(#f5b0c8,#7a6ad0)', price: 300, souvenir: 'teapot', line: 'Mặc hanbok dạo cung điện, tối lên tháp ngắm thành phố.' },
-  { id: 'tokyo', name: 'Tokyo mùa hoa', icon: '🗾', bg: 'linear-gradient(#ffd8e8,#f08aa6)', price: 320, souvenir: 'sakura_bloom', line: 'Hoa anh đào rơi trên vai, tụi mình ăn ramen đến no căng.' },
-  { id: 'taichung', name: 'Đài Trung', icon: '🌈', bg: 'linear-gradient(#ffd27a,#7ac8e8)', price: 260, souvenir: 'peach_tea', line: 'Làng Cầu Vồng sặc sỡ, chợ đêm Phùng Giáp với ly trà sữa trân châu chính gốc.' },
-  { id: 'gwangju', name: 'Gwangju', icon: '🍂', bg: 'linear-gradient(#f6c48a,#c8604a)', price: 260, souvenir: 'teapot', line: 'Leo núi Mudeung mùa lá đỏ, tối ăn gà nướng phố Chungjang.' },
-  { id: 'paris', name: 'Paris', icon: '🗼', bg: 'linear-gradient(#c8d8f8,#f0b8c8)', price: 450, souvenir: 'rose_bloom', line: 'Hôn nhau dưới tháp Eiffel lúc đèn bật sáng, sáng ra ăn croissant bên sông Seine.' },
-  { id: 'venice', name: 'Venice', icon: '🛶', bg: 'linear-gradient(#f8e0a8,#4a8ab8)', price: 420, souvenir: 'bouquet', line: 'Ngồi thuyền gondola qua những cây cầu nhỏ, người lái thuyền hát cho tụi mình nghe.' },
-  { id: 'santorini', name: 'Santorini', icon: '🏛️', bg: 'linear-gradient(#ffffff,#3a7ad0)', price: 480, souvenir: 'coral', line: 'Nhà trắng mái xanh, ngắm hoàng hôn đẹp nhất thế giới ở Oia.' },
-  { id: 'swiss', name: 'Thuỵ Sĩ', icon: '🏔️', bg: 'linear-gradient(#e8f4ff,#5a9a6a)', price: 500, souvenir: 'chocolate', line: 'Tàu đỏ chạy qua núi tuyết, uống sô-cô-la nóng trong nhà gỗ.' },
-  { id: 'iceland', name: 'Iceland', icon: '🌌', bg: 'linear-gradient(#0a1a3a,#3ac88a)', price: 550, souvenir: 'star_lantern', line: 'Nằm giữa trời lạnh ngắm cực quang nhảy múa, tay trong tay.' },
-  { id: 'maldives', name: 'Maldives', icon: '🏝️', bg: 'linear-gradient(#a8f0f0,#2ab8c8)', price: 520, souvenir: 'coral', line: 'Nhà gỗ trên mặt nước trong vắt, cá nhỏ bơi ngay dưới sàn kính.' },
-  { id: 'newyork', name: 'New York', icon: '🗽', bg: 'linear-gradient(#f8d878,#5a5a8a)', price: 480, souvenir: 'gift_box', line: 'Trượt băng ở Central Park, đêm giao thừa đếm ngược ở Quảng trường Thời Đại.' },
-  { id: 'bali', name: 'Bali', icon: '🌴', bg: 'linear-gradient(#b8f0a8,#e8a04a)', price: 380, souvenir: 'lotus', line: 'Ruộng bậc thang Tegallalang, xích đu giữa rừng dừa và massage đôi.' },
-];
-export function TravelSheet({ me, partner, coins, mems, today, onClose }: { me: api.Profile; partner: api.Profile | null; coins: number; mems: api.Memory[]; today: string; onClose: () => void }) {
+export function TravelSheet({ me, partner, coins, mems, onClose, onFly }: { me: api.Profile; partner: api.Profile | null; coins: number; mems: api.Memory[]; today: string; onClose: () => void; onFly: (id: TripId) => void }) {
   const cards = mems.filter(m => m.kind === 'postcard');
-  const go = (t: typeof TRIPS[number]) => run(async () => {
-    if (!confirm(`✈️ Đi ${t.name} hết ${t.price} xu? Mang về bưu thiếp và quà lưu niệm ${item(t.souvenir).icon}`)) return;
+  const go = (t: Trip) => run(async () => {
+    if (!confirm(`✈️ Mua vé đi ${t.name} hết ${t.price} xu? (kèm quà lưu niệm ${item(t.souvenir).icon}, về làng miễn phí)`)) return;
     await api.buyItem(t.souvenir, t.price);
-    await api.addMemory(me, 'postcard', { trip: t.id }, today);
-    notify('memories', 'inventory', 'profiles');
-    toast(`✈️ Chuyến ${t.name} thật vui! Bưu thiếp đã dán vào sổ`);
+    notify('inventory', 'profiles');
+    onClose(); onFly(t.id);
   });
+
   return (
     <Sheet title="✈️ Du lịch cùng nhau" onClose={onClose}>
-      <p className="muted small-note">Hũ xu: 🪙 {coins} · mỗi chuyến mang về 1 bưu thiếp + 1 món quà lưu niệm</p>
+      <p className="muted small-note">Hũ xu: 🪙 {coins} · bay tới nơi dạo chơi, ăn đặc sản, chụp bưu thiếp 📸</p>
       <div className="bag-grid">
         {TRIPS.map(t => <button key={t.id} className="bag-item" disabled={coins < t.price} onClick={() => void go(t)}><span style={{ fontSize: 26 }}>{t.icon}</span><small>{t.name}</small><small>🪙 {t.price}</small></button>)}
       </div>

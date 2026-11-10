@@ -78,6 +78,8 @@ import { CallButtons, CallTiles, EnterGate, RemoteAudio } from './Call';
 import { outWx } from '../lib/weather';
 import { DiarySheet, FestivalSheet, festKindOf, LanternParade, TravelSheet } from './Festive';
 import { seeded } from '../lib/rng';
+import { tripCtx, tripOf, type TripId } from '../lib/trips';
+import { FlightOverlay } from './Trip';
 import { ChatDock } from './ChatDock';
 
 type SheetState =
@@ -238,6 +240,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     f?.();
   }
   function enter(target: SceneId, at?: Pt) {
+    if (!target.startsWith('trip_') && target !== 'restaurant') tripCtx.at = '';
     cancelFishing();
     pending.current = null;
     route.current = [];
@@ -440,6 +443,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     sendEvent('snowball', d);
     live.say('❄️ Hứng này!');
   }
+  const [flight, setFlight] = useState<{ to: SceneId; name: string } | null>(null);
   const [kitchenOpen, setKitchenOpen] = useState(false);
   const [playing, setPlaying] = useState<GameId | null>(null);
   function openGame(g: GameId, invite = true) {
@@ -837,6 +841,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     farm: ['town', TOWN.toFarm, '🏘️ Về làng'],
     beach: ['town', { x: TOWN.toBeach.x, y: TOWN.toBeach.y - 6 }, '🏘️ Về làng'],
   };
+  if (tripCtx.at && scene === 'restaurant') EXITS.restaurant = [`trip_${tripCtx.at}`, { x: 44, y: 166 }, '🚪 Ra phố'];
+  if (scene.startsWith('trip_')) EXITS[scene] = ['town', SCENES.town.spawn, '✈️ Bay về làng'];
   const liveNow = useRef(live);
   liveNow.current = live;
   // Rửa tay ở bồn rửa mặt (đứng quay lưng, xà phòng + nước)
@@ -1135,7 +1141,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'diary' && <DiarySheet me={me} partner={partner} today={myTime.date} mems={mems} onClose={close} />}
       {sheet?.kind === 'festival' && festKind && <FestivalSheet kind={festKind} me={me} partner={partner} today={myTime.date} mems={mems} inventory={inventory} kids={kids} onClose={close} />}
-      {sheet?.kind === 'travel' && <TravelSheet me={me} partner={partner} coins={couple?.coins ?? 0} mems={mems} today={myTime.date} onClose={close} />}
+      {sheet?.kind === 'travel' && <TravelSheet me={me} partner={partner} coins={couple?.coins ?? 0} mems={mems} today={myTime.date} onClose={close} onFly={id => setFlight({ to: `trip_${id}` as SceneId, name: tripOf(id)?.name ?? '' })} />}
+      {flight && <FlightOverlay to={flight.name} onDone={() => { const f = flight; setFlight(null); tripCtx.at = f.to.startsWith('trip_') ? (f.to.slice(5) as TripId) : ''; enter(f.to); }} />}
       {festKind === 'midautumn' && myTime.hour >= 18 && <LanternParade mems={mems} year={myTime.date.slice(0, 4)} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} kinds={animals.reduce<Record<string, number>>((m, a) => ({ ...m, [a.kind]: (m[a.kind] ?? 0) + 1 }), {})} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'workshop' && <WorkshopSheet inventory={inventory} together={!!partnerHere} partnerName={partnerName} onClose={close} />}

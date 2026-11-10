@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import * as api from '../lib/api';
 import { content, item } from '../lib/content';
+import { tripCtx, tripOf, TRIP_MENU } from '../lib/trips';
 import { emojiSprite } from '../lib/pixel';
 import { notify } from '../lib/realtime';
 import { RtcRoom } from '../lib/rtc';
@@ -209,7 +210,7 @@ export function RoomPanel({ scene, rtc, call, live, inventory, partnerHere, part
   const canCam = typeof navigator.mediaDevices?.getUserMedia === 'function';
   const dishes = inventory.filter(r => item(r.item_id).kind === 'dish');
 
-  const [cat, setCat] = useState(0);
+  const [cat, setCat] = useState(tripCtx.at ? -2 : 0);
   async function serve(name: string, icon: string, itemId?: string, drink = false) {
     try {
       if (itemId) { await api.craft([{ id: itemId, n: 1 }]); notify('inventory'); }
@@ -273,11 +274,16 @@ export function RoomPanel({ scene, rtc, call, live, inventory, partnerHere, part
       {menu && (
         <Sheet title="🍽️ Thực đơn tối nay" onClose={() => setMenu(false)}>
           <div className="tabs scroll">
+            {tripCtx.at && <button className={cat === -2 ? 'active' : ''} onClick={() => setCat(-2)}>📍 Đặc sản {tripOf(tripCtx.at)?.name}</button>}
             {content.dinner.menu.map((c, i) => <button key={c.cat} className={cat === i ? 'active' : ''} onClick={() => setCat(i)}>{c.cat}</button>)}
             <button className={cat === -1 ? 'active' : ''} onClick={() => setCat(-1)}>👩‍🍳 Món tự nấu</button>
           </div>
           <div className="bag-grid">
-            {cat === -1 ? (
+            {cat === -2 && tripCtx.at ? TRIP_MENU[tripCtx.at].map(f => (
+              <button key={f.name} className="bag-item" onClick={() => serve(f.name, f.icon, undefined, f.drink)}>
+                <img src={emojiSprite(f.icon).url} className="px-img" alt="" /><small>{f.name}</small><i>{f.drink ? 'đồ uống' : 'đặc sản'}</i>
+              </button>
+            )) : cat === -1 ? (
               <>
                 {dishes.length === 0 && <p className="muted">Chưa có món tự nấu — vào bếp nhà gỗ nấu từ rau nông trại và cá câu được nhé.</p>}
                 {dishes.map(r => (

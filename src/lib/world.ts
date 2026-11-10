@@ -1,8 +1,9 @@
 // Bản đồ thế giới chung: làng, bãi biển, đồi ngắm cảnh và các tòa nhà đi vào được.
 // Tọa độ là pixel logic của từng cảnh (trước khi phóng to).
 import { HH, HW } from './iso';
+import { TRIP_WALK, TRIPS, type TripId } from './trips';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'campus' | 'gym' | 'street' | 'florist' | 'bakery' | 'ranch' | 'office' | 'city';
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'campus' | 'gym' | 'street' | 'florist' | 'bakery' | 'ranch' | 'office' | 'city' | `trip_${TripId}`;
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -59,6 +60,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   wheel: { name: 'Vòng đu quay', icon: '🎡', w: 192, h: 144, outdoor: false, spawn: { x: 48, y: 117 } },
   camp: { name: 'Bãi cắm trại', icon: '⛺', w: 192, h: 144, outdoor: true, spawn: { x: 72, y: 120 } },
   twin: { name: 'Đài quan sát hai bờ', icon: '🔭', w: 192, h: 144, outdoor: false, spawn: { x: 86, y: 128 } },
+  ...(Object.fromEntries(TRIPS.map(tr => [`trip_${tr.id}`, { name: `✈️ ${tr.name}`, icon: tr.icon, w: 256, h: 192, outdoor: true, walk: TRIP_WALK, spawn: { x: 128, y: 176 } }])) as Record<`trip_${TripId}`, SceneDef>),
 };
 
 /** Các tòa nhà trong làng: vẽ ở (x, y) — đáy tòa nhà; cửa để đi vào */

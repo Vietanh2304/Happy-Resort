@@ -67,6 +67,8 @@ import { ranchBackground } from '../lib/ranchArt';
 import { beachSetSprite, loungeBackground, type SeaSpot } from '../lib/seaView';
 /** Vũng nước khi mưa: [x, y, rộng] (toạ độ cảnh) */
 const PUDDLES: [number, number, number][] = [[30, 150, 18], [88, 128, 14], [140, 170, 20], [205, 140, 16], [60, 200, 15], [170, 215, 18]];
+import { tripBackground, tripOf, type TripId } from '../lib/trips';
+import { TripContent } from './Trip';
 import { liveStatus } from './SeedSheet';
 
 export interface Lantern { id: number; x: number; text: string; mine: boolean }
@@ -190,7 +192,7 @@ const TAN = 'skewY(26.565deg)', TAN_NEG = 'skewY(-26.565deg)';
 export function World(props: WorldProps) {
   const { scene, myView, editing } = props;
   const def = SCENES[scene];
-  const bg = {
+  const bg = scene.startsWith('trip_') ? tripBackground(scene.slice(5) as TripId, myView.phase) : ({
     town: () => townBackground(),
     beach: () => beachBackground(myView.phase),
     lounge: () => loungeBackground(myView.phase, props.seaSpot ?? 'home'),
@@ -219,7 +221,7 @@ export function World(props: WorldProps) {
     camp: () => campBackground(myView.phase),
     twin: observatoryRoom,
     disco: discoRoom,
-  }[scene]();
+  } as Record<string, () => ReturnType<typeof townBackground> | undefined>)[scene]();
 
   const walkable = (!!def.walk && !editing) || (!!props.festIcon && scene === 'town');
   const follow = editing && scene === 'town'
@@ -361,6 +363,7 @@ function SceneContent(p: WorldProps) {
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
 
+      {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <TripContent trip={tripOf(scene.slice(5))!} me={me} today={p.myView.time.date} go={go} enter={enter} />}
       {scene === 'city' && <CityContent go={go} night={phase === 'night'} onStall={id => p.stall?.(id)} onOffice={() => enter('office')} onHome={() => enter('town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 })} />}
       {scene === 'office' && p.job && p.work && (
         <>
