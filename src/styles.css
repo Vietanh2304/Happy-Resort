@@ -1744,3 +1744,8 @@ textarea { resize: vertical; }
 .fx-art { position: absolute; z-index: 300; font-size: 18px; animation: pop .4s; pointer-events: none; }
 .fx-soak { position: absolute; pointer-events: none; border-radius: 50%; background: radial-gradient(#b8f4f8ee 40%, #7ad8e0aa 70%, transparent 72%); box-shadow: 0 0 6px #fff8; }
 .trip-flash { position: absolute; inset: 0; z-index: 950; background: #fff; pointer-events: none; animation: flash .5s ease-out forwards; }
+.spr.fx-rise { animation: fxrise 2.4s ease-out forwards; }
+@keyframes fxrise { from { translate: 0 0; opacity: 0; } 15% { opacity: 1; } to { translate: 0 calc(var(--s, 3) * -10px); opacity: 0; } }
+.spr.fx-dove { animation: fxland .9s ease-out both, peck .5s steps(2) .9s infinite; }
+@keyframes fxland { from { translate: var(--dx) -60px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+@keyframes peck { 50% { transform: translateY(1px) rotate(12deg); } }

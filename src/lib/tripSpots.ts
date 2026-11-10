@@ -388,6 +388,8 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       p.rect(118, 150, 20, 10, '#5a5a5a'); p.rect(114, 148, 28, 3, '#3a3a3a'); p.rect(122, 160, 3, 4, '#3a3a3a'); p.rect(131, 160, 3, 4, '#3a3a3a');
       // quầy xăm omikuji
       p.rect(200, 150, 30, 18, '#8a5a3a'); p.rect(198, 146, 34, 4, '#c83a2a'); for (let k = 0; k < 5; k++) p.rect(203 + k * 5, 154, 3, 8, '#f0e8d0');
+      p.rect(236, 140, 2, 30, '#5a3a2a'); p.rect(252, 140, 2, 30, '#5a3a2a'); for (let k = 0; k < 3; k++) p.rect(236, 144 + k * 7, 18, 1, '#8a6a4a');
+      for (let k = 0; k < 9; k++) p.rect(238 + (k * 5) % 14, 145 + (k % 3) * 7, 2, 3, '#fffaf0');
     },
     fx: [{ k: 'sway', x: 124, y: 62, c: '#e8302a', big: true }, { k: 'steam', x: 128, y: 146, n: 4 }, { k: 'fall', n: 10, c: ['#f8b8cc', '#ffd8e4'], size: 2, slow: true }],
     acts: [{ k: 'fortune', x: 214, y: 140, label: '🎋 Rút quẻ omikuji' }, { ...say(128, 140, '🪔 Xông khói nhang', 'Vẫy khói nhang lên người cho khoẻ mạnh nè', 'pray'), at: { x: 128, y: 166 } }, buy(40, 140, 'onigiri', 6, '🍙 Onigiri'), ph(128, 176)],
@@ -697,3 +699,28 @@ export const wallFlowerSprite = (i: number) => makeSprite(`wallflower:${i % 4}`,
   for (const [dx, dy] of [[0, -3], [3, 0], [0, 3], [-3, 0], [2, -2], [-2, 2], [2, 2], [-2, -2]]) p.rect(4 + dx, 3 + dy, 3, 3, c);
   p.rect(4, 3, 3, 3, '#ffe04a');
 }, null);
+
+// ───────── hiệu ứng pixel nhỏ bay lên / đậu xuống ─────────
+const POP_ART: Record<string, [number, number, string[], Record<string, string>]> = {
+  '🕊️': [9, 7, ['..WW.....', '.WKWW....', 'OWWWWWW..', '..WGGWWWW', '..WWWWWG.', '...WWW...', '...O.O...'], { W: '#e8e8f0', K: '#2a2a3a', O: '#f08a3a', G: '#8a9ab8' }],
+  '🍁': [7, 7, ['...R...', 'R.RRR.R', 'RRRRRRR', '.RRDRR.', 'RRRDRRR', '...D...', '...D...'], { R: '#e8443a', D: '#8a2a1a' }],
+  '🔔': [7, 8, ['...B...', '..YYY..', '.YYWYY.', '.YYYYY.', '.YYYYY.', 'YYYYYYY', 'DDDDDDD', '...D...'], { Y: '#f6c445', W: '#fff4b0', D: '#a87a2a', B: '#6a4a2a' }],
+  '🫙': [8, 9, ['.RRRRRR.', '.BBBBBB.', 'BBBBBBBB', 'BBLBBBBB', 'BBLBBBBB', 'BBBBBBBB', 'BBBBBBBB', '.BBBBBB.', '..DDDD..'], { R: '#e8d8b0', B: '#6a3a22', L: '#9a6a4a', D: '#3a2010' }],
+  '🎵': [5, 7, ['..KK.', '..K.K', '..K..', '..K..', 'KKK..', 'KKK..', '.K...'], { K: '#3a2a5a' }],
+  '🎶': [7, 7, ['..KKKKK', '..K...K', '..K...K', '..K...K', 'KKK.KKK', 'KKK.KKK', '.K...K.'], { K: '#c04a8a' }],
+  '✨': [5, 5, ['..Y..', '.YWY.', 'YWWWY', '.YWY.', '..Y..'], { Y: '#f6e04a', W: '#ffffff' }],
+  '💕': [7, 6, ['.RR.RR.', 'RRPRRRR', 'RRRRRRR', '.RRRRR.', '..RRR..', '...R...'], { R: '#f0507a', P: '#ffd0dc' }],
+  '🌠': [7, 7, ['...Y...', '..YWY..', 'YYWWWYY', '.YWWWY.', '.YY.YY.', 'Y.....Y', '.......'], { Y: '#f6e04a', W: '#fff8d0' }],
+  '🙏': [5, 7, ['..S..', '..S..', '.S.S.', '..S..', '.S...', '..S..', '...S.'], { S: '#e8e8f0' }],
+  '🎉': [7, 7, ['R...B..', '..Y...G', '.P..R..', 'G...Y.B', '..B..P.', 'Y.G...R', '...R...'], { R: '#e8443a', B: '#4a9ae8', Y: '#f6e04a', G: '#6ac86a', P: '#f59ab3' }],
+  '👏': [7, 6, ['Y..Y..Y', '.......', 'Y.YYY.Y', '..YWY..', 'Y.YYY.Y', '.......'], { Y: '#f6e04a', W: '#ffffff' }],
+  '🖼️': [12, 10, ['FFFFFFFFFFFF', 'FSSSSSSSSSSF', 'FSSSSSSYSSSF', 'FSSPPSSSSSSF', 'FSPPPPSSKKSF', 'FSSPPSSKKKKF', 'FGGGGGGGGGGF', 'FGGGGGGGGGGF', 'FFFFFFFFFFFF', '.....LL.....'], { F: '#c8903a', S: '#8ac0e8', Y: '#fff2a0', P: '#f8b8cc', K: '#4a6a8a', G: '#6aa850', L: '#7a5a3a' }],
+};
+export const popSprite = (icon: string): Sprite | null => {
+  const a = POP_ART[icon]; if (!a) return null;
+  return makeSprite(`pop:${icon}`, a[0], a[1], p => p.map(a[2], a[3]));
+};
+/** Bồ câu đậu đất mổ hạt (2 khung) */
+export const pigeonSprite = (f: 0 | 1) => makeSprite(`pigeon:${f}`, 10, 8, p => p.map(f ? ['..........', '..........', '.GGWWWW...', 'GGWWWWWW..', '.GWWWWWWW.', '..WWWWWWWK', '...O.O..OO', '..........'] : ['.......WW.', '......WKWO', '.GGWWWWWW.', 'GGWWWWWW..', '.GWWWWWW..', '..WWWWW...', '...O.O....', '..........'], { W: '#d8d8e4', G: '#7a8aa8', K: '#2a2a3a', O: '#f08a3a' }));
+/** Tờ quẻ buộc trên giá */
+export const knotSprite = () => makeSprite('omikuji-knot', 3, 5, p => { p.rect(0, 0, 3, 2, '#fffaf0'); p.px(1, 2, '#e8e0d0'); p.rect(0, 3, 3, 2, '#fffaf0'); });

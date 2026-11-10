@@ -9,7 +9,7 @@ import { item } from '../lib/content';
 import { notify } from '../lib/realtime';
 import { seeded } from '../lib/rng';
 import { toast, toastError } from '../lib/toast';
-import { FORTUNES, lotusSprite, wallFlowerSprite, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
+import { FORTUNES, knotSprite, pigeonSprite, popSprite, lotusSprite, wallFlowerSprite, miniSprite, type Act, type Fx, type SpotDef, type SpotScene } from '../lib/tripSpots';
 import type { Pt } from '../lib/world';
 import { Spr, Tag, useScale } from './Stage';
 import { Stroller } from './Trip';
@@ -41,7 +41,7 @@ export function FxList({ fx, scene, night }: { fx: Fx[]; scene: string; night: b
 
 const RIDE_MS = 9000;
 const RIDE_ZOOM: Record<string, number> = { cable: 2, swan: 2, boat: 1.6, sampan: 1.4, gondola: 1.1, bateau: 1, train: 1 };
-const DRINKS = ['tra_sua', 'honey_tea', 'ca_phe_sua', 'peach_tea', 'yogurt'];
+const DRINKS = ['tra_sua', 'honey_tea', 'ca_phe_sua', 'peach_tea'];
 const KEEP = ['clock', 'books', 'lantern', 'rose_bloom', 'chocolate', 'cheese'];
 
 /** Ngồi trên thuyền / cáp treo / tàu: xe chạy ngang map mang theo nhân vật */
@@ -73,6 +73,8 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   const [art, setArt] = useState<{ x: number; y: number } | null>(null);
   const [made, setMade] = useState<{ icon: string; x: number; y: number }[]>([]);
   const [flowers, setFlowers] = useState<{ x: number; y: number }[]>([]);
+  const [knots, setKnots] = useState<{ x: number; y: number }[]>([]);
+  const [doves, setDoves] = useState<{ x: number; y: number; n: number; dx: number }[]>([]);
   const L = useRef(live); L.current = live;
   const mine = live.mine, theirs = partnerHere ? live.theirs : null;
   const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
@@ -110,7 +112,12 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       await api.addMemory(me, 'postcard', { trip: spot.trip, spot: spot.id }, today); notify('memories', 'claims');
       toast(`📸 Bưu thiếp ${spot.name} đã dán vào sổ du lịch`);
     });
-    if (a.k === 'fortune') { anim('rummage'); setTimeout(() => { hold({ act: 'omikuji' }, 6000); live.say(`🎋 ${FORTUNES[Math.floor(Math.random() * FORTUNES.length)]}`); }, 700); return; }
+    if (a.k === 'fortune') {
+      live.update({ act: 'shake' }); live.say('🎋 Lắc lắc… lắc lắc…');
+      setTimeout(() => { if (L.current.mine.act !== 'shake') return; L.current.update({ act: 'omikuji' }); L.current.say(`📜 ${FORTUNES[Math.floor(Math.random() * FORTUNES.length)]}`); }, 2400);
+      setTimeout(() => { if (L.current.mine.act !== 'omikuji') return; L.current.update({ act: null }); go({ x: 244, y: 172 }, () => { L.current.update({ act: 'wall' }); setTimeout(() => { L.current.update({ act: null }); setKnots(k => [...k.slice(-8), { x: 239 + Math.round(Math.random() * 12), y: 148 + Math.floor(Math.random() * 3) * 7 }]); L.current.say('🎋 Buộc quẻ lên giá để giữ may mắn!'); }, 1600); }); }, 8000);
+      return;
+    }
     if (a.k === 'ride') {
       live.update({ act: 'ride', trip: { i, at: Date.now() }, dish: null, drink: null }); live.say(a.say);
       const end = { x: a.x < 128 ? spot.walk.x1 - 10 : spot.walk.x0 + 10, y: spot.walk.y0 + 4 };
@@ -125,11 +132,11 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       case 'wall': hold({ act: 'wall' }, 5000); for (let k = 0; k < 4; k++) setTimeout(() => onAnim('wash'), k * 900); setTimeout(() => { setFlowers(f => [...f.slice(-11), { x: at.x - 5 + Math.round(Math.random() * 10), y: 92 + Math.round(Math.random() * 14) }]); pop(at.x, at.y - 40, '✨', 2); }, 4200); break;
       case 'craft': anim('rummage', 3); setTimeout(() => { pop(at.x, at.y - 34, '✨', 2); const r = a.res; if (r) setMade(m => [...m.filter(e => e.icon !== r.icon || e.x !== r.x), r]); }, 2200); break;
       case 'dress': anim('rummage', 2); setTimeout(() => { setFlash(Date.now()); live.update({ outfit: L.current.mine.outfit === a.outfit ? null : a.outfit ?? null }); anim('cheer'); pop(at.x, at.y - 34, '✨', 3); }, 1600); break;
-      case 'pick': anim('rummage', 2); setTimeout(() => pop(at.x, at.y - 30, '🍁', 3), 1200); break;
+      case 'pick': hold({ act: 'sit' }, 1800); setTimeout(() => { hold({ act: 'pick' }, 8000); pop(at.x, at.y - 30, '✨', 2); }, 1800); break;
       case 'cheer': anim('cheer', 2); pop(at.x, at.y - 34, '✨', 3); break;
       case 'sing': hold({ act: 'sing' }, 9000); for (let k = 0; k < 6; k++) setTimeout(() => pop(at.x, at.y - 34, k % 2 ? '🎵' : '🎶'), k * 1400); setTimeout(() => pop(at.x, at.y - 10, '👏', 4), 8000); break;
       case 'pray': hold({ act: 'pray' }, 6000); for (let k = 0; k < 3; k++) setTimeout(() => pop(at.x, at.y - 34, scene === 'trip_iceland_aurora' ? '🌠' : '🙏'), k * 1500); break;
-      case 'feed': hold({ act: 'feed' }, 7000); for (let k = 0; k < 4; k++) setTimeout(() => pop(at.x + (k % 2 ? 14 : -14), at.y - 4, '🕊️', 2), 600 + k * 900); break;
+      case 'feed': hold({ act: 'feed' }, 9000); for (let k = 0; k < 7; k++) setTimeout(() => setDoves(d => [...d.slice(-9), { x: at.x + (k % 2 ? 1 : -1) * (8 + (k * 5) % 16), y: at.y + 2 + (k % 3) * 3, n: Date.now() + k, dx: (k % 2 ? 1 : -1) * 60 }]), 500 + k * 600); setTimeout(() => setDoves([]), 16000); break;
       case 'paint': hold({ act: 'paint' }, 9000); setArt(null); setTimeout(() => { setArt({ x: a.x, y: a.y }); pop(a.x, a.y - 20, '✨', 2); }, 8000); break;
       case 'cross': go({ x: spot.walk.x0 + 14, y: 148 }, () => go({ x: spot.walk.x1 - 14, y: 180 }, () => { anim('cheer'); pop(L.current.mine.pos.x, L.current.mine.pos.y - 34, '🎉', 2); })); break;
       case 'love': if (theirs) onKiss(); else live.say('💭 Ước gì người ấy ở đây…'); pop(at.x, at.y - 36, '💕', 3); break;
@@ -145,11 +152,13 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     <>
       <FxList fx={spot.fx} scene={scene} night={night} />
       {floats.map(f => <Spr key={f.n} sprite={lotusSprite()} x={f.x} y={f.y} z={Math.round(f.y)} className="fx-lotus" />)}
+      {knots.map((k, i) => <Spr key={`k${i}`} sprite={knotSprite()} x={k.x} y={k.y + 5} z={6} className="pop" />)}
+      {doves.map(d => <Spr key={d.n} sprite={pigeonSprite(0)} x={d.x} y={d.y} z={Math.round(d.y)} className="fx-dove" style={v({ '--dx': `${d.dx * s}px` })} />)}
       {flowers.map((f, k) => <Spr key={k} sprite={wallFlowerSprite(k)} x={f.x} y={f.y} z={5} className="pop" />)}
-      {fx.map(e => <span key={e.n} className="fx-pop" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>)}
+      {fx.map(e => { const sp = popSprite(e.icon); return sp ? <Spr key={e.n} sprite={sp} x={e.x} y={e.y} z={700} className="fx-rise" /> : <span key={e.n} className="fx-pop" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>; })}
       {flash > 0 && <div key={flash} className="trip-flash" />}
-      {made.map(e => <span key={e.icon + e.x} className="fx-art" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>)}
-      {art && <span className="fx-art" style={{ left: art.x * s - 10, top: (art.y - 30) * s }}>🖼️</span>}
+      {made.map(e => { const sp = popSprite(e.icon); return sp ? <Spr key={e.icon + e.x} sprite={sp} x={e.x} y={e.y} z={Math.round(e.y)} className="pop" /> : <span key={e.icon + e.x} className="fx-art" style={{ left: e.x * s, top: e.y * s }}>{e.icon}</span>; })}
+      {art && <Spr sprite={popSprite('🖼️')!} x={art.x + 1} y={art.y - 16} z={Math.round(art.y) + 1} className="pop" />}
       <Rider spot={spot} who={mine} look={looks.me} />
       {theirs && <Rider spot={spot} who={theirs} look={looks.them} />}
       {[mine, theirs].map((w, k) => (w?.act === 'soak' || w?.act === 'mask') && <i key={k} className="fx-soak" style={{ left: (w.pos.x - 11) * s, top: (w.pos.y - 10) * s, width: 22 * s, height: 11 * s, zIndex: Math.round(w.pos.y) + 2 }} />)}

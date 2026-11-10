@@ -2,7 +2,9 @@
 import { makeSprite, mix, type Pen } from './pixel';
 
 export type PropKind = 'mug' | 'iced' | 'boba' | 'teacup' | 'milk' | 'wine' | 'flute' | 'cocktail' | 'soju' | 'juice'
-  | 'chopsticks' | 'fork' | 'spoon' | 'stick' | 'book' | 'rod' | 'can' | 'baby';
+  | 'chopsticks' | 'fork' | 'spoon' | 'stick' | 'book' | 'rod' | 'can' | 'baby'
+  | 'cotton' | 'skewer' | 'drum' | 'cone' | 'pop' | 'bread' | 'pastry' | 'rice' | 'cake' | 'cupnoodle' | 'sandwich' | 'tub' | 'box' | 'choco'
+  | 'omikuji' | 'paper' | 'mic' | 'brush' | 'seed' | 'leaf';
 export interface PropSpec { kind: PropKind; color: string }
 export type HoldMode = 'sip' | 'eat' | 'roast' | 'read' | 'fish' | 'pour' | 'carry';
 export interface Hold { spec: PropSpec; mode: HoldMode }
@@ -17,7 +19,8 @@ export function drinkProp(name: string): PropSpec {
   if (has(n, 'trân châu', 'trà sữa')) return { kind: 'boba', color: '#d8b48a' };
   if (has(n, 'cappuccino')) return { kind: 'mug', color: '#c8a07a' };
   if (has(n, 'cà phê muối')) return { kind: 'mug', color: '#d6b48c' };
-  if (has(n, 'ca cao', 'socola nóng')) return { kind: 'mug', color: '#7a4a32' };
+  if (has(n, 'espresso', 'café au lait')) return { kind: 'mug', color: '#6a3a22' };
+  if (has(n, 'ca cao', 'socola nóng', 'sô-cô-la nóng')) return { kind: 'mug', color: '#7a4a32' };
   if (has(n, 'americano')) return { kind: 'iced', color: '#4a2e22' };
   if (has(n, 'bạc xỉu')) return { kind: 'iced', color: '#e2cba8' };
   if (has(n, 'dalgona')) return { kind: 'iced', color: '#e8b070' };
@@ -34,6 +37,19 @@ export function drinkProp(name: string): PropSpec {
   if (has(n, 'nho', 'grape')) return { kind: 'juice', color: '#8a4aa8' };
   if (has(n, 'dưa hấu', 'sinh tố')) return { kind: 'juice', color: '#f57a8a' };
   return { kind: 'iced', color: '#c8946a' };
+}
+
+/** Đồ ăn vặt cầm tay ngoài phố (kẹo bông, xiên mực, kem…); null = không phải đồ cầm tay */
+export function snackProp(name: string): PropSpec | null {
+  const n = name.toLowerCase();
+  const R: [string[], PropKind, string][] = [
+    [['kẹo bông'], 'cotton', '#f8b8d8'], [['kẹo dẻo'], 'cotton', '#a8e0f0'], [['mực'], 'skewer', '#e8a060'], [['tteokbokki'], 'skewer', '#e85a3a'],
+    [['gà rán', 'gà/tôm', 'gà'], 'drum', '#d8903a'], [['kem que'], 'pop', '#f8a8c8'], [['gelato', 'kem'], 'cone', '#f8e0a8'], [['bánh mì'], 'bread', '#e8b060'],
+    [['bánh tráng'], 'bread', '#f0d090'], [['croissant'], 'pastry', '#e8a850'], [['onigiri'], 'rice', '#fffaf0'], [['macaron'], 'cake', '#f59ab3'], [['tiramisu'], 'cake', '#a87850'],
+    [['mì ly'], 'cupnoodle', '#f6c445'], [['sandwich'], 'sandwich', '#f0d8a8'], [['skyr'], 'tub', '#fffaf0'], [['sushi'], 'box', '#ffffff'], [['sô-cô-la'], 'choco', '#c8c8d0'], [['phô mai'], 'skewer', '#f6d860'],
+  ];
+  for (const [ks, kind, color] of R) if (has(n, ...ks)) return { kind, color };
+  return null;
 }
 
 /** Món ăn: bát hay đĩa trên bàn, màu món, ăn bằng đũa / nĩa / thìa */
@@ -132,6 +148,73 @@ export function drawProp(p: Pen, s: PropSpec, gx: number, gy: number, phase: 0 |
       p.rect(gx, gy - 3, 7, 4, c); p.rect(gx + 1, gy - 2, 5, 2, cl);
       p.rect(gx + 4 - phase, gy - 5, 3, 3, '#fde3d0'); p.px(gx + 4 - phase, gy - 5, '#7a4e34');
       p.px(gx + 5 - phase, gy - 4, '#3b2d3f');
+      break;
+    case 'cotton':   // kẹo bông trên que
+      p.rect(gx + 1, gy - 3, 1, 4, '#e8dcc8'); p.rect(gx - 1, gy - 8, 5, 5, c); p.rect(gx, gy - 9, 3, 1, c); p.px(gx, gy - 7, cl); p.px(gx + 2, gy - 6, cl);
+      break;
+    case 'skewer':   // xiên nướng (mực, bánh gạo, gà)
+      for (let i = 0; i < 7; i++) p.px(gx + 1 + Math.floor(i / 2), gy - i, '#c8a878');
+      for (let k = 0; k < 3; k++) p.rect(gx + 2 + k, gy - 4 - k * 2, 3, 2, k % 2 ? cd : c);
+      break;
+    case 'drum':     // đùi gà rán to
+      p.rect(gx, gy - 1, 2, 2, WHITE); p.rect(gx + 1, gy - 6, 5, 5, c); p.rect(gx + 2, gy - 7, 3, 1, c); p.px(gx + 2, gy - 5, cl); p.px(gx + 4, gy - 3, cd);
+      break;
+    case 'cone':     // kem ốc quế / gelato
+      for (let i = 0; i < 4; i++) p.rect(gx + Math.floor(i / 2), gy - i, 4 - Math.floor(i / 2) * 2 || 1, 1, '#d8a050');
+      p.rect(gx - 1, gy - 7, 5, 3, c); p.rect(gx, gy - 8, 3, 1, c); p.px(gx, gy - 6, cl);
+      break;
+    case 'pop':      // kem que
+      p.rect(gx + 1, gy - 1, 1, 2, '#e8d0a0'); p.rect(gx, gy - 6, 3, 5, c); p.px(gx, gy - 5, cl); p.rect(gx, gy - 6, 3, 1, cl);
+      break;
+    case 'bread':    // ổ bánh mì
+      p.rect(gx - 1, gy - 3, 8, 3, c); p.rect(gx, gy - 4, 6, 1, cl); for (let k = 0; k < 3; k++) p.px(gx + 1 + k * 2, gy - 3, cd);
+      p.rect(gx, gy - 1, 6, 1, '#8cc65c');
+      break;
+    case 'pastry':   // croissant
+      p.rect(gx, gy - 3, 6, 3, c); p.px(gx - 1, gy - 1, c); p.px(gx + 6, gy - 1, c); p.px(gx + 2, gy - 3, cd); p.px(gx + 4, gy - 2, cd); p.rect(gx + 1, gy - 4, 4, 1, cl);
+      break;
+    case 'rice':     // nắm cơm onigiri rong biển
+      p.rect(gx + 1, gy - 5, 2, 1, WHITE); p.rect(gx, gy - 4, 4, 2, WHITE); p.rect(gx - 1, gy - 2, 6, 2, WHITE); p.rect(gx, gy - 2, 4, 2, '#2a3a2a');
+      break;
+    case 'cake':     // miếng bánh / macaron
+      p.rect(gx, gy - 4, 5, 4, c); p.rect(gx, gy - 4, 5, 1, cl); p.rect(gx, gy - 2, 5, 1, WHITE); p.px(gx + 2, gy - 5, '#e84a5a');
+      break;
+    case 'cupnoodle':
+      p.rect(gx, gy - 4, 4, 5, WHITE); p.rect(gx, gy - 3, 4, 1, '#e8443a'); p.rect(gx - 1, gy - 5, 6, 1, '#f0e8d0'); p.px(gx + 1, gy - 7, '#ffffff'); p.px(gx + 2, gy - 8, '#f2f2f2');
+      break;
+    case 'sandwich':
+      for (let i = 0; i < 4; i++) p.rect(gx, gy - 1 - i, 6 - i, 1, i === 1 ? '#8cc65c' : i === 2 ? '#f6c445' : '#f0d8a8');
+      break;
+    case 'tub':      // hũ sữa chua skyr + thìa
+      p.rect(gx, gy - 3, 4, 4, WHITE); p.rect(gx, gy - 3, 4, 1, '#5a8ad0'); p.px(gx + 4, gy - 5, '#c8c8d0'); p.px(gx + 3, gy - 4, '#c8c8d0');
+      break;
+    case 'box':      // hộp sushi
+      p.rect(gx - 1, gy - 3, 8, 4, '#2a2a2a'); p.rect(gx - 1, gy - 3, 8, 1, '#c83a2a'); for (let k = 0; k < 3; k++) { p.rect(gx + k * 2, gy - 2, 2, 2, WHITE); p.px(gx + k * 2, gy - 2, k % 2 ? '#f6a07a' : '#e85a5a'); }
+      break;
+    case 'choco':    // thanh sô-cô-la bóc vỏ
+      p.rect(gx, gy - 5, 4, 6, '#5a3020'); p.rect(gx, gy - 2, 4, 3, c); p.px(gx + 1, gy - 4, '#7a4a32'); p.px(gx + 2, gy - 5, '#7a4a32');
+      break;
+    case 'omikuji':  // ống xăm lục giác, lắc thì que thò ra
+      p.rect(gx, gy - 6, 4, 7, '#c83a2a'); p.rect(gx, gy - 6, 4, 1, '#f0d070'); p.px(gx + 1, gy - 3, '#f0d070');
+      if (phase) p.rect(gx + 1, gy - 9, 1, 3, '#e8d8b0');
+      break;
+    case 'paper':    // tờ quẻ mở ra đọc
+      p.rect(gx - 1, gy - 5, 7, 5, WHITE); for (let k = 0; k < 3; k++) p.rect(gx, gy - 4 + k, 5, 1, k === 0 ? '#c83a2a' : '#8a8a9a');
+      break;
+    case 'mic':
+      p.rect(gx + 1, gy - 2, 1, 3, '#3a3a3a'); p.rect(gx, gy - 5, 3, 3, '#9a9aa8'); p.px(gx + 1, gy - 4, '#d8d8e0');
+      break;
+    case 'brush':    // cọ sơn chấm màu
+      for (let i = 0; i < 5; i++) p.px(gx + 1 + i, gy - 1 - i, '#c98a52');
+      p.rect(gx + 5, gy - 7, 2, 2, c);
+      if (phase) p.px(gx + 7, gy - 8, c);
+      break;
+    case 'seed':     // túi hạt, rắc thì hạt rơi
+      p.rect(gx, gy - 3, 4, 4, '#d8c090'); p.rect(gx + 1, gy - 4, 2, 1, '#b8a070');
+      if (phase) { p.px(gx + 5, gy, '#f0d870'); p.px(gx + 6, gy + 2, '#f0d870'); p.px(gx + 4, gy + 3, '#f0d870'); }
+      break;
+    case 'leaf':     // lá phong đỏ
+      p.rect(gx + 1, gy - 5, 3, 3, c); p.px(gx, gy - 4, c); p.px(gx + 4, gy - 4, c); p.px(gx + 2, gy - 6, c); p.px(gx + 2, gy - 2, '#6a3a22'); p.px(gx + 2, gy - 1, '#6a3a22');
       break;
     case 'book':
       p.rect(gx, gy - 3, 7, 4, c); p.rect(gx + 1, gy - 3, 2, 3, WHITE); p.rect(gx + 4, gy - 3, 2, 3, WHITE); p.px(gx + 3, gy - 3, cd);

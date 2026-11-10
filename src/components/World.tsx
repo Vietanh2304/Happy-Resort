@@ -6,7 +6,7 @@ import { toast, toastError } from '../lib/toast';
 import { visitorsToday } from '../lib/shops';
 import { cradleSprite, kidLook, kidMood, kidSprite, kidStage, strollerSprite } from '../lib/kids';
 import { HEIGHT_K, HH, HW } from '../lib/iso';
-import { cupSprite, drinkProp, foodProp, marshmallow, wareSprite, type Hold } from '../lib/props';
+import { cupSprite, drinkProp, foodProp, marshmallow, wareSprite, type Hold, snackProp } from '../lib/props';
 import { characterSprite } from '../lib/sprites';
 import { THEMES, type Theme } from '../lib/festivals';
 import type { TwinPlane } from './Twin';
@@ -320,10 +320,14 @@ function SceneContent(p: WorldProps) {
     if (scene === 'farm' && who.act === 'water') return { spec: { kind: 'can', color: '#7ac8e8' }, mode: 'pour' };
     if (scene === 'cafe' && who.act === 'read') return { spec: { kind: 'book', color: '#8db8ef' }, mode: 'read' };
     if (scene.startsWith('trip_')) {
-      if (who.act === 'omikuji') return { spec: { kind: 'book', color: '#f8f0e0' }, mode: 'read' };
-      if (who.act === 'wall') return { spec: { kind: 'stick', color: '#e8443a' }, mode: 'pour' };
-      if (who.act === 'feed') return { spec: { kind: 'can', color: '#e8d8a0' }, mode: 'pour' };
-      if (who.act === 'sing') return { spec: { kind: 'stick', color: '#3a3a3a' }, mode: 'sip' };
+      if (who.act === 'shake') return { spec: { kind: 'omikuji', color: '#c83a2a' }, mode: 'pour' };
+      if (who.act === 'omikuji') return { spec: { kind: 'paper', color: '#ffffff' }, mode: 'read' };
+      if (who.act === 'pick') return { spec: { kind: 'leaf', color: '#e8443a' }, mode: 'read' };
+      if (who.act === 'paint') return { spec: { kind: 'brush', color: '#4a9ae8' }, mode: 'pour' };
+      if (who.act === 'wall') return { spec: { kind: 'brush', color: '#e8443a' }, mode: 'pour' };
+      if (who.act === 'feed') return { spec: { kind: 'seed', color: '#d8c090' }, mode: 'pour' };
+      if (who.act === 'sing') return { spec: { kind: 'mic', color: '#9a9aa8' }, mode: 'sip' };
+      if (who.dish && snackProp(who.dish)) return { spec: snackProp(who.dish)!, mode: 'eat' };
       if (who.dish) return { spec: foodProp(who.dish).utensil, mode: 'eat' };
       if (who.drink) return { spec: drinkProp(who.drink), mode: 'sip' };
     }
