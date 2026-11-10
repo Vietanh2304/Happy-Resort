@@ -16,10 +16,11 @@ export function kidLook(k: Kid, a: Profile | null, b: Profile | null) {
   const [p1, p2] = h % 2 ? [a, b] : [b, a];
   return { skin: SKINS[p1?.avatar?.skin ?? 0], hair: HAIR_COLORS[p2?.avatar?.hairColor ?? 0], cloth: k.gender === 'm' ? '#8db8ef' : k.gender === 'f' ? '#f59ab3' : '#f6e27a' };
 }
-type Look = ReturnType<typeof kidLook>;
+type Look = ReturnType<typeof kidLook> & { scarf?: string; coat?: string };
 
 export function kidSprite(stage: KidStage, look: Look, frame: 'idle' | 'walk' | 'sleep', girl: boolean) {
-  const key = `kid:${stage}:${look.skin}:${look.hair}:${look.cloth}:${frame}:${girl}`;
+  look = look.coat ? { ...look, cloth: look.coat } : look;
+  const key = `kid:${stage}:${look.skin}:${look.hair}:${look.cloth}:${frame}:${girl}:${look.scarf ?? ''}`;
   if (stage === 'baby') {
     return makeSprite(key, 12, 10, p => {
       ellipse(p, 6.5, 6.5, 5.5, 3.5, look.cloth);                     // khăn quấn
@@ -54,6 +55,7 @@ export function kidSprite(stage: KidStage, look: Look, frame: 'idle' | 'walk' | 
     p.px(cx - 2, hy - 1, '#ffffff');
     p.px(cx - 3, hy + 1, '#f8a8b8'); p.px(cx + 2, hy + 1, '#f8a8b8');
     p.px(cx - 0.5, hy + 2, '#e86a7a');
+    if (look.scarf) { p.rect(cx - 3, by - 1, 6, 2, look.scarf); p.rect(cx + 1, by + 1, 2, 3, look.scarf); p.px(cx + 1, by + 4, mix(look.scarf, '#ffffff', 0.4)); }   // khăn quàng ấm
     if (stage === 'student') { p.rect(0, by + 1, 2, 5, '#e86a7a'); p.rect(0, by + 1, 2, 1, '#f59ab3'); p.px(2, by + 1, '#8a3a4a'); }   // cặp sách
   });
 }

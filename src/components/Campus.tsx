@@ -15,7 +15,9 @@ import { avatarPx } from './Avatar';
 import { Chat, status } from './Places';
 import { Sheet } from './Sheet';
 import { Spr, Tag, useScale } from './Stage';
-import { wxLook, wxRain } from '../lib/weather';
+import { outWx, wxLook, wxRain } from '../lib/weather';
+/** Bé ra sân: lạnh quàng khăn, rét mặc thêm áo khoác */
+const kidWx = <T extends object>(l: T): T & { scarf?: string; coat?: string } => !outWx.on || outWx.temp >= 10 ? l : { ...l, scarf: '#e05a5a', ...(outWx.temp < 3 ? { coat: '#6a7a9a' } : {}) };
 import { umbrellaSprite } from '../lib/places';
 import { Follower } from './Wander';
 
@@ -158,7 +160,7 @@ export function CampusContent({ gym, kids, me, partner, when, weather, walking, 
         const at = k.mine && period === 'dismiss' ? { x: 128, y: 138 } : sp.at;
         return (
           <div key={k.id}>
-            <Follower sprite={kidSprite('student', k.look, 'idle', k.girl)} walk={kidSprite('student', k.look, 'walk', k.girl)} x={at.x} y={at.y} className={sp.cls} ps={ps * CAMPUS.kidScale}
+            <Follower sprite={kidSprite('student', kidWx(k.look), 'idle', k.girl)} walk={kidSprite('student', kidWx(k.look), 'walk', k.girl)} umbrella={wxRain() && !gym ? ['#f6c445', '#f59ab3', '#8bc87a', '#5aa8e0'][i % 4] : undefined} x={at.x} y={at.y} className={sp.cls} ps={ps * CAMPUS.kidScale}
               title={k.mine ? `🎒 ${k.name}` : `Bạn ${k.name}`} onClick={() => (k.mine ? onKid(k.id) : setSaid({ i, text: MATE_CHATTER[(i + tick) % MATE_CHATTER.length] }))} />
             {k.mine && <Tag x={at.x} y={at.y - 22} className="label">🎒 {k.name}</Tag>}
             {sp.food && <Tag x={at.x + 4} y={at.y - 22} className="food-bubble">{sp.food}</Tag>}
