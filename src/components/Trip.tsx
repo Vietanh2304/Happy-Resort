@@ -10,10 +10,8 @@ import { TRIP_WALK, tripCtx, type Trip } from '../lib/trips';
 import type { Pt, SceneId } from '../lib/world';
 import { spotsOf } from '../lib/tripSpots';
 import { wxLook, wxRain } from '../lib/weather';
-import { drinkProp, snackProp } from '../lib/props';
 import type { AnimName } from '../lib/acts';
 import type { Live } from '../lib/useLive';
-import { mainOf } from '../lib/tripMain';
 import { makeSprite } from '../lib/pixel';
 import { avatarPx } from './Avatar';
 import { Tag, useScale } from './Stage';
@@ -74,7 +72,6 @@ export function Stroller({ seed, i, box = TRIP_WALK, lines = TOURIST, jobs, call
 }
 
 export function TripContent({ trip, me, today, go, enter, live, onAnim, onCamera }: { trip: Trip; me: api.Profile; today: string; go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void; live: Live; onAnim: (n: AnimName) => void; onCamera: () => void }) {
-  const mainJobs = useMemo<NpcJob[]>(() => [{ x: 128, y: 166, frame: 'idle', view: 'front', say: '📸 Chụp giùm tấm nha' }, { x: 212, y: 166, frame: 'idle', view: 'front', say: 'Mua quà về cho mẹ' }, { x: 56, y: 166, frame: 'idle', hold: { spec: snackProp(trip.food.name) ?? drinkProp(trip.food.name), mode: snackProp(trip.food.name) ? 'eat' : 'sip' }, say: 'Đặc sản ngon ghê!' }], [trip]);
   const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
   const souvenir = () => run(async () => {
     const it = item(trip.souvenir), price = 10;
@@ -84,12 +81,11 @@ export function TripContent({ trip, me, today, go, enter, live, onAnim, onCamera
   return (
     <>
       {spotsOf(trip.id).map((s, k) => (
-        <Tag key={s.scene} x={s.at} y={92 + (k % 2) * 8} className="label" onClick={() => go({ x: s.at, y: TRIP_WALK.y0 + 6 }, () => enter(s.scene))}>{s.icon} {s.name} ➜</Tag>
+        <Tag key={s.scene} x={s.at} y={96 + (k % 2) * 6} className="label" onClick={() => go({ x: s.at, y: TRIP_WALK.y0 + 26 }, () => enter(s.scene))}>{s.icon} {s.name} ➜</Tag>
       ))}
-      <Tag x={44} y={150} className="label" onClick={() => go({ x: 44, y: 160 }, () => { tripCtx.at = trip.id; enter('restaurant'); })}>🍽️ Quán {trip.food.icon} {trip.food.name}</Tag>
-      <Tag x={128} y={150} className="label" onClick={() => go({ x: 128, y: 160 }, onCamera)}>📸 Chụp kỉ niệm</Tag>
-      <Tag x={212} y={150} className="label" onClick={() => go({ x: 212, y: 160 }, () => void souvenir())}>🛍️ Quà lưu niệm {item(trip.souvenir).icon}</Tag>
-      {[0, 1, 2, 3, 4, 5, 6, 7].map(i => <Stroller key={i} seed={trip.id} i={i} lines={mainOf(trip.id).lines} jobs={mainJobs} />)}
+      <Tag x={44} y={140} className="label" onClick={() => go({ x: 44, y: 174 }, () => { tripCtx.at = trip.id; enter('restaurant'); })}>🍽️ Quán {trip.food.icon} {trip.food.name}</Tag>
+      <Tag x={128} y={140} className="label" onClick={() => go({ x: 128, y: 174 }, onCamera)}>📸 Chụp kỉ niệm</Tag>
+      <Tag x={212} y={140} className="label" onClick={() => go({ x: 212, y: 174 }, () => void souvenir())}>🛍️ Quà lưu niệm {item(trip.souvenir).icon}</Tag>
     </>
   );
 }

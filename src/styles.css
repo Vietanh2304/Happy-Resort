@@ -1764,7 +1764,7 @@ textarea { resize: vertical; }
 .cam-shutter:active { transform: scale(.92); background: #f0f0f0; }
 
 /* Chỉnh màu toàn game: tươi hơn, có chiều sâu (viền tối nhẹ + ánh sáng trên cao) */
-.stage { filter: contrast(1.03); }
+.stage { }
 .stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 450;
   background: radial-gradient(ellipse at 50% 45%, transparent 60%, rgba(50, 30, 40, .18) 100%); }
 
@@ -1773,3 +1773,8 @@ textarea { resize: vertical; }
 .spr.flicker { animation: flicker 1.4s ease-in-out infinite; filter: drop-shadow(0 0 4px #ffb040); }
 .spr.twinkle-lights { animation: twlights 1.2s steps(2) infinite; }
 @keyframes twlights { 50% { filter: brightness(1.35) drop-shadow(0 0 3px #ffe060); } }
+.tag.invite-chip { background: #ffe0ec; border-color: #e84a7a; animation: pop .3s, glow 1.2s ease-in-out infinite; }
+/* Điện thoại: tắt hiệu ứng nặng */
+@media (pointer: coarse) { .fx-shim:nth-child(2n), .fx-fall:nth-child(2n), .fest-fall i:nth-child(2n), .fx-spark:nth-child(2n), .fx-steam:nth-child(2n) { display: none; } .fx-aurora { filter: none; } }
+@media (prefers-reduced-motion: reduce) { .fx, .fest-fall, .fx-steam, .fx-bird { display: none; } }
+.tag.label.dim { opacity: .22; }

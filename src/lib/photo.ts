@@ -69,6 +69,8 @@ export async function captureWorld(): Promise<HTMLCanvasElement> {
       ctx.translate((r.left + r.width / 2 - view.left) * k, (r.top + r.height / 2 - view.top) * k);
       ctx.scale(k, k);
       ctx.transform(m.a, m.b, m.c, m.d, 0, 0);
+      // thuộc tính scale / translate riêng (vd. người bên phải khi ôm hôn được lật bằng scale: -1 1)
+      if (cs.scale && cs.scale !== 'none') { const [sx, sy = sx] = cs.scale.split(' ').map(parseFloat); ctx.scale(sx, sy); }
       if (cs.filter && cs.filter !== 'none') ctx.filter = cs.filter;
       ctx.imageSmoothingEnabled = el.classList.contains('smooth') || el instanceof HTMLVideoElement;
       try {

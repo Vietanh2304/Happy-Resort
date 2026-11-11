@@ -124,20 +124,28 @@ export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => voi
 // ───────── sprite nhỏ chuyển động ─────────
 export type MiniId = 'boat' | 'gondola' | 'swan' | 'cable' | 'train' | 'bateau' | 'sampan' | 'scooter' | 'vespa' | 'bus' | 'car' | 'cyclo';
 export const MINI: Record<MiniId, { z: number; hull: number; seat: number }> = {
-  boat: { z: 2.4, hull: 5, seat: 0.78 }, sampan: { z: 2.2, hull: 7, seat: 0.5 }, gondola: { z: 1.7, hull: 10, seat: 0.45 }, swan: { z: 2.4, hull: 8, seat: 0.4 },
+  boat: { z: 2.4, hull: 5, seat: 0.78 }, sampan: { z: 2.2, hull: 7, seat: 0.5 }, gondola: { z: 1.7, hull: 10, seat: 0.45 }, swan: { z: 1.5, hull: 15, seat: 0.36 },
   cable: { z: 2.6, hull: 10, seat: 0.5 }, train: { z: 2.2, hull: 9, seat: 0.12 }, bateau: { z: 1.8, hull: 8, seat: 0.55 },
   scooter: { z: 1.6, hull: 9, seat: 0.45 }, vespa: { z: 1.6, hull: 9, seat: 0.45 }, bus: { z: 1.7, hull: 11, seat: 0.5 }, car: { z: 1.6, hull: 6, seat: 0.5 }, cyclo: { z: 1.6, hull: 8, seat: 0.25 },
 };
 /** Sprite xe/thuyền đã phóng theo tỉ lệ người */
 export const vehicleSprite = (id: MiniId): Sprite => { const sp = miniSprite(id), z = MINI[id].z; return { ...sp, w: sp.w * z, h: sp.h * z }; };
 export function miniSprite(id: MiniId): Sprite {
-  const W: Record<MiniId, [number, number]> = { boat: [22, 10], gondola: [34, 16], swan: [16, 14], cable: [12, 14], train: [72, 16], bateau: [48, 14], sampan: [26, 12], scooter: [16, 16], vespa: [16, 16], bus: [56, 22], car: [30, 14], cyclo: [22, 18] };
+  const W: Record<MiniId, [number, number]> = { boat: [22, 10], gondola: [34, 16], swan: [34, 26], cable: [12, 14], train: [72, 16], bateau: [48, 14], sampan: [26, 12], scooter: [16, 16], vespa: [16, 16], bus: [56, 22], car: [30, 14], cyclo: [22, 18] };
   const [w, h] = W[id];
   return makeSprite(`mini:${id}`, w, h, p => {
     if (id === 'boat') { p.rect(2, 6, 18, 3, '#f0f0f0'); p.rect(0, 5, 22, 1, '#d8302a'); p.rect(6, 1, 9, 4, '#5aa8e0'); p.rect(7, 2, 3, 2, '#d8f0ff'); p.rect(11, 2, 3, 2, '#d8f0ff'); }
     if (id === 'sampan') { p.rect(1, 8, 24, 3, '#6a3a22'); p.rect(0, 7, 26, 1, '#8a5a32'); p.rect(7, 3, 12, 4, '#c8a060'); p.rect(6, 2, 14, 1, '#7a4a2a'); p.rect(13, 0, 2, 2, '#e8443a'); }
     if (id === 'gondola') { p.rect(2, 12, 30, 2, '#14141c'); p.rect(0, 10, 3, 3, '#14141c'); p.rect(31, 9, 3, 4, '#14141c'); p.px(33, 8, '#d8c890'); p.rect(12, 10, 8, 2, '#a83a3a'); p.rect(25, 3, 3, 7, '#f0f0f0'); p.rect(25, 4, 3, 1, '#d8302a'); p.rect(25, 6, 3, 1, '#d8302a'); p.rect(25, 1, 3, 2, '#e8c8a0'); p.rect(24, 0, 5, 1, '#3a2a1a'); p.rect(22, 2, 1, 12, '#8a6a3a'); }
-    if (id === 'swan') { p.rect(2, 8, 12, 5, '#ffffff'); p.rect(0, 7, 4, 3, '#ffffff'); p.rect(11, 2, 3, 7, '#ffffff'); p.rect(13, 2, 3, 2, '#f6a83a'); p.px(12, 3, '#1a1a1a'); p.rect(5, 6, 6, 2, '#f8b8cc'); }
+    if (id === 'swan') {
+      const Wt = '#ffffff', Sh = '#dedad6', Pk = '#f6b8cc';
+      p.rect(2, 16, 26, 7, Wt); p.rect(0, 14, 4, 6, Wt); p.rect(28, 15, 3, 6, Wt); p.rect(3, 23, 24, 2, Sh); p.rect(2, 21, 26, 2, Sh);   // thân thuyền
+      for (let k = 0; k < 6; k++) p.rect(1 + k, 11 + Math.round(k * 0.6), 2, 4, Wt);                                                       // đuôi vểnh
+      p.rect(5, 12, 18, 4, '#7a5a8a'); p.rect(6, 13, 16, 3, Pk); p.rect(6, 12, 16, 1, '#e890b0');                                     // khoang ngồi đệm hồng
+      for (let k = 0; k < 4; k++) { p.rect(3 + k * 5, 18, 4, 2, Sh); }                                                                    // lông cánh
+      p.rect(24, 6, 4, 11, Wt); p.rect(25, 3, 4, 4, Wt); p.rect(26, 1, 5, 4, Wt); p.rect(24, 9, 1, 7, Sh);                            // cổ cong + đầu
+      p.rect(31, 3, 3, 2, '#f6a83a'); p.px(31, 2, '#2a2a3a'); p.px(28, 2, '#2a2a3a'); p.px(29, 5, Pk);                                  // mỏ, mắt, má hồng
+    }
     if (id === 'cable') { p.rect(5, 0, 2, 4, '#4a4a5a'); p.rect(1, 4, 10, 9, '#e8443a'); p.rect(2, 6, 8, 4, '#c8e8ff'); p.rect(1, 12, 10, 1, '#8a2a2a'); }
     if (id === 'train') for (let c = 0; c < 3; c++) { const x = c * 24; p.rect(x + 1, 2, 22, 11, '#d8302a'); p.rect(x + 1, 2, 22, 2, '#f0f0f0'); for (let k = 0; k < 4; k++) p.rect(x + 3 + k * 5, 5, 4, 4, '#c8e8ff'); p.rect(x + 1, 11, 22, 1, '#8a1a1a'); p.rect(x + 4, 13, 3, 3, '#2a2a2a'); p.rect(x + 17, 13, 3, 3, '#2a2a2a'); }
     if (id === 'scooter' || id === 'vespa') {

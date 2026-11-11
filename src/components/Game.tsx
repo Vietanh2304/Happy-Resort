@@ -1019,7 +1019,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
             star: tapStar,
           }}
         />
-        {exit && <button className="exit-chip" onClick={() => enter(exit[0], exit[1])}>{exit[2]}</button>}
+        {exit && <button className="exit-chip" onClick={() => { if (exit[0] === 'town' && scene.startsWith('trip_')) { if (confirm('✈️ Kết thúc chuyến đi và bay về làng?')) setFlight({ to: 'town', name: 'làng' }); return; } enter(exit[0], exit[1]); }}>{exit[2]}</button>}
         {live.mine.horse && <button className="exit-chip dismount" onClick={dismount}>🐴 Xuống ngựa · về chuồng</button>}
       </main>
       {link === 'down' && <div className="link-down">📡 Mất kết nối đồng bộ với người ấy — đang thử nối lại… (kiểm tra mạng, hoặc tải lại trang)</div>}
