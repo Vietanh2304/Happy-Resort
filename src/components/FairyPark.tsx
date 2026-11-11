@@ -112,7 +112,7 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
       if (k === 'royal') {
         onAnim('rummage'); setTimeout(() => onAnim('rummage'), 700);
         setTimeout(() => {
-          const o = looks.me.gender === 'f' ? 17 : 4, on = L.current.mine.outfit !== o;
+          const o = looks.me.gender === 'f' ? 17 : 19, on = L.current.mine.outfit !== o;
           L.current.update({ outfit: on ? o : null }); onAnim('cheer');
           L.current.say(on ? (o === 17 ? '👑 Công chúa xuất hiện!' : '🤴 Hoàng tử đây!') : '👕 Thay lại đồ thường');
         }, 1500);
@@ -137,7 +137,7 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
         </>
       )}
       {scene === 'trip_fairy_parade' && parade > 0 && <Parade at={parade} now={now} night={night} />}
-      <Festoons scene={scene} night={night} />
+      <Festoons scene={scene} night={night || showing} show={showing} />
       {scene === 'trip_fairy_rides' && (
         <>
           <Carousel now={now} riders={ridersSorted('carousel')} />
@@ -210,7 +210,7 @@ function Teacups({ now, riders }: { now: number; riders: { look: AvatarLook; at:
 type Who = 'princess' | 'prince' | 'dancer' | 'drum' | 'flag' | 'fairy';
 const LOOKS: Record<Who, AvatarLook[]> = {
   princess: [{ gender: 'f', hair: 1, hairColor: 3, skin: 0, shirt: 0, outfit: 17, acc: 8 }, { gender: 'f', hair: 9, hairColor: 0, skin: 2, shirt: 4, outfit: 17, acc: 8 }, { gender: 'f', hair: 5, hairColor: 2, skin: 1, shirt: 9, outfit: 17, acc: 8 }],
-  prince: [{ gender: 'm', hair: 8, hairColor: 2, skin: 1, shirt: 7, outfit: 4 }, { gender: 'm', hair: 0, hairColor: 0, skin: 3, shirt: 10, outfit: 4 }],
+  prince: [{ gender: 'm', hair: 8, hairColor: 2, skin: 1, shirt: 7, outfit: 19, acc: 8 }, { gender: 'm', hair: 0, hairColor: 0, skin: 3, shirt: 10, outfit: 19, acc: 8 }],
   dancer: [{ gender: 'f', hair: 4, hairColor: 4, skin: 0, shirt: 0, outfit: 5 }, { gender: 'm', hair: 10, hairColor: 1, skin: 2, shirt: 5, outfit: 16 }, { gender: 'f', hair: 11, hairColor: 5, skin: 1, shirt: 11, outfit: 1 }],
   drum: [{ gender: 'm', hair: 0, hairColor: 0, skin: 1, shirt: 8, outfit: 6 }, { gender: 'f', hair: 6, hairColor: 1, skin: 0, shirt: 8, outfit: 6 }],
   flag: [{ gender: 'f', hair: 5, hairColor: 3, skin: 2, shirt: 3, outfit: 1 }, { gender: 'm', hair: 2, hairColor: 2, skin: 0, shirt: 1, outfit: 0 }],
@@ -288,8 +288,8 @@ function CastleShow({ at, now, night }: { at: number; now: number; night: boolea
   const c = PROJ[Math.floor(el / 2500) % PROJ.length], m = castleMaskAt(c);
   return (
     <>
-      {!night && <div className="fa-veil" style={{ width: 256 * s, height: 192 * s, opacity: el < 1500 ? el / 1500 : el > SHOW_MS - 2000 ? Math.max(0, (SHOW_MS - el) / 2000) : 1 }} />}
-      {el > 1500 && <Spr key={c} sprite={m.sprite} x={m.x} y={m.y} z={3} className="fa-proj" />}
+      <div className={`fa-veil ${night ? 'night' : ''}`} style={{ width: 256 * s, height: 192 * s, opacity: el < 1500 ? el / 1500 : el > SHOW_MS - 2000 ? Math.max(0, (SHOW_MS - el) / 2000) : 1 }} />
+      {el > 1500 && <Spr key={c} sprite={m.sprite} x={m.x} y={m.y} z={455} className="fa-proj" />}
       <FireworkShow at={at + 2000} />
       {el > 4000 && el < 12000 && <i className="fa-fairy" style={v({ '--s': `${s}px`, left: 128 * s, top: 18 * s })} />}
       {el > SHOW_MS - 3500 && <Tag x={128} y={8} className="bed-bubble">✨ …và họ sống hạnh phúc mãi mãi ✨</Tag>}
@@ -536,7 +536,7 @@ const FESTOON: Record<string, Arc[]> = {
   trip_fairy_rides: [[0, 64, 70, 70, 8, 5], [148, 98, 256, 92, 10, 6], [92, 112, 194, 116, 8, 6]],
 };
 const BULB = ['#ff4a7a', '#ffd84a', '#4ad8ff', '#a87aff', '#5aff8a', '#ff8a3a', '#ffffff'];
-function Festoons({ scene, night }: { scene: string; night: boolean }) {
+function Festoons({ scene, night, show }: { scene: string; night: boolean; show?: boolean }) {
   const s = useScale(), arcs = FESTOON[scene];
   const bulbs = useMemo(() => (arcs ?? []).flatMap(([x0, y0, x1, y1, sag, gap], a) => {
     const n = Math.max(2, Math.round(Math.hypot(x1 - x0, y1 - y0) / gap));
@@ -544,7 +544,7 @@ function Festoons({ scene, night }: { scene: string; night: boolean }) {
   }), [arcs]);
   if (!arcs) return null;
   return (
-    <div className={`festoon ${night ? 'on' : ''}`} style={{ left: 0, top: 0, width: 256 * s, height: 192 * s }}>
+    <div className={`festoon ${night ? 'on' : ''} ${show ? 'show' : ''}`} style={{ left: 0, top: 0, width: 256 * s, height: 192 * s }}>
       <svg width={256 * s} height={192 * s} viewBox="0 0 256 192">{arcs.map(([x0, y0, x1, y1, sag], k) => <path key={k} d={`M${x0} ${y0} Q${(x0 + x1) / 2} ${(y0 + y1) / 2 + sag * 2} ${x1} ${y1}`} stroke="#3a2a3a" strokeWidth={0.5} fill="none" />)}</svg>
       {bulbs.map((b, k) => <i key={k} style={v({ left: (b.x - 1) * s, top: b.y * s, width: 2.2 * s, height: 2.6 * s, '--c': b.c, animationDelay: `${b.d}s` })} />)}
     </div>

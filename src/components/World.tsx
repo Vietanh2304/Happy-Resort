@@ -363,7 +363,7 @@ function SceneContent(p: WorldProps) {
     return { look: l, umbrella: w.type === 'rain' };
   };
   { const w = p.myView.weather; outWx.on = !!w && def.outdoor && scene !== 'sky' && scene !== 'reef' && !(scene === 'hill' && !p.hillReal); if (w) { outWx.type = w.type; outWx.temp = w.temp; } outWx.hour = p.myView.time.hour; outWx.theme = p.theme ? festKey(p.theme, p.myView.time.date) : ''; outWx.fest = p.theme ? ({ romantic: 'ngày đặc biệt', party: 'ngày hội', calm: 'ngày đáng nhớ', tet: 'Tết', lantern: 'Trung Thu', winter: 'Giáng Sinh' } as Record<string, string>)[p.theme] ?? '' : ''; }
-  const rent = (look: Profile['avatar'], o?: number | null) => (scene.startsWith('trip_') && o != null ? { ...look, outfit: o, design: null } : look);
+  const rent = (look: Profile['avatar'], o?: number | null) => (scene.startsWith('trip_') && o != null ? { ...look, outfit: o, design: null, ...(o === 17 || o === 19 ? { acc: 8 } : {}) } : look);
   const tripDress = (d: { look: Profile['avatar']; umbrella: boolean }, act?: string | null) => {
     if (!scene.startsWith('trip_')) return d;
     if (act === 'soak' || act === 'mask') return { look: { ...d.look, outfit: 18, acc: 0, design: null, glasses: act === 'mask' ? 5 : 0 }, umbrella: false };

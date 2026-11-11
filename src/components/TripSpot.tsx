@@ -96,6 +96,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   const [bell, setBell] = useState(0);
   const [paintN, setPaintN] = useState(0);
   const [knots, setKnots] = useState<{ x: number; y: number }[]>([]);
+  const [join, setJoin] = useState<{ i: number; at: number } | null>(null);
   const [doves, setDoves] = useState<{ x: number; y: number; n: number; dx: number }[]>([]);
   const L = useRef(live); L.current = live;
   const mine = live.mine, theirs = partnerHere ? live.theirs : null;
@@ -109,14 +110,47 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     const tag = patch.act ?? null, dish = patch.dish ?? null, drink = patch.drink ?? null;
     setTimeout(() => { const m = L.current.mine; if ((tag && m.act === tag) || (dish && m.dish === dish) || (drink && m.drink === drink)) L.current.update(end); }, ms);
   };
-  const pop = (x: number, y: number, icon: string, n = 1) => {
+  type Shared =
+    | { t: 'pop'; x: number; y: number; icon: string; n: number } | { t: 'float' | 'flower' | 'knot' | 'art' | 'doves'; x: number; y: number }
+    | { t: 'made'; r: { icon: string; x: number; y: number } } | { t: 'paint' | 'lid' | 'bell' | 'art0' };
+  /** vẽ kết quả trên máy mình (cũng chạy khi người ấy làm) */
+  const apply = (e: Shared) => {
+    switch (e.t) {
+      case 'pop': return popLocal(e.x, e.y, e.icon, e.n);
+      case 'float': return setFloats(f => [...f.slice(-7), { x: e.x, y: e.y, n: Date.now() + Math.random() }]);
+      case 'flower': return setFlowers(f => [...f.slice(-11), { x: e.x, y: e.y }]);
+      case 'knot': return setKnots(k => [...k.slice(-8), { x: e.x, y: e.y }]);
+      case 'made': { const r = e.r; return setMade(m => [...m.filter(x => x.icon !== r.icon || x.x !== r.x), r]); }
+      case 'paint': return setPaintN(Date.now());
+      case 'bell': return setBell(Date.now());
+      case 'lid': setLid(true); setTimeout(() => setLid(false), 5000); return;
+      case 'art0': return setArt(null);
+      case 'art': return setArt({ x: e.x, y: e.y });
+      case 'doves': {
+        const { x, y } = e, t0 = Date.now();
+        for (let k = 0; k < 7; k++) setTimeout(() => setDoves(d => [...d.slice(-13), { x: x + (k % 2 ? 1 : -1) * (8 + (k * 5) % 16), y: y + 2 + (k % 3) * 3, n: t0 + k + Math.random(), dx: (k % 2 ? 1 : -1) * 60 }]), 500 + k * 600);
+        setTimeout(() => setDoves(d => d.filter(v => v.n < t0 || v.n > t0 + 8)), 16000); return;
+      }
+    }
+  };
+  const share = (e: Shared) => { apply(e); if (L.current.theirs) sendEvent('trip-fx', { scene, e }); };
+  const pop = (x: number, y: number, icon: string, n = 1) => share({ t: 'pop', x, y, icon, n });
+  const popLocal = (x: number, y: number, icon: string, n = 1) => {
     const t = Date.now() + Math.random();
     setFx(f => [...f.slice(-14), ...Array.from({ length: n }, (_, k) => ({ x: x + (k - (n - 1) / 2) * 7, y, icon, n: t + k / 10 }))]);
     setTimeout(() => setFx(f => f.filter(e => e.n < t || e.n >= t + 1)), 2600);
   };
   const anim = (n: AnimName, times = 1) => { for (let k = 0; k < times; k++) setTimeout(() => onAnim(n), k * 800); };
-  const doAct = (a: Act, i: number) => go((a.k === 'do' || a.k === 'park') && a.at ? a.at : near(a), () => {
+  // chỉ làm đồ thủ công mới rủ vào làm chung; còn lại ai làm nấy (đứng cạnh thì tự đứng lệch sang bên)
+  const together = (a: Act) => a.k === 'do' && a.do === 'craft';
+  const beside = (p: Pt, side: number): Pt => side ? { x: Math.max(spot.walk.x0, Math.min(spot.walk.x1, p.x + side * 12)), y: p.y } : p;
+  /** side: 0 = tự làm, 1 = chạy tới làm cùng người ấy (đứng lệch sang bên cạnh) */
+  const doAct = (a: Act, i: number, side = 0) => { const to = (a.k === 'do' || a.k === 'park') && a.at ? a.at : near(a), th = L.current.theirs;
+    if (!side && a.k !== 'ride' && a.k !== 'park' && th && partnerHere && Math.abs(th.pos.x - to.x) < 10 && Math.abs(th.pos.y - to.y) < 8) side = th.pos.x <= to.x ? 1 : -1;
+    go(beside(to, side), () => {
     const at = L.current.mine.pos;
+    if (!side && together(a) && L.current.theirs) sendEvent('trip-do', { scene, i, at: Date.now() });
+    if (side) setJoin(null);
     if (a.k === 'buy') return void run(async () => {
       const it = item(a.item);
       if (!confirm(`Mua ${it.icon} ${it.name} (${a.price} xu)?`)) return;
@@ -132,7 +166,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     if (a.k === 'fortune') {
       live.update({ act: 'shake' }); live.say('🎋 Lắc lắc… lắc lắc…');
       setTimeout(() => { if (L.current.mine.act !== 'shake') return; L.current.update({ act: 'omikuji' }); L.current.say(`📜 ${FORTUNES[Math.floor(Math.random() * FORTUNES.length)]}`); }, 2400);
-      setTimeout(() => { if (L.current.mine.act !== 'omikuji') return; L.current.update({ act: null }); go({ x: 244, y: 172 }, () => { L.current.update({ act: 'wall' }); setTimeout(() => { L.current.update({ act: null }); setKnots(k => [...k.slice(-8), { x: 239 + Math.round(Math.random() * 12), y: 148 + Math.floor(Math.random() * 3) * 7 }]); L.current.say('🎋 Buộc quẻ lên giá để giữ may mắn!'); }, 1600); }); }, 8000);
+      setTimeout(() => { if (L.current.mine.act !== 'omikuji') return; L.current.update({ act: null }); go({ x: 244 - side * 10, y: 172 }, () => { L.current.update({ act: 'wall' }); setTimeout(() => { L.current.update({ act: null }); share({ t: 'knot', x: 239 + Math.round(Math.random() * 12), y: 148 + Math.floor(Math.random() * 3) * 7 }); L.current.say('🎋 Buộc quẻ lên giá để giữ may mắn!'); }, 1600); }); }, 8000);
       return;
     }
     if (a.k === 'ride') {
@@ -143,37 +177,43 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       setTimeout(() => { if (L.current.mine.act === 'ride') L.current.update({ act: null, trip: null, pos: end }); }, RIDE_MS);
       return;
     }
-    if (a.k === 'float') { hold({ act: 'sit' }, 2600); setTimeout(() => { setFloats(f => [...f.slice(-7), { x: at.x, y: a.ry, n: Date.now() }]); live.say('🪷 Ước gì mình mãi bên nhau…'); }, 1200); return; }
+    if (a.k === 'float') { hold({ act: 'sit' }, 2600); setTimeout(() => { share({ t: 'float', x: at.x, y: a.ry }); live.say('🪷 Ước gì mình mãi bên nhau…'); }, 1200); return; }
     if (a.k !== 'do') return;
     live.say(a.say);
     switch (a.do) {
       case 'sit': hold({ act: 'sit' }, 20000); break;
-      case 'wall': hold({ act: 'wall' }, 5000); for (let k = 0; k < 4; k++) setTimeout(() => onAnim('wash'), k * 900); setTimeout(() => { setFlowers(f => [...f.slice(-11), { x: at.x - 5 + Math.round(Math.random() * 10), y: 92 + Math.round(Math.random() * 14) }]); pop(at.x, at.y - 40, '✨', 2); }, 4200); break;
-      case 'craft': anim('rummage', 3); setTimeout(() => { pop(at.x, at.y - 34, '✨', 2); const r = a.res; if (r) setMade(m => [...m.filter(e => e.icon !== r.icon || e.x !== r.x), r]); }, 2200); break;
+      case 'wall': hold({ act: 'wall' }, 5000); for (let k = 0; k < 4; k++) setTimeout(() => onAnim('wash'), k * 900); setTimeout(() => { share({ t: 'flower', x: at.x - 5 + Math.round(Math.random() * 10), y: 92 + Math.round(Math.random() * 14) }); pop(at.x, at.y - 40, '✨', 2); }, 4200); break;
+      case 'craft': anim('rummage', 3); setTimeout(() => { pop(at.x, at.y - 34, '✨', 2); const r = a.res; if (r) share({ t: 'made', r }); }, 2200); break;
       case 'dress': anim('rummage', 2); setTimeout(() => { setFlash(Date.now()); live.update({ outfit: L.current.mine.outfit === a.outfit ? null : a.outfit ?? null }); anim('cheer'); pop(at.x, at.y - 34, '✨', 3); }, 1600); break;
       case 'pick': hold({ act: 'sit' }, 1800); setTimeout(() => { hold({ act: 'pick' }, 8000); pop(at.x, at.y - 30, '✨', 2); }, 1800); break;
       case 'cheer': anim('cheer', 2); pop(at.x, at.y - 34, '✨', 3); break;
-      case 'watch': hold({ act: 'watch' }, 9000); setPaintN(Date.now()); setTimeout(() => { setFlowers(f => [...f.slice(-11), { x: 200 + Math.round(Math.random() * 30), y: 96 + Math.round(Math.random() * 12) }]); anim('cheer'); live.say('👏 Ông vẽ đẹp quá!'); }, 7000); break;
+      case 'watch': hold({ act: 'watch' }, 9000); share({ t: 'paint' }); setTimeout(() => { share({ t: 'flower', x: 200 + Math.round(Math.random() * 30), y: 96 + Math.round(Math.random() * 12) }); anim('cheer'); live.say('👏 Ông vẽ đẹp quá!'); }, 7000); break;
       case 'gaze': hold({ act: 'gaze' }, 8000); setTimeout(() => live.say('🛶 Gondola đi qua dưới cầu kìa…'), 3000); break;
-      case 'jar': hold({ act: 'jar' }, 6000); setTimeout(() => { setLid(true); pop(214, 160, '✨', 2); }, 1500); setTimeout(() => setLid(false), 6500); break;
-      case 'cow': hold({ act: 'cow' }, 6000); for (let k = 0; k < 5; k++) setTimeout(() => onAnim('wash'), k * 800); setBell(Date.now()); setTimeout(() => live.say('🔔 Leng keng~ leng keng~'), 1200); break;
+      case 'jar': hold({ act: 'jar' }, 6000); setTimeout(() => { share({ t: 'lid' }); pop(214, 160, '✨', 2); }, 1500); break;
+      case 'cow': hold({ act: 'cow' }, 6000); for (let k = 0; k < 5; k++) setTimeout(() => onAnim('wash'), k * 800); share({ t: 'bell' }); setTimeout(() => live.say('🔔 Leng keng~ leng keng~'), 1200); break;
       case 'sing': hold({ act: 'sing' }, 9000); for (let k = 0; k < 6; k++) setTimeout(() => pop(at.x, at.y - 34, k % 2 ? '🎵' : '🎶'), k * 1400); setTimeout(() => pop(at.x, at.y - 10, '👏', 4), 8000); break;
       case 'pray': hold({ act: 'pray' }, 6000); for (let k = 0; k < 3; k++) setTimeout(() => pop(at.x, at.y - 34, scene === 'trip_iceland_aurora' ? '🌠' : '🙏'), k * 1500); break;
-      case 'feed': hold({ act: 'feed' }, 9000); for (let k = 0; k < 7; k++) setTimeout(() => setDoves(d => [...d.slice(-9), { x: at.x + (k % 2 ? 1 : -1) * (8 + (k * 5) % 16), y: at.y + 2 + (k % 3) * 3, n: Date.now() + k, dx: (k % 2 ? 1 : -1) * 60 }]), 500 + k * 600); setTimeout(() => setDoves([]), 16000); break;
-      case 'paint': hold({ act: 'paint' }, 9000); setArt(null); setTimeout(() => { setArt({ x: a.x, y: a.y }); pop(a.x, a.y - 20, '✨', 2); }, 8000); break;
+      case 'feed': hold({ act: 'feed' }, 9000); share({ t: 'doves', x: at.x, y: at.y }); break;
+      case 'paint': hold({ act: 'paint' }, 9000); share({ t: 'art0' }); setTimeout(() => { share({ t: 'art', x: a.x, y: a.y }); pop(a.x, a.y - 20, '✨', 2); }, 8000); break;
       case 'cross': go({ x: spot.walk.x0 + 14, y: 148 }, () => go({ x: spot.walk.x1 - 14, y: 180 }, () => { anim('cheer'); pop(L.current.mine.pos.x, L.current.mine.pos.y - 34, '🎉', 2); })); break;
       case 'love': if (theirs) { onKiss(); pop(at.x, at.y - 36, '💕', 3); } else { hold({ act: 'gaze' }, 3500); setTimeout(() => { hold({ act: 'selfie' }, 3500); live.say('🤳 Chụp tự sướng với tháp gửi người ấy nè'); setTimeout(() => setFlash(Date.now()), 1800); }, 3500); } break;
       case 'tent': live.update({ act: 'tent', pos: { x: 66, y: 176 }, dish: null, drink: null }); break;
       case 'soak': case 'mask': live.update({ act: a.do, pos: { x: a.x, y: a.y - 6 }, dish: null, drink: null }); break;
     }
-  });
+  }); };
   // Người ấy rủ đi thuyền / đạp vịt / cáp treo → đồng ý thì lên ngồi chung
+  useEffect(() => onEvent('trip-fx', (d: { scene: string; e: Shared }) => { if (d.scene === scene) apply(d.e); }), [scene]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => onEvent('trip-ride', (d: { scene: string; i: number; at: number }) => {
     const a = spot.acts[d.i];
     if (d.scene !== scene || !a || a.k !== 'ride' || L.current.mine.act === 'ride') return;
     setInvite({ i: d.i, at: d.at });
     setTimeout(() => setInvite(v => (v && v.at === d.at ? null : v)), 6000);
   }), [scene]);
+  useEffect(() => onEvent('trip-do', (d: { scene: string; i: number; at: number }) => {
+    if (d.scene !== scene || !spot.acts[d.i] || L.current.mine.act) return;
+    setJoin({ i: d.i, at: d.at });
+    setTimeout(() => setJoin(v => (v && v.at === d.at ? null : v)), 9000);
+  }), [scene, spot]);
   const joinRide = () => {
     const d = invite; setInvite(null); if (!d) return;
     const a = spot.acts[d.i]; if (!a || a.k !== 'ride' || Date.now() - d.at > RIDE_MS - 1500) return;
@@ -208,6 +248,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       {soaking && <Tag x={mine.pos.x} y={mine.pos.y + 4} className="label" onClick={() => live.update({ act: null, pos: { x: mine.pos.x, y: spot.walk.y0 + 4 } })}>🚶 Lên bờ</Tag>}
       {tent && tented > 0 && <Tag x={tent.x + 6} y={tent.y - 6} className="bed-bubble" onClick={() => mine.act === 'tent' && live.update({ act: null, pos: near(tent) })}>{tented > 1 ? '💑 Hai đứa trong lều' : '⛺ Có người trong lều'}{mine.act === 'tent' ? ' · bấm để ra' : ''}</Tag>}
       {invite && (() => { const a = spot.acts[invite.i]; return a ? <Tag x={a.x} y={Math.max(20, a.y - 30)} className="label invite-chip" onClick={joinRide}>💑 Người ấy rủ {lbl(a).replace(/^\S+\s/, '')} — lên cùng!</Tag> : null; })()}
+      {join && !invite && (() => { const a = spot.acts[join.i]; return a ? <Tag x={a.x} y={Math.max(20, a.y - 16)} className="label invite-chip" onClick={() => doAct(a, join.i, 1)}>💑 Người ấy đang {lbl(a).replace(/^\S+\s/, '')} — làm cùng!</Tag> : null; })()}
       {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className={`label ${a.k !== 'park' && Math.abs(mine.pos.x - a.x) < 26 && mine.pos.y - a.y > -8 && mine.pos.y - a.y < 52 ? 'dim' : ''}`} onClick={() => doAct(a, i)}>{lbl(a)}</Tag>)}
     </>
   );

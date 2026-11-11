@@ -1811,11 +1811,12 @@ textarea { resize: vertical; }
 @media (pointer: coarse) { .fw-p:nth-child(3n) { display: none; } }
 
 /* ── Vương quốc Cổ Tích: show lâu đài, diễu hành, tách trà, tàu lượn toàn màn hình */
-.fa-veil { position: absolute; left: 0; top: 0; background: #0a0a3a; mix-blend-mode: multiply; opacity: .6; z-index: 1; pointer-events: none; transition: opacity .3s; }
-.fa-veil { background: #1a1650c8; mix-blend-mode: normal; }
+.fa-veil { position: absolute; left: 0; top: 0; background: #3a3f8aa8; mix-blend-mode: multiply; z-index: 450; pointer-events: none; transition: opacity .3s; }
+.fa-veil.night { background: #2e3278c8; }
+.festoon.show { z-index: 452; }
 .fa-proj { opacity: .42; mix-blend-mode: screen; pointer-events: none; animation: faproj 2.5s ease-in-out both; }
 @keyframes faproj { 0% { opacity: 0; } 20%, 80% { opacity: .5; } 100% { opacity: .15; } }
-.fa-fairy { position: absolute; width: calc(var(--s) * 2); height: calc(var(--s) * 2); background: #fff6c0; box-shadow: 0 0 calc(var(--s) * 3) #ffe880, calc(var(--s) * -3) calc(var(--s) * 1) 0 #ffd84a, calc(var(--s) * -6) calc(var(--s) * 2) 0 #ffd84a99, calc(var(--s) * -9) calc(var(--s) * 3) 0 #ffd84a55; z-index: 4; pointer-events: none; animation: fafly 8s ease-in-out both; }
+.fa-fairy { position: absolute; z-index: 470; width: calc(var(--s) * 2); height: calc(var(--s) * 2); background: #fff6c0; box-shadow: 0 0 calc(var(--s) * 3) #ffe880, calc(var(--s) * -3) calc(var(--s) * 1) 0 #ffd84a, calc(var(--s) * -6) calc(var(--s) * 2) 0 #ffd84a99, calc(var(--s) * -9) calc(var(--s) * 3) 0 #ffd84a55; z-index: 4; pointer-events: none; animation: fafly 8s ease-in-out both; }
 @keyframes fafly { 0% { transform: translate(0, 0); } 30% { transform: translate(calc(var(--s) * 70), calc(var(--s) * 20)); } 60% { transform: translate(calc(var(--s) * -60), calc(var(--s) * 40)); } 100% { transform: translate(calc(var(--s) * 10), calc(var(--s) * 92)); opacity: 0; } }
 .fa-lit { filter: drop-shadow(0 0 3px #ffe08a) brightness(1.15) saturate(1.2); }
 .fa-glint { filter: drop-shadow(0 0 4px #fff6c0); animation: faglint .5s ease-in-out infinite alternate; }
@@ -1842,7 +1843,7 @@ textarea { resize: vertical; }
 .fa-dusk { position: absolute; left: 0; top: 0; background: #2a1a6050; pointer-events: none; z-index: 1; }
 .fa-banner { font-weight: 700; animation: glow 1.2s ease-in-out infinite; }
 
-.fw-show { position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none; }
+.fw-show { position: absolute; left: 0; top: 0; z-index: 460; pointer-events: none; }
 .fw-act { font-weight: 700; font-size: 14px; animation: fwact 3s ease-out both; }
 @keyframes fwact { 0% { transform: translate(-50%, -100%) scale(.6); opacity: 0; } 12% { transform: translate(-50%, -100%) scale(1.15); opacity: 1; } 22% { transform: translate(-50%, -100%) scale(1); } 85% { opacity: 1; } 100% { opacity: .0; } }
 

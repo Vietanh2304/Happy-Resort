@@ -18,7 +18,7 @@ export const GLASSES = ['Không', 'Kính tròn', 'Kính vuông', 'Kính râm', '
 export const OUTFITS = [
   'Áo thun', 'Váy xinh', 'Hoodie', 'Yếm', 'Vest lịch lãm', 'Váy dạ hội', 'Sơ mi & quần tây', 'Áo len',
   'Đồ ngủ', 'Đồ làm vườn', 'Đồ câu cá', 'Áo khoác mùa đông', 'Áo dài', 'Hanbok', 'Sườn xám', 'Áo choàng tắm',
-  'Đồ thể thao', 'Váy công chúa', 'Đồ bơi',
+  'Đồ thể thao', 'Váy công chúa', 'Đồ bơi', 'Đồ hoàng tử',
 ];
 export const ACCS = ['Không', 'Nơ', 'Hoa cài', 'Mũ len', 'Kính', 'Tai mèo', 'Mũ rơm', 'Mũ tai bèo', 'Vương miện', 'Kẹp sao', 'Khăn quàng', 'Mũ lưỡi trai', 'Khăn tắm'];
 /** Gợi ý đồ theo hoạt động */
@@ -26,6 +26,7 @@ export const PRESETS: { name: string; outfit: number; acc: number }[] = [
   { name: '💐 Hẹn hò · vest', outfit: 4, acc: 0 },
   { name: '💐 Hẹn hò · váy dạ hội', outfit: 5, acc: 2 },
   { name: '👑 Dạ tiệc · váy công chúa', outfit: 17, acc: 8 },
+  { name: '🤴 Dạ tiệc · đồ hoàng tử', outfit: 19, acc: 8 },
   { name: '🌱 Làm vườn', outfit: 9, acc: 6 },
   { name: '🎣 Câu cá', outfit: 10, acc: 7 },
   { name: '🌙 Đi ngủ', outfit: 8, acc: 0 },

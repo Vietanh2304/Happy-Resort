@@ -164,6 +164,20 @@ function outfitOf(o: number, C: string, S: string, girl = false): Outfit {
     case 15: return { top: W, sleeve: 'long', topEnd: 44, bottom: 'skirt', bot: W, hem: 44, shoes: '#f7b8cc', deco: (P, v, y) => { P.rect(10, y + 34, 12, 2, C); if (v === 'front') { P.line(14, y + 24, 17, y + 33, 1, '#e8e0e8'); P.rect(18, y + 36, 2, 4, C); } } };
     case 16: return { top: C, sleeve: 'long', bottom: 'pants', bot: Cd, shoes: W, deco: (P, v, y) => { if (v !== 'back') P.rect(16, y + 25, 1, 11, Cl); P.rect(10, y + 26, 1, 8, W); P.rect(21, y + 26, 1, 8, W); } };
     case 17: return { top: C, sleeve: 'puff', bottom: 'gown', bot: Cl, hem: 51, shoes: '#f6c64e', deco: (P, _v, y) => { P.rect(10, y + 35, 12, 1, '#f6c64e'); for (const [x, yy] of [[9, 44], [14, 47], [21, 42], [23, 48], [11, 39], [18, 40]]) P.px(x, yy, '#ffffff'); } };
+    // Đồ hoàng tử: áo trắng cầu vai vàng, đai đỏ chéo, khuy vàng, quần xanh hoàng gia, áo choàng đỏ sau lưng
+    case 19: {
+      const R = '#c8283a', G = '#f6c64e', N = '#24306a';
+      return { top: '#f8f4ea', sleeve: 'long', bottom: 'pants', bot: N, shoes: '#2a1a1a', deco: (P, v, y) => {
+        if (v === 'back') { P.rect(9, y + 24, 14, 22, R); P.rect(9, y + 45, 14, 1, mix(R, '#2a1020', 0.35)); P.rect(9, y + 24, 14, 1, G); P.rect(10, y + 26, 1, 18, mix(R, '#ffffff', 0.25)); return; }
+        if (v === 'front') {
+          P.rect(8, y + 24, 4, 2, G); P.rect(20, y + 24, 4, 2, G); for (const x of [8, 10, 20, 22]) P.px(x, y + 26, G);
+          P.rect(14, y + 24, 4, 1, G);
+          for (let k = 0; k < 9; k++) P.rect(20 - k, y + 25 + k, 2, 1, k % 4 === 3 ? mix(R, '#ffffff', 0.3) : R);
+          for (const yy of [27, 30, 33]) P.px(15, y + yy, G);
+          P.rect(10, y + 35, 12, 2, G); P.px(15, y + 35, '#ffffff');
+        } else { P.rect(14, y + 24, 4, 2, G); P.rect(11, y + 35, 10, 2, G); }
+      } };
+    }
     // Đồ bơi: nam quần đùi cởi trần, nữ bikini hai mảnh (màu theo màu áo đang chọn), dép tông
     case 18: {
       const Sd = mix(S, '#c07060', 0.28), Cs = mix(C, '#ffffff', 0.5);
