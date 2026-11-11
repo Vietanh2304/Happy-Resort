@@ -154,6 +154,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const live = useLive(partnerOnline);
   const scene = live.mine.scene;
   const theirs = partnerOnline ? live.theirs : null;
+  const tripHere = scene.startsWith('trip_') ? scene.split('_')[1] : scene === 'restaurant' ? tripCtx.at : '';
   const partnerHere = theirs?.scene === scene && (scene !== 'restaurant' || (theirs?.tripAt ?? '') === (live.mine.tripAt ?? ''));
   const partnerName = partner?.display_name || 'người ấy';
 
@@ -1152,16 +1153,16 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       )}
 
       {sheet?.kind === 'map' && (
-        <Sheet title={scene.startsWith('trip_') ? `🗺️ Bản đồ ${tripOf(scene.split('_')[1])?.name ?? ''}` : '🗺️ Đi đâu đây?'} onClose={close}>
+        <Sheet title={tripHere ? `🗺️ Bản đồ ${tripOf(tripHere)?.name ?? ''}` : '🗺️ Đi đâu đây?'} onClose={close}>
           <ul className="places">
-            {(Object.keys(SCENES) as SceneId[]).filter(id => scene.startsWith('trip_') ? id === 'town' || id.split('_')[1] === scene.split('_')[1] && id.startsWith('trip_') : !id.startsWith('trip_')).map(id => (
+            {(Object.keys(SCENES) as SceneId[]).filter(id => tripHere ? id === 'town' || id.split('_')[1] === tripHere && id.startsWith('trip_') : !id.startsWith('trip_')).map(id => (
               <li key={id}>
                 <span className="place-icon">{SCENES[id].icon}</span>
                 <div>
                   <b>{SCENES[id].name}</b>
-                  {theirs?.scene === id && <p className="here">💗 {partnerName} đang ở đây</p>}
+                  {theirs?.scene === id && (id !== 'restaurant' || (theirs?.tripAt ?? '') === (live.mine.tripAt ?? '')) && <p className="here">💗 {partnerName} đang ở đây</p>}
                 </div>
-                <button className="btn small" disabled={id === scene} onClick={() => { close(); if (scene.startsWith('trip_') && id === 'town') setFlight({ to: 'town', name: 'làng' }); else enter(id); }}>{id === scene ? 'Đang ở đây' : scene.startsWith('trip_') && id === 'town' ? '✈️ Bay về' : 'Đi'}</button>
+                <button className="btn small" disabled={id === scene} onClick={() => { close(); if (tripHere && id === 'town') setFlight({ to: 'town', name: 'làng' }); else enter(id); }}>{id === scene ? 'Đang ở đây' : tripHere && id === 'town' ? '✈️ Bay về' : 'Đi'}</button>
               </li>
             ))}
           </ul>
