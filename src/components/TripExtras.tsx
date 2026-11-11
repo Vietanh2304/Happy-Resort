@@ -21,9 +21,11 @@ const ALL_SPOTS = Object.keys(SPOTS) as SpotScene[];
 /** Mỗi nơi một chỗ treo khoá (cầu, bờ hồ, bờ sông…) */
 const LOCK_SPOT: Record<TripId, SpotScene> = {
   taichung: 'trip_taichung_sunmoon', gwangju: 'trip_gwangju_mudeung', hoian: 'trip_hoian_river', tokyo: 'trip_tokyo_ueno',
-  paris: 'trip_paris_seine', venice: 'trip_venice_canal', swiss: 'trip_swiss_chalet', iceland: 'trip_iceland_aurora',
+  paris: 'trip_paris_seine', venice: 'trip_venice_canal', swiss: 'trip_swiss_chalet', iceland: 'trip_iceland_aurora', fairy: 'trip_fairy_castle',
 };
 
+/** Chỗ đặt trụ dấu cố định (map có trò chơi to, góc trống bị vướng) */
+const STAMP_AT: Record<string, Pt> = { trip_fairy_rides: { x: 146, y: 124 } };
 /** Chọn góc trống nhất trong vùng đi lại (xa các nhãn hoạt động) */
 function freeCorners(spot: SpotDef): Pt[] {
   const w = spot.walk;
@@ -33,7 +35,7 @@ function freeCorners(spot: SpotDef): Pt[] {
 }
 
 /** Pháo hoa pixel: tên lửa vọt lên rồi nổ tung thành hạt vuông */
-function Fireworks({ dense }: { dense: boolean }) {
+export function Fireworks({ dense }: { dense: boolean }) {
   const s = useScale();
   const [bursts, setBursts] = useState<{ id: number; x: number; y: number; c: string[]; n: number }[]>([]);
   useEffect(() => {
@@ -105,7 +107,7 @@ export function TripExtras({ scene, trip, spot, me, partner, live, partnerHere, 
   }, []);
 
   const corners = useMemo(() => (spot ? freeCorners(spot) : []), [spot]);
-  const post = corners[0];
+  const post = STAMP_AT[scene] ?? corners[0];
   const rail = spot && LOCK_SPOT[trip] === scene ? corners.find(c => post && Math.hypot(c.x - post.x, c.y - post.y) > 60) : undefined;
   const railX = rail ? Math.max(24, Math.min(232, rail.x)) : 0;
 

@@ -1,8 +1,9 @@
 // Du lịch: mỗi điểm đến là một bản đồ riêng (256×192) đi dạo được — nền trời, cảnh xa, mặt đất và công trình nổi tiếng.
 import { makeSprite, mix, type Pen } from './pixel';
 import { seeded } from './rng';
+import { castle } from './fairyArt';
 
-export type TripId = 'taichung' | 'gwangju' | 'hoian' | 'tokyo' | 'paris' | 'venice' | 'swiss' | 'iceland';
+export type TripId = 'taichung' | 'gwangju' | 'hoian' | 'tokyo' | 'paris' | 'venice' | 'swiss' | 'iceland' | 'fairy';
 export interface Spot { x: number; y: number; icon: string; name: string; say: string }
 export interface Trip {
   id: TripId; name: string; icon: string; bg: string; price: number; souvenir: string; line: string;
@@ -33,6 +34,9 @@ export const TRIPS: Trip[] = [
   { id: 'swiss', name: 'Thuỵ Sĩ', icon: '🏔️', bg: 'linear-gradient(#e8f4ff,#5a9a6a)', price: 70, souvenir: 'chocolate', line: 'Tàu đỏ chạy qua núi tuyết, uống sô-cô-la nóng trong nhà gỗ.',
     sky: ['#7ab8f0', '#e8f4ff'], ground: ['#8ac878', '#7ab868'], far: 'snow', food: { name: 'Fondue phô mai', icon: '🫕' },
     spots: [S(60, 98, '🚂', 'Ga tàu núi', 'Tàu Glacier Express chạy qua 291 cây cầu!'), S(196, 98, '🏠', 'Nhà gỗ chalet', 'Vào đây uống sô-cô-la nóng cho ấm ☕')] },
+  { id: 'fairy', name: 'Vương quốc Cổ Tích', icon: '🏰', bg: 'linear-gradient(#ffd8f0,#8ab8ff)', price: 70, souvenir: 'fa_balloon', line: 'Lâu đài pháo hoa, đoàn diễu hành ánh sáng và tàu lượn Sao Băng dài nhất vùng — một ngày như trong truyện cổ tích.',
+    sky: ['#8ac8f8', '#ffe0f0'], ground: ['#e8c8a8', '#d8b494'], far: 'hills', food: { name: 'Churros quế', icon: '🥨' },
+    spots: [S(128, 96, '🏰', 'Lâu đài Cổ Tích', 'Tối nay có pháo hoa trên lâu đài đó ✨'), S(206, 100, '🎢', 'Tàu lượn Sao Băng', 'Ngồi hàng đầu cho đã nha 😆')] },
   { id: 'iceland', name: 'Iceland', icon: '🌌', bg: 'linear-gradient(#0a1a3a,#3ac88a)', price: 80, souvenir: 'star_lantern', line: 'Nằm giữa trời lạnh ngắm cực quang nhảy múa, tay trong tay.',
     sky: ['#0a1030', '#1a3060'], ground: ['#e8f0f8', '#d8e4f0'], far: 'snow', food: { name: 'Súp thịt cừu', icon: '🍲' },
     spots: [S(80, 98, '🌌', 'Đồi ngắm cực quang', 'Cực quang hiện rồi kìa!! Ước đi 💚'), S(200, 100, '♨️', 'Suối nước nóng Blue Lagoon', 'Ngâm mình nước ấm giữa trời tuyết, sướng ghê')] },
@@ -115,6 +119,7 @@ const LANDMARK: Record<TripId, (p: Pen, night: boolean, r: () => number) => void
     house(p, 170, 100, 40, 20, '#a8683a', '#7a3a2a', '#fff0c8'); p.rect(166, 76, 48, 4, '#ffffff');
     p.rect(0, 96, 256, 2, '#5a4a3a'); for (let i = 0; i < 4; i++) { p.rect(20 + i * 22, 86, 20, 10, '#d8302a'); p.rect(22 + i * 22, 88, 16, 4, '#c8e8ff'); }
   },
+  fairy: p => castle(p, null, 128, 100, 0.4),
   iceland: p => { for (let i = 0; i < 4; i++) house(p, 150 + i * 24, 100, 18, 12, ['#d8302a', '#f6c445', '#3a6ad0', '#ffffff'][i], '#2a2a3a', '#ffe08a'); },
 };
 // Hội An: dãy nhà vàng mái ngói, đèn lồng giăng, Chùa Cầu ở giữa
@@ -136,5 +141,6 @@ export const TRIP_MENU: Record<TripId, Dish[]> = {
   paris: [D('Croissant', '🥐'), D('Bánh macaron', '🧁'), D('Súp hành', '🥣'), D('Bít tết khoai tây', '🥩'), D('Vang đỏ', '🍷', true)],
   venice: [D('Pizza', '🍕'), D('Mì Ý mực đen', '🍝'), D('Gelato', '🍨'), D('Tiramisu', '🍰'), D('Cà phê espresso', '☕', true)],
   swiss: [D('Fondue phô mai', '🫕'), D('Rösti khoai tây', '🥔'), D('Sô-cô-la Thuỵ Sĩ', '🍫'), D('Xúc xích nướng', '🌭'), D('Sô-cô-la nóng', '☕', true)],
+  fairy: [D('Churros quế', '🥨'), D('Đùi gà tây nướng', '🍗'), D('Bắp rang bơ', '🍿'), D('Bánh waffle trái tim', '🧇'), D('Nước chanh hồng', '🍹', true)],
   iceland: [D('Súp thịt cừu', '🍲'), D('Cá hồi nướng', '🐟'), D('Skyr', '🥛'), D('Xúc xích Pylsur', '🌭'), D('Trà nóng', '🍵', true)],
 };

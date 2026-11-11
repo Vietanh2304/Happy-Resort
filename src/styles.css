@@ -1806,3 +1806,25 @@ textarea { resize: vertical; }
 .exit-chip.fly-chip { bottom: auto; top: 10px; left: 50%; transform: translateX(-50%); background: #e8f4ff; white-space: nowrap; animation: glow 1.6s ease-in-out infinite; }
 .cam-poses { display: flex; gap: 4px; flex-wrap: wrap; justify-content: center; width: 100%; order: 9; }
 @media (pointer: coarse) { .fw-p:nth-child(3n) { display: none; } }
+
+/* ── Vương quốc Cổ Tích: show lâu đài, diễu hành, tách trà, tàu lượn toàn màn hình */
+.fa-veil { position: absolute; left: 0; top: 0; background: #0a0a3a; mix-blend-mode: multiply; opacity: .6; z-index: 1; pointer-events: none; transition: opacity .3s; }
+.fa-veil { background: #1a1650c8; mix-blend-mode: normal; }
+.fa-proj { opacity: .42; mix-blend-mode: screen; pointer-events: none; animation: faproj 2.5s ease-in-out both; }
+@keyframes faproj { 0% { opacity: 0; } 20%, 80% { opacity: .5; } 100% { opacity: .15; } }
+.fa-fairy { position: absolute; width: calc(var(--s) * 2); height: calc(var(--s) * 2); background: #fff6c0; box-shadow: 0 0 calc(var(--s) * 3) #ffe880, calc(var(--s) * -3) calc(var(--s) * 1) 0 #ffd84a, calc(var(--s) * -6) calc(var(--s) * 2) 0 #ffd84a99, calc(var(--s) * -9) calc(var(--s) * 3) 0 #ffd84a55; z-index: 4; pointer-events: none; animation: fafly 8s ease-in-out both; }
+@keyframes fafly { 0% { transform: translate(0, 0); } 30% { transform: translate(calc(var(--s) * 70), calc(var(--s) * 20)); } 60% { transform: translate(calc(var(--s) * -60), calc(var(--s) * 40)); } 100% { transform: translate(calc(var(--s) * 10), calc(var(--s) * 92)); opacity: 0; } }
+.fa-lit { filter: drop-shadow(0 0 3px #ffe08a) brightness(1.08); }
+.fa-glint { filter: drop-shadow(0 0 4px #fff6c0); animation: faglint .5s ease-in-out infinite alternate; }
+@keyframes faglint { to { filter: drop-shadow(0 0 8px #ffffff); } }
+.fa-wobble { animation: fawob .35s ease-in-out infinite alternate; }
+@keyframes fawob { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+.coaster { position: fixed; inset: 0; z-index: 9000; background: #000; display: flex; align-items: center; justify-content: center; }
+.coaster canvas { width: min(100vw, 177.7vh); height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; }
+.coaster-line { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: #fffaf0ee; color: #3a2430; padding: 6px 14px; border-radius: 14px; font-size: 15px; white-space: nowrap; }
+.coaster-flash { position: absolute; inset: 0; background: #fff; animation: cfl .25s ease-out both; pointer-events: none; }
+@keyframes cfl { from { opacity: 1; } to { opacity: 0; } }
+.coaster-x { position: absolute; top: 10px; right: 10px; }
+.coaster-end { position: absolute; background: #fffaf0; border-radius: 16px; padding: 14px; max-width: min(92vw, 520px); text-align: center; box-shadow: 0 8px 30px #0008; }
+.coaster-end img { width: 100%; image-rendering: pixelated; border: 4px solid #f6c445; border-radius: 6px; }
+.coaster-end .row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }

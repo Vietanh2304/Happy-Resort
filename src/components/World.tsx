@@ -69,6 +69,7 @@ import { beachSetSprite, loungeBackground, type SeaSpot } from '../lib/seaView';
 const PUDDLES: [number, number, number][] = [[30, 150, 18], [88, 128, 14], [140, 170, 20], [205, 140, 16], [60, 200, 15], [170, 215, 18]];
 import { tripCtx, tripOf, type TripId } from '../lib/trips';
 import { TripExtras } from './TripExtras';
+import { FairyContent } from './FairyPark';
 import { bigUmbrellaSprite } from '../lib/tripArt';
 import { TripContent } from './Trip';
 import { FEST, festSprite, garland } from '../lib/festArt';
@@ -402,6 +403,7 @@ function SceneContent(p: WorldProps) {
       {spotOf(scene) && <SpotContent spot={spotOf(scene)!} scene={scene as SpotScene} me={me} live={live} partnerHere={!!p.partnerHere} looks={{ me: myDress.look, them: theirDress.look }} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} onCamera={() => p.onCamera?.()} today={p.myView.time.date} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland_aurora'} go={go} />}
       {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <FxList fx={mainOf(scene.slice(5) as TripId).fx} scene={scene} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland'} />}
       {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <TripContent trip={tripOf(scene.slice(5))!} me={me} today={p.myView.time.date} go={go} enter={enter} live={live} onAnim={n => p.onAnim?.(n)} onCamera={() => p.onCamera?.()} onShop={() => p.onTripShop?.()} onClass={() => p.onTripClass?.()} />}
+      {scene.startsWith('trip_fairy_') && <FairyContent scene={scene} live={live} partnerHere={!!p.partnerHere} looks={{ me: myDress.look, them: theirDress.look }} go={go} onAnim={n => p.onAnim?.(n)} night={phase === 'night' || phase === 'sunset'} phase={phase} />}
       {scene.startsWith('trip_') && tripOf(scene.split('_')[1]) && <TripExtras scene={scene} trip={scene.split('_')[1] as TripId} spot={spotOf(scene)} me={me} partner={partner} live={live} partnerHere={!!p.partnerHere} go={go} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} night={phase === 'night' || phase === 'sunset'} today={p.myView.time.date} />}
       {scene === 'city' && <CityContent go={go} night={phase === 'night'} onStall={id => p.stall?.(id)} onOffice={() => enter('office')} onHome={() => enter('town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 })} />}
       {scene === 'office' && p.job && p.work && (
@@ -531,12 +533,12 @@ function SceneContent(p: WorldProps) {
       {/* Nhân vật */}
       {(myBed || theirBed) && <BedLayer {...p} myBed={myBed} theirBed={theirBed} />}
       <KidLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />
-      {!myBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride'].includes(live.mine.act ?? '')) && <Avatar
+      {!myBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin'].includes(live.mine.act ?? '')) && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')} makeup={live.mine.act === 'makeup'} riding={live.mine.horse && SCENES[scene].outdoor ? horseKind(p.animals, live.mine.horse) : undefined}
         sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : SINK_ACTS.includes(live.mine.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
-      {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride'].includes(theirs.act ?? '')) && (
+      {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin'].includes(theirs.act ?? '')) && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')} makeup={theirs.act === 'makeup'} riding={theirs.horse && SCENES[scene].outdoor ? horseKind(p.animals, theirs.horse) : undefined}
@@ -1056,17 +1058,20 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
   const theirs = p.partnerHere ? live.theirs : null;
   const out: ReactNode[] = [];
   let homeIdx = 0;
+  const nWith = { me: 0, partner: 0 };
   for (const k of born) {
     const stage = kidStage(k, today);
     const look = kidLook(k, p.me, p.partner);
     const girl = k.gender === 'f';
     const sad = kidMood(k).low.length > 0;
-    const walker = live.mine.walkKid === k.id ? 'me' : live.theirs?.walkKid === k.id ? 'partner' : null;
+    const walker = live.mine.walkKid === k.id || live.mine.walkAll ? 'me' : live.theirs?.walkKid === k.id || live.theirs?.walkAll ? 'partner' : null;
     if (walker) {
       const who = walker === 'me' ? live.mine : theirs;
-      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom' || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask'].includes(who.act ?? ''))) continue;
+      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom' || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask', 'coaster', 'spin'].includes(who.act ?? ''))) continue;
       const seat = walker === 'me' ? p.mySeat : p.theirSeat;
-      const at = seat ? { x: seat.x + (seat.left ? -12 : 12), y: seat.y + 3 } : { x: who.pos.x + 10, y: who.pos.y + 1 };
+      // nhiều bé cùng đi: xếp xen kẽ hai bên, xa dần
+      const n = nWith[walker]++, side = n % 2 ? -1 : 1, gap = 10 + Math.floor(n / 2) * 9;
+      const at = seat ? { x: seat.x + (seat.left ? -1 : 1) * (n % 2 ? -1 : 1) * (12 + Math.floor(n / 2) * 9), y: seat.y + 3 } : { x: who.pos.x + side * gap, y: who.pos.y + 1 + (n % 2) };
       out.push(<Follower key={k.id} sprite={stage === 'baby' ? strollerSprite() : kidSprite(stage, look, 'idle', girl)} walk={stage === 'baby' ? undefined : kidSprite(stage, look, 'walk', girl)} x={at.x} y={at.y} title={`👶 ${k.name}`} onClick={() => p.on.kid(k.id)} />);
       continue;
     }
@@ -1716,7 +1721,7 @@ function FlyingVisitor({ id, home, name, className, onClick }: { id: string; hom
 }
 
 /** Nhà hàng ở điểm du lịch: cửa sổ vòm nhìn ra địa danh của nơi đó (sáng/tối theo giờ) */
-const WINDOW_FOCUS: Record<TripId, number> = { taichung: 0.3, gwangju: 0.45, hoian: 0.55, tokyo: 0.23, paris: 0.87, venice: 0.64, swiss: 0.58, iceland: 0.5 };
+const WINDOW_FOCUS: Record<TripId, number> = { taichung: 0.3, gwangju: 0.45, hoian: 0.55, tokyo: 0.23, paris: 0.87, venice: 0.64, swiss: 0.58, iceland: 0.5, fairy: 0.5 };
 function TripWindow({ trip, hour }: { trip: TripId; hour: number }) {
   const s = useScale();
   const ph: Phase = hour >= 19 || hour < 5 ? 'night' : hour >= 17 ? 'sunset' : hour < 7 ? 'dawn' : 'day';

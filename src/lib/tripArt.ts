@@ -3,6 +3,7 @@ import { ellipse } from './iso';
 import { makeSprite, mix, type Pen } from './pixel';
 import type { Art } from './furniture';
 import type { TripId } from './trips';
+import { balloonDecoSprite, castleModelSprite, musicBoxSprite } from './fairyArt';
 
 const WOOD = '#a8703f', WOOD_D = '#7a4e2c', GOLD = '#f6c64e', RED = '#d8343c', CREAM = '#fbefdc';
 const frame = (p: Pen, w: number, h: number, c = WOOD) => { p.rect(0, 0, w, h, c); p.rect(1, 1, w - 2, h - 2, mix(c, '#000000', 0.25)); };
@@ -140,13 +141,14 @@ export const TRIP_ART: Record<string, Art> = {
   ch_cuckoo_clock: { place: 'wall', sprite: cuckoo }, ch_cowbell_deco: { place: 'wall', sprite: cowbell },
   is_aurora_painting: { place: 'wall', sprite: auroraPainting, glow: true }, is_puffin_plush: { place: 'any', sprite: puffin },
   travel_globe: { place: 'any', sprite: globe, glow: true },
+  fa_castle_model: { place: 'any', sprite: castleModelSprite, glow: true }, fa_music_box: { place: 'any', sprite: musicBoxSprite }, fa_balloon: { place: 'any', sprite: balloonDecoSprite },
 };
 /** Chợ lưu niệm mỗi nơi: [id, giá] */
 export const TRIP_SHOP: Record<TripId, [string, number][]> = {
   taichung: [['tw_sky_lantern', 25], ['tw_rainbow_art', 30]], gwangju: [['kr_maple_frame', 25], ['kr_hanbok_doll', 30]],
   hoian: [['hoian_lanterns', 20], ['hoian_basket_boat', 25]], tokyo: [['jp_maneki', 30], ['jp_daruma', 25]],
   paris: [['fr_eiffel_model', 35], ['fr_paris_poster', 25]], venice: [['it_gondola_model', 35], ['it_carnival_mask', 30]],
-  swiss: [['ch_cuckoo_clock', 40], ['ch_cowbell_deco', 25]], iceland: [['is_aurora_painting', 40], ['is_puffin_plush', 30]],
+  swiss: [['ch_cuckoo_clock', 40], ['ch_cowbell_deco', 25]], fairy: [['fa_castle_model', 45], ['fa_music_box', 35]], iceland: [['is_aurora_painting', 40], ['is_puffin_plush', 30]],
 };
 
 // ── Khoá tình yêu: lan can treo khoá, ổ khoá màu

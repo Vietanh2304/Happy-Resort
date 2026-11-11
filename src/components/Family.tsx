@@ -51,7 +51,7 @@ export function KidSheet({ kids, me, partner, today, live, pick, onClose, onDo }
   const look = kidLook(kid, me, partner);
   const age = kidAge(kid, today);
   const mood = kidMood(kid);
-  const walking = live.mine.walkKid === kid.id;
+  const walking = live.mine.walkKid === kid.id || !!live.mine.walkAll;
   const callMe = me.avatar?.gender === 'm' ? 'Ba' : me.avatar?.gender === 'f' ? 'Mẹ' : 'Ba mẹ';
 
   async function act(a: CareAction) {
@@ -97,7 +97,7 @@ export function KidSheet({ kids, me, partner, today, live, pick, onClose, onDo }
       <div className="care-grid">
         {ACTIONS[stage].map(a => <button key={a.id} className="bag-item" onClick={() => act(a)}><span className="care-icon">{a.icon}</span><small>{a.label}</small></button>)}
       </div>
-      <button className={`btn small ${walking ? '' : 'ghost'}`} onClick={() => { live.update({ walkKid: walking ? null : kid.id }); onClose(); toast(walking ? `🏠 Đưa bé ${kid.name} về nhà` : stage === 'baby' ? `👶 Đẩy xe cho bé ${kid.name} đi dạo` : `🧒 Bé ${kid.name} nắm tay ${callMe.toLowerCase()} đi chơi`); }}>
+      <button className={`btn small ${walking ? '' : 'ghost'}`} onClick={() => { live.update({ walkKid: walking ? null : kid.id, walkAll: false }); onClose(); toast(walking ? `🏠 Đưa bé ${kid.name} về nhà` : stage === 'baby' ? `👶 Đẩy xe cho bé ${kid.name} đi dạo` : `🧒 Bé ${kid.name} nắm tay ${callMe.toLowerCase()} đi chơi`); }}>
         {walking ? '🏠 Đưa bé về nhà' : stage === 'baby' ? '👶 Đẩy xe đưa bé đi dạo' : '🧒 Dắt bé đi chơi'}
       </button>
       <div className="field">

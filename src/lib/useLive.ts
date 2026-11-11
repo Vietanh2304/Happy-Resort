@@ -31,6 +31,7 @@ export interface LiveState {
   ride?: number;          // lúc bấm quay vòng đu quay
   bed?: string | null;    // đang nằm trên giường nào (act = 'sleep' | 'intimate')
   walkKid?: string | null; // đang dắt bé nào đi chơi
+  walkAll?: boolean;        // dắt tất cả các bé cùng đi (du lịch cả nhà)
   care?: string | null;
   horse?: string | boolean | null;   // đang cưỡi ngựa nào (id con ngựa)
   petTrick?: { t: 'sit' | 'shake' | 'roll'; at: number } | null;   // thú cưng đang làm trò         // đang cưỡi ngựa    // đang chăm bé nào (bế, cho bú, ru, tắm)

@@ -5,6 +5,7 @@ import type { Weather } from './weather';
 import { mix, type Pen } from './pixel';
 import { band, bldg, dither, eiffel, hoianHouse, roofEA, venHouse, vsign, circle, paint, pine, rail, ridge, sky, speckle, string, tiles, tree, water, type Fx, type Light } from './tripSpots';
 import type { TripId } from './trips';
+import { drawFairyMain } from './fairyArt';
 
 interface MainDef { draw: (p: Pen, L: Light) => void; fx: Fx[]; lines: string[]; night?: boolean }
 
@@ -193,6 +194,11 @@ const MAIN: Record<TripId, MainDef> = {
     fx: [{ k: 'move', spr: 'train', x: -80, y: 140, dx: 420, dur: 14, loop: true }, { k: 'steam', x: 40, y: 64, n: 2 }, { k: 'steam', x: 144, y: 64, n: 2 }, { k: 'fall', n: 16, c: ['#ffffff'], size: 2, slow: true }, { k: 'bird', x: 60, y: 20, icon: '🦅', n: 1 }],
     lines: ['Grüezi!', 'Tàu đỏ tới rồi kìa', 'Không khí trong lành ghê', 'Mua sô-cô-la đi', 'Bò đeo chuông dễ thương quá'],
   },
+  fairy: {
+    draw: drawFairyMain,
+    fx: [{ k: 'sparkle', x: 60, y: 10, w: 136, h: 80, n: 14 }, { k: 'bird', x: 40, y: 20, icon: '🕊️', n: 2 }, { k: 'glow', x: 128, y: 70, r: 70, c: '#ff8ad8', night: true }],
+    lines: ['Lâu đài kìa!!', 'Đi tàu lượn trước nha', 'Mua bóng bay đi', 'Mấy giờ diễu hành ta?', 'Vui như con nít luôn 😆'],
+  },
   iceland: {
     night: true,
     draw: (p, L) => {
@@ -224,7 +230,7 @@ export const mainOf = (id: TripId) => MAIN[id];
 const CLIMATE: Record<TripId, [number, number, number[]]> = {
   taichung: [26, 31, [0.5, 0.3, 0.2, 0, 0]], gwangju: [9, 16, [0.5, 0.35, 0.15, 0, 0]], hoian: [27, 32, [0.6, 0.25, 0.15, 0, 0]],
   tokyo: [13, 19, [0.55, 0.35, 0.1, 0, 0]], paris: [11, 17, [0.35, 0.45, 0.2, 0, 0]], venice: [18, 24, [0.6, 0.3, 0, 0, 0.1]],
-  swiss: [-3, 4, [0.45, 0.1, 0, 0.45, 0]], iceland: [-7, -1, [0.4, 0, 0, 0.5, 0.1]],
+  swiss: [-3, 4, [0.45, 0.1, 0, 0.45, 0]], fairy: [18, 27, [0.75, 0.2, 0.05, 0, 0]], iceland: [-7, -1, [0.4, 0, 0, 0.5, 0.1]],
 };
 const WX: WeatherType[] = ['clear', 'cloudy', 'rain', 'snow', 'fog'];
 /** Thời tiết ở điểm du lịch theo ngày + buổi (đổi mỗi 6 tiếng) */

@@ -75,6 +75,7 @@ export const CLASS_RECIPES: Record<string, KRecipe[]> = {
   paris: [{ id: 'fr_crepe', needs: ['flour', 'egg', 'milk'], m: 'S' }, { id: 'fr_onion_soup', needs: ['garlic', 'butter', 'bread'], m: 'S' }],
   venice: [{ id: 'it_pizza', needs: ['flour', 'tomato', 'cheese'], m: 'S' }, { id: 'it_pasta', needs: ['noodle_raw', 'tomato', 'garlic'], m: 'S' }],
   swiss: [{ id: 'ch_fondue', needs: ['cheese', 'cheese', 'bread'], m: 'S' }, { id: 'ch_rosti', needs: ['potato', 'butter'], m: 'S' }],
+  fairy: [{ id: 'fa_churro', needs: ['flour', 'egg', 'butter'], m: 'S' }, { id: 'fa_popcorn', needs: ['corn', 'butter'], m: 'S' }],
   iceland: [{ id: 'is_salmon', needs: ['salmon', 'butter'], m: 'S' }, { id: 'is_lamb_soup', needs: ['beef', 'potato', 'carrot'], m: 'S' }],
 };
 export let KRECIPES: KRecipe[] = HOME_RECIPES;

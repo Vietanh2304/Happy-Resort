@@ -115,7 +115,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     setTimeout(() => setFx(f => f.filter(e => e.n < t || e.n >= t + 1)), 2600);
   };
   const anim = (n: AnimName, times = 1) => { for (let k = 0; k < times; k++) setTimeout(() => onAnim(n), k * 800); };
-  const doAct = (a: Act, i: number) => go(a.k === 'do' && a.at ? a.at : near(a), () => {
+  const doAct = (a: Act, i: number) => go((a.k === 'do' || a.k === 'park') && a.at ? a.at : near(a), () => {
     const at = L.current.mine.pos;
     if (a.k === 'buy') return void run(async () => {
       const it = item(a.item);
@@ -128,6 +128,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       live.say(`${it.icon} Ngon quá!`);
     });
     if (a.k === 'photo') return onCamera();
+    if (a.k === 'park') return void window.dispatchEvent(new CustomEvent('fairy-act', { detail: { ride: a.ride, i } }));
     if (a.k === 'fortune') {
       live.update({ act: 'shake' }); live.say('🎋 Lắc lắc… lắc lắc…');
       setTimeout(() => { if (L.current.mine.act !== 'shake') return; L.current.update({ act: 'omikuji' }); L.current.say(`📜 ${FORTUNES[Math.floor(Math.random() * FORTUNES.length)]}`); }, 2400);

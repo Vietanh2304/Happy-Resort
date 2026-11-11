@@ -2070,6 +2070,36 @@
       "name": "Súp thịt Iceland",
       "icon": "🍲",
       "kind": "dish"
+    },
+    {
+      "id": "fa_castle_model",
+      "name": "Mô hình lâu đài cổ tích",
+      "icon": "🏰",
+      "kind": "decor"
+    },
+    {
+      "id": "fa_music_box",
+      "name": "Hộp nhạc ngựa gỗ",
+      "icon": "🎠",
+      "kind": "decor"
+    },
+    {
+      "id": "fa_balloon",
+      "name": "Chùm bóng bay trái tim",
+      "icon": "🎈",
+      "kind": "decor"
+    },
+    {
+      "id": "fa_churro",
+      "name": "Churros quế",
+      "icon": "🥨",
+      "kind": "dish"
+    },
+    {
+      "id": "fa_popcorn",
+      "name": "Bắp rang bơ",
+      "icon": "🍿",
+      "kind": "dish"
     }
   ],
   "animals": [

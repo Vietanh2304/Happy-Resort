@@ -644,7 +644,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     if (confirm(`😢 ${partnerName} chưa đi được lúc này. Bạn vẫn muốn bay một mình không? (vé đã mua)`)) flyTo(id);
   }), []); // eslint-disable-line react-hooks/exhaustive-deps
   function startTrip(id: TripId, kid: string | null) {
-    live.update({ walkKid: kid });
+    const all = kid === 'all';
+    live.update({ walkKid: all ? kids.find(k => k.name)?.id ?? null : kid, walkAll: all });
     if (!partnerOnline) { toast(`✈️ ${partnerName} đang offline — bạn bay trước, người ấy vào game sẽ thấy bạn đang ở đâu`); flyTo(id); return; }
     pendingTrip.current = id; sendEvent('trip-invite', { id });
     toast(`💌 Đã mời ${partnerName} — chờ người ấy đồng ý rồi cùng bay`);
@@ -1086,11 +1087,11 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       ) : scene === 'school' ? (
         <SchoolPanel live={live} kids={kids} when={myTime} partnerHere={!!partnerHere} partnerName={partnerName} onLeave={() => enter('campus', CAMPUS.door)}
           onStudy={() => setSheet({ kind: 'study' })} onMeeting={() => (myTime.hour >= 17 ? setSheet({ kind: 'meeting' }) : toast('📣 Họp phụ huynh bắt đầu lúc 17:00 — tới giờ quay lại nhé'))}
-          onPickup={k => { enter('town', SCHOOL.door); live.update({ walkKid: k.id }); toast(`🎒 Đón bé ${k.name} tan học — bé nắm tay đi về cùng bạn`); }} />
+          onPickup={k => { enter('town', SCHOOL.door); live.update({ walkKid: k.id, walkAll: false }); toast(`🎒 Đón bé ${k.name} tan học — bé nắm tay đi về cùng bạn`); }} />
       ) : scene === 'campus' ? (
         <CampusPanel live={live} kids={kids} when={myTime} partnerHere={!!partnerHere} partnerName={partnerName}
           onClass={() => enter('school')} onStall={id => setSheet({ kind: 'stall', id })} onLeave={() => enter('town', SCHOOL.door)}
-          onPickup={k => { enter('town', SCHOOL.door); live.update({ walkKid: k.id }); toast(`🎒 Đón bé ${k.name} tan học — bé nắm tay đi về cùng bạn`); }} />
+          onPickup={k => { enter('town', SCHOOL.door); live.update({ walkKid: k.id, walkAll: false }); toast(`🎒 Đón bé ${k.name} tan học — bé nắm tay đi về cùng bạn`); }} />
       ) : scene === 'gym' ? (
         <div className="room-bar">
           <div className="room-panel">
@@ -1198,7 +1199,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'diary' && <DiarySheet me={me} partner={partner} today={myTime.date} mems={mems} onClose={close} />}
       {sheet?.kind === 'festival' && festKind && <FestivalSheet kind={festKind} me={me} partner={partner} today={myTime.date} mems={mems} inventory={inventory} kids={kids} onClose={close} />}
       {sheet?.kind === 'tripshop' && tripHere && <TripShopSheet trip={tripHere as TripId} coins={couple?.coins ?? 0} onClose={close} onBought={(url, name) => { doAct('rummage'); setTimeout(() => { doAct('cheer'); window.dispatchEvent(new CustomEvent('trip-pop', { detail: { url } })); live.say(`🛍️ Mua ${name} mang về trang trí nhà!`); }, 900); }} />}
-      {sheet?.kind === 'travel' && <TravelSheet me={me} partner={partner} coins={couple?.coins ?? 0} mems={mems} today={myTime.date} onClose={close} kids={kids.filter(k => k.name).map(k => ({ id: k.id, name: k.name }))} kidWith={live.mine.walkKid ?? null} onFly={startTrip} />}
+      {sheet?.kind === 'travel' && <TravelSheet me={me} partner={partner} coins={couple?.coins ?? 0} mems={mems} today={myTime.date} onClose={close} kids={kids.filter(k => k.name).map(k => ({ id: k.id, name: k.name }))} kidWith={live.mine.walkAll ? 'all' : live.mine.walkKid ?? null} onFly={startTrip} />}
       {flight && <FlightOverlay to={flight.name} onDone={() => { const f = flight; setFlight(null); tripCtx.at = f.to.startsWith('trip_') ? (f.to.slice(5) as TripId) : ''; enter(f.to); }} />}
       {festKind === 'midautumn' && myTime.hour >= 18 && <LanternParade mems={mems} year={myTime.date.slice(0, 4)} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} kinds={animals.reduce<Record<string, number>>((m, a) => ({ ...m, [a.kind]: (m[a.kind] ?? 0) + 1 }), {})} coins={couple?.coins ?? 0} onClose={close} />}

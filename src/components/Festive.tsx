@@ -193,12 +193,13 @@ export function LanternParade({ mems, year }: { mems: api.Memory[]; year: string
 export function TravelSheet({ me, partner, coins, mems, onClose, onFly, kids = [], kidWith = null }: { me: api.Profile; partner: api.Profile | null; coins: number; mems: api.Memory[]; today: string; onClose: () => void; onFly: (id: TripId, kid: string | null) => void; kids?: { id: string; name: string }[]; kidWith?: string | null }) {
   const cards = mems.filter(m => m.kind === 'postcard');
   const [kid, setKid] = useState<string | null>(kidWith);
-  const kidName = kids.find(k => k.id === kid)?.name;
-  const cost = (t: Trip) => t.price + (kid ? Math.ceil(t.price / 2) : 0);
+  const all = kid === 'all', nKids = all ? kids.length : kid ? 1 : 0;
+  const kidName = all ? `cả ${kids.length} bé` : kids.find(k => k.id === kid)?.name;
+  const cost = (t: Trip) => t.price + nKids * Math.ceil(t.price / 2);
   const go = (t: Trip) => run(async () => {
-    if (!confirm(`✈️ Mua vé đi ${t.name} hết ${cost(t)} xu${kidName ? ` (gồm vé trẻ em cho bé ${kidName})` : ''}? (kèm quà lưu niệm ${item(t.souvenir).icon}, về làng miễn phí)`)) return;
+    if (!confirm(`✈️ Mua vé đi ${t.name} hết ${cost(t)} xu${kidName ? ` (gồm vé trẻ em cho ${all ? kidName : `bé ${kidName}`})` : ''}? (kèm quà lưu niệm ${item(t.souvenir).icon}, về làng miễn phí)`)) return;
     await api.buyItem(t.souvenir, t.price);
-    if (kid) await api.buyItem(t.souvenir, Math.ceil(t.price / 2));
+    for (let k = 0; k < nKids; k++) await api.buyItem(t.souvenir, Math.ceil(t.price / 2));
     notify('inventory', 'profiles');
     onClose(); onFly(t.id, kid);
   });
@@ -211,6 +212,7 @@ export function TravelSheet({ me, partner, coins, mems, onClose, onFly, kids = [
           <span className="muted small-note">👶 Đưa bé đi cùng:</span>
           <button className={`btn small ${kid ? 'ghost' : ''}`} onClick={() => setKid(null)}>Không</button>
           {kids.map(k => <button key={k.id} className={`btn small ${kid === k.id ? '' : 'ghost'}`} onClick={() => setKid(k.id)}>{k.name}</button>)}
+          {kids.length > 1 && <button className={`btn small ${all ? '' : 'ghost'}`} onClick={() => setKid('all')}>👨‍👩‍👧‍👦 Tất cả {kids.length} bé</button>}
         </div>
       )}
       <div className="bag-grid">
