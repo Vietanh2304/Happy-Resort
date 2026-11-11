@@ -73,8 +73,7 @@ export function Stroller({ seed, i, box = TRIP_WALK, lines = TOURIST, jobs, call
   );
 }
 
-export function TripContent({ trip, me, today, go, enter, live, onAnim }: { trip: Trip; me: api.Profile; today: string; go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void; live: Live; onAnim: (n: AnimName) => void }) {
-  const [flash, setFlash] = useState(0);
+export function TripContent({ trip, me, today, go, enter, live, onAnim, onCamera }: { trip: Trip; me: api.Profile; today: string; go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void; live: Live; onAnim: (n: AnimName) => void; onCamera: () => void }) {
   const mainJobs = useMemo<NpcJob[]>(() => [{ x: 128, y: 166, frame: 'idle', view: 'front', say: '📸 Chụp giùm tấm nha' }, { x: 212, y: 166, frame: 'idle', view: 'front', say: 'Mua quà về cho mẹ' }, { x: 56, y: 166, frame: 'idle', hold: { spec: snackProp(trip.food.name) ?? drinkProp(trip.food.name), mode: snackProp(trip.food.name) ? 'eat' : 'sip' }, say: 'Đặc sản ngon ghê!' }], [trip]);
   const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
   const souvenir = () => run(async () => {
@@ -82,21 +81,13 @@ export function TripContent({ trip, me, today, go, enter, live, onAnim }: { trip
     if (!confirm(`Mua quà lưu niệm ${it.icon} ${it.name} (${price} xu)?`)) return;
     await api.buyItem(trip.souvenir, price); notify('inventory', 'profiles'); onAnim('cheer'); live.say(`${it.icon} Quà ${trip.name} nè!`); toast(`🛍️ Mua ${it.icon} ${it.name} làm kỷ niệm`);
   });
-  const photo = () => run(async () => {
-    live.say(live.theirs ? '📸 Cười lên nào… 1, 2, 3!' : '📸 Cheese!'); onAnim('cheer'); setTimeout(() => setFlash(Date.now()), 700);
-    const ok = await api.claim(`postcard:${trip.id}:${today}:${me.id}`);
-    if (!ok) return toast('📸 Hôm nay chụp ở đây rồi — bưu thiếp đã trong ✈️ Du lịch');
-    await api.addMemory(me, 'postcard', { trip: trip.id }, today); notify('memories', 'claims');
-    toast(`📸 Tách! Bưu thiếp ${trip.name} đã dán vào sổ du lịch`);
-  });
   return (
     <>
-      {flash > 0 && <div key={flash} className="trip-flash" />}
       {spotsOf(trip.id).map((s, k) => (
         <Tag key={s.scene} x={s.at} y={92 + (k % 2) * 8} className="label" onClick={() => go({ x: s.at, y: TRIP_WALK.y0 + 6 }, () => enter(s.scene))}>{s.icon} {s.name} ➜</Tag>
       ))}
       <Tag x={44} y={150} className="label" onClick={() => go({ x: 44, y: 160 }, () => { tripCtx.at = trip.id; enter('restaurant'); })}>🍽️ Quán {trip.food.icon} {trip.food.name}</Tag>
-      <Tag x={128} y={150} className="label" onClick={() => go({ x: 128, y: 160 }, () => void photo())}>📸 Chụp bưu thiếp</Tag>
+      <Tag x={128} y={150} className="label" onClick={() => go({ x: 128, y: 160 }, onCamera)}>📸 Chụp kỉ niệm</Tag>
       <Tag x={212} y={150} className="label" onClick={() => go({ x: 212, y: 160 }, () => void souvenir())}>🛍️ Quà lưu niệm {item(trip.souvenir).icon}</Tag>
       {[0, 1, 2, 3, 4, 5, 6, 7].map(i => <Stroller key={i} seed={trip.id} i={i} lines={mainOf(trip.id).lines} jobs={mainJobs} />)}
     </>

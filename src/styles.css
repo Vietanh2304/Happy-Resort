@@ -1750,3 +1750,15 @@ textarea { resize: vertical; }
 @keyframes fxland { from { translate: var(--dx) -60px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
 @keyframes peck { 50% { transform: translateY(1px) rotate(12deg); } }
 .spr.fx-ring { transform-origin: 50% 0; animation: fxsway .25s ease-in-out infinite alternate; }
+
+/* Máy ảnh chụp kỉ niệm */
+.cam-ui { position: fixed; inset: 0; z-index: 9000; pointer-events: none; }
+.cam-frame { position: absolute; inset: 8% 6% 22% 6%; }
+.cam-frame i { position: absolute; width: 34px; height: 34px; border: 4px solid #fff; filter: drop-shadow(0 0 2px #0008); }
+.cam-frame i:nth-child(1) { left: 0; top: 0; border-right: 0; border-bottom: 0; }
+.cam-frame i:nth-child(2) { right: 0; top: 0; border-left: 0; border-bottom: 0; }
+.cam-frame i:nth-child(3) { left: 0; bottom: 0; border-right: 0; border-top: 0; }
+.cam-frame i:nth-child(4) { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+.cam-bar { position: absolute; left: 0; right: 0; bottom: 4%; display: flex; justify-content: center; align-items: center; gap: 18px; pointer-events: auto; }
+.cam-shutter { width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 6px solid #ffffff80; box-shadow: 0 0 0 3px #fff, 0 4px 12px #0006; cursor: pointer; }
+.cam-shutter:active { transform: scale(.92); background: #f0f0f0; }
