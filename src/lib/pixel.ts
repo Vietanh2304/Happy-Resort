@@ -54,13 +54,14 @@ export function gradeCanvas(ctx: CanvasRenderingContext2D, w: number, h: number)
     }
     let L2 = l, S2 = s, H2 = hh;
     if (s > 0.08) {
-      if (hh > 65 && hh < 170) { H2 = hh - (hh - 92) * 0.45; S2 = Math.min(0.72, Math.max(s, 0.5) * 1.1); if (l > 0.4) L2 = 0.4 + (l - 0.4) * 0.5; }   // cỏ lá: lục đậm ngả vàng
+      if (hh > 65 && hh < 170) { H2 = hh - (hh - 92) * 0.45; S2 = Math.min(0.6, Math.max(s, 0.45)); if (l > 0.34) L2 = 0.34 + (l - 0.34) * 0.5; }   // cỏ lá: lục đậm ngả vàng
       else if (hh >= 170 && hh < 250) { H2 = hh + (208 - hh) * 0.3; S2 = Math.min(0.8, Math.max(s, 0.45)); if (l > 0.55) L2 = 0.55 + (l - 0.55) * 0.6; }   // nước, trời: lam đậm
       else if (hh >= 15 && hh <= 65) { S2 = Math.min(0.85, s * 1.12); if (l > 0.62) L2 = 0.62 + (l - 0.62) * 0.75; }                                  // gỗ, đất, cát: nâu vàng ấm
       else if (l > 0.66) L2 = 0.66 + (l - 0.66) * 0.75;                                                                                                // hồng, đỏ, tím: bớt bạc
     }
     if (L2 < 0.4) { const t = (0.4 - L2) / 0.4; H2 = s > 0.05 ? H2 + ((H2 > 120 ? 255 : -105) - H2) * 0.16 * t : 25; S2 = Math.max(S2, 0.25 * t); L2 *= 0.92; }   // bóng tối sâu, pha tím/nâu
     else if (L2 > 0.7 && s > 0.05) { const t = (L2 - 0.7) / 0.3; H2 = H2 + ((H2 > 230 ? 410 : 50) - H2) * 0.18 * t; }
+    if (L2 > 0.72) L2 = 0.72 + (L2 - 0.72) * 0.55;   // nén vùng sáng cho đỡ chói
     H2 = ((H2 % 360) + 360) % 360;
     const q = L2 < 0.5 ? L2 * (1 + S2) : L2 + S2 - L2 * S2, p = 2 * L2 - q;
     const f = (t: number) => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };

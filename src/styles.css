@@ -1764,9 +1764,9 @@ textarea { resize: vertical; }
 .cam-shutter:active { transform: scale(.92); background: #f0f0f0; }
 
 /* Chỉnh màu toàn game: tươi hơn, có chiều sâu (viền tối nhẹ + ánh sáng trên cao) */
-.stage { filter: saturate(1.04) contrast(1.05); }
+.stage { filter: contrast(1.03); }
 .stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 450;
-  background: linear-gradient(rgba(255, 236, 190, .12), transparent 40%), radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(60, 30, 50, .26) 100%); }
+  background: radial-gradient(ellipse at 50% 45%, transparent 60%, rgba(50, 30, 40, .18) 100%); }
 
 /* Lễ hội pixel */
 .fest-fall i.px-fall { position: absolute; top: -10px; display: block; image-rendering: pixelated; box-shadow: 0 0 0 1px #3a242030; }

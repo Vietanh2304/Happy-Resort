@@ -109,7 +109,6 @@ export async function captureWorld(): Promise<HTMLCanvasElement> {
   o.drawImage(cv, 0, 0);
   o.filter = 'none';
   const top = o.createLinearGradient(0, 0, 0, H * 0.35); top.addColorStop(0, 'rgba(255,244,214,.10)'); top.addColorStop(1, 'rgba(255,244,214,0)');
-  o.fillStyle = top; o.fillRect(0, 0, W, H);
   const vg = o.createRadialGradient(W / 2, H * 0.45, Math.min(W, H) * 0.35, W / 2, H * 0.45, Math.max(W, H) * 0.7);
   vg.addColorStop(0, 'rgba(40,16,60,0)'); vg.addColorStop(1, 'rgba(40,16,60,.22)');
   o.fillStyle = vg; o.fillRect(0, 0, W, H);
