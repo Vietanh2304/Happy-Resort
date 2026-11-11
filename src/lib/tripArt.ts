@@ -131,7 +131,17 @@ const globe = () => makeSprite('tv:globe', 16, 22, p => {
   p.rect(7, 16, 2, 3, '#c8a050'); p.rect(3, 19, 10, 3, WOOD); p.rect(3, 19, 10, 1, '#c98b4b');
 }, '#2a3a5a');
 
+// ── Bình gốm Thanh Hà tự nặn (xưởng gốm Hội An)
+const haVase = () => makeSprite('tv:ha_vase', 12, 18, p => {
+  const prof = [3, 4, 5, 5, 5, 5, 4, 4, 3, 2, 2, 2, 2, 3];
+  prof.forEach((r, k) => { const y = 16 - k; p.rect(6 - r, y, r * 2, 1, '#eef2f8'); p.rect(6 + Math.ceil(r / 2), y, Math.floor(r / 2), 1, '#c8d4e4'); });
+  p.rect(3, 15, 6, 1, '#2a5ab8'); p.rect(4, 5, 4, 1, '#2a5ab8'); p.rect(4, 3, 4, 1, '#c8d4e4');
+  for (const [x, y] of [[4, 11], [7, 12], [5, 9]]) { p.px(x, y, '#2a5ab8'); p.px(x + 1, y, '#2a5ab8'); p.px(x, y + 1, '#2a5ab8'); }
+  p.px(3, 10, '#ffffff'); p.px(3, 11, '#ffffff'); p.rect(2, 17, 8, 1, '#8a6a5a');
+}, '#1a2a4a');
+
 export const TRIP_ART: Record<string, Art> = {
+  ha_vase: { place: 'any', sprite: haVase },
   tw_sky_lantern: { place: 'any', sprite: skyLantern, glow: true }, tw_rainbow_art: { place: 'wall', sprite: rainbowArt },
   kr_maple_frame: { place: 'wall', sprite: mapleFrame }, kr_hanbok_doll: { place: 'any', sprite: hanbokDoll },
   hoian_lanterns: { place: 'wall', sprite: hoianLanterns, glow: true }, hoian_basket_boat: { place: 'any', sprite: basketBoat },

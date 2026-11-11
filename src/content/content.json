@@ -2090,6 +2090,12 @@
       "kind": "decor"
     },
     {
+      "id": "ha_vase",
+      "name": "Bình gốm Thanh Hà tự nặn",
+      "icon": "🏺",
+      "kind": "decor"
+    },
+    {
       "id": "fa_churro",
       "name": "Churros quế",
       "icon": "🥨",
