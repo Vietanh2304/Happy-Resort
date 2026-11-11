@@ -105,14 +105,14 @@ export function string(p: Pen, L: Light, x0: number, x1: number, y: number, sag:
 /** Vẽ nền một map tham quan (có cache theo phase) */
 export function spotBackground(scene: SpotScene, ph: Phase): Sprite {
   const s = SPOTS[scene];
-  return paint(`spot:v8:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora', s.trip === 'fairy');
+  return paint(`spot:v9:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora', s.trip === 'fairy');
 }
 /** Vẽ một cảnh: nền → phủ màu theo giờ → cửa sổ sáng, neon, đèn lồng có quầng */
 export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => void, ph: Phase, alwaysNight = false, soft = false): Sprite {
   return makeSprite(key, 256, 192, p => {
     const L: Light = { ph, night: ph === 'night' || alwaysNight, dusk: ph === 'sunset' && !alwaysNight, r: seeded(seed), wins: [], lamps: [], neon: [] };
     draw(p, L);
-    if (L.night) p.rect(0, 0, 256, 192, soft ? '#1a105030' : '#08103a70'); else if (L.dusk) p.rect(0, 0, 256, 192, '#ff70401c'); else if (ph === 'dawn') p.rect(0, 0, 256, 192, '#ffb0c014');
+    if (L.night && !soft) p.rect(0, 0, 256, 192, '#08103a70'); else if (L.dusk && !soft) p.rect(0, 0, 256, 192, '#ff70401c'); else if (ph === 'dawn') p.rect(0, 0, 256, 192, '#ffb0c014');
     const lit = L.night || L.dusk;
     if (lit) for (const [x, y, w, h] of L.wins) if (soft || L.r() < 0.75) { p.rect(x, y, w, h, L.r() < 0.5 ? '#ffd88a' : '#ffe8b0'); p.rect(x - 1, y - 1, w + 2, h + 2, '#ffd88a22'); }
     for (const f of L.post ?? []) f();
@@ -123,7 +123,7 @@ export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => voi
       p.rect(l.x, l.y, 3 * z, 4 * z, l.c); p.rect(l.x, l.y, 3 * z, 1, '#3a2a1a'); p.rect(l.x, l.y + 4 * z - 1, 3 * z, 1, '#3a2a1a');
       p.px(l.x + z, l.y + z, lit ? '#fff4c0' : mix(l.c, '#ffffff', 0.4));
     }
-  }, null);
+  }, null, soft);
 }
 
 // ───────── sprite nhỏ chuyển động ─────────

@@ -1,7 +1,9 @@
 // Disneyland: công viên giải trí ở điểm du lịch — lâu đài, đại lộ diễu hành, khu trò chơi (tàu lượn, ngựa gỗ, tách trà).
 // Toàn bộ vẽ pixel tay; lâu đài dùng chung cho phố chính, map lâu đài, chuyến tàu lượn và quà lưu niệm.
 import { ellipse } from './iso';
-import { makeSprite, mix, type Pen, type Sprite } from './pixel';
+import { makeSprite as mkRaw, mix, type Pen, type Sprite } from './pixel';
+/** Sprite màu tươi (không pha màu dịu như phần còn lại của game) */
+const makeSprite = (key: string, w: number, h: number, draw: (p: Pen) => void, outline: string | null = '#3a2420') => mkRaw(`v:${key}`, w, h, draw, outline, true);
 import { band, circle, dither, sky, speckle, string, tiles, tree, water, type Light } from './tripSpots';
 
 const GOLD = '#f6c445', GOLD_D = '#c8902a';
@@ -394,3 +396,15 @@ export const mascotSprite = (i: number, f: 0 | 1 | 2 | 3) => makeSprite(`fa-masc
   const shoe = id === 'penguin' || id === 'owl' ? '#f6a030' : id === 'panda' ? K : '#3a2a3a';
   p.rect(cx - 6 + step, 35, 5, 3, shoe); p.rect(cx + 1 - step, 35, 5, 3, shoe);
 }, '#2a1a24');
+
+/** Trống diễu hành (dùi gõ lên xuống) */
+export const drumSprite = (f: 0 | 1) => makeSprite(`fa-drum2:${f}`, 9, 8, p => {
+  p.rect(1, 3, 7, 5, '#e8303a'); p.rect(1, 3, 7, 1, '#ffffff'); p.rect(1, 7, 7, 1, '#ffffff'); p.px(3, 5, GOLD); p.px(5, 5, GOLD);
+  p.rect(f ? 2 : 1, f ? 1 : 0, 1, 3, '#f6eedf'); p.rect(f ? 6 : 7, f ? 0 : 1, 1, 3, '#f6eedf');
+}, '#3a1a24');
+/** Cờ hoa phất qua lại */
+export const flagSprite = (k: number, f: 0 | 1) => makeSprite(`fa-flag2:${k % 3}:${f}`, 8, 15, p => {
+  const c = ['#ff4a7a', '#4ad8ff', '#ffd84a'][k % 3];
+  p.rect(0, 1, 1, 14, GOLD_D); p.px(0, 0, GOLD);
+  for (let y = 0; y < 6; y++) { const w = 6 - Math.round(Math.abs(y - 3) * 0.5) - (f ? (y % 2) : ((y + 1) % 2)); p.rect(1, 1 + y, w, 1, y % 3 ? c : '#ffffff'); }
+}, '#3a1a24');

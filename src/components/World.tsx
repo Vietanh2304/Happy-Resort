@@ -559,7 +559,7 @@ function SceneContent(p: WorldProps) {
       {p.snowball && Date.now() - p.snowball.at < 1500 && <i key={p.snowball.at} className="snowball" style={{ left: p.snowball.from.x * s, top: (p.snowball.from.y - 14) * s, '--dx': `${(p.snowball.to.x - p.snowball.from.x) * s}px`, '--dy': `${(p.snowball.to.y - p.snowball.from.y) * s}px`, width: 4 * s, height: 4 * s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'snow' && <div className="px-snow" style={{ '--s': s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'fog' && <div className="px-fog" />}
-      {def.outdoor && scene !== 'hill' && <div className={`tint tint-${phase}`} />}
+      {def.outdoor && scene !== 'hill' && !scene.startsWith('trip_fairy') && <div className={`tint tint-${phase}`} />}
       {p.theme && (def.outdoor || scene === 'house') && <FestFall theme={p.theme} date={p.myView.time.date} />}
       {p.theme && def.outdoor && scene !== 'town' && scene !== 'sky' && scene !== 'reef' && def.walk && <FestScene theme={p.theme} date={p.myView.time.date} w={def.w} h={def.h} floor={def.walk && def.walk !== 'room' ? def.walk.y1 : def.h - 6} />}
       {p.theme && def.outdoor && <div className={`fest-tint fest-${p.theme}`} />}

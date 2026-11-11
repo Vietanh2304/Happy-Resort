@@ -13,7 +13,7 @@ export interface Pen {
 export const OUTLINE = '#3a2420';
 const cache = new Map<string, Sprite>();
 
-export function makeSprite(key: string, w: number, h: number, draw: (p: Pen) => void, outline: string | null = OUTLINE): Sprite {
+export function makeSprite(key: string, w: number, h: number, draw: (p: Pen) => void, outline: string | null = OUTLINE, vivid = false): Sprite {
   const hit = cache.get(key);
   if (hit) return hit;
   const m = outline ? 1 : 0;
@@ -30,7 +30,7 @@ export function makeSprite(key: string, w: number, h: number, draw: (p: Pen) => 
     })),
   };
   draw(pen);
-  gradeCanvas(ctx, canvas.width, canvas.height);
+  if (!vivid) gradeCanvas(ctx, canvas.width, canvas.height);
   if (outline) { autoShade(ctx, canvas.width, canvas.height); addOutline(ctx, canvas.width, canvas.height, outline); }
   else if (w * h >= 160 * 120) groundTexture(ctx, canvas.width, canvas.height);
   const sprite = { url: canvas.toDataURL(), w: canvas.width, h: canvas.height };

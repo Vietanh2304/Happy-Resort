@@ -239,4 +239,4 @@ export function tripWeather(id: TripId, date: string, hour: number): Weather {
   let x = r(), k = 0; while (k < 4 && x >= pr[k]) { x -= pr[k]; k++; }
   return { type: WX[k], temp: Math.round(lo + r() * (hi - lo)), code: 0 };
 }
-export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v7:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night, id === 'fairy');
+export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v8:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night, id === 'fairy');
