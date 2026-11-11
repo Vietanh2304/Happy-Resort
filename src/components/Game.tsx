@@ -154,7 +154,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const live = useLive(partnerOnline);
   const scene = live.mine.scene;
   const theirs = partnerOnline ? live.theirs : null;
-  const partnerHere = theirs?.scene === scene;
+  const partnerHere = theirs?.scene === scene && (scene !== 'restaurant' || (theirs?.tripAt ?? '') === (live.mine.tripAt ?? ''));
   const partnerName = partner?.display_name || 'người ấy';
 
   // Người ấy vừa vào: có thể đã đổi gì đó trước khi kênh realtime kịp nối
@@ -247,7 +247,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     route.current = [];
     setEditing(false);
     editor.setSelection(null);
-    live.update({ scene: target, pos: at ?? SCENES[target].spawn, act: null, dish: null, jump: null, ...(target.startsWith('trip_') ? {} : { outfit: null }) });
+    live.update({ scene: target, pos: at ?? SCENES[target].spawn, act: null, dish: null, jump: null, ...(target.startsWith('trip_') ? {} : { outfit: null }), tripAt: target === 'restaurant' ? tripCtx.at : '' });
   }
 
   async function run(f: () => Promise<unknown>) {
@@ -883,7 +883,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     farm: ['town', TOWN.toFarm, '🏘️ Về làng'],
     beach: ['town', { x: TOWN.toBeach.x, y: TOWN.toBeach.y - 6 }, '🏘️ Về làng'],
   };
-  if (tripCtx.at && scene === 'restaurant') EXITS.restaurant = [`trip_${tripCtx.at}`, { x: 44, y: 166 }, '🚪 Ra phố'];
+  if (tripCtx.at && scene === 'restaurant') EXITS.restaurant = [`trip_${tripCtx.at}`, { x: 44, y: 174 }, '🚪 Ra phố'];
   if (scene.startsWith('trip_')) EXITS[scene] = ['town', SCENES.town.spawn, '✈️ Bay về làng'];
   { const sp = spotOf(scene); if (sp) EXITS[scene] = [`trip_${sp.trip}`, { x: sp.at, y: 112 }, '🏙️ Về phố chính']; }
   const liveNow = useRef(live);
@@ -1028,7 +1028,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {room ? (
         <div className="room-bar">
           <RoomPanel scene={room} rtc={rtc} call={call} live={live} cinemaMode={cinemaMode} yt={yt} onYt={setYt} inventory={inventory} partnerHere={!!partnerHere} partnerName={partnerName} />
-          <button className="btn small ghost leave" onClick={() => enter('town', SCENES.town.spawn)}>🚪 Ra ngoài</button>
+          <button className="btn small ghost leave" onClick={() => (room === 'restaurant' && tripCtx.at ? enter(`trip_${tripCtx.at}`, { x: 44, y: 174 }) : enter('town', SCENES.town.spawn))}>{room === 'restaurant' && tripCtx.at ? '🚪 Ra phố' : '🚪 Ra ngoài'}</button>
         </div>
       ) : scene === 'bathroom' && !editing ? (
         <BathPanel

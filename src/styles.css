@@ -1778,3 +1778,6 @@ textarea { resize: vertical; }
 @media (pointer: coarse) { .fx-shim:nth-child(2n), .fx-fall:nth-child(2n), .fest-fall i:nth-child(2n), .fx-spark:nth-child(2n), .fx-steam:nth-child(2n) { display: none; } .fx-aurora { filter: none; } }
 @media (prefers-reduced-motion: reduce) { .fx, .fest-fall, .fx-steam, .fx-bird { display: none; } }
 .tag.label.dim { opacity: .22; }
+.spr.fx-move, .fx-rider { will-change: transform; }
+.spr.fx-move2 { animation: fxmove2 30s linear infinite; will-change: transform; }
+@keyframes fxmove2 { 0% { translate: 0 0; scale: 1 1; } 49.9% { translate: var(--dx) 0; scale: 1 1; } 50% { translate: var(--dx) 0; scale: -1 1; } 100% { translate: 0 0; scale: -1 1; } }
