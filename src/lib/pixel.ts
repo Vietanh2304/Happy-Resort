@@ -30,11 +30,44 @@ export function makeSprite(key: string, w: number, h: number, draw: (p: Pen) => 
     })),
   };
   draw(pen);
+  gradeCanvas(ctx, canvas.width, canvas.height);
   if (outline) { autoShade(ctx, canvas.width, canvas.height); addOutline(ctx, canvas.width, canvas.height, outline); }
   else if (w * h >= 160 * 120) groundTexture(ctx, canvas.width, canvas.height);
   const sprite = { url: canvas.toDataURL(), w: canvas.width, h: canvas.height };
   cache.set(key, sprite);
   return sprite;
+}
+
+
+/** Pha màu kiểu tranh nông trại ấm áp: cỏ lá ngả vàng, xanh dương dịu, bóng tối pha tím, chỗ sáng pha vàng, bớt chói */
+export function gradeCanvas(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const img = ctx.getImageData(0, 0, w, h), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    if (!d[i + 3]) continue;
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, dl = mx - mn;
+    let hh = 0, s = 0;
+    if (dl > 0) {
+      s = l > 0.5 ? dl / (2 - mx - mn) : dl / (mx + mn);
+      hh = mx === r ? ((g - b) / dl + (g < b ? 6 : 0)) : mx === g ? (b - r) / dl + 2 : (r - g) / dl + 4;
+      hh *= 60;
+    }
+    let L2 = l, S2 = s, H2 = hh;
+    if (s > 0.08) {
+      if (hh > 65 && hh < 170) { H2 = hh - (hh - 88) * 0.4; S2 = s * 0.86; }          // xanh lá → vàng lục ấm
+      else if (hh >= 170 && hh < 250) { H2 = hh + (205 - hh) * 0.25; S2 = s * 0.84; }  // xanh dương dịu, ngả lam
+      else if (hh >= 250 && hh < 330) S2 = s * 0.92;
+      if (S2 > 0.82) S2 = 0.82 + (S2 - 0.82) * 0.4;                                     // nén màu quá gắt
+    }
+    if (l < 0.42) { const t = (0.42 - l) / 0.42; H2 = s > 0.05 ? H2 + ((H2 > 90 ? 265 : -95) - H2) * 0.18 * t : 265; S2 = Math.max(S2, 0.18 * t); }   // bóng pha tím
+    else if (l > 0.72 && s > 0.05) { const t = (l - 0.72) / 0.28; H2 = H2 + ((H2 > 230 ? 410 : 50) - H2) * 0.15 * t; }                                   // sáng pha vàng
+    H2 = ((H2 % 360) + 360) % 360;
+    const q = L2 < 0.5 ? L2 * (1 + S2) : L2 + S2 - L2 * S2, p = 2 * L2 - q;
+    const f = (t: number) => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+    const hr = H2 / 360;
+    d[i] = Math.min(255, f(hr + 1 / 3) * 255 + 5); d[i + 1] = f(hr) * 255 + 1; d[i + 2] = Math.max(0, f(hr - 1 / 3) * 255 - 5);   // tông ấm nhẹ
+  }
+  ctx.putImageData(img, 0, 0);
 }
 
 function autoShade(ctx: CanvasRenderingContext2D, w: number, h: number) {

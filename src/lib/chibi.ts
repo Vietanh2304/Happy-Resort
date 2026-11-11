@@ -4,7 +4,7 @@
 // chỉ ảnh được vẽ ở độ phân giải ×2 cho nét mịn hơn.
 import type { Design } from './ranch';
 import { drawProp, type HoldMode, type PropSpec } from './props';
-import { mix, type Pen, type Sprite } from './pixel';
+import { mix, type Pen, type Sprite, gradeCanvas } from './pixel';
 
 export interface ChibiLook { skin?: number; hair?: number; hairColor?: number; shirt?: number; outfit?: number; acc?: number; gender?: 'm' | 'f'; glasses?: number; design?: Design | null }
 export type View = 'front' | 'back' | 'side';
@@ -213,6 +213,7 @@ export function chibiSprite(look: ChibiLook, pose: Pose, view: View = 'front', s
   const ctx = canvas.getContext('2d')!;
   const P = hiPen(ctx, K, K);
   draw(P, { S, H, C, hairIx, out, acc, glasses, girl, pose, view, step, hold, design });
+  gradeCanvas(ctx, canvas.width, canvas.height);
   outline(ctx, canvas.width, canvas.height, INK);
 
   if (hold) {                                  // đồ cầm tay: vẽ nét thường rồi phóng lên

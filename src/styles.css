@@ -1764,6 +1764,6 @@ textarea { resize: vertical; }
 .cam-shutter:active { transform: scale(.92); background: #f0f0f0; }
 
 /* Chỉnh màu toàn game: tươi hơn, có chiều sâu (viền tối nhẹ + ánh sáng trên cao) */
-.stage { filter: saturate(1.2) contrast(1.06) brightness(1.02); }
+.stage { filter: saturate(1.04) contrast(1.05); }
 .stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 450;
-  background: linear-gradient(rgba(255, 244, 214, .10), transparent 35%), radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(40, 16, 60, .22) 100%); }
+  background: linear-gradient(rgba(255, 236, 190, .12), transparent 40%), radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(60, 30, 50, .26) 100%); }
