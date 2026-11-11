@@ -18,6 +18,7 @@ import { useTicker } from './Skydive';
 import { Spr, Tag, useScale } from './Stage';
 import { Fireworks } from './TripExtras';
 import { FxList } from './TripSpot';
+import { FireworkShow } from './FireworkShow';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
 /** Sắp xếp người ngồi theo ngoại hình để hai máy thấy cùng một chỗ ngồi */
@@ -25,7 +26,7 @@ const seatOrder = <T extends { look: AvatarLook }>(a: T[]) => [...a].sort((p, q)
 type RideKind = 'coaster' | 'carousel' | 'cups';
 const RIDE_I: Record<RideKind, number> = { carousel: 0, cups: 1, coaster: 2 };
 const RIDE_NAME: Record<RideKind, string> = { coaster: 'tàu lượn siêu tốc', carousel: 'King Arthur Carrousel', cups: 'Mad Tea Party' };
-const SPIN_MS = 16000, STATION_MS = 5000, SHOW_MS = 30000, PARADE_MS = 72000, PARADE_EVERY = 20 * 60_000;
+const SPIN_MS = 16000, STATION_MS = 5000, SHOW_MS = 50000, PARADE_MS = 72000, PARADE_EVERY = 20 * 60_000;
 
 interface Props { scene: string; live: Live; partnerHere: boolean; looks: { me: AvatarLook; them: AvatarLook }; go: (to: Pt, then?: () => void) => void; onAnim: (n: AnimName) => void; night: boolean; phase: Phase }
 
@@ -268,9 +269,9 @@ function CastleShow({ at, now, night }: { at: number; now: number; night: boolea
     <>
       {!night && <div className="fa-veil" style={{ width: 256 * s, height: 192 * s, opacity: el < 1500 ? el / 1500 : el > SHOW_MS - 2000 ? Math.max(0, (SHOW_MS - el) / 2000) : 1 }} />}
       {el > 1500 && <Spr key={c} sprite={m.sprite} x={m.x} y={m.y} z={3} className="fa-proj" />}
-      {el > 3000 && <Fireworks dense />}
+      <FireworkShow at={at + 2000} />
       {el > 4000 && el < 12000 && <i className="fa-fairy" style={v({ '--s': `${s}px`, left: 128 * s, top: 18 * s })} />}
-      {el > SHOW_MS - 7000 && <Tag x={128} y={8} className="bed-bubble">✨ …và họ sống hạnh phúc mãi mãi ✨</Tag>}
+      {el > SHOW_MS - 3500 && <Tag x={128} y={8} className="bed-bubble">✨ …và họ sống hạnh phúc mãi mãi ✨</Tag>}
     </>
   );
 }

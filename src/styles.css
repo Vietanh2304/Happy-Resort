@@ -1841,3 +1841,7 @@ textarea { resize: vertical; }
 @keyframes fatw { 0% { filter: drop-shadow(0 0 3px #ffe08a) brightness(1.05); } 100% { filter: drop-shadow(0 0 6px #ff8ad8) brightness(1.25); } }
 .fa-dusk { position: absolute; left: 0; top: 0; background: #2a1a6050; pointer-events: none; z-index: 1; }
 .fa-banner { font-weight: 700; animation: glow 1.2s ease-in-out infinite; }
+
+.fw-show { position: absolute; left: 0; top: 0; z-index: 2; pointer-events: none; }
+.fw-act { font-weight: 700; font-size: 14px; animation: fwact 3s ease-out both; }
+@keyframes fwact { 0% { transform: translate(-50%, -100%) scale(.6); opacity: 0; } 12% { transform: translate(-50%, -100%) scale(1.15); opacity: 1; } 22% { transform: translate(-50%, -100%) scale(1); } 85% { opacity: 1; } 100% { opacity: .0; } }

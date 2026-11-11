@@ -193,7 +193,7 @@ export function TripExtras({ scene, trip, spot, me, partner, live, partnerHere, 
   const isMain = !spot;
   return (
     <>
-      {night && (watching || isMain) && <Fireworks dense={watching} />}
+      {night && (watching || isMain) && scene !== 'trip_fairy_castle' && <Fireworks dense={watching} />}
       {isMain && night && <Tag x={128} y={74} className="label" onClick={watchFw}>🎆 Ngắm pháo hoa</Tag>}
       {post && (
         <>
