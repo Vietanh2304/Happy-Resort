@@ -47,7 +47,7 @@ export interface SpotDef {
 }
 
 // ───────── bộ vẽ chung ─────────
-export interface Light { ph: Phase; night: boolean; dusk: boolean; r: () => number; wins: number[][]; lamps: { x: number; y: number; c: string; big?: boolean }[]; neon: { x: number; y: number; w: number; h: number; c: string }[] }
+export interface Light { ph: Phase; night: boolean; dusk: boolean; r: () => number; wins: number[][]; lamps: { x: number; y: number; c: string; big?: boolean }[]; neon: { x: number; y: number; w: number; h: number; c: string }[]; post?: (() => void)[] }
 const SKY: Record<Phase, [string, string]> = { day: ['#7ac8f0', '#d8f0ff'], dawn: ['#f0a8c0', '#ffe2b0'], sunset: ['#5a4ab8', '#ff9a6a'], night: ['#0a1034', '#283070'] };
 
 export function circle(p: Pen, cx: number, cy: number, r: number, c: string) {
@@ -110,7 +110,7 @@ export function string(p: Pen, L: Light, x0: number, x1: number, y: number, sag:
 /** Vẽ nền một map tham quan (có cache theo phase) */
 export function spotBackground(scene: SpotScene, ph: Phase): Sprite {
   const s = SPOTS[scene];
-  return paint(`spot:v1:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora');
+  return paint(`spot:v2:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora');
 }
 /** Vẽ một cảnh: nền → phủ màu theo giờ → cửa sổ sáng, neon, đèn lồng có quầng */
 export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => void, ph: Phase, alwaysNight = false): Sprite {
@@ -120,6 +120,7 @@ export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => voi
     if (L.night) p.rect(0, 0, 256, 192, '#08103a70'); else if (L.dusk) p.rect(0, 0, 256, 192, '#ff70401c'); else if (ph === 'dawn') p.rect(0, 0, 256, 192, '#ffb0c014');
     const lit = L.night || L.dusk;
     if (lit) for (const [x, y, w, h] of L.wins) if (L.r() < 0.75) { p.rect(x, y, w, h, L.r() < 0.5 ? '#ffd88a' : '#ffe8b0'); p.rect(x - 1, y - 1, w + 2, h + 2, '#ffd88a22'); }
+    for (const f of L.post ?? []) f();
     for (const n of L.neon) { if (lit) p.rect(n.x - 2, n.y - 2, n.w + 4, n.h + 4, n.c + '40'); p.rect(n.x, n.y, n.w, n.h, lit ? n.c : mix(n.c, '#888888', 0.4)); p.rect(n.x + 1, n.y + 1, n.w - 2, 1, '#ffffffa0'); }
     for (const l of L.lamps) {
       const z = l.big ? 2 : 1;
@@ -461,15 +462,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
     draw: (p, L) => {
       sky(p, L, ['#90b8f0', '#f4e4ec'], 110, 50);
       for (let i = 0; i < 12; i++) bldg(p, L, i * 22, 110, 21, 16 + (i * 11) % 10, '#e0d4c0', '#5a6a80', '#8aa0b8', 6);
-      const c = L.night ? '#d8a040' : '#7a6248';
-      for (let y = 4; y < 128; y++) {
-        const w = y < 40 ? 1.5 + (y - 4) / 14 : y < 76 ? 4 + (y - 40) / 3.5 : 14 + Math.pow((y - 76) / 52, 1.6) * 34;
-        p.rect(128 - w, y, 3, 1, c); p.rect(126 + w, y, 3, 1, c);
-        if (y % 6 === 0) { p.rect(128 - w, y, 2 * w + 2, 1, c + '80'); }
-        if (y > 100) { const arch = Math.sqrt(Math.max(0, 1 - Math.pow((y - 128) / 26, 2))) * (w - 6); if (arch > 0) p.rect(128 - arch, y, 2 * arch + 1, 1, '#00000000'); }
-      }
-      p.rect(118, 40, 20, 3, c); p.rect(108, 76, 40, 4, c); p.rect(126, 0, 4, 6, c);
-      if (L.night) L.lamps.push({ x: 126, y: 0, c: '#fff6c0' });
+      eiffel(p, L, 128, 128, 120);
       band(p, 128, 192, '#8ac868', '#6aa850');
       for (let y = 136; y < 192; y += 10) for (let x = 0; x < 256; x += 32) p.rect(x + (y / 10 % 2) * 16, y, 14, 1, '#7ab858');
       // lối sỏi
@@ -750,3 +743,52 @@ export const flySprite = (icon: string, f: 0 | 1) => { const a = FLY[icon] ?? FL
 export const lidSprite = () => makeSprite('jar-lid', 11, 4, p => { p.rect(1, 1, 9, 2, '#4a2a18'); p.rect(4, 0, 3, 1, '#6a3a22'); p.rect(1, 3, 9, 1, '#2a1a10'); });
 /** Chuông bò lắc lư */
 export const cowbellSprite = () => makeSprite('cowbell', 5, 6, p => { p.rect(1, 0, 3, 1, '#8a5a2a'); p.rect(1, 1, 3, 3, '#f6c445'); p.rect(0, 4, 5, 1, '#c8902a'); p.px(2, 5, '#6a4a2a'); p.px(1, 2, '#fff4b0'); });
+
+/** Tháp Eiffel pixel: 4 chân cong loe, vòm lớn giữa chân, 3 tầng sàn, khung lưới thép nhìn xuyên thấy trời, ăng-ten trên đỉnh.
+ *  cx = tâm, base = chân tháp, H = chiều cao (không tính ăng-ten). Đêm thì tháp ánh vàng. */
+export function eiffel(p: Pen, L: Light, cx: number, base: number, H: number, late = false) {
+  const night = L.night || L.dusk;
+  if (night && !late) (L.post ??= []).push(() => eiffel(p, L, cx, base, H, true));
+  const M = night ? '#d89a40' : '#8a6a4a', D = night ? '#a86a28' : '#5a4232', Lt = night ? '#ffd27a' : '#b08a62';
+  const k = H / 124;
+  const ow = (t: number) => t < 0.3 ? 20 + 17 * Math.pow((0.3 - t) / 0.3, 1.9)
+    : t < 0.52 ? 8 + 9 * Math.pow((0.52 - t) / 0.22, 1.3)
+      : t < 0.93 ? 1.6 + 5.4 * Math.pow((0.93 - t) / 0.41, 1.4) : 1.2;
+  const baseW = ow(0) * k, legW = (t: number) => (4 + 9 * (1 - t / 0.3)) * k;
+  for (let y = Math.round(base - H); y <= base; y++) {
+    const t = (base - y) / H, w = Math.max(1, ow(t) * k), x0 = Math.round(cx - w), x1 = Math.round(cx + w);
+    for (let x = x0; x <= x1; x++) {
+      const dx = Math.abs(x - cx), edge = x <= x0 + 0 || x >= x1 - 0;
+      let solid = edge, color = D;
+      if (t < 0.3) {
+        // chân tháp + vòm: dưới vòm là khoảng trống
+        const aw = baseW - legW(0) * 0.9, archY = base - 0.24 * H * Math.sqrt(Math.max(0, 1 - Math.pow(dx / aw, 2)));
+        const inLeg = dx >= w - legW(t);
+        if (!inLeg && y > archY) continue;
+        if (!inLeg && Math.abs(y - archY) < 1.5) { solid = true; color = D; }
+        else if (inLeg && Math.abs(dx - (w - legW(t))) < 1) { solid = true; color = D; }
+        else if (!solid) { solid = (x + y) % 3 === 0 || (x - y + 300) % 3 === 0; color = (x + y) % 6 === 0 ? Lt : M; }
+      } else if (!solid) {
+        // khung lưới chéo, xuyên thấy trời
+        solid = (x + y) % 3 === 0 || (x - y + 300) % 3 === 0 || dx < 0.6; color = (x - y + 300) % 6 === 0 ? Lt : M;
+      }
+      if (solid) p.px(x, y, color);
+    }
+    // xà ngang mỗi đoạn
+    if (y % Math.max(4, Math.round(7 * k)) === 0 && t > 0.24) p.rect(x0, y, x1 - x0 + 1, 1, M);
+  }
+  // các tầng sàn có lan can
+  const deck = (t: number, extra: number, h: number) => {
+    const y = Math.round(base - t * H), w = ow(t) * k + extra;
+    p.rect(cx - w, y - h, 2 * w + 1, h, D); p.rect(cx - w, y - h, 2 * w + 1, 1, Lt);
+    for (let x = Math.round(cx - w); x <= cx + w; x += 2) p.px(x, y - h - 1, M);
+    if (night) for (let x = Math.round(cx - w) + 1; x < cx + w; x += 3) p.px(x, y - h + 1, '#fff2b0');
+  };
+  deck(0.3, 4 * k, Math.max(2, Math.round(5 * k)));
+  deck(0.52, 3 * k, Math.max(2, Math.round(3 * k)));
+  // đỉnh: buồng quan sát + ăng-ten
+  const ty = Math.round(base - 0.93 * H);
+  p.rect(cx - 3 * k, ty - 4 * k, 6 * k + 1, 4 * k, D); p.rect(cx - 2 * k, ty - 3 * k, 4 * k + 1, 1, Lt);
+  p.rect(cx, ty - 4 * k - 10 * k, 1, 10 * k, D);
+  if (night && late) L.lamps.push({ x: Math.round(cx - 1), y: Math.round(ty - 16 * k), c: '#fff6c0' });
+}

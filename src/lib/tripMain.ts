@@ -3,7 +3,7 @@ import type { Phase, WeatherType } from './content';
 import { seeded } from './rng';
 import type { Weather } from './weather';
 import type { Pen } from './pixel';
-import { band, bldg, circle, paint, pine, rail, ridge, sky, speckle, string, tiles, tree, water, type Fx, type Light } from './tripSpots';
+import { band, bldg, eiffel, circle, paint, pine, rail, ridge, sky, speckle, string, tiles, tree, water, type Fx, type Light } from './tripSpots';
 import type { TripId } from './trips';
 
 interface MainDef { draw: (p: Pen, L: Light) => void; fx: Fx[]; lines: string[]; night?: boolean }
@@ -129,8 +129,7 @@ const MAIN: Record<TripId, MainDef> = {
     draw: (p, L) => {
       sky(p, L, ['#9ac0f0', '#f0e0e8'], 70, 60);
       // Eiffel xa bên phải
-      for (let y = 10; y < 70; y++) { const w = y < 30 ? 1 + (y - 10) / 12 : 3 + Math.pow((y - 30) / 40, 1.5) * 16; p.rect(210 - w, y, 2, 1, '#7a6248'); p.rect(209 + w, y, 2, 1, '#7a6248'); } p.rect(202, 40, 18, 2, '#7a6248');
-      if (L.night) for (let k = 0; k < 10; k++) L.lamps.push({ x: 204 + (k * 7) % 12, y: 20 + k * 5, c: '#ffe8a0' });
+      eiffel(p, L, 224, 100, 92);
       for (let i = 0; i < 4; i++) {
         const x = i * 50; p.rect(x, 28, 49, 72, '#ece0c8'); p.rect(x, 22, 49, 6, '#5a6a80'); for (let k = 0; k < 3; k++) p.rect(x + 6 + k * 15, 16, 6, 6, '#5a6a80');
         for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) { const wx = x + 6 + k * 15, wy = 32 + r * 18; p.rect(wx, wy, 8, 12, '#7a9ab8'); L.wins.push([wx, wy, 8, 12]); p.rect(wx - 1, wy + 12, 10, 1, '#2a2a2a'); circle(p, wx + 4, wy + 13, 1, '#e8443a'); }
@@ -237,4 +236,4 @@ export function tripWeather(id: TripId, date: string, hour: number): Weather {
   let x = r(), k = 0; while (k < 4 && x >= pr[k]) { x -= pr[k]; k++; }
   return { type: WX[k], temp: Math.round(lo + r() * (hi - lo)), code: 0 };
 }
-export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v2:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night);
+export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v3:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night);
