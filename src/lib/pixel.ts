@@ -30,10 +30,47 @@ export function makeSprite(key: string, w: number, h: number, draw: (p: Pen) => 
     })),
   };
   draw(pen);
-  if (outline) addOutline(ctx, canvas.width, canvas.height, outline);
+  if (outline) { autoShade(ctx, canvas.width, canvas.height); addOutline(ctx, canvas.width, canvas.height, outline); }
+  else if (w * h >= 160 * 120) groundTexture(ctx, canvas.width, canvas.height);
   const sprite = { url: canvas.toDataURL(), w: canvas.width, h: canvas.height };
   cache.set(key, sprite);
   return sprite;
+}
+
+function autoShade(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const img = ctx.getImageData(0, 0, w, h), d = img.data, src = new Uint8ClampedArray(d);
+  const a = (x: number, y: number) => x >= 0 && y >= 0 && x < w && y < h && src[(y * w + x) * 4 + 3] > 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    if (!a(x, y)) continue;
+    const i = (y * w + x) * 4;
+    let k = 0;
+    if (!a(x, y - 1)) k += 0.22; else if (!a(x, y - 2)) k += 0.08;
+    if (!a(x - 1, y)) k += 0.08;
+    if (!a(x, y + 1)) k -= 0.2; else if (!a(x, y + 2)) k -= 0.06;
+    if (!a(x + 1, y)) k -= 0.1;
+    if (!k) continue;
+    for (let c = 0; c < 3; c++) d[i + c] = k > 0 ? src[i + c] + (255 - src[i + c]) * k : src[i + c] * (1 + k);
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/** Vân nền: bụi cỏ trên vùng cỏ phẳng, hạt cát/đất trên vùng cát (không đụng trời, nước) */
+function groundTexture(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const img = ctx.getImageData(0, 0, w, h), d = img.data, src = new Uint8ClampedArray(d);
+  const at = (x: number, y: number) => (y * w + x) * 4;
+  const same = (i: number, j: number) => Math.abs(src[i] - src[j]) + Math.abs(src[i + 1] - src[j + 1]) + Math.abs(src[i + 2] - src[j + 2]) < 10;
+  const set = (x: number, y: number, k: number) => { if (x < 0 || y < 0 || x >= w || y >= h) return; const i = at(x, y); for (let c = 0; c < 3; c++) d[i + c] = k > 0 ? src[i + c] + (255 - src[i + c]) * k : src[i + c] * (1 + k); };
+  for (let y = 2; y < h - 2; y++) for (let x = 2; x < w - 2; x++) {
+    const i = at(x, y);
+    if (src[i + 3] < 255 || !same(i, at(x - 2, y)) || !same(i, at(x + 2, y)) || !same(i, at(x, y - 2)) || !same(i, at(x, y + 2))) continue;
+    const r = src[i], g = src[i + 1], b = src[i + 2], hsh = ((x * 73856093) ^ (y * 19349663)) >>> 0;
+    const grass = g > r + 12 && g > b + 12, sand = r > b + 30 && g > b + 15 && r >= g - 10;
+    if (grass && hsh % 23 === 0) { set(x, y, -0.14); set(x, y - 1, -0.1); set(x - 1, y, -0.08); set(x + 1, y - 1, 0.1); }
+    else if (grass && hsh % 37 === 0) set(x, y, 0.1);
+    else if (sand && hsh % 29 === 0) { set(x, y, -0.1); }
+    else if (sand && hsh % 41 === 0) set(x, y, 0.12);
+  }
+  ctx.putImageData(img, 0, 0);
 }
 
 function addOutline(ctx: CanvasRenderingContext2D, w: number, h: number, color: string) {

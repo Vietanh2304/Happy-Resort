@@ -2,8 +2,8 @@
 import type { Phase, WeatherType } from './content';
 import { seeded } from './rng';
 import type { Weather } from './weather';
-import type { Pen } from './pixel';
-import { band, bldg, eiffel, circle, paint, pine, rail, ridge, sky, speckle, string, tiles, tree, water, type Fx, type Light } from './tripSpots';
+import { mix, type Pen } from './pixel';
+import { band, bldg, dither, eiffel, hoianHouse, roofEA, venHouse, vsign, circle, paint, pine, rail, ridge, sky, speckle, string, tiles, tree, water, type Fx, type Light } from './tripSpots';
 import type { TripId } from './trips';
 
 interface MainDef { draw: (p: Pen, L: Light) => void; fx: Fx[]; lines: string[]; night?: boolean }
@@ -41,7 +41,7 @@ const MAIN: Record<TripId, MainDef> = {
         p.rect(x, 62, 34, 38, ['#fff4e0', '#f0f0f0', '#ffe8d0', '#f8f0ff'][i]); awning(p, x, 70, 34, c);
         p.rect(x + 3, 80, 28, 14, '#5a4a3a'); p.rect(x + 4, 81, 26, 12, '#ffe8b0'); L.wins.push([x + 4, 81, 26, 12]);
         for (let k = 0; k < 4; k++) { p.rect(x + 6 + k * 6, 86, 3, 5, '#d8a060'); p.px(x + 7 + k * 6, 85, '#3a2a2a'); }
-        L.neon.push({ x: x + 28, y: 40 + (i % 2) * 6, w: 5, h: 20, c: ['#ff4a6a', '#4af0ff', '#ffe04a', '#8aff6a'][i] });
+        vsign(L, p, x + 27, 38 + (i % 2) * 6, 22, ['#ff4a6a', '#4af0ff', '#ffe04a', '#8aff6a'][i]);
       }
       string(p, L, 104, 256, 60, 5, ['#e8443a', '#ffb040'], 9);
       for (let i = 0; i < 4; i++) palm(p, 108 + i * 40, 100);
@@ -61,7 +61,8 @@ const MAIN: Record<TripId, MainDef> = {
       p.rect(140, 64, 110, 36, '#7a9ab0'); for (let x = 142; x < 250; x += 8) { p.rect(x, 66, 6, 30, '#9ac0d8'); L.wins.push([x, 66, 6, 30]); } p.rect(138, 60, 114, 4, '#5a8a4a');
       // cổng hanok + toà hiện đại có biển Hàn
       for (let i = 0; i < 4; i++) bldg(p, L, i * 32, 100, 31, 40 + (i * 17) % 22, ['#e8d8d0', '#d0d8e0', '#f0e0c8', '#d8d0d8'][i], undefined, '#90b8d8', 6);
-      for (let i = 0; i < 4; i++) L.neon.push({ x: 4 + i * 32, y: 70 + (i % 2) * 6, w: 22, h: 5, c: ['#ff4a8a', '#4ae0ff', '#ffe04a', '#8aff6a'][i] });
+      for (let i = 0; i < 4; i++) vsign(L, p, 22 + i * 32, 58 + (i % 2) * 6, 22, ['#ff4a8a', '#4ae0ff', '#ffe04a', '#8aff6a'][i]);
+      roofEA(p, 136, 58, 120, 6, '#4a5a4a', 0.2);
       // cửa hàng tiện lợi
       p.rect(4, 84, 60, 16, '#f0f0f0'); p.rect(4, 82, 60, 3, '#3a9a5a'); p.rect(8, 88, 52, 10, '#c8e8f0'); L.wins.push([8, 88, 52, 10]);
       // hàng phong đỏ hai bên đường
@@ -80,11 +81,7 @@ const MAIN: Record<TripId, MainDef> = {
     draw: (p, L) => {
       sky(p, L, ['#f6b06a', '#ffe0a8'], 50, 200);
       for (let i = 0; i < 6; i++) {
-        const x = 2 + i * 43; bldg(p, L, x, 100, 41, 50, ['#f0c84a', '#f6d060', '#e8b840'][i % 3], '#a84a2a', '#5a3a2a', 9);
-        p.rect(x - 2, 72, 45, 3, '#8a3a22'); for (let k = 0; k < 41; k += 3) p.rect(x + k, 75, 2, 2, '#6a2a18');
-        // hoa giấy hồng leo tường
-        speckle(p, L, x + (i % 2 ? 26 : 0), 50, 14, 28, 50, ['#f04a9a', '#f878b8', '#3a8a3a']);
-        p.rect(x + 4, 80, 33, 3, '#6a3a22');
+        hoianHouse(p, L, 2 + i * 43, 100, 41, 50);
       }
       string(p, L, 0, 256, 40, 6, ['#e8443a', '#f6c445', '#f59ab3', '#3aa86a', '#9a6ae0'], 7);
       string(p, L, 0, 256, 56, 4, ['#f6c445', '#e8443a'], 11);
@@ -111,8 +108,8 @@ const MAIN: Record<TripId, MainDef> = {
       // dãy shotengai: biển dọc, rèm noren, máy bán nước
       for (let i = 0; i < 7; i++) {
         const x = i * 37, wall = ['#e8dcc8', '#f0e8e0', '#d8d0c8', '#e8e0d0'][i % 4];
-        p.rect(x, 64, 36, 36, wall); p.rect(x, 64, 36, 3, '#5a4a4a');
-        L.neon.push({ x: x + 30, y: 66, w: 4, h: 18, c: ['#ff4a6a', '#ffe04a', '#4af0ff', '#ff8a3a'][i % 4] });
+        p.rect(x, 64, 36, 36, wall); dither(p, x + 30, 64, 6, 36, wall, mix(wall, '#2a1a2a', 0.15)); roofEA(p, x - 1, 62, 38, 4, '#4a3a4a', 0.2);
+        vsign(L, p, x + 29, 68, 18, ['#ff4a6a', '#ffe04a', '#4af0ff', '#ff8a3a'][i % 4]);
         for (let k = 0; k < 4; k++) p.rect(x + 3 + k * 6, 84, 5, 10, ['#3a3a6a', '#c83a2a', '#3a6a5a'][i % 3]);
         p.rect(x + 3, 94, 24, 6, '#ffe8b0'); L.wins.push([x + 3, 72, 24, 9]); p.rect(x + 3, 72, 24, 9, '#a0c0d8');
       }
@@ -152,7 +149,7 @@ const MAIN: Record<TripId, MainDef> = {
       sky(p, L, ['#8ac8f0', '#fff0d8'], 40, 200);
       const cs = ['#e8a87a', '#f0d088', '#d8786a', '#f0c0a0', '#e89a6a', '#d8c098'];
       for (let i = 0; i < 10; i++) {
-        const x = i * 26; bldg(p, L, x, 96, 25, 50 + (i * 13) % 20, cs[i % 6], '#a84a3a', '#4a3a3a', 6);
+        const x = i * 26; venHouse(p, L, x, 96, 25, 50 + (i * 13) % 20, cs[i % 6]);
         p.rect(x + 3, 96 - 30, 18, 2, '#ffffff'); for (let k = 0; k < 4; k++) circle(p, x + 5 + k * 5, 64, 1, '#e8443a');
         for (let k = 0; k < 2; k++) { p.rect(x + 7 + k * 8, 2 + 96 - 66 - (i * 13) % 20 + 60, 0, 0, '#000'); }
       }
@@ -236,4 +233,4 @@ export function tripWeather(id: TripId, date: string, hour: number): Weather {
   let x = r(), k = 0; while (k < 4 && x >= pr[k]) { x -= pr[k]; k++; }
   return { type: WX[k], temp: Math.round(lo + r() * (hi - lo)), code: 0 };
 }
-export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v5:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night);
+export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v6:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night);

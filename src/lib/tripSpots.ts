@@ -350,7 +350,12 @@ const drawAsakusa = (p: Pen, L: Light) => {
 
 
 // ═══ HỘI AN: Chùa Cầu mái ngói âm dương, nhà vàng cửa xanh, hoa giấy, đèn lồng ═══
-function hoianHouse(p: Pen, L: Light, x: number, yb: number, w: number, h: number) {
+export function venHouse(p: Pen, L: Light, x: number, yb: number, w: number, h: number, c: string) {
+  p.rect(x, yb - h, w, h, c); dither(p, x + w - 4, yb - h, 4, h, c, dk(c, 0.18)); p.rect(x - 1, yb - h - 3, w + 2, 3, '#a84a3a'); p.rect(x - 1, yb - h - 3, w + 2, 1, '#c86a5a');
+  for (let yy = yb - h + 6; yy < yb - 8; yy += 13) for (let xx = x + 3; xx < x + w - 6; xx += 9) { p.rect(xx, yy, 5, 8, '#4a3a3a'); circle(p, xx + 2, yy, 2, '#4a3a3a'); p.rect(xx - 2, yy + 1, 2, 7, '#3a8a6a'); p.rect(xx + 5, yy + 1, 2, 7, '#3a8a6a'); L.wins.push([xx + 1, yy + 1, 3, 6]); }
+  for (let k = x + 2; k < x + w - 2; k += 3) p.px(k, yb - 2, dk(c, 0.4));
+}
+export function hoianHouse(p: Pen, L: Light, x: number, yb: number, w: number, h: number) {
   const wall = ['#f2c84a', '#f6d466', '#eab840'][Math.floor(x / 40) % 3];
   p.rect(x, yb - h, w, h, wall); dither(p, x + w - 6, yb - h, 6, h, wall, dk(wall, 0.18));
   for (let yy = yb - h + 3; yy < yb; yy += 5) p.px(x + 2 + (yy * 7) % (w - 4), yy, dk(wall, 0.15));   // vệt rêu, tường cũ
@@ -487,7 +492,7 @@ function glyphs(p: Pen, x: number, y: number, n: number, c: string, vertical = t
   for (let i = 0; i < n; i++) { const gx = vertical ? x : x + i * 5, gy = vertical ? y + i * 5 : y; p.rect(gx, gy, 3, 1, c); p.rect(gx + 1, gy, 1, 3, c); p.px(gx, gy + 2, c); p.px(gx + 2, gy + 2, c); }
 }
 /** Biển hiệu dọc phát sáng có chữ */
-function vsign(L: Light, p: Pen, x: number, y: number, h: number, c: string) { L.neon.push({ x, y, w: 6, h, c }); (L.post ??= []).push(() => glyphs(p, x + 1, y + 2, Math.floor((h - 3) / 5), '#ffffff')); }
+export function vsign(L: Light, p: Pen, x: number, y: number, h: number, c: string) { L.neon.push({ x, y, w: 6, h, c }); (L.post ??= []).push(() => glyphs(p, x + 1, y + 2, Math.floor((h - 3) / 5), '#ffffff')); }
 
 // ═══ ĐÀI TRUNG: Chợ đêm Phùng Giáp — hẻm chật biển dọc neon, sạp đèn hộp, khói nướng ═══
 const drawFengjia = (p: Pen, L: Light) => {
@@ -651,11 +656,7 @@ const drawCafe = (p: Pen, L: Light) => {
 const drawCanal = (p: Pen, L: Light) => {
   sky(p, L, ['#88c4f0', '#fff0d8'], 36, 128);
   const cs = ['#e8a87a', '#f0d088', '#d8786a', '#f0c0a0', '#e89a6a', '#d8c098'];
-  const house = (x: number, w: number, h: number, c: string) => {
-    p.rect(x, 120 - h, w, h, c); dither(p, x + w - 4, 120 - h, 4, h, c, dk(c, 0.18)); p.rect(x - 1, 120 - h - 3, w + 2, 3, '#a84a3a');
-    for (let yy = 120 - h + 6; yy < 112; yy += 13) for (let xx = x + 3; xx < x + w - 6; xx += 9) { p.rect(xx, yy, 5, 8, '#4a3a3a'); circle(p, xx + 2, yy, 2, '#4a3a3a'); p.rect(xx - 2, yy + 1, 2, 7, '#3a8a6a'); p.rect(xx + 5, yy + 1, 2, 7, '#3a8a6a'); L.wins.push([xx + 1, yy + 1, 3, 6]); }
-    for (let k = x + 2; k < x + w - 2; k += 3) p.px(k, 120 - 2, dk(c, 0.4));
-  };
+  const house = (x: number, w: number, h: number, c: string) => venHouse(p, L, x, 120, w, h, c);
   for (let i = 0; i < 4; i++) { house(i * 26, 25, 80 + (i % 2) * 10, cs[i]); house(152 + i * 26, 25, 76 + (i % 2) * 12, cs[i + 2]); }
   // dây phơi đồ vắt qua kênh
   for (let x = 30; x < 226; x++) p.px(x, 52 + Math.round(Math.sin((x - 30) / 196 * Math.PI) * 6), '#5a4a3a');
