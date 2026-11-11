@@ -34,7 +34,7 @@ export const TRIPS: Trip[] = [
   { id: 'swiss', name: 'Thuỵ Sĩ', icon: '🏔️', bg: 'linear-gradient(#e8f4ff,#5a9a6a)', price: 70, souvenir: 'chocolate', line: 'Tàu đỏ chạy qua núi tuyết, uống sô-cô-la nóng trong nhà gỗ.',
     sky: ['#7ab8f0', '#e8f4ff'], ground: ['#8ac878', '#7ab868'], far: 'snow', food: { name: 'Fondue phô mai', icon: '🫕' },
     spots: [S(60, 98, '🚂', 'Ga tàu núi', 'Tàu Glacier Express chạy qua 291 cây cầu!'), S(196, 98, '🏠', 'Nhà gỗ chalet', 'Vào đây uống sô-cô-la nóng cho ấm ☕')] },
-  { id: 'fairy', name: 'Disneyland', icon: '🏰', bg: 'linear-gradient(#ffd8f0,#8ab8ff)', price: 70, souvenir: 'fa_balloon', line: 'Lâu đài Người Đẹp Ngủ Trong Rừng, pháo hoa đêm, diễu hành ánh sáng cùng Mickey, Minnie, Donald, Goofy và tàu lượn siêu tốc — nơi hạnh phúc nhất thế giới.',
+  { id: 'fairy', name: 'Disneyland', icon: '🏰', bg: 'linear-gradient(#ffd8f0,#8ab8ff)', price: 70, souvenir: 'fa_balloon', line: 'Lâu đài Người Đẹp Ngủ Trong Rừng, pháo hoa đêm, diễu hành ánh sáng cùng các bạn thú hoá trang và tàu lượn siêu tốc — nơi hạnh phúc nhất thế giới.',
     sky: ['#8ac8f8', '#ffe0f0'], ground: ['#e8c8a8', '#d8b494'], far: 'hills', food: { name: 'Churros quế', icon: '🥨' },
     spots: [S(128, 96, '🏰', 'Lâu đài Người Đẹp Ngủ', 'Tối nay có pháo hoa trên lâu đài đó ✨'), S(206, 100, '🎢', 'Tàu lượn siêu tốc', 'Ngồi hàng đầu cho đã nha 😆')] },
   { id: 'iceland', name: 'Iceland', icon: '🌌', bg: 'linear-gradient(#0a1a3a,#3ac88a)', price: 80, souvenir: 'star_lantern', line: 'Nằm giữa trời lạnh ngắm cực quang nhảy múa, tay trong tay.',

@@ -25,7 +25,7 @@ const seatOrder = <T extends { look: AvatarLook }>(a: T[]) => [...a].sort((p, q)
 type RideKind = 'coaster' | 'carousel' | 'cups';
 const RIDE_I: Record<RideKind, number> = { carousel: 0, cups: 1, coaster: 2 };
 const RIDE_NAME: Record<RideKind, string> = { coaster: 'tàu lượn siêu tốc', carousel: 'King Arthur Carrousel', cups: 'Mad Tea Party' };
-const SPIN_MS = 16000, STATION_MS = 5000, SHOW_MS = 30000, PARADE_MS = 56000, PARADE_EVERY = 20 * 60_000;
+const SPIN_MS = 16000, STATION_MS = 5000, SHOW_MS = 30000, PARADE_MS = 72000, PARADE_EVERY = 20 * 60_000;
 
 interface Props { scene: string; live: Live; partnerHere: boolean; looks: { me: AvatarLook; them: AvatarLook }; go: (to: Pt, then?: () => void) => void; onAnim: (n: AnimName) => void; night: boolean; phase: Phase }
 
@@ -205,8 +205,8 @@ const DANCER = [
   { gender: 'f' as const, hair: 4, hairColor: 4, skin: 0, shirt: 0, outfit: 17 }, { gender: 'm' as const, hair: 8, hairColor: 2, skin: 1, shirt: 3, outfit: 4 },
 ];
 const LINEUP: ({ float: FloatId; on: number[] } | { walk: number[] })[] = [
-  { walk: [8] }, { float: 'castle', on: [0, 1] }, { walk: [2, 4] }, { float: 'pumpkin', on: [6, 7] }, { walk: [9, 10, 11] },
-  { float: 'teaparty', on: [3] }, { walk: [5, 12] }, { float: 'dragon', on: [] }, { walk: [-1, -2] },
+  { walk: [4] }, { float: 'castle', on: [2, 1] }, { walk: [0, 7] }, { float: 'star', on: [] }, { walk: [5, 6] }, { float: 'pumpkin', on: [1] },
+  { walk: [-1, -2] }, { float: 'unicorn', on: [] }, { walk: [3, 2] }, { float: 'teaparty', on: [0, 7] }, { walk: [6, 4, 5] }, { float: 'dragon', on: [] },
 ];
 const GAP = 76, TK = 0.55;
 /** Nhân vật Disney (thu nhỏ cho cân với nhân vật người chơi) */
@@ -222,7 +222,22 @@ function Parade({ at, now, night }: { at: number; now: number; night: boolean })
   const wave = (j: number): 0 | 1 | 2 => (Math.floor(now / 320 + j) % 3 === 0 ? 2 : (Math.floor(now / 260 + j) % 2 as 0 | 1));
   return (
     <>
-      <FxList fx={[{ k: 'fall', n: 28, c: ['#ff5a9a', '#ffd84a', '#5ad8ff', '#9a7aff', '#7aff9a', '#ffffff'], size: 2 }]} scene="parade" night={night} />
+      <FxList fx={[{ k: 'fall', n: 40, c: ['#ff5a9a', '#ffd84a', '#5ad8ff', '#9a7aff', '#7aff9a', '#ffffff'], size: 2 }]} scene="parade" night={night} />
+      <Fireworks dense />
+      {!night && <div className="fa-dusk" style={{ width: 256 * s, height: 192 * s }} />}
+      {[30, 92, 164, 226].map((bx, k) => <i key={k} className="fa-beam" style={v({ left: bx * s, top: 192 * s, height: 190 * s, width: 18 * s, '--c': ['#ff8ad8', '#8ad8ff', '#fff2a0', '#b08aff'][k], animationDelay: `${-k * 0.9}s` })} />)}
+      {Array.from({ length: 14 }, (_, k) => { const y = 192 - ((now / 28 + k * 31) % 210), x = (k * 41 + Math.sin(now / 900 + k) * 10 + 512) % 256; return <i key={`b${k}`} className="fa-bubble" style={{ left: x * s, top: y * s, width: (3 + (k % 3)) * s, height: (3 + (k % 3)) * s }} />; })}
+      {LINEUP.map((u, idx) => {
+        if (!('float' in u)) return null;
+        const ox = lead - idx * GAP; if (ox < -40 || ox > 300) return null;
+        const ph = ((now / 1600 + idx * 0.37) % 1), t = ph * 1.6;
+        return Array.from({ length: 16 }, (_, k) => {
+          const a = -Math.PI / 2 + ((k / 15) - 0.5) * 1.6, sp = 55 + (k * 13) % 30;
+          const x = ox + Math.cos(a) * sp * t, y = 140 + Math.sin(a) * sp * t + 55 * t * t;
+          return <i key={`c${idx}-${k}`} className="fa-conf" style={{ left: x * s, top: y * s, width: 2 * s, height: (k % 2 ? 2 : 1) * s, background: ['#ff5a9a', '#ffd84a', '#5ad8ff', '#9a7aff', '#7aff9a', '#ffffff'][k % 6], opacity: 1 - ph, transform: `rotate(${k * 40 + now / 4}deg)` }} />;
+        });
+      })}
+      <Tag x={128} y={14} className="bed-bubble fa-banner">🎉 Diễu hành ánh sáng 🎉</Tag>
       {LINEUP.map((u, idx) => {
         const x = lead - idx * GAP;
         if (x < -90 || x > 350) return null;
@@ -234,7 +249,7 @@ function Parade({ at, now, night }: { at: number; now: number; night: boolean })
         const bob = Math.sin(now / 300 + idx) * 1.2;
         return (
           <span key={idx}>
-            <Spr sprite={floatSprite(u.float, night)} x={x} y={188 + bob} z={188} className={night ? 'fa-lit' : ''} />
+            <Spr sprite={floatSprite(u.float, true)} x={x} y={188 + bob} z={188} className="fa-lit fa-twinkle" />
             {u.on.map((who, j) => <Toon key={j} i={who} f={wave(j)} x={x - 8 + (j - (u.on.length - 1) / 2) * 16} y={152 + bob} z={189} />)}
           </span>
         );
@@ -464,9 +479,9 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
 
 // ───────── Linh vật đi dạo: bấm vào thì chạy tới ôm / vẫy tay chụp ảnh (người kia cũng thấy) ─────────
 const MASCOT_AT: Record<string, { ids: number[]; box: { x0: number; x1: number; y0: number; y1: number } }> = {
-  trip_fairy: { ids: [0, 1, 3], box: { x0: 24, x1: 232, y0: 130, y1: 184 } },
-  trip_fairy_castle: { ids: [2, 4, 5], box: { x0: 24, x1: 190, y0: 152, y1: 186 } },
-  trip_fairy_parade: { ids: [6, 7], box: { x0: 24, x1: 232, y0: 112, y1: 144 } },
+  trip_fairy: { ids: [0, 1, 7], box: { x0: 24, x1: 232, y0: 130, y1: 184 } },
+  trip_fairy_castle: { ids: [2, 3, 4], box: { x0: 24, x1: 190, y0: 152, y1: 186 } },
+  trip_fairy_parade: { ids: [5, 6], box: { x0: 24, x1: 232, y0: 112, y1: 144 } },
 };
 const HUG_MS = 5000;
 /** Vị trí theo đồng hồ chung (hai máy thấy linh vật ở cùng chỗ); `off` = thời gian đã đứng lại */

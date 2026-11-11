@@ -910,7 +910,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       { k: 'park', x: 216, y: 136, label: '⚔️ Rút gươm trong đá', ride: 'sword', at: { x: 202, y: 182 } },
       ph(64, 176), buy(176, 184, 'fa_churro', 8, '🥨 Churros quế'),
     ],
-    lines: ['Lâu đài đẹp như mơ', 'Tối có pháo hoa đó!', 'Mickey kìa!!', 'Ai rút được gươm là vua đó', 'Như công chúa luôn 👑'],
+    lines: ['Lâu đài đẹp như mơ', 'Tối có pháo hoa đó!', 'Gấu Mật Ong kìa!!', 'Ai rút được gươm là vua đó', 'Như công chúa luôn 👑'],
   },
   trip_fairy_parade: {
     trip: 'fairy', id: 'parade', name: 'Main Street U.S.A.', icon: '🎪', at: 46, walk: W(108, 146), day: ['#80c0f8', '#ffe4f0'],

@@ -116,7 +116,7 @@ function balloons(p: Pen, x: number, y: number) {
   const cs = ['#e8443a', '#f6c445', '#4a9ae8', '#f08aa6', '#8bc87a', '#b08ae0'];
   const P: [number, number][] = [[-5, -30], [0, -33], [5, -30], [-3, -24], [3, -24], [0, -27]];
   for (const [dx, dy] of P) p.rect(x + dx, y + dy + 3, 1, -dy - 3, '#e8e8e8');
-  P.forEach(([dx, dy], i) => { circle(p, x + dx, y + dy, 2, cs[i]); circle(p, x + dx - 2, y + dy - 2, 1, cs[i]); circle(p, x + dx + 2, y + dy - 2, 1, cs[i]); p.px(x + dx - 1, y + dy - 1, '#ffffff'); });
+  P.forEach(([dx, dy], i) => { ellipse(p, x + dx, y + dy, 2.4, 3, cs[i]); p.px(x + dx - 1, y + dy - 1, '#ffffff'); });
   p.rect(x - 4, y, 9, 10, '#7a4e2c'); p.rect(x - 3, y + 1, 7, 2, '#e8443a');
 }
 function lampPost(p: Pen, L: Light, x: number, y: number) { p.rect(x, y - 22, 2, 22, '#2a3a4a'); p.rect(x - 2, y - 26, 6, 4, '#2a3a4a'); L.lamps.push({ x: x - 1, y: y - 28, c: '#ffe8a0' }); p.rect(x - 1, y - 1, 4, 1, '#2a3a4a'); }
@@ -259,7 +259,7 @@ export const swordSprite = () => makeSprite('fa-sword:v2', 5, 15, p => {
 }, '#2a2a3a');
 
 /** Xe hoa diễu hành (ban đêm bóng đèn sáng) */
-export const FLOATS = ['dragon', 'pumpkin', 'teaparty', 'castle'] as const;
+export const FLOATS = ['dragon', 'pumpkin', 'teaparty', 'castle', 'star', 'unicorn'] as const;
 export type FloatId = (typeof FLOATS)[number];
 export const floatSprite = (id: FloatId, lit: boolean) => makeSprite(`fa-float:${id}:${lit ? 1 : 0}`, 76, 54, p => {
   const bulb = (x: number, y: number, c: string) => { p.px(x, y, lit ? c : mix(c, '#888888', 0.5)); if (lit) { p.px(x - 1, y, c + '80'); p.px(x + 1, y, c + '80'); } };
@@ -283,6 +283,21 @@ export const floatSprite = (id: FloatId, lit: boolean) => makeSprite(`fa-float:$
     for (let x = 28; x < 50; x += 5) circle(p, x, 24, 1, '#e8507a');
     ellipse(p, 12, 32, 6, 3, '#f6c445'); ellipse(p, 64, 32, 6, 3, '#8bc87a');
     for (let x = 8; x < 70; x += 5) bulb(x, 35, ['#ff8ac8', '#fff2a0'][x % 2]);
+  } else if (id === 'star') {
+    p.rect(6, 36, 64, 8, '#7a5ac8'); for (let x = 6; x < 70; x += 6) p.rect(x, 36, 3, 8, '#9a7ae8');
+    const pts: [number, number][] = []; for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + (k * Math.PI) / 5, r = k % 2 ? 8 : 19; pts.push([38 + Math.cos(a) * r, 19 + Math.sin(a) * r]); }
+    for (let y = 0; y < 40; y++) for (let x = 18; x < 60; x++) { let inside = false; for (let a2 = 0, b2 = 9; a2 < 10; b2 = a2++) { const [xi, yi] = pts[a2], [xj, yj] = pts[b2]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside; } if (inside) p.px(x, y, y < 18 ? '#ffe86a' : '#f6c445'); }
+    for (const [x, y] of pts) bulb(Math.round(x), Math.round(y), '#fff6c8');
+    p.px(33, 17, '#2a1a2a'); p.px(43, 17, '#2a1a2a'); p.rect(36, 22, 5, 1, '#c84a5a'); p.px(30, 20, '#ff9ab0'); p.px(46, 20, '#ff9ab0');
+    for (let x = 8; x < 70; x += 4) bulb(x, 35, ['#ff8ad8', '#8ad8ff', '#fff2a0'][x % 3]);
+  } else if (id === 'unicorn') {
+    p.rect(6, 36, 64, 8, '#f6d0e8'); for (let x = 6; x < 70; x += 8) p.rect(x, 40, 4, 4, '#ffffff');
+    ellipse(p, 32, 26, 16, 8, '#ffffff'); p.rect(44, 10, 8, 16, '#ffffff'); ellipse(p, 52, 10, 7, 5, '#ffffff'); p.px(54, 9, '#2a1a2a'); p.rect(56, 12, 2, 1, '#f08aa6');
+    for (let k = 0; k < 7; k++) p.px(54 + k, 4 - k, '#f6c445'); p.px(55, 3, '#fff2b0');
+    const RB = ['#e8443a', '#f6a83a', '#f6e04a', '#6ac86a', '#4a9ae8', '#9a6ae0'];
+    RB.forEach((c, k) => { p.rect(42 - k, 6 + k * 3, 3, 4, c); p.rect(14 - k, 22 + k * 2, 4, 2, c); });
+    for (const x of [22, 30, 38, 44]) p.rect(x, 32, 3, 5, '#ffffff');
+    for (let x = 8; x < 70; x += 4) bulb(x, 35, RB[(x / 4) % 6]);
   } else {
     p.rect(8, 28, 60, 16, '#f4cfe2'); for (let x = 8; x < 68; x += 6) p.rect(x, 25, 3, 3, '#f4cfe2');
     for (const [x, h] of [[14, 22], [38, 34], [62, 22]] as [number, number][]) {
@@ -300,11 +315,11 @@ export const musicBoxSprite = () => makeSprite('tv:musicbox', 18, 22, p => {
   p.rect(8, 4, 2, 12, GOLD); for (let y = 0; y < 5; y++) { const w = 2 + y * 1.6; p.rect(9 - w, y, w * 2, 1, y % 2 ? '#f08aa6' : '#ffffff'); }
   ellipse(p, 9, 12, 4, 2, '#ffffff'); p.rect(11, 9, 2, 3, '#ffffff'); p.px(12, 9, '#2a2a3a'); p.rect(6, 13, 1, 3, '#ffffff'); p.rect(11, 13, 1, 3, '#ffffff');
 }, '#4a2a3a');
-export const balloonDecoSprite = () => makeSprite('tv:mickeyballoons', 20, 28, p => {
+export const balloonDecoSprite = () => makeSprite('tv:balloons2', 20, 28, p => {
   const cs = ['#e8443a', '#f6c445', '#4a9ae8', '#f08aa6', '#8bc87a'];
   const P = [[6, 9], [14, 8], [10, 3], [3, 15], [17, 15]];
   P.forEach(([x, y]) => p.rect(x, y + 3, 1, 24 - y, '#d8d8e0'));
-  P.forEach(([x, y], i) => { const c = cs[i]; circle(p, x, y, 3, c); circle(p, x - 3, y - 3, 1, c); circle(p, x + 3, y - 3, 1, c); p.px(x - 1, y - 1, '#ffffff'); });
+  P.forEach(([x, y], i) => { ellipse(p, x, y, 3, 3.6, cs[i]); p.px(x - 1, y - 2, '#ffffff'); p.px(x, y + 4, cs[i]); });
   p.rect(7, 25, 7, 3, '#7a4e2c');
 }, '#4a2a3a');
 /** Ảnh lâu đài phủ một màu (lớp chiếu sáng show đêm) — vị trí khớp map lâu đài */
@@ -313,120 +328,69 @@ export function castleMaskAt(c: string): { sprite: Sprite; x: number; y: number 
   return { sprite: sp, x: cx, y: base + 1 };
 }
 
-// ───────── Nhân vật Disney: Mickey, Minnie, Donald, Goofy, Daisy, Pluto, Chip, Dale, Mickey phù thuỷ, Huey, Dewey, Louie, Scrooge ─────────
+// ───────── Nhân vật hoá trang của công viên (tự thiết kế): Gấu Mật Ong, Thỏ Ngọc, Cáo Hoàng Tử, Rồng Bông, Mèo Phù Thuỷ, Cánh Cụt Thuỷ Thủ, Cú Giáo Sư, Gấu Trúc Bông ─────────
 export const MASCOTS = [
-  { id: 'mickey', name: 'Mickey', hi: 'Hot dog! Chào mừng tới Disneyland! 🎉' },
-  { id: 'minnie', name: 'Minnie', hi: 'Ôi dễ thương quá, chụp chung với Minnie nha! 🎀' },
-  { id: 'donald', name: 'Donald', hi: 'Quạc quạc! Hai bạn đi chơi vui không? 🦆' },
-  { id: 'goofy', name: 'Goofy', hi: 'A-hyuck! Đi tàu lượn với Goofy không? 😆' },
-  { id: 'daisy', name: 'Daisy', hi: 'Hai bạn đẹp đôi ghê! 💗' },
-  { id: 'pluto', name: 'Pluto', hi: 'Gâu gâu! 🐾' },
-  { id: 'chip', name: 'Chip', hi: 'Có hạt dẻ không? 🌰' },
-  { id: 'dale', name: 'Dale', hi: 'Hihi, Dale nè! 🌰' },
-  { id: 'sorcerer', name: 'Mickey phù thuỷ', hi: 'Abracadabra! ✨' },
-  { id: 'huey', name: 'Huey', hi: 'Bọn cháu đi diễu hành nè! ❤️' },
-  { id: 'dewey', name: 'Dewey', hi: 'Chụp ảnh không? 💙' },
-  { id: 'louie', name: 'Louie', hi: 'Vẫy tay nào! 💚' },
-  { id: 'scrooge', name: 'Scrooge', hi: 'Vé vào cổng đắt lắm đó nha! 🎩' },
+  { id: 'bear', name: 'Gấu Mật Ong', hi: 'Chào bạn nhỏ! Ăn mật ong không? 🍯' },
+  { id: 'bunny', name: 'Thỏ Ngọc', hi: 'Nhảy nhảy~ chụp ảnh với Thỏ nha! 🌸' },
+  { id: 'fox', name: 'Cáo Hoàng Tử', hi: 'Ta là hoàng tử của vương quốc này! 👑' },
+  { id: 'dragon', name: 'Rồng Bông', hi: 'Phù~ Rồng Bông phun lửa trái tim nè 💖' },
+  { id: 'cat', name: 'Mèo Phù Thuỷ', hi: 'Meo~ biến hai bạn thành công chúa hoàng tử nè ✨' },
+  { id: 'penguin', name: 'Cánh Cụt Thuỷ Thủ', hi: 'Ahoy! Lên tàu lượn chưa? ⚓' },
+  { id: 'owl', name: 'Cú Giáo Sư', hi: 'Hú hú~ hai bạn là cặp đôi dễ thương nhất hôm nay! 🎓' },
+  { id: 'panda', name: 'Gấu Trúc Bông', hi: 'Ôm một cái thật chặt nào! 🎋' },
 ] as const;
 type ToonId = (typeof MASCOTS)[number]['id'];
 /** f: 0 đứng · 1 bước · 2 vẫy tay · 3 dang tay ôm */
-export const mascotSprite = (i: number, f: 0 | 1 | 2 | 3) => makeSprite(`fa-toon:${i}:${f}`, 30, 40, p => {
-  const id: ToonId = MASCOTS[i % MASCOTS.length].id, cx = 15;
-  const K = '#1a1a22', SKIN = '#f8d4b4', W = '#ffffff', RED = '#e8303a', YEL = '#f6c445', OR = '#f6a030';
-  const step = f === 1 ? 1 : 0;
-  const glove = (x: number, y: number) => { circle(p, x, y, 2, W); p.px(x, y - 1, '#e0e0e8'); };
-  const arms = (c: string, y0: number, gloves = true) => {
-    const hand = (x: number, y: number) => (gloves ? glove(x, y) : circle(p, x, y, 1, c));
-    if (f === 3) { for (const s of [-1, 1]) { p.rect(cx + s * 6 - (s < 0 ? 5 : 0), y0 + 1, 5, 2, c); hand(cx + s * 12, y0 + 1); } return; }
-    p.rect(cx - 8, y0 + 1, 2, 6, c); hand(cx - 8, y0 + 8);
-    if (f === 2) { p.rect(cx + 6, y0 - 6, 2, 7, c); hand(cx + 7, y0 - 7); } else { p.rect(cx + 6, y0 + 1, 2, 6, c); hand(cx + 7, y0 + 8); }
-  };
-  const feet = (c: string, y: number, rx = 3.4) => { ellipse(p, cx - 4 + step, y, rx, 1.8, c); ellipse(p, cx + 4 - step, y, rx, 1.8, c); };
-  const legs = (c: string, y: number, h: number, w = 2) => { p.rect(cx - 4 + step, y, w, h, c); p.rect(cx + 2 - step, y, w, h, c); };
-  // ── chuột: Mickey, Minnie, Mickey phù thuỷ
-  if (id === 'mickey' || id === 'minnie' || id === 'sorcerer') {
-    circle(p, cx - 8, 5, 4, K); circle(p, cx + 8, 5, 4, K);
-    ellipse(p, cx, 13, 7.5, 7, K);
-    ellipse(p, cx, 16, 6, 4, SKIN); ellipse(p, cx - 2.4, 11, 2.4, 3.4, SKIN); ellipse(p, cx + 2.4, 11, 2.4, 3.4, SKIN);
-    p.rect(cx - 3, 9, 2, 4, K); p.rect(cx + 1, 9, 2, 4, K); p.px(cx - 3, 9, W); p.px(cx + 1, 9, W);
-    ellipse(p, cx, 14.5, 1.8, 1.2, K);
-    p.rect(cx - 3, 17, 7, 1, '#5a1a1a'); p.rect(cx - 2, 18, 5, 1, '#5a1a1a'); p.rect(cx - 1, 18, 3, 1, '#f07a8a');
-    if (id === 'minnie') {
-      p.rect(cx - 6, 2, 12, 5, RED); p.rect(cx - 1, 3, 3, 3, '#c02028'); for (const [x, y] of [[-5, 3], [-3, 5], [3, 3], [5, 5]]) p.px(cx + x, y, W);
-      p.px(cx - 4, 8, K); p.px(cx + 4, 8, K);
-      for (let y = 21; y < 31; y++) { const w = 5 + Math.floor((y - 21) * 0.7); p.rect(cx - w, y, w * 2, 1, RED); }
-      for (const [x, y] of [[-3, 23], [2, 22], [-5, 27], [0, 26], [4, 28], [-1, 29]]) p.px(cx + x, y, W);
-      p.rect(cx - 5, 20, 10, 2, K); arms(K, 20); legs(K, 31, 5); feet(YEL, 37, 3);
-    } else if (id === 'sorcerer') {
-      for (let y = 0; y < 8; y++) { const w = 1 + y * 0.9; p.rect(cx - w, y - 1, w * 2, 1, '#3a4ac8'); }
-      p.px(cx - 1, 2, YEL); p.px(cx + 2, 4, YEL); p.px(cx - 3, 5, YEL); p.rect(cx - 7, 6, 14, 1, '#2a3aa8');
-      for (let y = 20; y < 36; y++) { const w = 6 + Math.floor((y - 20) * 0.3); p.rect(cx - w, y, w * 2, 1, y % 5 ? RED : '#c82028'); }
-      p.rect(cx - 1, 20, 2, 16, '#a81820'); arms(RED, 20); feet(YEL, 37);
-    } else {
-      p.rect(cx - 4, 20, 8, 4, K); arms(K, 20);
-      p.rect(cx - 6, 24, 12, 6, RED); p.rect(cx - 6, 24, 12, 1, '#ff6a6a'); p.rect(cx - 3, 25, 2, 2, W); p.rect(cx + 1, 25, 2, 2, W);
-      legs(K, 30, 5); feet(YEL, 37);
-    }
-    return;
+export const mascotSprite = (i: number, f: 0 | 1 | 2 | 3) => makeSprite(`fa-mascot2:${i}:${f}`, 30, 40, p => {
+  const id: ToonId = MASCOTS[i % MASCOTS.length].id, cx = 15, K = '#1a1a22', W = '#ffffff';
+  const fur = { bear: '#b07840', bunny: '#ffffff', fox: '#f08a3a', dragon: '#a88ae8', cat: '#8a9ac8', penguin: '#2a2a3a', owl: '#9a6a3a', panda: '#ffffff' }[id];
+  const muz = { bear: '#f6d8a8', bunny: '#ffe8f0', fox: '#ffffff', dragon: '#f6e8b0', cat: '#e8ecf8', penguin: '#ffffff', owl: '#f0d8a8', panda: '#ffffff' }[id];
+  const cloth = { bear: '#4a8ad8', bunny: '#f08aa6', fox: '#7a4ac8', dragon: '#5ac88a', cat: '#5a3a9a', penguin: '#e8303a', owl: '#3a5a8a', panda: '#f08ac0' }[id];
+  const limb = id === 'panda' ? K : id === 'penguin' ? K : fur, step = f === 1 ? 1 : 0;
+  // tai / sừng (sau đầu)
+  if (id === 'bear') { circle(p, cx - 7, 5, 3, fur); circle(p, cx + 7, 5, 3, fur); p.px(cx - 7, 5, '#e8a0a0'); p.px(cx + 7, 5, '#e8a0a0'); }
+  if (id === 'panda') { circle(p, cx - 7, 5, 3, K); circle(p, cx + 7, 5, 3, K); }
+  if (id === 'bunny') for (const s of [-1, 1]) { p.rect(cx + s * 4 - 1, 0, 4, 9, fur); p.rect(cx + s * 4, 1, 2, 7, '#f6b8cc'); }
+  if (id === 'fox' || id === 'cat') for (const s of [-1, 1]) for (let y = 0; y < 6; y++) { const w = Math.max(1, 6 - y); p.rect(cx + s * 6 - w / 2, 8 - y, w, 1, y > 3 && id === 'fox' ? '#2a1a1a' : fur); }
+  if (id === 'dragon') for (const s of [-1, 1]) { p.rect(cx + s * 5, 1, 2, 4, '#f6e8b0'); p.px(cx + s * 5 + (s > 0 ? 1 : 0), 0, '#f6e8b0'); }
+  if (id === 'owl') for (const s of [-1, 1]) { p.rect(cx + s * 6 - 1, 3, 3, 3, fur); }
+  // đầu
+  ellipse(p, cx, 12, id === 'penguin' ? 7.5 : 8.5, 7.5, fur);
+  if (id === 'penguin') ellipse(p, cx, 13, 5.5, 5, W); else if (id !== 'owl') ellipse(p, cx, 15, 5.5, 3.6, muz);
+  if (id === 'panda') { ellipse(p, cx - 3.5, 11, 2.4, 2.8, K); ellipse(p, cx + 3.5, 11, 2.4, 2.8, K); }
+  if (id === 'owl') { circle(p, cx - 3.5, 11, 3, W); circle(p, cx + 3.5, 11, 3, W); circle(p, cx - 3.5, 11, 1, K); circle(p, cx + 3.5, 11, 1, K); p.rect(cx - 7, 8, 14, 1, '#c8a060'); p.rect(cx - 1, 14, 2, 3, '#f6a030'); }
+  else { p.rect(cx - 4, 9, 2, 3, id === 'panda' ? W : K); p.rect(cx + 2, 9, 2, 3, id === 'panda' ? W : K); if (id === 'panda') { p.px(cx - 3, 10, K); p.px(cx + 3, 10, K); } else { p.px(cx - 4, 9, W); p.px(cx + 2, 9, W); } }
+  if (id === 'penguin') { p.rect(cx - 2, 14, 5, 2, '#f6a030'); }
+  else if (id !== 'owl') { p.rect(cx - 1, 13, 3, 2, id === 'bunny' || id === 'cat' ? '#f08aa6' : '#3a2020'); p.rect(cx - 2, 16, 5, 1, '#c84a5a'); p.px(cx - 3, 15, '#c84a5a'); p.px(cx + 3, 15, '#c84a5a'); }
+  p.rect(cx - 8, 14, 2, 1, '#ff9ab0'); p.rect(cx + 7, 14, 2, 1, '#ff9ab0');
+  if (id === 'cat') for (const s of [-1, 1]) { p.rect(cx + s * 6 - (s < 0 ? 3 : 0), 14, 4, 1, '#5a5a7a'); }
+  // mũ / phụ kiện đầu
+  if (id === 'fox') { p.rect(cx - 4, 2, 9, 3, GOLD); p.px(cx - 4, 1, GOLD); p.px(cx, 1, '#e8507a'); p.px(cx + 4, 1, GOLD); }
+  if (id === 'bunny') for (let k = 0; k < 5; k++) p.px(cx - 6 + k * 3, 4, ['#ff8ad8', '#fff2a0', '#8ad8ff'][k % 3]);
+  if (id === 'cat') { for (let y = 0; y < 8; y++) { const w = 1 + y; p.rect(cx - w + 1, y - 2, w * 2, 1, '#5a3a9a'); } p.rect(cx - 8, 5, 16, 1, '#3a2a7a'); p.px(cx - 1, 1, GOLD); p.px(cx + 2, 3, GOLD); }
+  if (id === 'penguin') { p.rect(cx - 5, 3, 10, 3, W); p.rect(cx - 5, 5, 10, 1, '#3a5ad8'); circle(p, cx, 2, 1, '#e8303a'); }
+  if (id === 'owl') { p.rect(cx - 7, 2, 14, 2, K); p.rect(cx - 3, 4, 6, 2, K); p.rect(cx + 5, 3, 1, 5, GOLD); }
+  // thân + đồ
+  p.rect(cx - 6, 20, 12, 10, id === 'penguin' ? K : cloth); ellipse(p, cx, 25, 3.5, 3.5, id === 'penguin' ? W : muz);
+  if (id === 'penguin') { p.rect(cx - 4, 20, 8, 2, '#3a5ad8'); p.px(cx, 21, '#e8303a'); }
+  if (id === 'bear') { p.rect(cx - 3, 19, 6, 2, GOLD); p.px(cx, 20, '#e8443a'); }
+  if (id === 'bunny') for (let y = 26; y < 31; y++) p.rect(cx - 6 - (y - 26), y, 12 + (y - 26) * 2, 1, y % 2 ? cloth : lt(cloth, 0.3));
+  if (id === 'fox') { p.rect(cx - 8, 20, 2, 11, '#c83a5a'); p.rect(cx + 6, 20, 2, 11, '#c83a5a'); p.rect(cx + 7, 26, 5, 3, fur); p.px(cx + 11, 26, W); }
+  if (id === 'dragon') { for (const s of [-1, 1]) for (let y = 0; y < 5; y++) p.rect(cx + s * (7 + y) - (s < 0 ? 1 : 0), 20 + y, 1, 4 - Math.floor(y / 2), '#7ae0a8'); p.rect(cx + 6, 27, 6, 2, fur); }
+  if (id === 'cat') { for (let y = 26; y < 33; y++) p.rect(cx - 6 - (y - 26) * 0.5, y, 12 + (y - 26), 1, '#5a3a9a'); p.px(cx - 3, 28, GOLD); p.px(cx + 2, 30, GOLD); p.rect(cx + 7, 24, 5, 2, fur); }
+  if (id === 'owl') { p.rect(cx - 6, 20, 12, 10, fur); ellipse(p, cx, 25, 4, 4, '#f0d8a8'); p.rect(cx - 2, 20, 4, 2, '#e8303a'); }
+  if (id === 'panda') { p.rect(cx - 6, 19, 12, 2, cloth); p.rect(cx + 3, 21, 2, 5, cloth); }
+  // tay
+  const hand = (x: number, y: number) => circle(p, x, y, 2, id === 'panda' || id === 'penguin' ? K : muz);
+  if (f === 3) { for (const s of [-1, 1]) { p.rect(cx + s * 6 - (s < 0 ? 5 : 0), 21, 5, 2, limb); hand(cx + s * 12, 21); } }
+  else {
+    p.rect(cx - 8, 21, 2, 6, limb); hand(cx - 8, 28);
+    if (f === 2) { p.rect(cx + 6, 14, 2, 7, limb); hand(cx + 7, 13); } else { p.rect(cx + 6, 21, 2, 6, limb); hand(cx + 7, 28); }
   }
-  // ── vịt: Donald, Daisy, Huey/Dewey/Louie, Scrooge
-  if (id === 'donald' || id === 'daisy' || id === 'huey' || id === 'dewey' || id === 'louie' || id === 'scrooge') {
-    const kid = id === 'huey' || id === 'dewey' || id === 'louie', oy = kid ? 4 : 0;
-    const kc = id === 'huey' ? '#e8303a' : id === 'dewey' ? '#3a7ae8' : '#3aa84a';
-    ellipse(p, cx, 12 + oy, kid ? 6.5 : 7.5, kid ? 6 : 7, W);
-    ellipse(p, cx - 2.5, 10 + oy, 2, 2.6, W); ellipse(p, cx + 2.5, 10 + oy, 2, 2.6, W); p.rect(cx - 2, 10 + oy, 1, 2, K); p.rect(cx + 2, 10 + oy, 1, 2, K);
-    ellipse(p, cx + 1, 15.5 + oy, kid ? 5 : 6, 2, OR); ellipse(p, cx + 1, 17 + oy, 4, 1.3, '#e88a20'); p.rect(cx - 3, 15 + oy, 8, 1, '#c87018');
-    if (id === 'donald') { const B = '#2a5ad0'; p.rect(cx - 6, 3, 12, 3, B); p.rect(cx - 7, 5, 14, 2, '#1a1a3a'); p.rect(cx + 5, 6, 4, 2, '#1a1a3a'); p.rect(cx - 2, 1, 5, 2, B);
-      p.rect(cx - 6, 20, 12, 7, B); p.rect(cx - 6, 20, 12, 1, '#5a8af0'); p.rect(cx - 2, 20, 4, 2, RED); p.px(cx, 22, RED); }
-    if (id === 'daisy') { p.rect(cx - 5, 2, 10, 4, '#f08ac0'); p.rect(cx - 1, 3, 2, 2, '#d0609a'); p.px(cx - 4, 8, K); p.px(cx + 4, 8, K); p.px(cx - 5, 9, K); p.px(cx + 5, 9, K);
-      p.rect(cx - 6, 20, 12, 8, '#9a5ad8'); p.rect(cx - 6, 20, 12, 1, '#c08af0'); for (let k = 0; k < 4; k++) p.px(cx - 4 + k * 3, 24, '#f08ac0'); }
-    if (kid) { p.rect(cx - 6, 4 + oy, 12, 3, kc); p.rect(cx + 2, 6 + oy, 7, 2, kc); p.rect(cx - 5, 21 + oy, 10, 6, kc); p.rect(cx - 5, 21 + oy, 10, 1, lt(kc, 0.4)); }
-    if (id === 'scrooge') {
-      p.rect(cx - 4, -1 + 1, 8, 6, K); p.rect(cx - 6, 5, 12, 1, K); p.rect(cx - 4, 4, 8, 1, '#c02028');
-      p.rect(cx - 5, 9, 4, 3, '#a8c8e8'); p.rect(cx + 1, 9, 4, 3, '#a8c8e8'); p.rect(cx - 1, 10, 2, 1, K);
-      p.rect(cx - 8, 12, 2, 4, W); p.rect(cx + 6, 12, 2, 4, W);
-      p.rect(cx - 6, 20, 12, 9, '#c82838'); p.rect(cx - 7, 27, 3, 5, '#c82838'); p.rect(cx + 4, 27, 3, 5, '#c82838'); for (let y = 21; y < 28; y += 2) p.px(cx, y, YEL);
-      p.rect(cx + 9, 22, 1, 14, '#6a3a1a'); p.rect(cx + 8, 21, 3, 1, YEL);
-    }
-    if (!kid && id !== 'scrooge' && id !== 'donald' && id !== 'daisy') { /* (không có) */ }
-    for (let y = 27 + (kid ? 0 : 0); y < 32; y++) p.rect(cx - 5 + (y - 27) * 0.4, y, 10 - (y - 27) * 0.8, 1, W);
-    arms(id === 'scrooge' ? '#c82838' : id === 'daisy' ? '#9a5ad8' : kid ? kc : id === 'donald' ? '#2a5ad0' : W, 20 + (kid ? oy : 0), false);
-    p.rect(cx - 3 + step, 32, 2, 3, OR); p.rect(cx + 1 - step, 32, 2, 3, OR);
-    p.rect(cx - 6 + step, 35, 5, 3, OR); p.rect(cx + 1 - step, 35, 5, 3, OR);
-    return;
-  }
-  if (id === 'goofy') {
-    p.rect(cx - 9, 7, 3, 12, K); p.rect(cx + 6, 7, 3, 12, K);
-    ellipse(p, cx, 11, 6.5, 7, K);
-    ellipse(p, cx + 1, 15, 5.5, 3.6, SKIN); ellipse(p, cx + 2, 12.5, 2.6, 1.8, K);
-    ellipse(p, cx - 2, 8, 2, 2.6, W); ellipse(p, cx + 2, 8, 2, 2.6, W); p.px(cx - 2, 9, K); p.px(cx + 2, 9, K);
-    p.rect(cx - 2, 17, 6, 1, '#5a1a1a'); p.rect(cx, 18, 2, 2, W);
-    p.rect(cx - 5, 1, 10, 4, '#3a9a4a'); p.rect(cx - 7, 4, 14, 1, '#2a7a3a'); p.rect(cx - 5, 3, 10, 1, K);
-    p.rect(cx - 5, 20, 10, 7, '#f08a3a'); p.rect(cx - 5, 20, 3, 7, K); p.rect(cx + 2, 20, 3, 7, K); p.rect(cx - 2, 19, 4, 2, '#f08a3a');
-    arms('#f08a3a', 20);
-    p.rect(cx - 4, 27, 8, 3, '#3a5ab8'); legs('#3a5ab8', 30, 5, 3); feet('#7a4a2a', 37, 3.6);
-    return;
-  }
-  if (id === 'pluto') {
-    const Y = '#f0b030';
-    p.rect(cx - 9, 6, 3, 11, K); p.rect(cx + 6, 6, 3, 11, K);
-    ellipse(p, cx, 11, 6.5, 6.5, Y); ellipse(p, cx + 1, 14, 6, 3.4, '#f6c860'); ellipse(p, cx + 2, 11, 2.6, 1.8, K);
-    ellipse(p, cx - 2, 7, 1.6, 2.4, W); ellipse(p, cx + 2, 7, 1.6, 2.4, W); p.px(cx - 2, 8, K); p.px(cx + 2, 8, K);
-    p.rect(cx, 17, 3, 3, '#f06a7a');
-    p.rect(cx - 5, 19, 10, 2, '#3aa84a'); p.px(cx, 21, YEL);
-    ellipse(p, cx, 26, 6, 6, Y); arms(Y, 20, false);
-    legs(Y, 31, 4, 3); feet(Y, 36, 3); p.rect(cx + 6, 27, 6, 2, K); p.rect(cx + 11, 24, 2, 4, K);
-    return;
-  }
-  // ── sóc: Chip (mũi đen), Dale (mũi đỏ, sáng màu hơn)
-  const fur = id === 'chip' ? '#9a6232' : '#c07a3e', cream = '#f6dcb0';
-  circle(p, cx - 6, 5, 3, fur); circle(p, cx + 6, 5, 3, fur);
-  ellipse(p, cx, 12, 7, 6.5, fur); ellipse(p, cx, 15, 5, 3.6, cream); p.rect(cx - 1, 4, 2, 5, dk(fur, 0.4));
-  ellipse(p, cx - 2.5, 10, 1.8, 2.4, W); ellipse(p, cx + 2.5, 10, 1.8, 2.4, W); p.px(cx - 2, 11, K); p.px(cx + 2, 11, K);
-  ellipse(p, cx, 13.5, id === 'dale' ? 1.8 : 1.3, id === 'dale' ? 1.4 : 1, id === 'dale' ? '#d83a3a' : K);
-  if (id === 'chip') { p.rect(cx - 2, 17, 2, 2, W); p.rect(cx, 17, 2, 2, W); } else { p.rect(cx - 1, 17, 2, 2, W); }
-  ellipse(p, cx, 26, 6, 6, fur); ellipse(p, cx, 27, 3.6, 4.5, cream);
-  arms(fur, 20, false); legs(fur, 31, 4, 3); feet(fur, 36, 3);
-  for (let y = 18; y < 34; y++) p.rect(cx + 7 + Math.round(Math.sin(y / 3) * 2), y, 4, 1, y % 3 ? fur : dk(fur, 0.2));
+  if (id === 'cat' && f !== 3) { p.rect(cx - 10, 18, 1, 11, '#7a4e2c'); p.px(cx - 10, 17, GOLD); p.px(cx - 11, 17, '#fff2a0'); p.px(cx - 9, 17, '#fff2a0'); }
+  if (id === 'panda' && f !== 3) { p.rect(cx - 11, 18, 2, 14, '#6ab84a'); for (let y = 20; y < 32; y += 4) p.px(cx - 11, y, '#3a8a2a'); }
+  // chân
+  p.rect(cx - 5 + step, 30, 4, 5, limb); p.rect(cx + 1 - step, 30, 4, 5, limb);
+  const shoe = id === 'penguin' || id === 'owl' ? '#f6a030' : id === 'panda' ? K : '#3a2a3a';
+  p.rect(cx - 6 + step, 35, 5, 3, shoe); p.rect(cx + 1 - step, 35, 5, 3, shoe);
 }, '#2a1a24');

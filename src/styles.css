@@ -1831,3 +1831,13 @@ textarea { resize: vertical; }
 .coaster-end { position: absolute; background: #fffaf0; border-radius: 16px; padding: 14px; max-width: min(92vw, 520px); text-align: center; box-shadow: 0 8px 30px #0008; }
 .coaster-end img { width: 100%; image-rendering: pixelated; border: 4px solid #f6c445; border-radius: 6px; }
 .coaster-end .row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+
+/* Diễu hành bùng nổ: đèn rọi quét, bong bóng, pháo giấy, xe hoa nhấp nháy */
+.fa-beam { position: absolute; transform-origin: 50% 100%; translate: 0 -100%; background: linear-gradient(to top, var(--c), transparent 85%); opacity: .35; mix-blend-mode: screen; pointer-events: none; z-index: 3; filter: blur(2px); clip-path: polygon(30% 100%, 70% 100%, 100% 0, 0 0); animation: fabeam 3.6s ease-in-out infinite alternate; }
+@keyframes fabeam { from { rotate: -28deg; } to { rotate: 28deg; } }
+.fa-bubble { position: absolute; border-radius: 50%; border: 1px solid #ffffffc0; background: radial-gradient(circle at 30% 30%, #ffffffb0, #c8e8ff30 60%, transparent); pointer-events: none; z-index: 700; }
+.fa-conf { position: absolute; pointer-events: none; z-index: 650; }
+.fa-twinkle { animation: fatw .5s steps(2) infinite; }
+@keyframes fatw { 0% { filter: drop-shadow(0 0 3px #ffe08a) brightness(1.05); } 100% { filter: drop-shadow(0 0 6px #ff8ad8) brightness(1.25); } }
+.fa-dusk { position: absolute; left: 0; top: 0; background: #2a1a6050; pointer-events: none; z-index: 1; }
+.fa-banner { font-weight: 700; animation: glow 1.2s ease-in-out infinite; }
