@@ -13,6 +13,8 @@ interface StageProps {
   onTap?: (x: number, y: number) => void;
   /** Cảnh rộng: phóng to vừa mắt và cho camera đi theo điểm này (tọa độ logic) */
   follow?: { x: number; y: number };
+  /** số pixel logic tối thiểu luôn thấy ở cạnh ngắn (mặc định VIEW) */
+  view?: number;
   children?: ReactNode;
 }
 
@@ -20,7 +22,7 @@ const VIEW = 145;  // cạnh ngắn của màn hình luôn thấy khoảng bấy
 const SPEED = 45; // khớp tốc độ đi của nhân vật để camera lướt theo
 
 /** Khung cảnh pixel: tự co giãn vừa chỗ trống, giữ đúng tỉ lệ, trả tọa độ chạm theo pixel logic */
-export function Stage({ w, h, bg, className = '', onTap, follow, children }: StageProps) {
+export function Stage({ w, h, bg, className = '', onTap, follow, view = VIEW, children }: StageProps) {
   const wrap = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ cw: 0, ch: 0 });
 
@@ -34,7 +36,7 @@ export function Stage({ w, h, bg, className = '', onTap, follow, children }: Sta
   // Vừa khít; riêng màn dọc thì phóng to theo chiều cao và trượt ngang theo nhân vật
   const { cw, ch } = box;
   const fit = Math.min(cw / w, ch / h);
-  const raw = follow === undefined ? fit : Math.max(fit, Math.min(cw, ch) / VIEW);
+  const raw = follow === undefined ? fit : Math.max(fit, Math.min(cw, ch) / view);
   // Làm tròn để 1 pixel game = số nguyên pixel thật của màn hình (tránh nhòe khi Windows phóng 125%/150%)
   const dpr = window.devicePixelRatio || 1;
   const s = raw * dpr >= 2 ? Math.floor(raw * dpr) / dpr : raw;

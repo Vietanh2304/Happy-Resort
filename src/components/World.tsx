@@ -264,6 +264,7 @@ export function World(raw: WorldProps) {
       w={def.w} h={def.h} bg={bg} className={`world-stage scene-${scene}`}
       onTap={walkable ? tap : undefined}
       follow={follow}
+      view={scene.startsWith('trip_fairy') ? 192 : undefined}
     >
       <SceneContent {...props} />
     </Stage>
