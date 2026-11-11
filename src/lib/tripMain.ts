@@ -127,7 +127,7 @@ const MAIN: Record<TripId, MainDef> = {
     draw: (p, L) => {
       sky(p, L, ['#9ac0f0', '#f0e0e8'], 70, 60);
       // Eiffel xa bên phải
-      eiffel(p, L, 224, 100, 92);
+      eiffel(p, L, 224, 100, 70);
       for (let i = 0; i < 4; i++) {
         const x = i * 50; p.rect(x, 28, 49, 72, '#ece0c8'); p.rect(x, 22, 49, 6, '#5a6a80'); for (let k = 0; k < 3; k++) p.rect(x + 6 + k * 15, 16, 6, 6, '#5a6a80');
         for (let r = 0; r < 3; r++) for (let k = 0; k < 3; k++) { const wx = x + 6 + k * 15, wy = 32 + r * 18; p.rect(wx, wy, 8, 12, '#7a9ab8'); L.wins.push([wx, wy, 8, 12]); p.rect(wx - 1, wy + 12, 10, 1, '#2a2a2a'); circle(p, wx + 4, wy + 13, 1, '#e8443a'); }
@@ -239,4 +239,4 @@ export function tripWeather(id: TripId, date: string, hour: number): Weather {
   let x = r(), k = 0; while (k < 4 && x >= pr[k]) { x -= pr[k]; k++; }
   return { type: WX[k], temp: Math.round(lo + r() * (hi - lo)), code: 0 };
 }
-export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v8:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night, id === 'fairy');
+export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v9:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night, true);

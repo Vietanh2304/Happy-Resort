@@ -38,7 +38,7 @@ export type Act =
   | { k: 'park'; x: number; y: number; label: string; ride: ParkAct; at?: { x: number; y: number } }
   | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind; res?: { icon: string; x: number; y: number }; outfit?: number; at?: { x: number; y: number } };
 /** Trò ở Disneyland (xử lý trong FairyPark) */
-export type ParkAct = 'coaster' | 'carousel' | 'cups' | 'show' | 'parade' | 'sword' | 'royal';
+export type ParkAct = 'coaster' | 'carousel' | 'cups' | 'show' | 'parade' | 'sword' | 'royal' | 'boat';
 /** Hành động nhân vật: ngồi, khấn, ngâm nước, chui lều, cho chim ăn, vẽ, hát, hôn… */
 export type DoKind = 'watch' | 'gaze' | 'jar' | 'cow' | 'wall' | 'mask' | 'dress' | 'sit' | 'craft' | 'cheer' | 'pray' | 'feed' | 'paint' | 'cross' | 'love' | 'tent' | 'soak' | 'pick' | 'sing';
 
@@ -105,7 +105,7 @@ export function string(p: Pen, L: Light, x0: number, x1: number, y: number, sag:
 /** Vẽ nền một map tham quan (có cache theo phase) */
 export function spotBackground(scene: SpotScene, ph: Phase): Sprite {
   const s = SPOTS[scene];
-  return paint(`spot:v9:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora', s.trip === 'fairy');
+  return paint(`spot:v10:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora', true);
 }
 /** Vẽ một cảnh: nền → phủ màu theo giờ → cửa sổ sáng, neon, đèn lồng có quầng */
 export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => void, ph: Phase, alwaysNight = false, soft = false): Sprite {
@@ -805,11 +805,11 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
       sky(p, L, ['#a8c4e4', '#ece4f2'], 112, 40);
       // thành phố xa màu tím nhạt
       for (let i = 0; i < 14; i++) { const x = i * 19, h = 10 + (i * 7) % 12; p.rect(x, 112 - h, 18, h, L.night ? '#3a3a6a' : '#cfc6e0'); for (let k = 0; k < 3; k++) p.rect(x + 3 + k * 5, 112 - h + 3, 2, 3, L.night ? '#ffe08a' : '#b8b0d0'); }
-      // hàng rào cây xanh cắt tỉa
-      band(p, 108, 134, '#8ab890', '#6a9a74');
-      for (let x = 0; x < 256; x += 6) circle(p, x + 3, 108, 4, '#9ac8a0');
-      speckle(p, L, 0, 106, 256, 26, 220, ['#b0d8b4', '#5a8a64', '#7aa884']);
-      eiffel(p, L, 128, 134, 128);
+      eiffel(p, L, 128, 116, 84);
+      // hàng rào cây xanh cắt tỉa (che chân tháp)
+      band(p, 110, 134, '#8ab890', '#6a9a74');
+      for (let x = 0; x < 256; x += 6) circle(p, x + 3, 110, 4, '#9ac8a0');
+      speckle(p, L, 0, 108, 256, 26, 220, ['#b0d8b4', '#5a8a64', '#7aa884']);
       // bãi cỏ + lối đi lát hồng
       band(p, 134, 192, '#a8d098', '#88b878');
       for (let y = 134; y < 192; y++) { const w = 16 + (y - 134) * 0.7; p.rect(128 - w, y, 2 * w, 1, mix('#e8d4d8', '#d8c0c8', (y - 134) / 58)); }
@@ -907,6 +907,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
     acts: [
       { k: 'park', x: 128, y: 142, label: '🎆 Pháo hoa lâu đài', ride: 'show', at: { x: 128, y: 178 } },
       { k: 'park', x: 40, y: 136, label: '👑 Hoá trang hoàng gia', ride: 'royal' },
+      { k: 'park', x: 84, y: 118, label: '🛶 Thuyền cổ tích', ride: 'boat', at: { x: 92, y: 150 } },
       { k: 'park', x: 216, y: 136, label: '⚔️ Rút gươm trong đá', ride: 'sword', at: { x: 202, y: 182 } },
       ph(64, 176), buy(176, 184, 'fa_churro', 8, '🥨 Churros quế'),
     ],

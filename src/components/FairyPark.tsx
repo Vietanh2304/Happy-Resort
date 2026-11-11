@@ -19,13 +19,14 @@ import { Spr, Tag, useScale } from './Stage';
 import { Fireworks } from './TripExtras';
 import { FxList } from './TripSpot';
 import { FireworkShow } from './FireworkShow';
+import { BOAT_WAIT, BoatRide } from './FairyBoat';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
 /** Sắp xếp người ngồi theo ngoại hình để hai máy thấy cùng một chỗ ngồi */
 const seatOrder = <T extends { look: AvatarLook }>(a: T[]) => [...a].sort((p, q) => (JSON.stringify(p.look) < JSON.stringify(q.look) ? -1 : 1));
-type RideKind = 'coaster' | 'carousel' | 'cups';
-const RIDE_I: Record<RideKind, number> = { carousel: 0, cups: 1, coaster: 2 };
-const RIDE_NAME: Record<RideKind, string> = { coaster: 'tàu lượn siêu tốc', carousel: 'King Arthur Carrousel', cups: 'Mad Tea Party' };
+type RideKind = 'coaster' | 'carousel' | 'cups' | 'boat';
+const RIDE_I: Record<RideKind, number> = { carousel: 0, cups: 1, coaster: 2, boat: 3 };
+const RIDE_NAME: Record<RideKind, string> = { coaster: 'tàu lượn siêu tốc', carousel: 'King Arthur Carrousel', cups: 'Mad Tea Party', boat: 'thuyền cổ tích' };
 const SPIN_MS = 16000, STATION_MS = 5000, SHOW_MS = 50000, PARADE_MS = 72000, PARADE_EVERY = 20 * 60_000;
 
 interface Props { scene: string; live: Live; partnerHere: boolean; looks: { me: AvatarLook; them: AvatarLook }; go: (to: Pt, then?: () => void) => void; onAnim: (n: AnimName) => void; night: boolean; phase: Phase }
@@ -42,9 +43,9 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
 
   // ── lên trò chơi (đồng bộ thời điểm bắt đầu để hai người ngồi chung)
   const board = (kind: RideKind, at: number) => {
-    const act = kind === 'coaster' ? 'coaster' : 'spin';
+    const act = kind === 'coaster' || kind === 'boat' ? kind : 'spin';
     L.current.update({ act, trip: { i: RIDE_I[kind], at }, dish: null, drink: null });
-    if (kind !== 'coaster') {
+    if (kind === 'carousel' || kind === 'cups') {
       const exit = kind === 'carousel' ? { x: RIDES.carousel.x - 30, y: 132 } : { x: RIDES.cups.x + 30, y: 136 };
       setTimeout(() => { const m = L.current.mine; if (m.act === 'spin' && m.trip?.at === at) L.current.update({ act: null, trip: null, pos: exit }); }, SPIN_MS - (Date.now() - at));
     }
@@ -52,19 +53,20 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
   const ride = (kind: RideKind) => {
     const at = Date.now();
     board(kind, at);
-    L.current.say(kind === 'coaster' ? '🎢 Lên tàu lượn nào!' : kind === 'carousel' ? '🎠 Chọn con ngựa trắng nè' : '☕ Xoay thật nhanh luôn!');
+    L.current.say(kind === 'boat' ? '🛶 Lên thuyền đi qua hầm cổ tích nè!' : kind === 'coaster' ? '🎢 Lên tàu lượn nào!' : kind === 'carousel' ? '🎠 Chọn con ngựa trắng nè' : '☕ Xoay thật nhanh luôn!');
     if (theirs) sendEvent('fairy-ride', { kind, at });
   };
   useEffect(() => onEvent('fairy-ride', (d: { kind: RideKind; at: number }) => {
-    if (L.current.mine.act === 'coaster' || L.current.mine.act === 'spin') return;
-    setInvite(d); setTimeout(() => setInvite(x => (x?.at === d.at ? null : x)), d.kind === 'coaster' ? STATION_MS - 600 : 7000);
+    if (['coaster', 'spin', 'boat'].includes(L.current.mine.act ?? '')) return;
+    setInvite(d); setTimeout(() => setInvite(x => (x?.at === d.at ? null : x)), d.kind === 'coaster' ? STATION_MS - 600 : d.kind === 'boat' ? BOAT_WAIT - 600 : 7000);
   }), []);
   const join = () => {
     const d = invite; setInvite(null); if (!d) return;
-    const left = (d.kind === 'coaster' ? STATION_MS : SPIN_MS - 3000) - (Date.now() - d.at);
+    const wait = (k: RideKind) => (k === 'coaster' ? STATION_MS : k === 'boat' ? BOAT_WAIT : SPIN_MS - 3000);
+    const left = wait(d.kind) - (Date.now() - d.at);
     if (left < 300) return L.current.say('😢 Lỡ chuyến mất rồi…');
-    go(d.kind === 'coaster' ? { x: 40, y: 128 } : d.kind === 'carousel' ? { x: RIDES.carousel.x, y: 134 } : { x: RIDES.cups.x, y: 138 }, () => {
-      const still = (d.kind === 'coaster' ? STATION_MS : SPIN_MS - 3000) - (Date.now() - d.at);
+    go(d.kind === 'boat' ? { x: 92, y: 150 } : d.kind === 'coaster' ? { x: 40, y: 128 } : d.kind === 'carousel' ? { x: RIDES.carousel.x, y: 134 } : { x: RIDES.cups.x, y: 138 }, () => {
+      const still = wait(d.kind) - (Date.now() - d.at);
       if (still < 200) return L.current.say('😢 Tàu chạy mất rồi… đợi chuyến sau nha');
       board(d.kind, d.at);
     });
@@ -81,7 +83,7 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
   useEffect(() => {
     const f = (e: Event) => {
       const { ride: k } = (e as CustomEvent<{ ride: ParkAct }>).detail;
-      if (k === 'coaster' || k === 'carousel' || k === 'cups') return ride(k);
+      if (k === 'coaster' || k === 'carousel' || k === 'cups' || k === 'boat') return ride(k);
       if (k === 'show') {
         L.current.update({ act: 'firework', dish: null, drink: null }); L.current.say('✨ Show lâu đài bắt đầu rồi!');
         if (Date.now() - showAt > SHOW_MS) { const at = Date.now(); setShowAt(at); sendEvent('fairy-show', { at }); }
@@ -124,6 +126,7 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
     .filter(r => r.w.act === (kind === 'coaster' ? 'coaster' : 'spin') && r.w.trip?.i === RIDE_I[kind]).map(r => ({ look: r.look, at: r.w.trip!.at }));
   const ridersSorted = (kind: RideKind) => seatOrder(riders(kind));
   const myCoaster = mine.act === 'coaster' && mine.trip?.i === 2 ? mine.trip.at : 0;
+  const myBoat = mine.act === 'boat' && mine.trip?.i === 3 ? mine.trip.at : 0;
   return (
     <>
       {scene === 'trip_fairy_castle' && (
@@ -143,6 +146,8 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
         </>
       )}
       {invite && <Tag x={128} y={40} className="label invite-chip" onClick={join}>💑 Người ấy rủ đi {RIDE_NAME[invite.kind]} — lên cùng!</Tag>}
+      {myBoat > 0 && <BoatRide at={myBoat} me={looks.me} them={theirs?.act === 'boat' && theirs.trip?.at === myBoat ? looks.them : null} onExit={() => L.current.update({ act: null, trip: null, pos: { x: 92, y: 152 } })} />}
+      {scene === 'trip_fairy_castle' && (mine.act === 'boat' || theirs?.act === 'boat') && <Tag x={84} y={104} className="bed-bubble">🛶 Thuyền đang trôi qua hầm cổ tích…</Tag>}
       {myCoaster > 0 && <CoasterRide at={myCoaster} phase={phase} me={looks.me} them={theirs?.act === 'coaster' && theirs.trip?.at === myCoaster ? looks.them : null}
         onExit={() => L.current.update({ act: null, trip: null, pos: { x: 40, y: 130 } })} />}
     </>
@@ -294,7 +299,13 @@ function CastleShow({ at, now, night }: { at: number; now: number; night: boolea
 
 // ───────── Tàu lượn Sao Băng ─────────
 interface Track { x: Float32Array; h: Float32Array; t: Float32Array; v: Float32Array; n: number; total: number; lift: number; crest: number; drop: number; loop: [number, number]; loop2: [number, number]; brake: number; stop: number }
-const TUNNEL: [number, number] = [860, 1165];
+/** Các hầm trên đường tàu lượn: mỗi hầm một kiểu (vũ trụ, núi lửa, hang băng) */
+const TUNNELS = [
+  { x0: 860, x1: 1165, kind: 'space', name: '🚀 Hầm Space Mountain ✨', rock: ['#7a5ab8', '#5a4498'], bg: '#0a0620', rail: ['#1a3a6a', '#5ad8ff'], ring: ['#ff5a9a', '#5ad8ff', '#ffd84a', '#9a7aff'] },
+  { x0: 1535, x1: 1765, kind: 'lava', name: '🌋 Hầm núi lửa — nóng quáaa!', rock: ['#6a3a2a', '#4a2418'], bg: '#2a0604', rail: ['#5a1a0a', '#ffb03a'], ring: ['#ff5a2a', '#ffb03a', '#ffe06a'] },
+  { x0: 2085, x1: 2305, kind: 'ice', name: '❄️ Hang băng lấp lánh', rock: ['#a8d8f0', '#78b0d8'], bg: '#061c2c', rail: ['#1a4a6a', '#c8f4ff'], ring: ['#c8f4ff', '#7ae0ff', '#ffffff'] },
+] as const;
+const tunnelAt = (x: number) => TUNNELS.find(t => x > t.x0 && x < t.x1);
 let TRACK: Track | null = null;
 function track(): Track {
   if (TRACK) return TRACK;
@@ -350,8 +361,8 @@ function lineFor(T: Track, p: ReturnType<typeof at>, ms: number) {
   if (p.i < T.crest) return '😰 Lạch cạch… lạch cạch… cao quáaa';
   if (p.i < T.drop + 12) return '😱 AAAAAAAAA!!!';
   if (p.i <= T.loop[1]) return '🌀 Lộn vòng!!!';
-  if (p.x < TUNNEL[0]) return '🤸 Bay khỏi ghế luôn!';
-  if (p.x < TUNNEL[1]) return '🚀 Hầm Space Mountain ✨';
+  const tn = tunnelAt(p.x); if (tn) return tn.name;
+  if (p.x < TUNNELS[0].x0) return '🤸 Bay khỏi ghế luôn!';
   if (p.i >= T.loop2[0] && p.i <= T.loop2[1]) return '🌀 Lộn vòng lần nữaaa!!!';
   if (p.i < T.brake) return '🎉 Yeeeeee!';
   return '😆 Phù… vui quá trời!';
@@ -395,7 +406,7 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
       // mặt đất + cây
       ctx.fillStyle = night ? '#1a3a2a' : '#5aa850'; ctx.fillRect(-4, gy, W + 8, HH);
       for (let wx = Math.floor(camX / 37) * 37; wx < camX + W + 20; wx += 37) {
-        if (wx < 130 || wx > 2360 || (wx > TUNNEL[0] - 20 && wx < TUNNEL[1] + 20)) continue;
+        if (wx < 130 || wx > 2360 || tunnelAt(wx - 20) || tunnelAt(wx + 20)) continue;
         const x = SX(wx + ((wx * 7) % 13)); ctx.fillStyle = '#6a4a32'; ctx.fillRect(x, gy - 8, 2, 8);
         ctx.fillStyle = night ? '#1a4a3a' : '#3a8a4a'; ctx.fillRect(x - 5, gy - 18, 12, 11); ctx.fillRect(x - 3, gy - 22, 8, 4);
       }
@@ -412,14 +423,14 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
       ctx.fillStyle = night ? '#8a90b0' : '#f0e8f4';
       for (let i = 0; i < T.n; i += 6) {
         const x = SX(T.x[i]); if (x < -10 || x > W + 10 || (i > la && i < lb) || (i > T.loop2[0] && i < T.loop2[1]) || T.h[i] < 3) continue;
-        if (T.x[i] > TUNNEL[0] && T.x[i] < TUNNEL[1]) continue;
+        if (tunnelAt(T.x[i])) continue;
         const y = SY(T.h[i]) + 3; ctx.fillRect(Math.round(x), y, 1, gy - y); if (i % 12 === 0) for (let yy = y + 8; yy < gy; yy += 12) ctx.fillRect(Math.round(x) - 6, yy, 7, 1);
       }
       if (SX(560) > -60 && SX(560) < W + 60) { ctx.fillRect(Math.round(SX(573)), SY(10) + 3, 2, gy - SY(10)); }
       // ray
       const rails = (c1: string, c2: string, inTunnel: boolean) => {
         ctx.lineWidth = 3; ctx.strokeStyle = c1; ctx.beginPath(); let on = false;
-        for (let i = 0; i < T.n; i++) { const x = SX(T.x[i]); const tun = T.x[i] > TUNNEL[0] && T.x[i] < TUNNEL[1]; if (x < -20 || x > W + 20 || tun !== inTunnel) { on = false; continue; } const y = SY(T.h[i]) + 1; if (on) ctx.lineTo(x, y); else { ctx.moveTo(x, y); on = true; } }
+        for (let i = 0; i < T.n; i++) { const x = SX(T.x[i]); const tun = !!tunnelAt(T.x[i]); if (x < -20 || x > W + 20 || tun !== inTunnel) { on = false; continue; } const y = SY(T.h[i]) + 1; if (on) ctx.lineTo(x, y); else { ctx.moveTo(x, y); on = true; } }
         ctx.stroke(); ctx.lineWidth = 1; ctx.strokeStyle = c2; ctx.stroke();
       };
       rails('#7a1a2a', '#ff5a5a', false);
@@ -434,25 +445,46 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
         ctx.restore();
       };
       cart();
-      // núi Sao Băng (tàu chui vào hầm)
-      const mx = SX((TUNNEL[0] + TUNNEL[1]) / 2), mw = (TUNNEL[1] - TUNNEL[0]) / 2 + 14;
-      if (mx > -mw && mx < W + mw) {
-        for (let dx = -mw; dx <= mw; dx += 2) { const hh = Math.sqrt(1 - (dx / mw) ** 2) * 130; const x = mx + dx; ctx.fillStyle = dx < 0 ? '#7a5ab8' : '#5a4498'; ctx.fillRect(Math.round(x), Math.round(gy - hh), 2, Math.round(hh)); }
-        ctx.fillStyle = '#ffe8a0'; for (let k = 0; k < 14; k++) ctx.fillRect(Math.round(mx - mw + 20 + ((k * 37) % (mw * 2 - 40))), Math.round(gy - 30 - ((k * 23) % 80)), 1, 1);
-        for (const ex of [TUNNEL[0] + 4, TUNNEL[1] - 4]) { ctx.fillStyle = '#140c2a'; const y = SY(ex < 900 ? 34 : 32); ctx.fillRect(Math.round(SX(ex)) - 6, y - 28, 12, 32); }
+      // núi bọc các hầm (tàu chui vào là khuất)
+      for (const tn of TUNNELS) {
+        const mx = SX((tn.x0 + tn.x1) / 2), mw = (tn.x1 - tn.x0) / 2 + 14;
+        if (mx < -mw || mx > W + mw) continue;
+        let top = 0; for (let i = 0; i < T.n; i++) if (T.x[i] > tn.x0 && T.x[i] < tn.x1) top = Math.max(top, T.h[i]);
+        const H = top + 46;
+        for (let dx = -mw; dx <= mw; dx += 2) {
+          const hh = Math.sqrt(1 - (dx / mw) ** 2) * H * (0.9 + 0.1 * Math.sin(dx / 7)), x = Math.round(mx + dx);
+          ctx.fillStyle = dx < 0 ? tn.rock[0] : tn.rock[1]; ctx.fillRect(x, Math.round(gy - hh), 2, Math.round(hh));
+          if (tn.kind === 'ice' && hh > H * 0.75) { ctx.fillStyle = '#ffffff'; ctx.fillRect(x, Math.round(gy - hh), 2, 3); }
+          if (tn.kind === 'lava' && Math.abs(dx) < 8) { ctx.fillStyle = (Math.floor(Date.now() / 150 + dx) % 3) ? '#ff6a2a' : '#ffd04a'; ctx.fillRect(x, Math.round(gy - hh), 2, Math.round(hh * 0.35)); }
+        }
+        if (tn.kind === 'lava') for (let k = 0; k < 10; k++) { const ty = ((Date.now() / 25 + k * 37) % 70); ctx.fillStyle = k % 2 ? '#ffb03a' : '#ff5a2a'; ctx.fillRect(Math.round(mx + Math.sin(k * 2.3) * 10), Math.round(gy - H - ty), 2, 2); }
+        if (tn.kind === 'space') { ctx.fillStyle = '#ffe8a0'; for (let k = 0; k < 14; k++) ctx.fillRect(Math.round(mx - mw + 20 + ((k * 37) % (mw * 2 - 40))), Math.round(gy - 30 - ((k * 23) % 80)), 1, 1); }
+        for (const ex of [tn.x0 + 4, tn.x1 - 4]) { let j = 0; while (j < T.n - 1 && T.x[j] < ex) j++; const y = SY(T.h[j]); ctx.fillStyle = '#140c1a'; ctx.fillRect(Math.round(SX(ex)) - 7, y - 30, 14, 34); ctx.fillStyle = tn.ring[0]; ctx.fillRect(Math.round(SX(ex)) - 8, y - 31, 16, 2); }
       }
-      // trong hầm: tối om, sao vụt qua, vòng neon
-      const tin = Math.min(1, (p.x - TUNNEL[0]) / 25, (TUNNEL[1] - p.x) / 25);
-      if (tin > 0) {
-        ctx.globalAlpha = tin; ctx.fillStyle = '#0a0620'; ctx.fillRect(-4, -4, W + 8, HH + 8);
-        for (const [x, y, k] of stars) { const sx = ((x - camX * (1.2 + k * 0.4)) % W + W) % W; ctx.fillStyle = k === 2 ? '#8ad0ff' : '#ffffff'; ctx.fillRect(sx, (y * 1.5) % HH, k ? 3 + k * 2 : 1, 1); }
-        const RC = ['#ff5a9a', '#5ad8ff', '#ffd84a', '#9a7aff'];
-        for (let wx = Math.ceil(TUNNEL[0] / 40) * 40; wx < TUNNEL[1]; wx += 40) {
+      // bên trong hầm đang đi
+      const tn = tunnelAt(p.x);
+      const tin = tn ? Math.min(1, (p.x - tn.x0) / 25, (tn.x1 - p.x) / 25) : 0;
+      if (tn && tin > 0) {
+        ctx.globalAlpha = tin; ctx.fillStyle = tn.bg; ctx.fillRect(-4, -4, W + 8, HH + 8);
+        const now = Date.now();
+        if (tn.kind === 'space') for (const [x, y, k] of stars) { const sx = ((x - camX * (1.2 + k * 0.4)) % W + W) % W; ctx.fillStyle = k === 2 ? '#8ad0ff' : '#ffffff'; ctx.fillRect(sx, (y * 1.5) % HH, k ? 3 + k * 2 : 1, 1); }
+        if (tn.kind === 'lava') {
+          const lg = ctx.createLinearGradient(0, HH * 0.55, 0, HH); lg.addColorStop(0, 'transparent'); lg.addColorStop(1, '#ff5a1a'); ctx.fillStyle = lg; ctx.fillRect(0, HH * 0.55, W, HH * 0.45);
+          for (let x = 0; x < W; x += 3) { const y = HH - 14 + Math.sin(x / 9 + now / 300) * 3; ctx.fillStyle = (x / 3) % 2 ? '#ff8a2a' : '#ffd04a'; ctx.fillRect(x, y, 3, HH - y); }
+          for (let k = 0; k < 40; k++) { const x = ((k * 53 - camX * 0.7) % W + W) % W, y = HH - ((now / 12 + k * 41) % HH); ctx.fillStyle = k % 3 ? '#ff9a3a' : '#ffe06a'; ctx.fillRect(x, y, k % 4 ? 1 : 2, k % 4 ? 1 : 2); }
+          ctx.fillStyle = '#1a0402'; for (let x = -20; x < W + 20; x += 26) { const sx = ((x - camX * 0.9) % (W + 40) + W + 40) % (W + 40) - 20; for (let y = 0; y < 26; y++) ctx.fillRect(sx + y * 0.25, y, 10 - y * 0.4, 1); }
+        }
+        if (tn.kind === 'ice') {
+          ctx.fillStyle = '#c8f0ff'; for (let x = -20; x < W + 20; x += 18) { const sx = ((x - camX * 0.9) % (W + 40) + W + 40) % (W + 40) - 20, L2 = 14 + ((x * 7) % 16); for (let y = 0; y < L2; y++) ctx.fillRect(sx + y * 0.2, y, Math.max(1, 6 - y * (6 / L2)), 1); }
+          for (let k = 0; k < 50; k++) { const x = ((k * 61 - camX * (0.6 + (k % 3) * 0.3) + now / 40) % W + W) % W, y = ((k * 37 + now / 20) % HH); ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, k % 5 ? 1 : 2, k % 5 ? 1 : 2); }
+          for (let k = 0; k < 12; k++) if ((Math.floor(now / 200) + k) % 4 === 0) { const x = (k * 97) % W, y = 40 + (k * 31) % 100; ctx.fillStyle = '#ffffff'; ctx.fillRect(x - 2, y, 5, 1); ctx.fillRect(x, y - 2, 1, 5); }
+        }
+        for (let wx = Math.ceil(tn.x0 / 40) * 40; wx < tn.x1; wx += 40) {
           const x = SX(wx); if (x < -20 || x > W + 20) continue;
           let j = 0; while (j < T.n - 1 && T.x[j] < wx) j++;
-          ctx.strokeStyle = RC[(wx / 40) % 4]; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, SY(T.h[j]) - 8, 6, 22, 0, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = tn.ring[(wx / 40) % tn.ring.length]; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, SY(T.h[j]) - 8, 6, 22, 0, 0, Math.PI * 2); ctx.stroke();
         }
-        rails('#1a3a6a', '#5ad8ff', true);
+        rails(tn.rail[0], tn.rail[1], true);
         cart(); ctx.globalAlpha = 1;
       }
       // vệt tốc độ

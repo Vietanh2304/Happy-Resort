@@ -172,8 +172,16 @@ export function TripExtras({ scene, trip, spot, me, partner, live, partnerHere, 
   });
 
   // ── Khoá tình yêu
-  const hang = () => rail && go({ x: railX, y: rail.y + 6 }, () => {
-    L.current.update({ act: 'wall', dish: null, drink: null }); L.current.say('🔒 Khoá tình mình lại nào…');
+  // hai người cùng khoá: một người bấm thì người kia chạy tới đứng cạnh, cùng khoá, cùng ném chìa
+  const hang = () => {
+    if (!rail) return;
+    if (!theirs) return toast(`🔒 Khoá tình yêu phải treo cùng nhau — rủ ${partner?.display_name ?? 'người ấy'} tới đây nha 💕`);
+    sendEvent('trip-lock-go', { scene }); lockRef.current(-1);
+  };
+  const lockRef = useRef<(side: number) => void>(() => undefined);
+  useEffect(() => onEvent('trip-lock-go', (d: { scene: string }) => { if (d.scene === scene) { toast(`💕 ${partner?.display_name ?? 'Người ấy'} rủ treo khoá chung — chạy tới nè!`); lockRef.current(1); } }), [scene, partner?.display_name]);
+  lockRef.current = (side: number) => rail && go({ x: railX + side * 8, y: rail.y + 6 }, () => {
+    L.current.update({ act: 'wall', dish: null, drink: null }); L.current.say(side < 0 ? '🔒 Cùng khoá tình mình lại nào…' : '🔒 Tay trong tay cùng bấm khoá 💕');
     for (let k = 0; k < 3; k++) setTimeout(() => onAnim('wash'), 400 + k * 700);
     setTimeout(() => {
       void (async () => {
