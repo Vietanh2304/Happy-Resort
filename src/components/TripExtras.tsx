@@ -35,31 +35,51 @@ function freeCorners(spot: SpotDef): Pt[] {
 }
 
 /** Pháo hoa pixel: tên lửa vọt lên rồi nổ tung thành hạt vuông */
+type FwShape = 'ring' | 'double' | 'heart' | 'star' | 'willow' | 'peony';
+const FW_SHAPES: FwShape[] = ['ring', 'double', 'heart', 'star', 'willow', 'peony'];
+const FW_C = [['#ff5a7a', '#ffd0dc'], ['#ffd84a', '#fff2b0'], ['#5ad8ff', '#d0f4ff'], ['#b07aff', '#e8dcff'], ['#7aff9a', '#e0ffe8'], ['#ff9a3a', '#ffe0b0'], ['#ff8ad8', '#ffffff']];
+/** Toạ độ các hạt của một kiểu nổ (đơn vị bản đồ) */
+function fwPoints(shape: FwShape, n: number, R: number): [number, number, number][] {
+  const out: [number, number, number][] = [];
+  for (let k = 0; k < n; k++) {
+    const a = (k / n) * Math.PI * 2;
+    if (shape === 'heart') { const x = 16 * Math.sin(a) ** 3, y = -(13 * Math.cos(a) - 5 * Math.cos(2 * a) - 2 * Math.cos(3 * a) - Math.cos(4 * a)); out.push([(x / 17) * R, (y / 17) * R, 0]); }
+    else if (shape === 'star') { const r = R * (k % 2 ? 0.45 : 1); out.push([Math.cos(a) * r, Math.sin(a) * r, k % 2]); }
+    else if (shape === 'double') { const r = k % 2 ? R * 0.55 : R; out.push([Math.cos(a) * r, Math.sin(a) * r, k % 2]); }
+    else if (shape === 'peony') { for (const f of [0.35, 0.7, 1]) out.push([Math.cos(a + f) * R * f, Math.sin(a + f) * R * f, f < 1 ? 1 : 0]); }
+    else out.push([Math.cos(a) * R, Math.sin(a) * R, 0]);
+  }
+  return out;
+}
+/** Pháo hoa pixel: tên lửa vọt lên rồi nổ thành nhiều kiểu, hạt sáng có quầng, liễu vàng rơi chậm */
 export function Fireworks({ dense }: { dense: boolean }) {
   const s = useScale();
-  const [bursts, setBursts] = useState<{ id: number; x: number; y: number; c: string[]; n: number }[]>([]);
+  const [bursts, setBursts] = useState<{ id: number; x: number; y: number; c: string[]; shape: FwShape; R: number }[]>([]);
   useEffect(() => {
-    const C = [['#ff5a7a', '#ffd0dc'], ['#ffd84a', '#fff2b0'], ['#5ad8ff', '#d0f4ff'], ['#9a7aff', '#e0d4ff'], ['#7aff9a', '#e0ffe8'], ['#ff9a3a', '#ffe0b0']];
     const spawn = () => {
-      const id = Date.now() + Math.random();
-      setBursts(b => [...b.slice(-3), { id, x: 30 + Math.random() * 196, y: 18 + Math.random() * 40, c: C[Math.floor(Math.random() * C.length)], n: 14 + Math.floor(Math.random() * 6) }]);
-      setTimeout(() => setBursts(b => b.filter(e => e.id !== id)), 2400);
+      const id = Date.now() + Math.random(), shape = FW_SHAPES[Math.floor(Math.random() * FW_SHAPES.length)];
+      const b = { id, x: 34 + Math.random() * 188, y: 22 + Math.random() * 36, c: shape === 'willow' ? ['#ffd84a', '#ffb84a'] : FW_C[Math.floor(Math.random() * FW_C.length)], shape, R: 22 + Math.random() * 14 };
+      setBursts(v => [...v.slice(-5), b]);
+      setTimeout(() => setBursts(v => v.filter(e => e.id !== id)), 3400);
     };
     spawn();
-    const t = setInterval(spawn, dense ? 850 : 3600);
+    const t = setInterval(() => { spawn(); if (dense && Math.random() < 0.45) setTimeout(spawn, 250); }, dense ? 900 : 3600);
     return () => clearInterval(t);
   }, [dense]);
   return (
     <div className="fx" style={{ left: 0, top: 0, width: 256 * s, height: 192 * s, zIndex: 2 }}>
-      {bursts.map(b => (
-        <span key={b.id}>
-          <i className="fw-rocket" style={v({ left: b.x * s, top: b.y * s, width: s, height: 3 * s, '--rise': `${(150 - b.y) * s}px` })} />
-          {Array.from({ length: b.n }, (_, k) => {
-            const a = (k / b.n) * Math.PI * 2, r = (16 + (k % 3) * 5) * s;
-            return <i key={k} className="fw-p" style={v({ left: b.x * s, top: b.y * s, width: 1.5 * s, height: 1.5 * s, background: b.c[k % 2], '--dx': `${Math.cos(a) * r}px`, '--dy': `${Math.sin(a) * r}px` })} />;
-          })}
-        </span>
-      ))}
+      {bursts.map(b => {
+        const n = b.shape === 'peony' ? 14 : b.shape === 'heart' ? 30 : 26, willow = b.shape === 'willow';
+        return (
+          <span key={b.id}>
+            <i className="fw-rocket" style={v({ left: b.x * s, top: b.y * s, width: s, height: 3 * s, '--rise': `${(150 - b.y) * s}px` })} />
+            <i className="fw-flash" style={{ left: (b.x - b.R * 1.4) * s, top: (b.y - b.R * 1.4) * s, width: b.R * 2.8 * s, height: b.R * 2.8 * s, background: `radial-gradient(${b.c[0]}55, transparent 65%)` }} />
+            {fwPoints(b.shape, n, b.R).map(([dx, dy, alt], k) => (
+              <i key={k} className={`fw-p ${willow ? 'willow' : ''}`} style={v({ left: b.x * s, top: b.y * s, width: 1.6 * s, height: 1.6 * s, background: b.c[alt], boxShadow: `0 0 ${2.5 * s}px ${b.c[0]}`, '--dx': `${dx * s}px`, '--dy': `${dy * s}px`, '--g': `${(willow ? 26 : 9) * s}px` })} />
+            ))}
+          </span>
+        );
+      })}
     </div>
   );
 }

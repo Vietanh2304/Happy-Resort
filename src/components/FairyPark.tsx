@@ -1,15 +1,15 @@
-// Vương quốc Cổ Tích: tàu lượn Sao Băng (toàn màn hình, lên dốc → lao xuống → lộn vòng → hầm sao), ngựa gỗ, tách trà xoay,
+// Disneyland: tàu lượn siêu tốc (toàn màn hình, lên dốc → lao xuống → lộn vòng → hầm sao), ngựa gỗ, tách trà xoay,
 // đoàn xe hoa diễu hành, show chiếu sáng + pháo hoa trên lâu đài, rút gươm trong đá, hoá trang hoàng gia.
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import type { AnimName } from '../lib/acts';
 import type { Phase } from '../lib/content';
 import {
-  carouselPoleSprite, carouselTopSprite, castleMaskAt, castleSprite, cupBackSprite, cupSprite, FLOATS, floatSprite, horseSprite, RIDES, swordSprite, teapotSprite,
+  carouselPoleSprite, carouselTopSprite, MASCOTS, mascotSprite, type FloatId, castleMaskAt, castleSprite, cupBackSprite, cupSprite, floatSprite, horseSprite, RIDES, swordSprite, teapotSprite,
 } from '../lib/fairyArt';
 import { onEvent, sendEvent } from '../lib/realtime';
 import { SKY } from '../lib/sky';
-import { characterSprite, type AvatarLook } from '../lib/sprites';
+import { characterSprite, heartSprite, type AvatarLook } from '../lib/sprites';
 import type { ParkAct } from '../lib/tripSpots';
 import type { Live } from '../lib/useLive';
 import type { Pt } from '../lib/world';
@@ -17,14 +17,15 @@ import { avatarPx } from './Avatar';
 import { useTicker } from './Skydive';
 import { Spr, Tag, useScale } from './Stage';
 import { Fireworks } from './TripExtras';
+import { FxList } from './TripSpot';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
 /** Sắp xếp người ngồi theo ngoại hình để hai máy thấy cùng một chỗ ngồi */
 const seatOrder = <T extends { look: AvatarLook }>(a: T[]) => [...a].sort((p, q) => (JSON.stringify(p.look) < JSON.stringify(q.look) ? -1 : 1));
 type RideKind = 'coaster' | 'carousel' | 'cups';
 const RIDE_I: Record<RideKind, number> = { carousel: 0, cups: 1, coaster: 2 };
-const RIDE_NAME: Record<RideKind, string> = { coaster: 'tàu lượn Sao Băng', carousel: 'ngựa gỗ', cups: 'tách trà xoay' };
-const SPIN_MS = 16000, STATION_MS = 5000, SHOW_MS = 30000, PARADE_MS = 42000, PARADE_EVERY = 20 * 60_000;
+const RIDE_NAME: Record<RideKind, string> = { coaster: 'tàu lượn siêu tốc', carousel: 'King Arthur Carrousel', cups: 'Mad Tea Party' };
+const SPIN_MS = 16000, STATION_MS = 5000, SHOW_MS = 30000, PARADE_MS = 56000, PARADE_EVERY = 20 * 60_000;
 
 interface Props { scene: string; live: Live; partnerHere: boolean; looks: { me: AvatarLook; them: AvatarLook }; go: (to: Pt, then?: () => void) => void; onAnim: (n: AnimName) => void; night: boolean; phase: Phase }
 
@@ -127,11 +128,12 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
       {scene === 'trip_fairy_castle' && (
         <>
           {showing && <CastleShow at={showAt} now={now} night={night} />}
-          {!swordOn && <Spr sprite={swordSprite()} x={219} y={159} z={158} />}
+          {!swordOn && <Spr sprite={swordSprite()} x={219} y={167} z={166} />}
           {swordOn && <Spr sprite={swordSprite()} x={swordOn.x} y={swordOn.y - 21} z={Math.round(swordOn.y) + 2} className="fa-glint" />}
         </>
       )}
       {scene === 'trip_fairy_parade' && parade > 0 && <Parade at={parade} now={now} night={night} />}
+      {MASCOT_AT[scene] && <Mascots scene={scene} now={now} go={go} live={live} onAnim={onAnim} />}
       {scene === 'trip_fairy_rides' && (
         <>
           <Carousel now={now} riders={ridersSorted('carousel')} />
@@ -198,29 +200,46 @@ function Teacups({ now, riders }: { now: number; riders: { look: AvatarLook; at:
   );
 }
 
-// ───────── Diễu hành ─────────
+// ───────── Diễu hành: xe hoa phủ đèn + nhân vật Disney đi bộ vẫy tay, pháo giấy rơi ─────────
 const DANCER = [
   { gender: 'f' as const, hair: 4, hairColor: 4, skin: 0, shirt: 0, outfit: 17 }, { gender: 'm' as const, hair: 8, hairColor: 2, skin: 1, shirt: 3, outfit: 4 },
-  { gender: 'f' as const, hair: 1, hairColor: 3, skin: 2, shirt: 9, outfit: 5 }, { gender: 'm' as const, hair: 0, hairColor: 0, skin: 3, shirt: 6, outfit: 16 },
 ];
+const LINEUP: ({ float: FloatId; on: number[] } | { walk: number[] })[] = [
+  { walk: [8] }, { float: 'castle', on: [0, 1] }, { walk: [2, 4] }, { float: 'pumpkin', on: [6, 7] }, { walk: [9, 10, 11] },
+  { float: 'teaparty', on: [3] }, { walk: [5, 12] }, { float: 'dragon', on: [] }, { walk: [-1, -2] },
+];
+const GAP = 76, TK = 0.55;
+/** Nhân vật Disney (thu nhỏ cho cân với nhân vật người chơi) */
+function Toon({ i, f, x, y, z, onClick }: { i: number; f: 0 | 1 | 2 | 3; x: number; y: number; z?: number; onClick?: () => void }) {
+  const s = useScale(), sp = mascotSprite(i, f);
+  return <img src={sp.url} alt="" title={MASCOTS[i].name} draggable={false} className={`spr ${onClick ? 'tappable' : ''}`}
+    style={{ left: (x - (sp.w * TK) / 2) * s, top: (y - sp.h * TK) * s, width: sp.w * TK * s, height: sp.h * TK * s, zIndex: z ?? Math.round(y) }}
+    onClick={onClick && (e => { e.stopPropagation(); onClick(); })} />;
+}
 function Parade({ at, now, night }: { at: number; now: number; night: boolean }) {
   const s = useScale(), ps = avatarPx(s);
-  const k = (now - at) / PARADE_MS, lead = -90 + k * (256 + 90 + 7 * 64);
-  const step = Math.floor(now / 320) % 8;
-  const units = ['d', ...FLOATS.flatMap(f => [f, 'd'])];
+  const k = (now - at) / PARADE_MS, lead = -90 + k * (256 + 110 + LINEUP.length * GAP);
+  const wave = (j: number): 0 | 1 | 2 => (Math.floor(now / 320 + j) % 3 === 0 ? 2 : (Math.floor(now / 260 + j) % 2 as 0 | 1));
   return (
     <>
-      {units.map((u, i) => {
-        const x = lead - i * 64;
-        if (x < -90 || x > 340) return null;
-        if (u === 'd') return [0, 1].map(j => {
-          const look = DANCER[(i + j) % DANCER.length], ch = characterSprite(look, 'dance', undefined, 'front', (step + j * 3) % 8), y = 172 + j * 12;
-          return <img key={`${i}${j}`} src={ch.url} alt="" className="spr" style={{ left: (x + j * 14 - 7) * s - (ch.w * ps) / 2, top: y * s - ch.h * ps, width: ch.w * ps, height: ch.h * ps, zIndex: y }} />;
+      <FxList fx={[{ k: 'fall', n: 28, c: ['#ff5a9a', '#ffd84a', '#5ad8ff', '#9a7aff', '#7aff9a', '#ffffff'], size: 2 }]} scene="parade" night={night} />
+      {LINEUP.map((u, idx) => {
+        const x = lead - idx * GAP;
+        if (x < -90 || x > 350) return null;
+        if ('walk' in u) return u.walk.map((who, j) => {
+          const wx = x + (j - (u.walk.length - 1) / 2) * 17, wy = 178 + (j % 2) * 8;
+          if (who < 0) { const ch = characterSprite(DANCER[-who - 1], 'dance', undefined, 'front', (Math.floor(now / 320) + j * 3) % 8); return <img key={`${idx}${j}`} src={ch.url} alt="" className="spr" style={{ left: wx * s - (ch.w * ps) / 2, top: wy * s - ch.h * ps, width: ch.w * ps, height: ch.h * ps, zIndex: wy }} />; }
+          return <Toon key={`${idx}${j}`} i={who} f={wave(j + idx)} x={wx} y={wy} />;
         });
-        const bob = Math.sin(now / 300 + i) * 1.2;
-        return <Spr key={i} sprite={floatSprite(u as (typeof FLOATS)[number], night)} x={x} y={188 + bob} z={188} className={night ? 'fa-lit' : ''} />;
+        const bob = Math.sin(now / 300 + idx) * 1.2;
+        return (
+          <span key={idx}>
+            <Spr sprite={floatSprite(u.float, night)} x={x} y={188 + bob} z={188} className={night ? 'fa-lit' : ''} />
+            {u.on.map((who, j) => <Toon key={j} i={who} f={wave(j)} x={x - 8 + (j - (u.on.length - 1) / 2) * 16} y={152 + bob} z={189} />)}
+          </span>
+        );
       })}
-      {night && <i className="fx-glow" style={{ left: (lead - 400) * s, top: 140 * s, width: 440 * s, height: 60 * s, background: 'radial-gradient(#ff8ad855, transparent 70%)', zIndex: 2 }} />}
+      {night && <i className="fx-glow" style={{ left: (lead - 420) * s, top: 140 * s, width: 460 * s, height: 60 * s, background: 'radial-gradient(#ff8ad855, transparent 70%)', zIndex: 2 }} />}
     </>
   );
 }
@@ -242,7 +261,7 @@ function CastleShow({ at, now, night }: { at: number; now: number; night: boolea
 }
 
 // ───────── Tàu lượn Sao Băng ─────────
-interface Track { x: Float32Array; h: Float32Array; t: Float32Array; v: Float32Array; n: number; total: number; lift: number; crest: number; drop: number; loop: [number, number]; brake: number }
+interface Track { x: Float32Array; h: Float32Array; t: Float32Array; v: Float32Array; n: number; total: number; lift: number; crest: number; drop: number; loop: [number, number]; loop2: [number, number]; brake: number; stop: number }
 const TUNNEL: [number, number] = [860, 1165];
 let TRACK: Track | null = null;
 function track(): Track {
@@ -260,31 +279,38 @@ function track(): Track {
   const lb = X.length - 1;
   seg(640, 10, true); seg(720, 96); seg(800, 14); seg(850, 30);
   seg(920, 46); seg(980, 18); seg(1040, 52); seg(1100, 20); seg(1160, 32);
-  seg(1220, 72); seg(1290, 12); seg(1340, 40); seg(1390, 14); seg(1440, 34); seg(1490, 20); const brake = X.length - 1;
-  seg(1650, 20, true);
-  const n = X.length, v = new Float32Array(n), t = new Float32Array(n), g = 180, fr = 0.035;
+  seg(1220, 72); seg(1290, 12); seg(1340, 40); seg(1390, 14); seg(1440, 34); seg(1490, 20);
+  seg(1560, 64); seg(1620, 12); seg(1700, 50); seg(1750, 26); seg(1830, 82); seg(1920, 10); seg(1960, 10, true);
+  const l2a = X.length;
+  for (let k = 1; k <= 90; k++) { const th = -Math.PI / 2 + (k / 90) * Math.PI * 2; X.push(1960 + 34 * Math.cos(th) + (k / 90) * 22); H.push(44 + 34 * Math.sin(th)); }
+  const l2b = X.length - 1;
+  seg(2040, 10, true); seg(2100, 42); seg(2160, 16); seg(2220, 34); seg(2280, 14); seg(2330, 24); seg(2370, 20); const brake = X.length - 1;
+  seg(2470, 20, true); const stop = X.length - 1;
+  seg(2700, 20, true);
+  const n = X.length, v = new Float32Array(n), t = new Float32Array(n), g = 180, fr = 0.028;
   let E = 0, dist = 0, d0 = 0;
   for (let i = 0; i < n; i++) {
     if (i) dist += Math.hypot(X[i] - X[i - 1], H[i] - H[i - 1]);
     if (i <= lift) v[i] = 30;
     else if (i <= crest) { v[i] = 40; E = H[i] + (40 * 40) / (2 * g); d0 = dist; }
     else if (i <= brake) v[i] = Math.max(26, Math.sqrt(2 * g * Math.max(0, E - fr * (dist - d0) - H[i])));
-    else { const k = (i - brake) / (n - 1 - brake); v[i] = v[brake] * (1 - k) ** 2 + 6 * k; }
+    else if (i <= stop) { const k = (i - brake) / (stop - brake); v[i] = v[brake] * (1 - k) ** 2 + 6 * k; }
+    else v[i] = 6;
     if (i) t[i] = t[i - 1] + (Math.hypot(X[i] - X[i - 1], H[i] - H[i - 1]) / ((v[i] + v[i - 1]) / 2)) * 1000;
   }
-  TRACK = { x: Float32Array.from(X), h: Float32Array.from(H), t, v, n, total: t[n - 1], lift, crest, drop, loop: [la, lb], brake };
+  TRACK = { x: Float32Array.from(X), h: Float32Array.from(H), t, v, n, total: t[stop], lift, crest, drop, loop: [la, lb], loop2: [l2a, l2b], brake, stop };
   return TRACK;
 }
 /** Vị trí trên ray tại thời điểm (ms kể từ lúc rời ga) */
 function at(T: Track, ms: number) {
   if (ms <= 0) return { i: 0, x: T.x[0], h: T.h[0], a: 0, v: 0 };
-  let lo = 0, hi = T.n - 1;
+  let lo = 0, hi = T.stop;
   if (ms >= T.t[hi]) return { i: hi, x: T.x[hi], h: T.h[hi], a: 0, v: 0 };
   while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T.t[m] <= ms) lo = m; else hi = m; }
   const f = (ms - T.t[lo]) / (T.t[hi] - T.t[lo]), p = Math.max(0, lo - 1), q = Math.min(T.n - 1, hi + 1);
   return { i: lo, x: T.x[lo] + (T.x[hi] - T.x[lo]) * f, h: T.h[lo] + (T.h[hi] - T.h[lo]) * f, a: Math.atan2(T.h[q] - T.h[p], T.x[q] - T.x[p]), v: T.v[lo] };
 }
-const W = 320, HH = 180;
+const W = 320, HH = 180, Z = 2;   // khung logic 320×180, vẽ nét ×2 để nhân vật giữ đúng độ nét như trong game
 const img = (url: string) => { const i = new Image(); i.src = url; return i; };
 function lineFor(T: Track, p: ReturnType<typeof at>, ms: number) {
   if (ms < 0) return `🔒 Thắt dây an toàn… ${Math.ceil(-ms / 1000)}`;
@@ -293,7 +319,8 @@ function lineFor(T: Track, p: ReturnType<typeof at>, ms: number) {
   if (p.i < T.drop + 12) return '😱 AAAAAAAAA!!!';
   if (p.i <= T.loop[1]) return '🌀 Lộn vòng!!!';
   if (p.x < TUNNEL[0]) return '🤸 Bay khỏi ghế luôn!';
-  if (p.x < TUNNEL[1]) return '✨ Hầm Sao Băng ✨';
+  if (p.x < TUNNEL[1]) return '🚀 Hầm Space Mountain ✨';
+  if (p.i >= T.loop2[0] && p.i <= T.loop2[1]) return '🌀 Lộn vòng lần nữaaa!!!';
   if (p.i < T.brake) return '🎉 Yeeeeee!';
   return '😆 Phù… vui quá trời!';
 }
@@ -321,6 +348,7 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
       camH += (Math.max(0, p.h - 70) - camH) * 0.08;
       const camX = p.x - 120, SX = (x: number) => x - camX, SY = (h: number) => 150 - (h - camH), gy = SY(0);
       const shake = p.i > T.drop - 8 && p.i < T.drop + 10 ? (Math.random() - 0.5) * 4 : 0;
+      ctx.setTransform(Z, 0, 0, Z, 0, 0); ctx.imageSmoothingEnabled = false;
       ctx.save(); ctx.translate(Math.round(shake), Math.round(shake * 0.6));
       // trời
       const gr = ctx.createLinearGradient(0, 0, 0, HH); gr.addColorStop(0, sky[0]); gr.addColorStop(1, sky[1]); ctx.fillStyle = gr; ctx.fillRect(-4, -4, W + 8, HH + 8);
@@ -335,22 +363,23 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
       // mặt đất + cây
       ctx.fillStyle = night ? '#1a3a2a' : '#5aa850'; ctx.fillRect(-4, gy, W + 8, HH);
       for (let wx = Math.floor(camX / 37) * 37; wx < camX + W + 20; wx += 37) {
-        if (wx < 130 || (wx > TUNNEL[0] - 20 && wx < TUNNEL[1] + 20)) continue;
+        if (wx < 130 || wx > 2360 || (wx > TUNNEL[0] - 20 && wx < TUNNEL[1] + 20)) continue;
         const x = SX(wx + ((wx * 7) % 13)); ctx.fillStyle = '#6a4a32'; ctx.fillRect(x, gy - 8, 2, 8);
         ctx.fillStyle = night ? '#1a4a3a' : '#3a8a4a'; ctx.fillRect(x - 5, gy - 18, 12, 11); ctx.fillRect(x - 3, gy - 22, 8, 4);
       }
       // ga
-      if (camX < 140) {
-        const x0 = SX(-50), y0 = SY(20);
+      for (const wx of [-50, 2390]) {
+        if (SX(wx) > W + 10 || SX(wx) < -190) continue;
+        const x0 = SX(wx), y0 = SY(20);
         ctx.fillStyle = '#f4cfe2'; ctx.fillRect(x0, y0 - 46, 170, 46); ctx.fillStyle = '#c8b0c0'; ctx.fillRect(x0, y0, 170, gy - y0);
         for (let k = 0; k < 18; k++) { ctx.fillStyle = k % 2 ? '#e8443a' : '#ffffff'; ctx.fillRect(x0 - 6 + k * 10, y0 - 56, 10, 10); }
-        ctx.fillStyle = '#2a2a4a'; ctx.fillRect(x0 + 40, y0 - 40, 70, 12); ctx.fillStyle = '#ff8ac8'; ctx.font = 'bold 8px monospace'; ctx.fillText('★ SAO BĂNG ★', x0 + 44, y0 - 31);
+        ctx.fillStyle = '#2a2a4a'; ctx.fillRect(x0 + 40, y0 - 40, 70, 12); ctx.fillStyle = '#ff8ac8'; ctx.font = 'bold 8px monospace'; ctx.fillText('★ DISNEYLAND ★', x0 + 41, y0 - 31);
       }
       // trụ đỡ
       const [la, lb] = T.loop;
       ctx.fillStyle = night ? '#8a90b0' : '#f0e8f4';
       for (let i = 0; i < T.n; i += 6) {
-        const x = SX(T.x[i]); if (x < -10 || x > W + 10 || (i > la && i < lb) || T.h[i] < 3) continue;
+        const x = SX(T.x[i]); if (x < -10 || x > W + 10 || (i > la && i < lb) || (i > T.loop2[0] && i < T.loop2[1]) || T.h[i] < 3) continue;
         if (T.x[i] > TUNNEL[0] && T.x[i] < TUNNEL[1]) continue;
         const y = SY(T.h[i]) + 3; ctx.fillRect(Math.round(x), y, 1, gy - y); if (i % 12 === 0) for (let yy = y + 8; yy < gy; yy += 12) ctx.fillRect(Math.round(x) - 6, yy, 7, 1);
       }
@@ -365,7 +394,7 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
       const cart = () => {
         ctx.save(); ctx.translate(Math.round(SX(p.x)), Math.round(SY(p.h))); ctx.rotate(-p.a);
         const up = p.v > 125 && p.i > T.crest, seats = pics.seats.map((pic, k) => ({ x: k ? -7 : 7, pic }));
-        for (const st of seats) { const im = up ? st.pic.up : st.pic.sit; if (!im.complete || !im.height) continue; const h = 24, w = (im.width / im.height) * h; ctx.drawImage(im, Math.round(st.x - w / 2), -h - 1, Math.round(w), h); }
+        for (const st of seats) { const im = up ? st.pic.up : st.pic.sit; if (!im.complete || !im.height) continue; const h = im.height / Z, w = im.width / Z; ctx.drawImage(im, Math.round((st.x - w / 2) * Z) / Z, -h - 1, w, h); }
         ctx.fillStyle = '#e8443a'; ctx.fillRect(-15, -9, 30, 8); ctx.fillStyle = '#b02a3a'; ctx.fillRect(-15, -3, 30, 2);
         ctx.fillStyle = '#f6c445'; ctx.fillRect(-15, -9, 30, 1); ctx.fillRect(13, -9, 4, 7); ctx.fillRect(-2, -7, 3, 3);
         ctx.fillStyle = '#ffffff'; ctx.fillRect(14, -7, 2, 2);
@@ -401,8 +430,8 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
       if (!snapped && p.i >= T.drop - 6) {
         snapped = true;
         // ảnh chụp cận toa tàu (như máy chụp ở dốc lao)
-        const ph = document.createElement('canvas'); ph.width = 384; ph.height = 216; const pc = ph.getContext('2d')!; pc.imageSmoothingEnabled = false;
-        pc.drawImage(c, Math.max(0, Math.min(W - 128, SX(p.x) - 64)), Math.max(0, Math.min(HH - 72, SY(p.h) - 50)), 128, 72, 0, 0, 384, 216);
+        const ph = document.createElement('canvas'); ph.width = 512; ph.height = 288; const pc = ph.getContext('2d')!; pc.imageSmoothingEnabled = false;
+        pc.drawImage(c, Math.round(Math.max(0, Math.min(W - 128, SX(p.x) - 64)) * Z), Math.round(Math.max(0, Math.min(HH - 72, SY(p.h) - 50)) * Z), 128 * Z, 72 * Z, 0, 0, 512, 288);
         setPhoto(ph.toDataURL('image/png')); setFlash(true); setTimeout(() => setFlash(false), 220); }
       if (!ended && ms > T.total + 800) { ended = true; setDone(true); }
       raf = requestAnimationFrame(frame);
@@ -414,7 +443,7 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
   useEffect(() => { if (!done) return; const t = setTimeout(() => exitRef.current(), 15000); return () => clearTimeout(t); }, [done]);
   return createPortal(
     <div className="coaster">
-      <canvas ref={cv} width={W} height={HH} />
+      <canvas ref={cv} width={W * Z} height={HH * Z} />
       {!done && line && <b className="coaster-line">{line}</b>}
       {flash && <i className="coaster-flash" />}
       {done && (
@@ -430,5 +459,55 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
       {!done && <button className="coaster-x btn small ghost" onClick={() => { if (confirm('Xuống tàu giữa chừng?')) exitRef.current(); }}>✖</button>}
     </div>,
     document.body,
+  );
+}
+
+// ───────── Linh vật đi dạo: bấm vào thì chạy tới ôm / vẫy tay chụp ảnh (người kia cũng thấy) ─────────
+const MASCOT_AT: Record<string, { ids: number[]; box: { x0: number; x1: number; y0: number; y1: number } }> = {
+  trip_fairy: { ids: [0, 1, 3], box: { x0: 24, x1: 232, y0: 130, y1: 184 } },
+  trip_fairy_castle: { ids: [2, 4, 5], box: { x0: 24, x1: 190, y0: 152, y1: 186 } },
+  trip_fairy_parade: { ids: [6, 7], box: { x0: 24, x1: 232, y0: 112, y1: 144 } },
+};
+const HUG_MS = 5000;
+/** Vị trí theo đồng hồ chung (hai máy thấy linh vật ở cùng chỗ); `off` = thời gian đã đứng lại */
+function mascotPos(i: number, t: number, box: { x0: number; x1: number; y0: number; y1: number }) {
+  const u = t / 1000, a = u / (14 + i * 4) + i * 1.9, b = u / (9 + i * 3) + i;
+  return { x: box.x0 + (box.x1 - box.x0) * (0.5 + 0.46 * Math.sin(a)), y: box.y0 + (box.y1 - box.y0) * (0.5 + 0.45 * Math.sin(b)), moving: Math.abs(Math.cos(a)) > 0.08 };
+}
+function Mascots({ scene, now, go, live, onAnim }: { scene: string; now: number; go: Props['go']; live: Live; onAnim: Props['onAnim'] }) {
+  const cfg = MASCOT_AT[scene];
+  const [hold, setHold] = useState<Record<number, { x: number; y: number; until: number; hug: boolean; off: number }>>({});
+  const off = useRef<Record<number, number>>({});
+  const L = useRef(live); L.current = live;
+  const start = (d: { i: number; x: number; y: number; until: number; hug: boolean }) => setHold(h => ({ ...h, [d.i]: { ...d, off: 0 } }));
+  useEffect(() => onEvent('fairy-mascot', (d: { i: number; x: number; y: number; until: number; hug: boolean; scene: string }) => { if (d.scene === scene) start(d); }), [scene]);
+  // hết giờ đứng lại thì đi tiếp từ đúng chỗ đó (cộng thời gian đã dừng)
+  useEffect(() => {
+    for (const [k, h] of Object.entries(hold)) if (now > h.until) { off.current[+k] = (off.current[+k] ?? 0) + HUG_MS; setHold(x => { const y = { ...x }; delete y[+k]; return y; }); }
+  }, [now, hold]);
+  const meet = (i: number, at: { x: number; y: number }) => {
+    const side = at.x > 128 ? -12 : 12;
+    go({ x: at.x + side, y: at.y + 1 }, () => {
+      const hug = Math.random() < 0.6, d = { i, x: at.x, y: at.y, until: Date.now() + HUG_MS, hug, scene };
+      start(d); sendEvent('fairy-mascot', d);
+      L.current.say(hug ? `🤗 Ôm ${MASCOTS[i].name} một cái!` : `📸 Tạo dáng với ${MASCOTS[i].name} nè!`);
+      if (hug) { onAnim('cheer'); setTimeout(() => onAnim('heartR'), 900); } else onAnim('point');
+    });
+  };
+  return (
+    <>
+      {cfg.ids.map(i => {
+        const h = hold[i], p = h ?? mascotPos(i, now - (off.current[i] ?? 0), cfg.box);
+        const moving = !h && (p as { moving?: boolean }).moving;
+        const f: 0 | 1 | 2 | 3 = h ? (h.hug ? 3 : Math.floor(now / 400) % 2 ? 2 : 0) : moving ? (Math.floor(now / 280) % 2 as 0 | 1) : 0;
+        return (
+          <span key={i}>
+            <Toon i={i} f={f} x={p.x} y={p.y} onClick={() => !h && meet(i, { x: p.x, y: p.y })} />
+            {h && <Tag x={p.x} y={p.y - 30} className="bed-bubble">{MASCOTS[i].name}: {MASCOTS[i].hi}</Tag>}
+            {h && [0, 1, 2].map(k => <Spr key={k} sprite={heartSprite()} x={p.x - 8 + k * 8} y={p.y - 24 - ((now / 40 + k * 9) % 14)} z={800} />)}
+          </span>
+        );
+      })}
+    </>
   );
 }

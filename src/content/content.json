@@ -2073,19 +2073,19 @@
     },
     {
       "id": "fa_castle_model",
-      "name": "Mô hình lâu đài cổ tích",
+      "name": "Mô hình lâu đài Disneyland",
       "icon": "🏰",
       "kind": "decor"
     },
     {
       "id": "fa_music_box",
-      "name": "Hộp nhạc ngựa gỗ",
+      "name": "Hộp nhạc King Arthur Carrousel",
       "icon": "🎠",
       "kind": "decor"
     },
     {
       "id": "fa_balloon",
-      "name": "Chùm bóng bay trái tim",
+      "name": "Bóng bay tai Mickey",
       "icon": "🎈",
       "kind": "decor"
     },

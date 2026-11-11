@@ -196,8 +196,8 @@ const MAIN: Record<TripId, MainDef> = {
   },
   fairy: {
     draw: drawFairyMain,
-    fx: [{ k: 'sparkle', x: 60, y: 10, w: 136, h: 80, n: 14 }, { k: 'bird', x: 40, y: 20, icon: '🕊️', n: 2 }, { k: 'glow', x: 128, y: 70, r: 70, c: '#ff8ad8', night: true }],
-    lines: ['Lâu đài kìa!!', 'Đi tàu lượn trước nha', 'Mua bóng bay đi', 'Mấy giờ diễu hành ta?', 'Vui như con nít luôn 😆'],
+    fx: [{ k: 'sparkle', x: 80, y: 20, w: 96, h: 90, n: 18 }, { k: 'shim', x: 110, y: 154, w: 36, h: 8, n: 10 }, { k: 'sparkle', x: 116, y: 128, w: 24, h: 30, n: 10 }, { k: 'bird', x: 40, y: 20, icon: '🕊️', n: 2 }, { k: 'glow', x: 128, y: 80, r: 80, c: '#ff8ad8', night: true }, { k: 'glow', x: 128, y: 150, r: 40, c: '#8ad8ff', night: true }],
+    lines: ['Lâu đài kìa!!', 'Mickey ở đằng kia!', 'Mua bóng bay tai Mickey đi', 'Mấy giờ diễu hành ta?', 'Vui như con nít luôn 😆'],
   },
   iceland: {
     night: true,
@@ -239,4 +239,4 @@ export function tripWeather(id: TripId, date: string, hour: number): Weather {
   let x = r(), k = 0; while (k < 4 && x >= pr[k]) { x -= pr[k]; k++; }
   return { type: WX[k], temp: Math.round(lo + r() * (hi - lo)), code: 0 };
 }
-export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v6:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night);
+export const mainBackground = (id: TripId, ph: Phase) => paint(`main:v7:${id}:${ph}`, id, MAIN[id].draw, ph, !!MAIN[id].night, id === 'fairy');

@@ -37,7 +37,7 @@ export type Act =
   | { k: 'float'; x: number; y: number; label: string; ry: number }
   | { k: 'park'; x: number; y: number; label: string; ride: ParkAct; at?: { x: number; y: number } }
   | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind; res?: { icon: string; x: number; y: number }; outfit?: number; at?: { x: number; y: number } };
-/** Trò ở Vương quốc Cổ Tích (xử lý trong FairyPark) */
+/** Trò ở Disneyland (xử lý trong FairyPark) */
 export type ParkAct = 'coaster' | 'carousel' | 'cups' | 'show' | 'parade' | 'sword' | 'royal';
 /** Hành động nhân vật: ngồi, khấn, ngâm nước, chui lều, cho chim ăn, vẽ, hát, hôn… */
 export type DoKind = 'watch' | 'gaze' | 'jar' | 'cow' | 'wall' | 'mask' | 'dress' | 'sit' | 'craft' | 'cheer' | 'pray' | 'feed' | 'paint' | 'cross' | 'love' | 'tent' | 'soak' | 'pick' | 'sing';
@@ -105,16 +105,16 @@ export function string(p: Pen, L: Light, x0: number, x1: number, y: number, sag:
 /** Vẽ nền một map tham quan (có cache theo phase) */
 export function spotBackground(scene: SpotScene, ph: Phase): Sprite {
   const s = SPOTS[scene];
-  return paint(`spot:v7:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora');
+  return paint(`spot:v8:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora', s.trip === 'fairy');
 }
 /** Vẽ một cảnh: nền → phủ màu theo giờ → cửa sổ sáng, neon, đèn lồng có quầng */
-export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => void, ph: Phase, alwaysNight = false): Sprite {
+export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => void, ph: Phase, alwaysNight = false, soft = false): Sprite {
   return makeSprite(key, 256, 192, p => {
     const L: Light = { ph, night: ph === 'night' || alwaysNight, dusk: ph === 'sunset' && !alwaysNight, r: seeded(seed), wins: [], lamps: [], neon: [] };
     draw(p, L);
-    if (L.night) p.rect(0, 0, 256, 192, '#08103a70'); else if (L.dusk) p.rect(0, 0, 256, 192, '#ff70401c'); else if (ph === 'dawn') p.rect(0, 0, 256, 192, '#ffb0c014');
+    if (L.night) p.rect(0, 0, 256, 192, soft ? '#1a105030' : '#08103a70'); else if (L.dusk) p.rect(0, 0, 256, 192, '#ff70401c'); else if (ph === 'dawn') p.rect(0, 0, 256, 192, '#ffb0c014');
     const lit = L.night || L.dusk;
-    if (lit) for (const [x, y, w, h] of L.wins) if (L.r() < 0.75) { p.rect(x, y, w, h, L.r() < 0.5 ? '#ffd88a' : '#ffe8b0'); p.rect(x - 1, y - 1, w + 2, h + 2, '#ffd88a22'); }
+    if (lit) for (const [x, y, w, h] of L.wins) if (soft || L.r() < 0.75) { p.rect(x, y, w, h, L.r() < 0.5 ? '#ffd88a' : '#ffe8b0'); p.rect(x - 1, y - 1, w + 2, h + 2, '#ffd88a22'); }
     for (const f of L.post ?? []) f();
     for (const n of L.neon) { if (lit) p.rect(n.x - 2, n.y - 2, n.w + 4, n.h + 4, n.c + '40'); p.rect(n.x, n.y, n.w, n.h, lit ? n.c : mix(n.c, '#888888', 0.4)); p.rect(n.x + 1, n.y + 1, n.w - 2, 1, '#ffffffa0'); }
     for (const l of L.lamps) {
@@ -901,35 +901,35 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
 
   // ═════════ VƯƠNG QUỐC CỔ TÍCH ═════════
   trip_fairy_castle: {
-    trip: 'fairy', id: 'castle', name: 'Lâu đài Cổ Tích', icon: '🏰', at: 128, walk: W(140), day: ['#7ab8f8', '#ffe8f4'],
+    trip: 'fairy', id: 'castle', name: 'Lâu đài Người Đẹp Ngủ', icon: '🏰', at: 128, walk: W(146), day: ['#7ab8f8', '#ffe8f4'],
     draw: drawFairyCastle,
-    fx: [{ k: 'shim', x: 0, y: 121, w: 256, h: 12, n: 14 }, { k: 'sparkle', x: 70, y: 0, w: 116, h: 110, n: 12 }, { k: 'bird', x: 60, y: 20, icon: '🕊️', n: 2 }],
+    fx: [{ k: 'shim', x: 0, y: 129, w: 256, h: 10, n: 14 }, { k: 'sparkle', x: 70, y: 20, w: 116, h: 110, n: 18 }, { k: 'bird', x: 60, y: 30, icon: '🕊️', n: 2 }, { k: 'glow', x: 128, y: 90, r: 90, c: '#ff8ad8', night: true }],
     acts: [
-      { k: 'park', x: 128, y: 136, label: '✨ Xem show lâu đài', ride: 'show', at: { x: 128, y: 176 } },
-      { k: 'park', x: 40, y: 128, label: '👑 Hoá trang hoàng gia', ride: 'royal' },
-      { k: 'park', x: 216, y: 128, label: '⚔️ Rút gươm trong đá', ride: 'sword', at: { x: 202, y: 174 } },
-      ph(64, 172), buy(186, 182, 'fa_churro', 8, '🥨 Churros quế'),
+      { k: 'park', x: 128, y: 142, label: '🎆 Pháo hoa lâu đài', ride: 'show', at: { x: 128, y: 178 } },
+      { k: 'park', x: 40, y: 136, label: '👑 Hoá trang hoàng gia', ride: 'royal' },
+      { k: 'park', x: 216, y: 136, label: '⚔️ Rút gươm trong đá', ride: 'sword', at: { x: 202, y: 182 } },
+      ph(64, 176), buy(176, 184, 'fa_churro', 8, '🥨 Churros quế'),
     ],
-    lines: ['Lâu đài đẹp như mơ', 'Tối có pháo hoa đó!', 'Chụp ảnh trước cổng đi', 'Ai rút được gươm là vua đó', 'Như công chúa luôn 👑'],
+    lines: ['Lâu đài đẹp như mơ', 'Tối có pháo hoa đó!', 'Mickey kìa!!', 'Ai rút được gươm là vua đó', 'Như công chúa luôn 👑'],
   },
   trip_fairy_parade: {
-    trip: 'fairy', id: 'parade', name: 'Đại lộ Diễu Hành', icon: '🎪', at: 46, walk: W(108, 146), day: ['#80c0f8', '#ffe4f0'],
+    trip: 'fairy', id: 'parade', name: 'Main Street U.S.A.', icon: '🎪', at: 46, walk: W(108, 146), day: ['#80c0f8', '#ffe4f0'],
     draw: drawFairyParade,
     fx: [{ k: 'sparkle', x: 0, y: 0, w: 256, h: 60, n: 10, night: true }, { k: 'glow', x: 128, y: 170, r: 120, c: '#ff8ad8', night: true }],
     acts: [
-      { k: 'park', x: 128, y: 98, label: '🎪 Xem diễu hành', ride: 'parade', at: { x: 128, y: 140 } },
+      { k: 'park', x: 128, y: 98, label: '🎪 Diễu hành ánh sáng', ride: 'parade', at: { x: 128, y: 140 } },
       buy(40, 104, 'fa_popcorn', 6, '🍿 Bắp rang bơ'), buy(212, 104, 'keo_bong', 6, '🍭 Kẹo bông'), ph(176, 112),
     ],
     lines: ['Xe hoa tới rồi kìa!', 'Đèn sáng rực luôn', 'Vẫy tay đi!', 'Con rồng phun lửa 🐉', 'Đẹp quá trời'],
   },
   trip_fairy_rides: {
-    trip: 'fairy', id: 'rides', name: 'Khu trò chơi', icon: '🎢', at: 206, walk: W(118), day: ['#78c0f8', '#fff0e0'],
+    trip: 'fairy', id: 'rides', name: 'Fantasyland', icon: '🎢', at: 206, walk: W(118), day: ['#78c0f8', '#fff0e0'],
     draw: drawFairyRides,
     fx: [{ k: 'bird', x: 120, y: 10, icon: '🕊️', n: 2 }, { k: 'sparkle', x: 180, y: 30, w: 76, h: 60, n: 10 }],
     acts: [
-      { k: 'park', x: 36, y: 112, label: '🎢 Tàu lượn Sao Băng', ride: 'coaster', at: { x: 36, y: 128 } },
-      { k: 'park', x: 92, y: 102, label: '🎠 Ngựa gỗ', ride: 'carousel', at: { x: 92, y: 134 } },
-      { k: 'park', x: 194, y: 106, label: '☕ Tách trà xoay', ride: 'cups', at: { x: 194, y: 138 } },
+      { k: 'park', x: 36, y: 112, label: '🎢 Tàu lượn siêu tốc', ride: 'coaster', at: { x: 36, y: 128 } },
+      { k: 'park', x: 92, y: 102, label: '🎠 King Arthur Carrousel', ride: 'carousel', at: { x: 92, y: 134 } },
+      { k: 'park', x: 194, y: 106, label: '☕ Mad Tea Party', ride: 'cups', at: { x: 194, y: 138 } },
       buy(240, 128, 'kem_que', 5, '🍦 Kem que'),
     ],
     lines: ['Aaaa sợ quá 😱', 'Đi lại lần nữa!', 'Xếp hàng lâu ghê', 'Chóng mặt quá 🌀', 'Ngồi chung ngựa không?'],

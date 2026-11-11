@@ -1,14 +1,14 @@
-// Vương quốc Cổ Tích: công viên giải trí ở điểm du lịch — lâu đài, đại lộ diễu hành, khu trò chơi (tàu lượn, ngựa gỗ, tách trà).
+// Disneyland: công viên giải trí ở điểm du lịch — lâu đài, đại lộ diễu hành, khu trò chơi (tàu lượn, ngựa gỗ, tách trà).
 // Toàn bộ vẽ pixel tay; lâu đài dùng chung cho phố chính, map lâu đài, chuyến tàu lượn và quà lưu niệm.
 import { ellipse } from './iso';
 import { makeSprite, mix, type Pen, type Sprite } from './pixel';
-import { band, bldg, circle, sky, speckle, string, tiles, tree, water, type Light } from './tripSpots';
+import { band, circle, dither, sky, speckle, string, tiles, tree, water, type Light } from './tripSpots';
 
 const GOLD = '#f6c445', GOLD_D = '#c8902a';
 const dk = (c: string, k = 0.3) => mix(c, '#2a1a3a', k), lt = (c: string, k = 0.35) => mix(c, '#ffffff', k);
 
 /** Lâu đài pastel: tường kem, tháp hồng, mái chóp xanh, chóp vàng cờ hồng. `k` = tỉ lệ; `mono` = tô một màu (lớp chiếu sáng) */
-export function castle(p: Pen, L: Light | null, cx: number, base: number, k: number, mono?: string) {
+export function castle(p: Pen, L: Light | null, cx: number, base: number, k: number, mono?: string, lit = false) {
   const C = (c: string) => mono ?? c;
   const R = (x: number, y: number, w: number, h: number, c: string) => {
     const x0 = Math.round(cx + x * k), x1 = Math.round(cx + (x + w) * k), y1 = Math.round(base - y * k), y0 = Math.round(base - (y + h) * k);
@@ -17,7 +17,7 @@ export function castle(p: Pen, L: Light | null, cx: number, base: number, k: num
   const WALL = '#f6eedf', WALL_D = '#dccbb4', PINK = '#f4cfe2', PINK_D = '#d8a8c4', ROOF = '#4a8ad8', ROOF_L = '#80b8f4', ROOF_D = '#2c5aa0';
   const win = (x: number, y: number, big = false) => {
     const w = big ? 4 : 3, h = big ? 8 : 6;
-    R(x - w / 2 - 0.6, y - 0.6, w + 1.2, h + 1.6, '#c8b8a8'); R(x - w / 2, y, w, h, '#4a5a98'); R(x - w / 2, y + h - 1.5, w / 2, 1.5, '#9ab8f0');
+    R(x - w / 2 - 0.6, y - 0.6, w + 1.2, h + 1.6, '#c8b8a8'); R(x - w / 2, y, w, h, lit ? '#ffd88a' : '#4a5a98'); R(x - w / 2, y + h - 1.5, w / 2, 1.5, lit ? '#fff4c8' : '#9ab8f0');
     if (L && !mono) { const sx = Math.round(cx + (x - w / 2) * k), sy = Math.round(base - (y + h) * k); L.wins.push([sx, sy, Math.max(1, Math.round(w * k)), Math.max(2, Math.round(h * k))]); }
   };
   const cone = (x: number, w: number, y: number, h: number) => {
@@ -26,10 +26,12 @@ export function castle(p: Pen, L: Light | null, cx: number, base: number, k: num
       R(x - hw, y + i, hw * 2, 0.6, ROOF); R(x - hw, y + i, hw * 0.55, 0.6, ROOF_L); R(x + hw * 0.5, y + i, hw * 0.5, 0.6, ROOF_D);
     }
     for (let i = 3; i < h - 4; i += 6) R(x - (w / 2) * (1 - i / h) * 0.9, y + i, (w * (1 - i / h)) * 0.9, 0.5, ROOF_D);
+    if (lit) for (let i = 0; i < h - 2; i += 4) { const hw = (w / 2 + 1.5) * Math.pow(1 - i / h, 1.15); bulb(x - hw, y + i); bulb(x + hw - 0.6, y + i); }
     R(x - 2.5, y - 1, w * 0 + 5, 1.5, GOLD); R(x - (w / 2 + 1.5), y - 0.8, w + 3, 1.6, GOLD);
     R(x - 0.6, y + h, 1.2, 6, GOLD); R(x - 1.2, y + h + 2, 2.4, 1.6, GOLD_D);
     R(x + 0.6, y + h + 3.5, 6, 2.6, '#f07aa6'); R(x + 0.6, y + h + 3.5, 6, 1, '#ffb0cc');
   };
+  const bulb = (x: number, y: number) => { const sx = Math.round(cx + x * k), sy = Math.round(base - y * k); p.px(sx, sy, '#fff6c8'); };
   const tower = (x: number, w: number, y0: number, y1: number, wall: string, shade: string, roofH: number) => {
     R(x - w / 2, y0, w, y1 - y0, wall); R(x + w / 2 - w * 0.28, y0, w * 0.28, y1 - y0, shade); R(x - w / 2, y0, 1, y1 - y0, lt(wall, 0.4));
     for (let yy = y0 + 8; yy < y1 - 10; yy += 15) win(x, yy);
@@ -64,6 +66,8 @@ export function castle(p: Pen, L: Light | null, cx: number, base: number, k: num
   R(-9, 8, 18, 0.8, GOLD_D); R(-3, 25, 6, 4, GOLD); R(-1.5, 26, 3, 2, '#e8507a');
   // cờ hiệu dọc tường
   for (const x of [-50, 50]) { R(x - 2, 10, 4, 14, '#e8507a'); R(x - 2, 10, 4, 2, GOLD); R(x - 1, 8, 2, 2, '#e8507a'); }
+  if (lit) { for (let x = -66; x <= 66; x += 4) bulb(x, 36); for (let x = -26; x <= 26; x += 4) bulb(x, 85); for (let y = 0; y < 30; y += 4) { bulb(-66, y); bulb(66, y); } }
+  if (L && L.night && !mono && !lit) (L.post ??= []).push(() => castle(p, null, cx, base, k, undefined, true));
   if (L && !mono) for (const x of [-16, 16]) L.lamps.push({ x: Math.round(cx + x * k), y: Math.round(base - 14 * k), c: '#ffd88a' });
 }
 
@@ -73,18 +77,46 @@ export const castleSprite = (k: number, mono?: string) => {
   const w = Math.ceil(140 * k) + 4, h = Math.ceil(184 * k) + 4;
   return makeSprite(`castle:${k}:${mono ?? ''}`, w, h, p => castle(p, DUMMY(), w / 2, h - 1, k, mono), null);
 };
-export const CASTLE_SPOT = { cx: 128, base: 120, k: 0.6 };
+export const CASTLE_SPOT = { cx: 128, base: 128, k: 0.55 };
 
 // ───────── nền các map ─────────
-function shop(p: Pen, L: Light, x: number, w: number, h: number, wall: string, trim: string) {
-  bldg(p, L, x, 104, w, h, wall, trim, '#8ac0e0', 8);
-  for (let k = 0; k < w; k += 4) { p.rect(x + k, 104 - h + 6, 4, 4, (k / 4) % 2 ? trim : '#ffffff'); p.px(x + k + 1, 104 - h + 10, (k / 4) % 2 ? trim : '#ffffff'); }
-  for (let k = 0; k <= 6; k++) p.rect(x + w / 2 - 6 + k * 2 - (k > 3 ? (k - 3) * 2 : 0) * 0, 104 - h - 4 - Math.min(k, 6 - k) * 2, 2, Math.min(k, 6 - k) * 2 + 1, trim);
+function shop(p: Pen, L: Light, x: number, yb: number, w: number, h: number, wall: string, trim: string, dome = false) {
+  const top = yb - h;
+  p.rect(x, top, w, h, wall); dither(p, x + w - 4, top, 4, h, wall, dk(wall, 0.15)); p.rect(x, top, 1, h, dk(wall, 0.3));
+  // mái
+  if (dome) {
+    for (let i = 0; i < 12; i++) { const hw = (w / 2) * Math.sqrt(1 - (i / 12) ** 2); p.rect(x + w / 2 - hw, top - 2 - i, hw * 2, 1, i % 3 ? trim : lt(trim, 0.3)); }
+    p.rect(x + w / 2 - 1, top - 18, 2, 5, GOLD); p.px(x + w / 2, top - 19, '#fff2b0');
+  } else {
+    for (let i = 0; i < 12; i++) { const hw = (w / 2 + 1) * (1 - i / 12); p.rect(x + w / 2 - hw, top - 2 - i, hw * 2, 1, trim); }
+    for (let xx = x; xx < x + w; xx += 3) p.px(xx + 1, top - 2, '#ffffff');
+    circle(p, x + w / 2, top - 6, 2, '#ffffff'); p.px(x + w / 2, top - 6, GOLD);
+  }
+  p.rect(x - 1, top - 2, w + 2, 2, GOLD); p.rect(x - 1, top - 2, w + 2, 1, '#fff2b0');
+  // cửa sổ tầng trên + chậu hoa
+  for (let xx = x + 4; xx < x + w - 6; xx += 9) {
+    p.rect(xx - 1, top + 5, 7, 9, dk(wall, 0.3)); p.rect(xx, top + 6, 5, 7, '#9ac8f0'); p.px(xx, top + 6, '#e8f4ff'); p.rect(xx, top + 5, 5, 1, lt(wall, 0.5));
+    L.wins.push([xx, top + 6, 5, 7]);
+    p.rect(xx - 1, top + 14, 7, 2, '#7a4e2c'); for (let f = 0; f < 4; f++) p.px(xx + f * 2 - 1, top + 13, ['#e8507a', '#f6c445', '#ffffff', '#b08ae0'][f]);
+  }
+  // mái hiên sọc + tủ kính bày hàng
+  for (let k = 0; k < w; k += 4) { p.rect(x + k, yb - 22, 4, 4, (k / 4) % 2 ? trim : '#ffffff'); p.rect(x + k + 1, yb - 18, 2, 1, (k / 4) % 2 ? trim : '#ffffff'); }
+  // tủ kính: khung vàng, kính xanh nhạt, bày gấu bông tai chuột + bóng bay
+  const gx = x + 3, gw = w - 14;
+  p.rect(gx - 1, yb - 17, gw + 2, 16, GOLD_D); for (let yy = 0; yy < 14; yy++) p.rect(gx, yb - 16 + yy, gw, 1, mix('#bfe4f8', '#eef8ff', yy / 14));
+  for (let k = 0; k < gw; k += 7) { const c = ['#1a1a22', '#e8303a', '#f08ac0', '#f6c445'][(k / 7) % 4]; circle(p, gx + 3 + k, yb - 5, 2, c); p.px(gx + 1 + k, yb - 8, c); p.px(gx + 5 + k, yb - 8, c); p.rect(gx + 2 + k, yb - 3, 3, 2, ['#e8303a', '#4a9ae8', '#ffffff', '#9a5ad8'][(k / 7) % 4]); }
+  for (let k = 3; k < gw; k += 9) { p.rect(gx + k, yb - 15, 1, 5, '#d8d8e0'); circle(p, gx + k, yb - 13, 1, ['#e8443a', '#f6c445', '#4a9ae8'][k % 3]); }
+  p.rect(gx, yb - 16, gw, 1, '#ffffff'); p.px(gx + 1, yb - 14, '#ffffff'); p.px(gx + 2, yb - 13, '#ffffff');
+  (L.post ??= []).push(() => { if (L.night || L.dusk) { p.rect(gx, yb - 16, gw, 14, '#ffd88a40'); } });
+  p.rect(x + w - 10, yb - 14, 7, 14, dk(trim, 0.3)); p.rect(x + w - 9, yb - 13, 5, 13, lt(trim, 0.2)); p.px(x + w - 5, yb - 7, GOLD);
+  // đêm: viền bóng đèn mái
+  (L.post ??= []).push(() => { if (!L.night && !L.dusk) return; for (let xx = x; xx <= x + w; xx += 3) p.px(xx, top - 2, '#fff6c8'); for (let yy = top; yy < yb - 22; yy += 4) { p.px(x, yy, '#fff6c8'); p.px(x + w - 1, yy, '#fff6c8'); } });
 }
 function balloons(p: Pen, x: number, y: number) {
   const cs = ['#e8443a', '#f6c445', '#4a9ae8', '#f08aa6', '#8bc87a', '#b08ae0'];
-  for (let i = 0; i < 6; i++) { const bx = x + (i % 3) * 5 - 5, by = y - 30 + Math.floor(i / 3) * 6 - (i % 2) * 2; p.rect(bx, by, 1, 30 - (by - y + 30) + 0, '#e8e8e8'); }
-  for (let i = 0; i < 6; i++) { const bx = x + (i % 3) * 5 - 5, by = y - 30 + Math.floor(i / 3) * 6 - (i % 2) * 2; ellipse(p, bx, by, 2.6, 3.2, cs[i]); p.px(bx - 1, by - 2, '#ffffff'); }
+  const P: [number, number][] = [[-5, -30], [0, -33], [5, -30], [-3, -24], [3, -24], [0, -27]];
+  for (const [dx, dy] of P) p.rect(x + dx, y + dy + 3, 1, -dy - 3, '#e8e8e8');
+  P.forEach(([dx, dy], i) => { circle(p, x + dx, y + dy, 2, cs[i]); circle(p, x + dx - 2, y + dy - 2, 1, cs[i]); circle(p, x + dx + 2, y + dy - 2, 1, cs[i]); p.px(x + dx - 1, y + dy - 1, '#ffffff'); });
   p.rect(x - 4, y, 9, 10, '#7a4e2c'); p.rect(x - 3, y + 1, 7, 2, '#e8443a');
 }
 function lampPost(p: Pen, L: Light, x: number, y: number) { p.rect(x, y - 22, 2, 22, '#2a3a4a'); p.rect(x - 2, y - 26, 6, 4, '#2a3a4a'); L.lamps.push({ x: x - 1, y: y - 28, c: '#ffe8a0' }); p.rect(x - 1, y - 1, 4, 1, '#2a3a4a'); }
@@ -97,60 +129,69 @@ function flowerBed(p: Pen, L: Light, cx: number, cy: number) {
   speckle(p, L, cx - 10, cy - 4, 20, 10, 12, ['#ffffff', '#f6c445']);
 }
 
+function fountain(p: Pen, L: Light, cx: number, cy: number) {
+  ellipse(p, cx, cy, 22, 7, '#c8bcd8'); ellipse(p, cx, cy - 1, 20, 6, '#e8e0f0'); ellipse(p, cx, cy - 1, 17, 4.5, '#5ab0e8'); ellipse(p, cx, cy - 2, 14, 3, '#8ad0f8');
+  p.rect(cx - 2, cy - 14, 4, 13, '#e8e0f0'); ellipse(p, cx, cy - 14, 9, 3, '#c8bcd8'); ellipse(p, cx, cy - 15, 7, 2, '#8ad0f8');
+  p.rect(cx - 1, cy - 22, 2, 8, '#e8e0f0'); ellipse(p, cx, cy - 22, 4, 1.6, '#c8bcd8');
+  for (let i = 0; i < 5; i++) { const y = cy - 26 - i; p.px(cx + (i % 2), y, '#ffffff'); }
+  circle(p, cx, cy - 30, 2, GOLD); p.px(cx, cy - 31, '#fff2b0');
+  for (let i = -8; i <= 8; i += 4) { p.px(cx + i, cy - 12 + Math.abs(i) * 0.3, '#d8f4ff'); p.px(cx + i * 1.6, cy - 4, '#d8f4ff'); }
+  (L.post ??= []).push(() => { if (L.night || L.dusk) for (let a = 0; a < 16; a++) p.px(Math.round(cx + Math.cos(a / 16 * Math.PI * 2) * 21), Math.round(cy + Math.sin(a / 16 * Math.PI * 2) * 6.5), ['#ff8ad8', '#8ad8ff', '#fff2a0'][a % 3]); });
+}
+function topiary(p: Pen, x: number, y: number) { p.rect(x - 1, y - 4, 2, 4, '#6a4a32'); circle(p, x, y - 9, 6, '#2e7a3e'); circle(p, x - 1, y - 10, 4, '#4aa05a'); circle(p, x, y - 17, 3, '#2e7a3e'); circle(p, x - 1, y - 18, 2, '#4aa05a'); for (const [dx, dy] of [[-3, -8], [2, -11], [0, -6], [-1, -17]]) p.px(x + dx, y + dy, '#f08aa6'); p.rect(x - 4, y - 1, 8, 3, '#c8902a'); }
+function goldLamp(p: Pen, L: Light, x: number, y: number) { p.rect(x, y - 24, 2, 24, GOLD_D); p.rect(x, y - 24, 1, 24, GOLD); circle(p, x + 1, y - 27, 3, '#fff2c8'); circle(p, x + 1, y - 27, 2, '#ffffff'); p.rect(x - 1, y - 24, 4, 1, GOLD); (L.post ??= []).push(() => { if (L.night || L.dusk) { circle(p, x + 1, y - 27, 5, '#ffe8a040'); circle(p, x + 1, y - 27, 2, '#ffffff'); } }); p.rect(x - 2, y - 12, 6, 3, '#7a4e2c'); p.px(x - 1, y - 13, '#e8507a'); p.px(x + 2, y - 13, '#f6c445'); p.rect(x - 2, y - 1, 6, 1, GOLD_D); }
+function cart(p: Pen, x: number, y: number, c: string) { p.rect(x - 9, y - 12, 18, 10, c); for (let k = 0; k < 18; k += 3) p.rect(x - 9 + k, y - 18, 3, 4, k % 6 ? '#ffffff' : c); p.rect(x - 9, y - 14, 18, 2, GOLD); p.rect(x - 7, y - 10, 14, 5, '#fff4c0'); for (let k = 0; k < 6; k++) p.px(x - 6 + k * 2, y - 9, '#ffffff'); circle(p, x - 6, y - 1, 2, '#3a2a3a'); circle(p, x + 6, y - 1, 2, '#3a2a3a'); p.rect(x - 1, y - 24, 1, 6, '#c8c8d8'); }
+
 export function drawFairyMain(p: Pen, L: Light) {
-  sky(p, L, ['#8ac8f8', '#ffe0f0'], 100, 210);
-  band(p, 80, 104, '#8ac878', '#6aa858');
-  for (let i = 0; i < 10; i++) tree(p, 70 + i * 13, 98, 5, '#4a9a5a');
-  castle(p, L, 128, 100, 0.46);
-  shop(p, L, 2, 40, 44, '#f6d0a8', '#e8507a'); shop(p, L, 44, 38, 50, '#c8e0f8', '#3a7ad0'); shop(p, L, 84, 26, 34, '#fff0c8', '#8bc87a');
-  shop(p, L, 146, 26, 34, '#e8d8f8', '#9a6ae0'); shop(p, L, 174, 38, 50, '#fff0c8', '#e8443a'); shop(p, L, 214, 42, 44, '#d8f0e0', '#f6a83a');
-  tiles(p, 104, 192, '#e8c8a8', '#d8b494', 8);
-  band(p, 120, 168, '#c87a6a', '#b86a5a'); for (let y = 122; y < 168; y += 5) for (let x = (y % 10) ? 0 : 6; x < 256; x += 12) p.rect(x, y, 10, 1, '#a85a4a');
-  p.rect(0, 118, 256, 2, '#f6eedf'); p.rect(0, 168, 256, 2, '#f6eedf');
-  for (const x of [14, 70, 186, 242]) lampPost(p, L, x, 118);
-  flowerBed(p, L, 128, 182);
-  balloons(p, 28, 150);
-  string(p, L, 0, 256, 18, 8, ['#e8443a', '#f6c445', '#4a9ae8', '#f08aa6'], 12);
+  sky(p, L, ['#8ac8f8', '#ffe0f0'], 108, 214);
+  band(p, 86, 110, '#8ac878', '#6aa858');
+  for (let i = 0; i < 11; i++) tree(p, 66 + i * 12, 106, 5, i % 2 ? '#4a9a5a' : '#3a8a4a');
+  castle(p, L, 128, 110, 0.44);
+  shop(p, L, 2, 110, 44, 40, '#fbe0ec', '#e8507a', true); shop(p, L, 48, 110, 38, 32, '#dcecff', '#4a8ad8');
+  shop(p, L, 170, 110, 38, 32, '#fff2cc', '#f6a83a'); shop(p, L, 210, 110, 44, 40, '#e4f6e4', '#9a6ae0', true);
+  tiles(p, 110, 192, '#f0dcc4', '#e4ccb0', 8);
+  band(p, 122, 176, '#e8a0a8', '#d88a96'); for (let y = 124; y < 176; y += 5) for (let x = (y % 10) ? 0 : 6; x < 256; x += 12) p.rect(x, y, 10, 1, '#c87a88');
+  p.rect(0, 120, 256, 2, '#fff6ea'); p.rect(0, 176, 256, 2, '#fff6ea'); p.rect(0, 122, 256, 1, GOLD); p.rect(0, 175, 256, 1, GOLD);
+  fountain(p, L, 128, 160);
+  flowerBed(p, L, 128, 186);
+  for (const x of [64, 192]) topiary(p, x, 120);
+  for (const x of [18, 92, 164, 238]) goldLamp(p, L, x, 122);
+  balloons(p, 30, 168); cart(p, 226, 172, '#e8443a');
+  string(p, L, 0, 92, 12, 8, ['#e8443a', '#f6c445', '#4a9ae8', '#f08aa6'], 8); string(p, L, 164, 256, 12, 8, ['#f6c445', '#b08ae0', '#ff8ad8', '#8bc87a'], 8);
 }
 
 export function drawFairyCastle(p: Pen, L: Light) {
-  sky(p, L, ['#7ab8f8', '#ffe8f4'], 110, 40);
-  band(p, 90, 120, '#7ab868', '#5a9a50');
-  for (let i = 0; i < 9; i++) tree(p, 6 + i * 31, 116, 7 + (i % 3), i % 2 ? '#3a8a4a' : '#4a9a5a');
+  sky(p, L, ['#7ab8f8', '#ffe8f4'], 116, 40);
+  band(p, 96, 128, '#7ab868', '#5a9a50');
+  for (let i = 0; i < 9; i++) tree(p, 6 + i * 31, 124, 7 + (i % 3), i % 2 ? '#3a8a4a' : '#4a9a5a');
   const { cx, base, k } = CASTLE_SPOT;
   castle(p, L, cx, base, k);
-  water(p, L, 120, 134, '#5aa8e0', '#3a88c8');
-  // cầu vào cổng
-  p.rect(118, 118, 20, 18, '#c8b8a0'); for (let x = 119; x < 138; x += 3) p.rect(x, 118, 1, 18, '#a89880'); p.rect(116, 118, 2, 18, '#8a7a68'); p.rect(138, 118, 2, 18, '#8a7a68');
-  band(p, 134, 192, '#8ac870', '#6aa858');
-  // đường lát dẫn vào cổng + quảng trường
-  for (let y = 134; y < 192; y++) { const w = 12 + (y - 134) * 0.9; p.rect(128 - w, y, w * 2, 1, (y % 6) ? '#e8dcc8' : '#d0c4ae'); }
-  speckle(p, L, 0, 140, 256, 50, 160, ['#ffffff', '#f6e04a', '#e8507a', '#b08ae0']);
-  // bụi cây cắt tỉa
-  for (const x of [20, 70, 186, 236]) { circle(p, x, 150, 6, '#3a8a4a'); circle(p, x - 1, 148, 4, '#5aaa5a'); p.rect(x - 1, 156, 2, 4, '#6a4a32'); }
-  // tảng đá cắm gươm
-  ellipse(p, 220, 168, 12, 5, '#8a8a98'); for (let y = 0; y < 12; y++) p.rect(210 + y * 0.4, 156 + y, 20 - y * 0.8, 1, mix('#a8a8b8', '#7a7a88', y / 12));
-  p.rect(208, 168, 24, 4, '#6a6a78'); p.rect(212, 158, 4, 2, '#c8c8d4');
-  for (const x of [46, 210]) lampPost(p, L, x, 140);
+  water(p, L, 128, 140, '#5aa8e0', '#3a88c8');
+  p.rect(116, 126, 24, 16, '#c8b8a0'); for (let x = 117; x < 140; x += 3) p.rect(x, 126, 1, 16, '#a89880'); p.rect(114, 126, 2, 16, GOLD_D); p.rect(140, 126, 2, 16, GOLD_D);
+  band(p, 140, 192, '#8ac870', '#6aa858');
+  for (let y = 140; y < 192; y++) { const w = 14 + (y - 140) * 0.9; p.rect(128 - w, y, w * 2, 1, (y % 6) ? '#f0e4d0' : '#dccfb8'); }
+  speckle(p, L, 0, 144, 256, 48, 180, ['#ffffff', '#f6e04a', '#e8507a', '#b08ae0', '#ff8ad8']);
+  for (const x of [22, 70, 186, 234]) topiary(p, x, 160);
+  ellipse(p, 220, 176, 12, 5, '#8a8a98'); for (let y = 0; y < 12; y++) p.rect(210 + y * 0.4, 164 + y, 20 - y * 0.8, 1, mix('#a8a8b8', '#7a7a88', y / 12));
+  p.rect(208, 176, 24, 4, '#6a6a78'); p.rect(212, 166, 4, 2, '#c8c8d4');
+  for (const x of [46, 210]) goldLamp(p, L, x, 146);
+  string(p, L, 0, 70, 20, 6, ['#ff8ad8', '#fff2a0', '#8ad8ff'], 7); string(p, L, 186, 256, 20, 6, ['#ff8ad8', '#fff2a0', '#8ad8ff'], 7);
 }
 
 export function drawFairyParade(p: Pen, L: Light) {
-  sky(p, L, ['#80c0f8', '#ffe4f0'], 80, 200);
-  castle(p, L, 128, 78, 0.3);
-  // hai dãy nhà phố chạy về lâu đài
-  const cs = ['#f6d0a8', '#c8e0f8', '#fff0c8', '#e8d8f8', '#d8f0e0', '#f8c8c8'];
-  for (let i = 0; i < 4; i++) { bldg(p, L, i * 26, 100, 26, 30 + (i % 2) * 8, cs[i], ['#e8507a', '#3a7ad0', '#8bc87a', '#9a6ae0'][i], '#8ac0e0', 7); bldg(p, L, 256 - (i + 1) * 26, 100, 26, 30 + ((i + 1) % 2) * 8, cs[(i + 2) % 6], ['#f6a83a', '#e8443a', '#3a7ad0', '#e8507a'][i], '#8ac0e0', 7); }
-  tiles(p, 100, 150, '#e8d4bc', '#d8c0a8', 8);
-  // làn diễu hành
-  band(p, 150, 192, '#9a7a8a', '#8a6a7a');
-  for (let x = 0; x < 256; x += 16) p.rect(x, 170, 8, 1, '#f6e8c0');
-  p.rect(0, 148, 256, 2, '#f6eedf');
-  // dây chắn khán giả
+  sky(p, L, ['#80c0f8', '#ffe4f0'], 100, 200);
+  band(p, 76, 100, '#7ab868', '#5a9a50');
+  castle(p, L, 128, 98, 0.34);
+  shop(p, L, 0, 102, 30, 34, '#fbe0ec', '#e8507a', true); shop(p, L, 32, 102, 30, 28, '#dcecff', '#4a8ad8'); shop(p, L, 64, 102, 28, 24, '#fff2cc', '#8bc87a');
+  shop(p, L, 164, 102, 28, 24, '#e8dcf8', '#9a6ae0'); shop(p, L, 194, 102, 30, 28, '#fff2cc', '#e8443a'); shop(p, L, 226, 102, 30, 34, '#e4f6e4', '#f6a83a', true);
+  tiles(p, 102, 150, '#f0dcc4', '#e4ccb0', 8);
+  band(p, 150, 192, '#d8a0bc', '#c88aa8');
+  for (let x = 0; x < 256; x += 16) p.rect(x, 171, 8, 1, '#fff2c0');
+  p.rect(0, 148, 256, 2, '#fff6ea'); p.rect(0, 150, 256, 1, GOLD);
   for (let x = 4; x < 256; x += 24) { p.rect(x, 140, 2, 9, GOLD_D); p.rect(x - 1, 139, 4, 2, GOLD); }
   for (let x = 4; x < 252; x++) { const t = ((x - 4) % 24) / 24; p.px(x, 142 + Math.round(Math.sin(t * Math.PI) * 3), '#c8304a'); }
-  for (const x of [52, 204]) lampPost(p, L, x, 112);
-  string(p, L, 0, 256, 16, 10, ['#e8443a', '#f6c445', '#4a9ae8', '#f08aa6', '#8bc87a'], 10);
-  string(p, L, 0, 256, 40, 8, ['#f6c445', '#b08ae0', '#ffffff'], 14);
+  for (const x of [52, 204]) goldLamp(p, L, x, 114);
+  string(p, L, 0, 96, 14, 8, ['#e8443a', '#f6c445', '#4a9ae8', '#f08aa6', '#8bc87a'], 8); string(p, L, 160, 256, 14, 8, ['#f6c445', '#b08ae0', '#ff8ad8', '#8ad8ff'], 8);
 }
 
 export const RIDES = { carousel: { x: 92, y: 176 }, cups: { x: 194, y: 178 } };
@@ -259,15 +300,133 @@ export const musicBoxSprite = () => makeSprite('tv:musicbox', 18, 22, p => {
   p.rect(8, 4, 2, 12, GOLD); for (let y = 0; y < 5; y++) { const w = 2 + y * 1.6; p.rect(9 - w, y, w * 2, 1, y % 2 ? '#f08aa6' : '#ffffff'); }
   ellipse(p, 9, 12, 4, 2, '#ffffff'); p.rect(11, 9, 2, 3, '#ffffff'); p.px(12, 9, '#2a2a3a'); p.rect(6, 13, 1, 3, '#ffffff'); p.rect(11, 13, 1, 3, '#ffffff');
 }, '#4a2a3a');
-export const balloonDecoSprite = () => makeSprite('tv:balloons', 18, 26, p => {
+export const balloonDecoSprite = () => makeSprite('tv:mickeyballoons', 20, 28, p => {
   const cs = ['#e8443a', '#f6c445', '#4a9ae8', '#f08aa6', '#8bc87a'];
-  for (let i = 0; i < 5; i++) { const x = 3 + (i % 3) * 6 - (i > 2 ? -3 : 0), y = 4 + Math.floor(i / 3) * 6; p.rect(x, y + 4, 1, 20 - y, '#d8d8e0'); }
-  for (let i = 0; i < 5; i++) { const x = 3 + (i % 3) * 6 - (i > 2 ? -3 : 0), y = 4 + Math.floor(i / 3) * 6; for (let yy = -4; yy <= 4; yy++) for (let xx = -3; xx <= 3; xx++) { const X = xx / 3, Y = -yy / 3.6; if ((X * X + Y * Y - 1) ** 3 - X * X * Y * Y * Y <= 0) p.px(x + xx, y + yy, cs[i]); } p.px(x - 1, y - 2, '#ffffff'); }
-  p.rect(6, 23, 7, 3, '#7a4e2c');
+  const P = [[6, 9], [14, 8], [10, 3], [3, 15], [17, 15]];
+  P.forEach(([x, y]) => p.rect(x, y + 3, 1, 24 - y, '#d8d8e0'));
+  P.forEach(([x, y], i) => { const c = cs[i]; circle(p, x, y, 3, c); circle(p, x - 3, y - 3, 1, c); circle(p, x + 3, y - 3, 1, c); p.px(x - 1, y - 1, '#ffffff'); });
+  p.rect(7, 25, 7, 3, '#7a4e2c');
 }, '#4a2a3a');
-
 /** Ảnh lâu đài phủ một màu (lớp chiếu sáng show đêm) — vị trí khớp map lâu đài */
 export function castleMaskAt(c: string): { sprite: Sprite; x: number; y: number } {
   const { cx, base, k } = CASTLE_SPOT, sp = castleSprite(k, c);
   return { sprite: sp, x: cx, y: base + 1 };
 }
+
+// ───────── Nhân vật Disney: Mickey, Minnie, Donald, Goofy, Daisy, Pluto, Chip, Dale, Mickey phù thuỷ, Huey, Dewey, Louie, Scrooge ─────────
+export const MASCOTS = [
+  { id: 'mickey', name: 'Mickey', hi: 'Hot dog! Chào mừng tới Disneyland! 🎉' },
+  { id: 'minnie', name: 'Minnie', hi: 'Ôi dễ thương quá, chụp chung với Minnie nha! 🎀' },
+  { id: 'donald', name: 'Donald', hi: 'Quạc quạc! Hai bạn đi chơi vui không? 🦆' },
+  { id: 'goofy', name: 'Goofy', hi: 'A-hyuck! Đi tàu lượn với Goofy không? 😆' },
+  { id: 'daisy', name: 'Daisy', hi: 'Hai bạn đẹp đôi ghê! 💗' },
+  { id: 'pluto', name: 'Pluto', hi: 'Gâu gâu! 🐾' },
+  { id: 'chip', name: 'Chip', hi: 'Có hạt dẻ không? 🌰' },
+  { id: 'dale', name: 'Dale', hi: 'Hihi, Dale nè! 🌰' },
+  { id: 'sorcerer', name: 'Mickey phù thuỷ', hi: 'Abracadabra! ✨' },
+  { id: 'huey', name: 'Huey', hi: 'Bọn cháu đi diễu hành nè! ❤️' },
+  { id: 'dewey', name: 'Dewey', hi: 'Chụp ảnh không? 💙' },
+  { id: 'louie', name: 'Louie', hi: 'Vẫy tay nào! 💚' },
+  { id: 'scrooge', name: 'Scrooge', hi: 'Vé vào cổng đắt lắm đó nha! 🎩' },
+] as const;
+type ToonId = (typeof MASCOTS)[number]['id'];
+/** f: 0 đứng · 1 bước · 2 vẫy tay · 3 dang tay ôm */
+export const mascotSprite = (i: number, f: 0 | 1 | 2 | 3) => makeSprite(`fa-toon:${i}:${f}`, 30, 40, p => {
+  const id: ToonId = MASCOTS[i % MASCOTS.length].id, cx = 15;
+  const K = '#1a1a22', SKIN = '#f8d4b4', W = '#ffffff', RED = '#e8303a', YEL = '#f6c445', OR = '#f6a030';
+  const step = f === 1 ? 1 : 0;
+  const glove = (x: number, y: number) => { circle(p, x, y, 2, W); p.px(x, y - 1, '#e0e0e8'); };
+  const arms = (c: string, y0: number, gloves = true) => {
+    const hand = (x: number, y: number) => (gloves ? glove(x, y) : circle(p, x, y, 1, c));
+    if (f === 3) { for (const s of [-1, 1]) { p.rect(cx + s * 6 - (s < 0 ? 5 : 0), y0 + 1, 5, 2, c); hand(cx + s * 12, y0 + 1); } return; }
+    p.rect(cx - 8, y0 + 1, 2, 6, c); hand(cx - 8, y0 + 8);
+    if (f === 2) { p.rect(cx + 6, y0 - 6, 2, 7, c); hand(cx + 7, y0 - 7); } else { p.rect(cx + 6, y0 + 1, 2, 6, c); hand(cx + 7, y0 + 8); }
+  };
+  const feet = (c: string, y: number, rx = 3.4) => { ellipse(p, cx - 4 + step, y, rx, 1.8, c); ellipse(p, cx + 4 - step, y, rx, 1.8, c); };
+  const legs = (c: string, y: number, h: number, w = 2) => { p.rect(cx - 4 + step, y, w, h, c); p.rect(cx + 2 - step, y, w, h, c); };
+  // ── chuột: Mickey, Minnie, Mickey phù thuỷ
+  if (id === 'mickey' || id === 'minnie' || id === 'sorcerer') {
+    circle(p, cx - 8, 5, 4, K); circle(p, cx + 8, 5, 4, K);
+    ellipse(p, cx, 13, 7.5, 7, K);
+    ellipse(p, cx, 16, 6, 4, SKIN); ellipse(p, cx - 2.4, 11, 2.4, 3.4, SKIN); ellipse(p, cx + 2.4, 11, 2.4, 3.4, SKIN);
+    p.rect(cx - 3, 9, 2, 4, K); p.rect(cx + 1, 9, 2, 4, K); p.px(cx - 3, 9, W); p.px(cx + 1, 9, W);
+    ellipse(p, cx, 14.5, 1.8, 1.2, K);
+    p.rect(cx - 3, 17, 7, 1, '#5a1a1a'); p.rect(cx - 2, 18, 5, 1, '#5a1a1a'); p.rect(cx - 1, 18, 3, 1, '#f07a8a');
+    if (id === 'minnie') {
+      p.rect(cx - 6, 2, 12, 5, RED); p.rect(cx - 1, 3, 3, 3, '#c02028'); for (const [x, y] of [[-5, 3], [-3, 5], [3, 3], [5, 5]]) p.px(cx + x, y, W);
+      p.px(cx - 4, 8, K); p.px(cx + 4, 8, K);
+      for (let y = 21; y < 31; y++) { const w = 5 + Math.floor((y - 21) * 0.7); p.rect(cx - w, y, w * 2, 1, RED); }
+      for (const [x, y] of [[-3, 23], [2, 22], [-5, 27], [0, 26], [4, 28], [-1, 29]]) p.px(cx + x, y, W);
+      p.rect(cx - 5, 20, 10, 2, K); arms(K, 20); legs(K, 31, 5); feet(YEL, 37, 3);
+    } else if (id === 'sorcerer') {
+      for (let y = 0; y < 8; y++) { const w = 1 + y * 0.9; p.rect(cx - w, y - 1, w * 2, 1, '#3a4ac8'); }
+      p.px(cx - 1, 2, YEL); p.px(cx + 2, 4, YEL); p.px(cx - 3, 5, YEL); p.rect(cx - 7, 6, 14, 1, '#2a3aa8');
+      for (let y = 20; y < 36; y++) { const w = 6 + Math.floor((y - 20) * 0.3); p.rect(cx - w, y, w * 2, 1, y % 5 ? RED : '#c82028'); }
+      p.rect(cx - 1, 20, 2, 16, '#a81820'); arms(RED, 20); feet(YEL, 37);
+    } else {
+      p.rect(cx - 4, 20, 8, 4, K); arms(K, 20);
+      p.rect(cx - 6, 24, 12, 6, RED); p.rect(cx - 6, 24, 12, 1, '#ff6a6a'); p.rect(cx - 3, 25, 2, 2, W); p.rect(cx + 1, 25, 2, 2, W);
+      legs(K, 30, 5); feet(YEL, 37);
+    }
+    return;
+  }
+  // ── vịt: Donald, Daisy, Huey/Dewey/Louie, Scrooge
+  if (id === 'donald' || id === 'daisy' || id === 'huey' || id === 'dewey' || id === 'louie' || id === 'scrooge') {
+    const kid = id === 'huey' || id === 'dewey' || id === 'louie', oy = kid ? 4 : 0;
+    const kc = id === 'huey' ? '#e8303a' : id === 'dewey' ? '#3a7ae8' : '#3aa84a';
+    ellipse(p, cx, 12 + oy, kid ? 6.5 : 7.5, kid ? 6 : 7, W);
+    ellipse(p, cx - 2.5, 10 + oy, 2, 2.6, W); ellipse(p, cx + 2.5, 10 + oy, 2, 2.6, W); p.rect(cx - 2, 10 + oy, 1, 2, K); p.rect(cx + 2, 10 + oy, 1, 2, K);
+    ellipse(p, cx + 1, 15.5 + oy, kid ? 5 : 6, 2, OR); ellipse(p, cx + 1, 17 + oy, 4, 1.3, '#e88a20'); p.rect(cx - 3, 15 + oy, 8, 1, '#c87018');
+    if (id === 'donald') { const B = '#2a5ad0'; p.rect(cx - 6, 3, 12, 3, B); p.rect(cx - 7, 5, 14, 2, '#1a1a3a'); p.rect(cx + 5, 6, 4, 2, '#1a1a3a'); p.rect(cx - 2, 1, 5, 2, B);
+      p.rect(cx - 6, 20, 12, 7, B); p.rect(cx - 6, 20, 12, 1, '#5a8af0'); p.rect(cx - 2, 20, 4, 2, RED); p.px(cx, 22, RED); }
+    if (id === 'daisy') { p.rect(cx - 5, 2, 10, 4, '#f08ac0'); p.rect(cx - 1, 3, 2, 2, '#d0609a'); p.px(cx - 4, 8, K); p.px(cx + 4, 8, K); p.px(cx - 5, 9, K); p.px(cx + 5, 9, K);
+      p.rect(cx - 6, 20, 12, 8, '#9a5ad8'); p.rect(cx - 6, 20, 12, 1, '#c08af0'); for (let k = 0; k < 4; k++) p.px(cx - 4 + k * 3, 24, '#f08ac0'); }
+    if (kid) { p.rect(cx - 6, 4 + oy, 12, 3, kc); p.rect(cx + 2, 6 + oy, 7, 2, kc); p.rect(cx - 5, 21 + oy, 10, 6, kc); p.rect(cx - 5, 21 + oy, 10, 1, lt(kc, 0.4)); }
+    if (id === 'scrooge') {
+      p.rect(cx - 4, -1 + 1, 8, 6, K); p.rect(cx - 6, 5, 12, 1, K); p.rect(cx - 4, 4, 8, 1, '#c02028');
+      p.rect(cx - 5, 9, 4, 3, '#a8c8e8'); p.rect(cx + 1, 9, 4, 3, '#a8c8e8'); p.rect(cx - 1, 10, 2, 1, K);
+      p.rect(cx - 8, 12, 2, 4, W); p.rect(cx + 6, 12, 2, 4, W);
+      p.rect(cx - 6, 20, 12, 9, '#c82838'); p.rect(cx - 7, 27, 3, 5, '#c82838'); p.rect(cx + 4, 27, 3, 5, '#c82838'); for (let y = 21; y < 28; y += 2) p.px(cx, y, YEL);
+      p.rect(cx + 9, 22, 1, 14, '#6a3a1a'); p.rect(cx + 8, 21, 3, 1, YEL);
+    }
+    if (!kid && id !== 'scrooge' && id !== 'donald' && id !== 'daisy') { /* (không có) */ }
+    for (let y = 27 + (kid ? 0 : 0); y < 32; y++) p.rect(cx - 5 + (y - 27) * 0.4, y, 10 - (y - 27) * 0.8, 1, W);
+    arms(id === 'scrooge' ? '#c82838' : id === 'daisy' ? '#9a5ad8' : kid ? kc : id === 'donald' ? '#2a5ad0' : W, 20 + (kid ? oy : 0), false);
+    p.rect(cx - 3 + step, 32, 2, 3, OR); p.rect(cx + 1 - step, 32, 2, 3, OR);
+    p.rect(cx - 6 + step, 35, 5, 3, OR); p.rect(cx + 1 - step, 35, 5, 3, OR);
+    return;
+  }
+  if (id === 'goofy') {
+    p.rect(cx - 9, 7, 3, 12, K); p.rect(cx + 6, 7, 3, 12, K);
+    ellipse(p, cx, 11, 6.5, 7, K);
+    ellipse(p, cx + 1, 15, 5.5, 3.6, SKIN); ellipse(p, cx + 2, 12.5, 2.6, 1.8, K);
+    ellipse(p, cx - 2, 8, 2, 2.6, W); ellipse(p, cx + 2, 8, 2, 2.6, W); p.px(cx - 2, 9, K); p.px(cx + 2, 9, K);
+    p.rect(cx - 2, 17, 6, 1, '#5a1a1a'); p.rect(cx, 18, 2, 2, W);
+    p.rect(cx - 5, 1, 10, 4, '#3a9a4a'); p.rect(cx - 7, 4, 14, 1, '#2a7a3a'); p.rect(cx - 5, 3, 10, 1, K);
+    p.rect(cx - 5, 20, 10, 7, '#f08a3a'); p.rect(cx - 5, 20, 3, 7, K); p.rect(cx + 2, 20, 3, 7, K); p.rect(cx - 2, 19, 4, 2, '#f08a3a');
+    arms('#f08a3a', 20);
+    p.rect(cx - 4, 27, 8, 3, '#3a5ab8'); legs('#3a5ab8', 30, 5, 3); feet('#7a4a2a', 37, 3.6);
+    return;
+  }
+  if (id === 'pluto') {
+    const Y = '#f0b030';
+    p.rect(cx - 9, 6, 3, 11, K); p.rect(cx + 6, 6, 3, 11, K);
+    ellipse(p, cx, 11, 6.5, 6.5, Y); ellipse(p, cx + 1, 14, 6, 3.4, '#f6c860'); ellipse(p, cx + 2, 11, 2.6, 1.8, K);
+    ellipse(p, cx - 2, 7, 1.6, 2.4, W); ellipse(p, cx + 2, 7, 1.6, 2.4, W); p.px(cx - 2, 8, K); p.px(cx + 2, 8, K);
+    p.rect(cx, 17, 3, 3, '#f06a7a');
+    p.rect(cx - 5, 19, 10, 2, '#3aa84a'); p.px(cx, 21, YEL);
+    ellipse(p, cx, 26, 6, 6, Y); arms(Y, 20, false);
+    legs(Y, 31, 4, 3); feet(Y, 36, 3); p.rect(cx + 6, 27, 6, 2, K); p.rect(cx + 11, 24, 2, 4, K);
+    return;
+  }
+  // ── sóc: Chip (mũi đen), Dale (mũi đỏ, sáng màu hơn)
+  const fur = id === 'chip' ? '#9a6232' : '#c07a3e', cream = '#f6dcb0';
+  circle(p, cx - 6, 5, 3, fur); circle(p, cx + 6, 5, 3, fur);
+  ellipse(p, cx, 12, 7, 6.5, fur); ellipse(p, cx, 15, 5, 3.6, cream); p.rect(cx - 1, 4, 2, 5, dk(fur, 0.4));
+  ellipse(p, cx - 2.5, 10, 1.8, 2.4, W); ellipse(p, cx + 2.5, 10, 1.8, 2.4, W); p.px(cx - 2, 11, K); p.px(cx + 2, 11, K);
+  ellipse(p, cx, 13.5, id === 'dale' ? 1.8 : 1.3, id === 'dale' ? 1.4 : 1, id === 'dale' ? '#d83a3a' : K);
+  if (id === 'chip') { p.rect(cx - 2, 17, 2, 2, W); p.rect(cx, 17, 2, 2, W); } else { p.rect(cx - 1, 17, 2, 2, W); }
+  ellipse(p, cx, 26, 6, 6, fur); ellipse(p, cx, 27, 3.6, 4.5, cream);
+  arms(fur, 20, false); legs(fur, 31, 4, 3); feet(fur, 36, 3);
+  for (let y = 18; y < 34; y++) p.rect(cx + 7 + Math.round(Math.sin(y / 3) * 2), y, 4, 1, y % 3 ? fur : dk(fur, 0.2));
+}, '#2a1a24');
