@@ -1762,3 +1762,8 @@ textarea { resize: vertical; }
 .cam-bar { position: absolute; left: 0; right: 0; bottom: 4%; display: flex; justify-content: center; align-items: center; gap: 18px; pointer-events: auto; }
 .cam-shutter { width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 6px solid #ffffff80; box-shadow: 0 0 0 3px #fff, 0 4px 12px #0006; cursor: pointer; }
 .cam-shutter:active { transform: scale(.92); background: #f0f0f0; }
+
+/* Chỉnh màu toàn game: tươi hơn, có chiều sâu (viền tối nhẹ + ánh sáng trên cao) */
+.stage { filter: saturate(1.2) contrast(1.06) brightness(1.02); }
+.stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 450;
+  background: linear-gradient(rgba(255, 244, 214, .10), transparent 35%), radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(40, 16, 60, .22) 100%); }

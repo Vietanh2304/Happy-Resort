@@ -100,7 +100,7 @@ export function string(p: Pen, L: Light, x0: number, x1: number, y: number, sag:
 /** Vẽ nền một map tham quan (có cache theo phase) */
 export function spotBackground(scene: SpotScene, ph: Phase): Sprite {
   const s = SPOTS[scene];
-  return paint(`spot:v6:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora');
+  return paint(`spot:v7:${scene}:${ph}`, scene, s.draw, ph, s.trip === 'iceland' && s.id === 'aurora');
 }
 /** Vẽ một cảnh: nền → phủ màu theo giờ → cửa sổ sáng, neon, đèn lồng có quầng */
 export function paint(key: string, seed: string, draw: (p: Pen, L: Light) => void, ph: Phase, alwaysNight = false): Sprite {
@@ -481,6 +481,220 @@ const drawStation = (p: Pen, L: Light) => {
   for (let x = 100; x < 256; x += 50) L.lamps.push({ x, y: 116, c: '#ffe8a0' });
 };
 
+
+/** Khối chữ giả (biển hiệu Hán / Hàn) */
+function glyphs(p: Pen, x: number, y: number, n: number, c: string, vertical = true) {
+  for (let i = 0; i < n; i++) { const gx = vertical ? x : x + i * 5, gy = vertical ? y + i * 5 : y; p.rect(gx, gy, 3, 1, c); p.rect(gx + 1, gy, 1, 3, c); p.px(gx, gy + 2, c); p.px(gx + 2, gy + 2, c); }
+}
+/** Biển hiệu dọc phát sáng có chữ */
+function vsign(L: Light, p: Pen, x: number, y: number, h: number, c: string) { L.neon.push({ x, y, w: 6, h, c }); (L.post ??= []).push(() => glyphs(p, x + 1, y + 2, Math.floor((h - 3) / 5), '#ffffff')); }
+
+// ═══ ĐÀI TRUNG: Chợ đêm Phùng Giáp — hẻm chật biển dọc neon, sạp đèn hộp, khói nướng ═══
+const drawFengjia = (p: Pen, L: Light) => {
+  sky(p, L, ['#5a6ab8', '#c8a8d8'], 50, 40);
+  for (let i = 0; i < 11; i++) bldg(p, L, i * 24, 82, 23, 30 + (i * 37) % 26, ['#c8b8a8', '#a8a0b0', '#d8c0a0', '#b8b0a8'][i % 4], undefined, '#9ab0c8', 6);
+  for (let i = 0; i < 12; i++) vsign(L, p, 4 + i * 21, 30 + (i % 3) * 8, 26 + (i % 2) * 8, ['#ff4a6a', '#4af0ff', '#ffe04a', '#8aff6a', '#ff8a3a', '#c86aff'][i % 6]);
+  band(p, 82, 130, '#4a3a40', '#3a2a30');
+  for (let i = 0; i < 8; i++) {
+    const x = 2 + i * 32, c = ['#e8443a', '#f6a83a', '#3a8ad0', '#e8443a', '#3aa86a', '#f6a83a', '#9a6ae0', '#e8443a'][i];
+    p.rect(x, 98, 30, 26, '#7a5a42'); p.rect(x, 98, 30, 1, '#a88a62');
+    for (let k = 0; k < 8; k++) p.rect(x + k * 4, 88, 4, 10, k % 2 ? c : '#ffffff');
+    p.rect(x, 97, 32, 1, dk(c, 0.3));
+    p.rect(x + 2, 104, 26, 12, '#3a2a2a'); for (let k = 0; k < 6; k++) { p.rect(x + 3 + k * 4, 106, 3, 4, ['#f6c445', '#d86a3a', '#ffffff', '#c84a2a', '#8bc87a', '#e8a060'][(k + i) % 6]); p.px(x + 4 + k * 4, 105, '#ffe8b0'); }
+    p.rect(x + 4, 118, 22, 6, '#c8c0b0'); p.rect(x + 4, 118, 22, 1, '#e8e0d0');
+    L.neon.push({ x: x + 4, y: 82, w: 22, h: 5, c: ['#ffe04a', '#ff6a8a', '#6af0ff'][i % 3] });
+  }
+  string(p, L, 0, 256, 76, 5, ['#e8443a', '#ffb040', '#ffe04a'], 7);
+  tiles(p, 130, 192, '#6a6068', '#585058', 10);
+  for (let i = 0; i < 60; i++) p.rect(Math.floor(L.r() * 256), 132 + Math.floor(L.r() * 58), 3, 1, '#ffd88a40');
+};
+
+// ═══ GWANGJU: phố Chungjang — phố trẻ, biển chữ Hàn, quán cà phê, cây ngân hạnh vàng ═══
+const drawChungjang = (p: Pen, L: Light) => {
+  sky(p, L, ['#80b8f0', '#e8f0ff'], 60, 50);
+  const cs = ['#e8d8d0', '#c8d0e0', '#f0e0c0', '#d0e0d0', '#e0c8d8', '#c8c8c8'];
+  for (let i = 0; i < 8; i++) bldg(p, L, i * 32, 120, 31, 58 + (i * 23) % 40, cs[i % 6], undefined, '#90b8d8', 6);
+  for (let i = 0; i < 8; i++) {
+    const x = i * 32 + 2;
+    vsign(L, p, x + 23, 52 + (i % 3) * 8, 26, ['#ff4a8a', '#4ae0ff', '#ffe04a', '#8a6aff', '#ff8a3a', '#4aff9a', '#ff4a4a', '#4ab0ff'][i]);
+    L.neon.push({ x, y: 100, w: 27, h: 5, c: ['#ff6a4a', '#ffe04a', '#4ae0ff'][i % 3] });
+    p.rect(x, 106, 27, 14, '#c8e0f0'); p.rect(x + 2, 108, 23, 10, '#4a5a6a'); L.wins.push([x + 2, 108, 23, 10]); p.rect(x, 106, 27, 1, '#ffffff');
+  }
+  band(p, 120, 132, '#a0a0a8', '#909098');
+  tiles(p, 132, 192, '#7a7480', '#6a6470', 12);
+  // cây ngân hạnh lá vàng dọc phố
+  for (let x = 14; x < 256; x += 58) tree(p, x, 132, 8, '#f6c83a', '#6a4a2a');
+  speckle(p, L, 0, 132, 256, 60, 70, ['#f6c83a', '#f0d860']);
+  for (let i = 0; i < 3; i++) { const x = 40 + i * 80; p.rect(x - 10, 150, 20, 2, '#d8302a'); p.rect(x - 1, 152, 2, 10, '#c8c8c8'); p.rect(x - 8, 162, 16, 3, '#3a7ad0'); p.rect(x - 7, 165, 2, 6, '#3a7ad0'); p.rect(x + 5, 165, 2, 6, '#3a7ad0'); }
+  p.rect(60, 128, 136, 1, '#ffffff'); for (let x = 70; x < 190; x += 14) p.rect(x, 136, 8, 2, '#f0f0f0');
+};
+
+// ═══ HỘI AN: sông Hoài đêm — nhà vàng soi bóng, thuyền đèn, cầu An Hội, hoa đăng ═══
+const drawHoianRiver = (p: Pen, L: Light) => {
+  sky(p, L, ['#f0a870', '#ffe0b0'], 50, 200);
+  for (let i = 0; i < 7; i++) hoianHouse(p, L, i * 37, 76, 35, 30);
+  string(p, L, 0, 256, 34, 8, ['#e8443a', '#f6c445', '#f59ab3', '#3aa86a'], 8);
+  string(p, L, 0, 256, 44, 5, ['#f6c445', '#e8443a'], 11);
+  water(p, L, 76, 150, '#2a6a7a', '#1a4a5a');
+  // bóng nhà và đèn dưới nước
+  for (let x = 0; x < 256; x += 2) p.rect(x, 78, 2, 10 + (x % 6), '#f2c84a30');
+  for (let x = 6; x < 256; x += 9) for (let y = 80; y < 120; y += 3) if (L.r() < 0.55) p.rect(x + Math.round(Math.sin(y) * 2), y, 2, 1, ['#e8443a', '#f6c445', '#f59ab3'][x % 3] + '90');
+  // cầu An Hội
+  for (let x = 170; x < 256; x++) { const lift = Math.round(Math.sin((x - 170) / 86 * Math.PI) * 10); p.rect(x, 96 - lift, 1, 4, '#d8c8b0'); p.px(x, 95 - lift, '#8a6a4a'); }
+  for (let x = 172; x < 254; x += 7) L.lamps.push({ x, y: 86 - Math.round(Math.sin((x - 170) / 86 * Math.PI) * 10), c: '#ffb040' });
+  band(p, 150, 192, '#a88a68', '#987a58'); p.rect(0, 150, 256, 3, '#7a5a3a');
+  for (let x = 10; x < 256; x += 30) p.rect(x, 146, 3, 8, '#5a3a2a');
+  for (let k = 0; k < 6; k++) { p.rect(30 + k * 6, 164, 5, 3, '#f59ab3'); p.px(32 + k * 6, 163, '#ffe060'); }
+  p.rect(28, 167, 38, 2, '#6a3a22');
+};
+
+// ═══ TOKYO: Ueno — đại lộ anh đào, đèn lồng giấy bonbori, hồ Shinobazu sen, điện Bentendo bát giác ═══
+const drawUeno = (p: Pen, L: Light) => {
+  sky(p, L, ['#a0d0f8', '#fff0f6'], 64, 60);
+  for (let i = 0; i < 12; i++) bldg(p, L, i * 22, 64, 21, 12 + (i * 7) % 14, '#c0c8d8', undefined, '#a0b8d0', 5);
+  water(p, L, 64, 108, '#5aa0b0', '#4a8898');
+  for (let i = 0; i < 26; i++) { const x = Math.floor(L.r() * 256), y = 92 + Math.floor(L.r() * 14); circle(p, x, y, 2, '#4a8a4a'); if (i % 4 === 0) p.px(x, y - 2, '#f8a8c0'); }
+  // điện Bentendo bát giác đỏ trên đảo
+  p.rect(150, 80, 40, 6, '#8a7a6a'); p.rect(158, 66, 24, 14, '#c83a2a'); for (let k = 0; k < 4; k++) p.rect(160 + k * 6, 68, 2, 12, '#8a1a1a');
+  roofEA(p, 150, 60, 40, 7, '#3a3a48', 0.7); p.rect(168, 52, 4, 4, '#d8a83a');
+  band(p, 108, 192, '#9ac87a', '#7ab060');
+  tiles(p, 138, 162, '#e8d8b8', '#d8c8a8', 10);
+  // hai hàng anh đào tạo vòm hoa
+  for (const y0 of [134, 190]) for (let i = 0; i < 7; i++) {
+    const x = 16 + i * 38 + (y0 > 150 ? 19 : 0);
+    p.rect(x - 1, y0 - 20, 3, 20, '#5a3a2a'); p.rect(x - 7, y0 - 18, 7, 1, '#5a3a2a'); p.rect(x + 2, y0 - 15, 7, 1, '#5a3a2a');
+    for (let k = 0; k < 5; k++) circle(p, x - 12 + k * 6, y0 - 26 - (k % 2) * 4, 8, ['#f8b8cc', '#ffd0dc', '#f6a8c0', '#ffe0e8', '#f8c0d0'][k]);
+    speckle(p, L, x - 18, y0 - 38, 36, 20, 22, ['#ffffff', '#f088a8']);
+  }
+  // dây đèn bonbori giấy trắng viền đỏ
+  for (let x = 0; x < 256; x += 12) L.lamps.push({ x, y: 120, c: '#fff4e0' });
+  p.rect(0, 118, 256, 1, '#c83a2a');
+  speckle(p, L, 0, 160, 256, 30, 90, ['#f8b8cc', '#ffd8e4']);
+  p.rect(170, 168, 34, 14, '#3a8ad0'); for (let k = 0; k < 34; k += 6) p.rect(170 + k, 168, 3, 14, '#5aa8e8');
+  p.rect(180, 172, 6, 4, '#f6c445'); p.rect(190, 173, 5, 3, '#ffffff');
+};
+
+// ═══ TOKYO: Shibuya — toà Q-Front kính cong màn hình lớn, biển quảng cáo xếp chồng, vạch qua đường trắng ═══
+const drawShibuya = (p: Pen, L: Light) => {
+  sky(p, L, ['#3a5ab8', '#a8b8e8'], 60, 230);
+  // dãy toà nhà trái phủ biển quảng cáo
+  for (let i = 0; i < 4; i++) {
+    const x = i * 24, h = 62 + (i * 13) % 20;
+    bldg(p, L, x, 122, 23, h, ['#b8b0b8', '#a8a8b8', '#c8c0b0', '#9898a8'][i], undefined, '#a0c0e0', 5);
+    for (let k = 0; k < 3; k++) L.neon.push({ x: x + 2, y: 122 - h + 6 + k * 16, w: 19, h: 10, c: ['#f6e04a', '#ff4a6a', '#4ac0ff', '#6aff8a', '#ff8a3a'][(i + k) % 5] });
+  }
+  // Q-Front: khối kính cong, màn hình khổng lồ, chữ đèn trên nóc
+  for (let x = 100; x < 176; x++) { const bulge = Math.round(Math.sin((x - 100) / 76 * Math.PI) * 4); p.rect(x, 26 - bulge, 1, 96 + bulge, x < 140 ? '#5a6a88' : '#4a5a78'); }
+  for (let y = 30; y < 122; y += 3) p.rect(100, y, 76, 1, '#7a8aa8');
+  L.neon.push({ x: 112, y: 30, w: 52, h: 4, c: '#c8f0ff' });
+  p.rect(108, 40, 60, 22, '#1a1a2a'); p.rect(110, 70, 56, 26, '#1a1a2a');
+  for (let k = 0; k < 4; k++) L.neon.push({ x: 104 + k * 18, y: 104, w: 14, h: 5, c: '#ffe8b0' });
+  // toà bên phải
+  for (let i = 0; i < 3; i++) { const x = 180 + i * 26, h = 70 + i * 10; bldg(p, L, x, 122, 25, h, ['#d8d0c0', '#c0c8d8', '#b8b0a8'][i], undefined, '#a0c0e0', 5); L.neon.push({ x: x + 19, y: 122 - h + 8, w: 4, h: 30, c: ['#4af0ff', '#ff4a8a', '#8aff6a'][i] }); }
+  band(p, 122, 192, '#4a4a54', '#3a3a44');
+  for (let k = 0; k < 10; k++) { p.rect(24 + k * 21, 130, 13, 8, '#f0f0f0'); p.rect(24 + k * 21, 178, 13, 8, '#f0f0f0'); }
+  for (let k = 0; k < 5; k++) { p.rect(6, 140 + k * 8, 14, 5, '#f0f0f0'); p.rect(236, 140 + k * 8, 14, 5, '#f0f0f0'); }
+  for (let k = 0; k < 15; k++) { p.rect(48 + k * 11, 140 + k * 2.4, 8, 3, '#e0e0e0'); p.rect(200 - k * 11, 140 + k * 2.4, 8, 3, '#e0e0e0'); }
+  p.rect(28, 106, 2, 24, '#3a3a3a'); p.rect(24, 102, 10, 5, '#2a2a2a'); L.neon.push({ x: 25, y: 103, w: 3, h: 3, c: '#4aff6a' });
+  p.rect(210, 156, 22, 6, '#8a8a8a'); p.rect(214, 146, 12, 10, '#7a6a4a'); p.rect(222, 140, 6, 8, '#7a6a4a'); p.rect(226, 142, 3, 2, '#5a4a3a'); p.px(223, 141, '#3a2a1a');
+};
+
+// ═══ PARIS: bờ sông Seine — Nhà thờ Đức Bà 2 tháp vuông + cửa sổ hoa hồng, cầu đá vòm, sạp sách xanh, cây ngô đồng ═══
+const drawSeine = (p: Pen, L: Light) => {
+  sky(p, L, ['#98c0f0', '#f6e8e0'], 74, 210);
+  // Notre-Dame
+  const ND = '#d8ccb4';
+  p.rect(30, 22, 18, 52, ND); p.rect(66, 22, 18, 52, ND); p.rect(48, 36, 18, 38, ND); dither(p, 78, 22, 6, 52, ND, dk(ND, 0.15));
+  for (const x of [30, 66]) { for (let k = 0; k < 3; k++) p.rect(x + 3 + k * 5, 26, 2, 14, '#6a6058'); p.rect(x, 22, 18, 1, '#f0e8d8'); for (let k = 0; k < 9; k++) p.px(x + k * 2, 21, ND); }
+  circle(p, 57, 50, 6, '#6a5a7a'); circle(p, 57, 50, 4, '#8a6aa8'); circle(p, 57, 50, 1, '#e8c860');
+  for (let k = 0; k < 3; k++) { p.rect(36 + k * 15, 62, 8, 12, '#5a4a48'); circle(p, 40 + k * 15, 62, 4, '#5a4a48'); }
+  p.rect(84, 44, 30, 30, dk(ND, 0.08)); p.rect(100, 18, 2, 26, '#7a7068'); for (let k = 0; k < 4; k++) p.rect(86 + k * 7, 40, 2, 34, '#b8ac94');
+  for (let i = 0; i < 6; i++) bldg(p, L, 126 + i * 22, 74, 21, 22, '#ece0c8', '#5a6a80', '#8aa0b8', 6);
+  water(p, L, 74, 128, '#5a88a8', '#3a6a8a');
+  p.rect(0, 80, 256, 4, '#c8b898'); for (let k = 0; k < 5; k++) { const cx = 26 + k * 52; for (let dx = -18; dx <= 18; dx++) p.rect(cx + dx, 84, 1, Math.round(Math.sqrt(324 - dx * dx) * 0.55), '#c8b898'); p.rect(cx - 2, 84, 4, 14, '#b8a888'); }
+  for (let x = 0; x < 256; x += 5) p.rect(x, 78, 2, 2, '#a89878');
+  for (let x = 0; x < 256; x += 26) L.lamps.push({ x: x + 6, y: 72, c: '#ffe8a0' });
+  band(p, 128, 148, '#c8b8a0', '#b8a890'); for (let x = 0; x < 256; x += 12) { p.rect(x, 128, 11, 4, '#a89880'); p.rect(x, 128, 11, 1, '#c8b8a0'); }
+  for (let i = 0; i < 4; i++) { const x = 8 + i * 40; p.rect(x, 134, 32, 12, '#2a5a3a'); p.rect(x - 1, 131, 34, 3, '#1a4a2a'); dither(p, x + 26, 134, 6, 12, '#2a5a3a', '#1a4a2a'); for (let k = 0; k < 8; k++) p.rect(x + 2 + k * 3, 136, 2, 6, ['#d8302a', '#f6c445', '#3a6ad0', '#ffffff', '#8a5a3a'][(k + i) % 5]); }
+  tiles(p, 148, 192, '#d0c4b0', '#c0b4a0', 9);
+  p.rect(200, 150, 2, 22, '#7a5a3a'); p.rect(212, 150, 2, 22, '#7a5a3a'); p.rect(198, 144, 18, 14, '#ffffff'); p.rect(200, 146, 14, 10, '#8ac0e8'); circle(p, 207, 151, 3, '#f8b8cc'); p.rect(200, 154, 14, 2, '#6aa850');
+  for (let x = 180; x < 256; x += 36) tree(p, x, 130, 7, '#6aa04a');
+};
+
+// ═══ PARIS: cà phê vỉa hè — nhà Haussmann ban công sắt, mái hiên đỏ, ghế mây, bảng phấn, hoa ═══
+const drawCafe = (p: Pen, L: Light) => {
+  sky(p, L, ['#a0c4f0', '#f8ece4'], 40, 40);
+  for (let i = 0; i < 4; i++) {
+    const x = i * 64; p.rect(x, 20, 63, 104, '#efe2c8'); dither(p, x + 54, 20, 9, 104, '#efe2c8', '#dccfb4'); p.rect(x, 20, 1, 104, '#c8b8a0');
+    p.rect(x, 12, 63, 8, '#5a6a80'); p.rect(x, 12, 63, 1, '#7a8aa0'); for (let k = 0; k < 4; k++) { p.rect(x + 6 + k * 15, 5, 7, 7, '#5a6a80'); p.rect(x + 8 + k * 15, 7, 3, 4, '#a8c0d8'); }
+    for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) {
+      const wx = x + 5 + k * 15, wy = 26 + r * 18;
+      p.rect(wx - 1, wy - 1, 10, 14, '#c8b8a0'); p.rect(wx, wy, 8, 12, '#7a9ab8'); p.rect(wx + 4, wy, 1, 12, '#c8b8a0'); L.wins.push([wx, wy, 8, 12]);
+      p.rect(wx - 2, wy + 12, 12, 1, '#2a2a2a'); for (let b = 0; b < 12; b += 2) p.px(wx - 2 + b, wy + 11, '#2a2a2a');
+      if (r === 2) { p.rect(wx - 1, wy + 13, 10, 2, '#6a4a3a'); for (let f = 0; f < 5; f++) p.px(wx + f * 2, wy + 12, ['#e8443a', '#f59ab3', '#f6e04a'][f % 3]); }
+    }
+  }
+  for (let k = 0; k < 20; k++) { p.rect(20 + k * 8, 96, 8, 10, k % 2 ? '#c82a2a' : '#f4e6d4'); p.rect(20 + k * 8 + 1, 106, 6, 2, k % 2 ? '#a81a1a' : '#e0d0c0'); }
+  p.rect(20, 95, 160, 1, '#8a1a1a');
+  p.rect(20, 108, 160, 16, '#2a3a2a'); p.rect(26, 110, 60, 12, '#c8a070'); L.wins.push([26, 110, 60, 12]); p.rect(110, 110, 60, 12, '#c8a070'); L.wins.push([110, 110, 60, 12]);
+  L.neon.push({ x: 70, y: 90, w: 60, h: 4, c: '#ffd88a' });
+  band(p, 124, 192, '#b8aca0', '#a89c90');
+  for (let y = 128; y < 192; y += 6) for (let x = (y / 6 % 2) * 6; x < 256; x += 12) { p.rect(x, y, 10, 5, mix('#b8aca0', '#8a8078', (x + y) % 3 / 6)); p.rect(x, y, 10, 1, '#c8bcb0'); }
+  for (let i = 0; i < 4; i++) { const x = 34 + i * 46, y = 150; circle(p, x, y, 6, '#f0f0f0'); circle(p, x - 2, y - 1, 2, '#ffffff'); p.rect(x, y, 1, 10, '#3a3a3a'); for (const dx of [-13, 7]) { p.rect(x + dx, y - 4, 6, 6, '#c8a060'); for (let g = 0; g < 6; g += 2) p.rect(x + dx, y - 4 + g, 6, 1, '#a88040'); p.rect(x + dx, y + 2, 1, 8, '#8a6030'); p.rect(x + dx + 5, y + 2, 1, 8, '#8a6030'); } p.rect(x - 2, y - 4, 3, 3, '#ffffff'); }
+  // bảng phấn thực đơn
+  p.rect(186, 132, 14, 18, '#2a2a2a'); p.rect(187, 133, 12, 16, '#3a4a3a'); for (let k = 0; k < 4; k++) p.rect(189, 136 + k * 3, 6 + (k % 2) * 2, 1, '#f0f0e0'); p.rect(188, 150, 2, 6, '#6a4a2a'); p.rect(196, 150, 2, 6, '#6a4a2a');
+  for (let x = 206; x < 256; x += 22) { p.rect(x + 4, 120, 2, 30, '#2a2a2a'); L.lamps.push({ x: x + 3, y: 116, c: '#ffe8a0' }); }
+  for (let k = 0; k < 6; k++) { p.rect(200 + k * 8, 170, 6, 6, '#8a5a3a'); circle(p, 203 + k * 8, 167, 3, ['#e8443a', '#f6c445', '#f59ab3'][k % 3]); }
+};
+
+// ═══ VENICE: kênh nhỏ — nhà pastel cửa chớp xanh, cửa sổ gothic, dây phơi đồ, cọc sọc, cầu Rialto ═══
+const drawCanal = (p: Pen, L: Light) => {
+  sky(p, L, ['#88c4f0', '#fff0d8'], 36, 128);
+  const cs = ['#e8a87a', '#f0d088', '#d8786a', '#f0c0a0', '#e89a6a', '#d8c098'];
+  const house = (x: number, w: number, h: number, c: string) => {
+    p.rect(x, 120 - h, w, h, c); dither(p, x + w - 4, 120 - h, 4, h, c, dk(c, 0.18)); p.rect(x - 1, 120 - h - 3, w + 2, 3, '#a84a3a');
+    for (let yy = 120 - h + 6; yy < 112; yy += 13) for (let xx = x + 3; xx < x + w - 6; xx += 9) { p.rect(xx, yy, 5, 8, '#4a3a3a'); circle(p, xx + 2, yy, 2, '#4a3a3a'); p.rect(xx - 2, yy + 1, 2, 7, '#3a8a6a'); p.rect(xx + 5, yy + 1, 2, 7, '#3a8a6a'); L.wins.push([xx + 1, yy + 1, 3, 6]); }
+    for (let k = x + 2; k < x + w - 2; k += 3) p.px(k, 120 - 2, dk(c, 0.4));
+  };
+  for (let i = 0; i < 4; i++) { house(i * 26, 25, 80 + (i % 2) * 10, cs[i]); house(152 + i * 26, 25, 76 + (i % 2) * 12, cs[i + 2]); }
+  // dây phơi đồ vắt qua kênh
+  for (let x = 30; x < 226; x++) p.px(x, 52 + Math.round(Math.sin((x - 30) / 196 * Math.PI) * 6), '#5a4a3a');
+  for (let k = 0; k < 8; k++) { const x = 46 + k * 22, y = 53 + Math.round(Math.sin((x - 30) / 196 * Math.PI) * 6); p.rect(x, y, 5, 6, ['#ffffff', '#e8443a', '#4a9ae8', '#f6e04a'][k % 4]); }
+  water(p, L, 108, 162, '#3a9aa8', '#2a7888');
+  for (let x = 0; x < 256; x += 3) p.rect(x, 110, 2, 18, cs[(x / 26 | 0) % 6] + '40');
+  // cầu Rialto vòm đá trắng
+  for (let x = 70; x < 186; x++) { const t = (x - 70) / 116, lift = Math.round(Math.sin(t * Math.PI) * 22); p.rect(x, 96 - lift, 1, 14 + lift - Math.round(Math.sin(t * Math.PI) * 16), '#efe4cc'); p.px(x, 96 - lift, '#ffffff'); }
+  p.rect(108, 64, 40, 12, '#efe4cc'); for (let k = 0; k < 5; k++) { p.rect(111 + k * 7, 66, 4, 8, '#8a7a68'); circle(p, 113 + k * 7, 66, 2, '#8a7a68'); } roofEA(p, 104, 60, 48, 4, '#c86a4a', 0.2);
+  for (let x = 74; x < 184; x += 4) p.px(x, 94 - Math.round(Math.sin((x - 70) / 116 * Math.PI) * 22), '#c8bca8');
+  for (let x = 20; x < 256; x += 56) { for (let k = 0; k < 6; k++) p.rect(x, 128 + k * 4, 3, 4, k % 2 ? '#ffffff' : '#3a5ad0'); p.rect(x - 1, 126, 5, 2, '#d8a83a'); }
+  band(p, 162, 192, '#d8c0a0', '#c8b090'); p.rect(0, 162, 256, 2, '#a89070'); for (let x = 0; x < 256; x += 16) p.rect(x, 168, 15, 1, '#c0a888');
+  for (let x = 0; x < 256; x += 64) L.lamps.push({ x: x + 30, y: 150, c: '#ffd88a' });
+};
+
+// ═══ THUỴ SĨ: làng bên hồ Lucerne — cầu gỗ có mái Kapellbrücke + tháp nước bát giác, chalet, núi tuyết ═══
+const drawChalet = (p: Pen, L: Light) => {
+  sky(p, L, ['#78b8f0', '#eef6ff'], 70, 210);
+  ridge(p, 64, 44, 30, '#9aaac8', 1.3, '#ffffff'); ridge(p, 76, 22, 16, '#4a8a5a', 0.2);
+  water(p, L, 76, 118, '#4aa0d0', '#3a88b8');
+  for (let x = 0; x < 256; x += 2) p.rect(x, 78 + Math.round(Math.sin(x / 9) * 2), 1, 6, '#6a8ab060');
+  // cầu gỗ Kapellbrücke chạy chéo, mái đỏ, hoa đỏ dọc lan can + tháp nước đá
+  for (let x = 20; x < 236; x++) { const y = 98 - Math.round((x - 20) * 0.06); p.rect(x, y, 1, 5, '#8a5a3a'); p.px(x, y - 4, '#c8483a'); p.px(x, y - 3, '#a8382a'); if (x % 3 === 0) p.px(x, y - 1, '#e8443a'); if (x % 12 === 0) p.rect(x, y + 5, 1, 12, '#5a3a2a'); }
+  p.rect(150, 60, 18, 32, '#c8a878'); dither(p, 162, 60, 6, 32, '#c8a878', '#a88a5a'); for (let y = 64; y < 92; y += 5) p.rect(150, y, 18, 1, '#a88a5a');
+  for (let k = 0; k <= 12; k++) p.rect(148 + k * 2, 60 - Math.min(k, 12 - k) * 1.4, 2, Math.min(k, 12 - k) * 1.4 + 1, '#8a2a1a');
+  p.rect(156, 72, 4, 6, '#3a2a2a');
+  band(p, 118, 192, '#8ac870', '#70b058');
+  for (let i = 0; i < 4; i++) {
+    const x = 8 + i * 62, yb = 148;
+    p.rect(x, yb - 26, 44, 26, '#a8683a'); for (let k = 0; k < 6; k++) p.rect(x, yb - 26 + k * 5, 44, 1, '#8a5030'); dither(p, x + 36, yb - 26, 8, 26, '#a8683a', '#8a5030');
+    for (let k = 0; k < 7; k++) { const h = 16 - Math.abs(k - 3) * 4; p.rect(x - 4 + k * 7.4, yb - 26 - h, 8, h, '#5a2a1a'); }
+    p.rect(x - 4, yb - 28, 52, 2, '#ffffff');
+    for (let k = 0; k < 2; k++) { const wx = x + 6 + k * 24; p.rect(wx - 1, yb - 21, 11, 10, '#5a2a1a'); p.rect(wx, yb - 20, 9, 8, '#fff0c8'); L.wins.push([wx, yb - 20, 9, 8]); p.rect(wx - 1, yb - 12, 11, 3, '#6a3a22'); for (let f = 0; f < 5; f++) p.px(wx + f * 2, yb - 13, ['#e8443a', '#f6c445', '#f59ab3'][f % 3]); }
+    p.rect(x + 18, yb - 12, 8, 12, '#5a2a1a'); p.rect(x + 34, yb - 44, 4, 10, '#7a7a7a');
+  }
+  p.rect(100, 112, 50, 6, '#8a6a4a'); for (let x = 102; x < 150; x += 8) p.rect(x, 112, 1, 10, '#5a3a2a');
+  for (let i = 0; i < 6; i++) tree(p, 14 + i * 46, 186, 6, '#4a9a4a');
+};
+
 export const SPOTS: Record<SpotScene, SpotDef> = {
   // ═════════ ĐÀI TRUNG ═════════
   trip_taichung_rainbow: {
@@ -492,26 +706,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
   },
   trip_taichung_fengjia: {
     trip: 'taichung', id: 'fengjia', name: 'Chợ đêm Phùng Giáp', icon: '🏮', at: 120, walk: W(128), day: ['#7ab8e8', '#e0f0ff'],
-    draw: (p, L) => {
-      sky(p, L, ['#7ab8e8', '#e0f0ff'], 60, 40);
-      for (let i = 0; i < 11; i++) bldg(p, L, i * 24, 76, 23, 24 + (i * 37) % 22, ['#c8b8a8', '#a8a0b0', '#d8c0a0', '#b8b0a8'][i % 4]);
-      // biển hiệu chữ dọc
-      for (let i = 0; i < 9; i++) L.neon.push({ x: 8 + i * 28, y: 40 + (i % 3) * 6, w: 5, h: 22, c: ['#ff4a6a', '#4af0ff', '#ffe04a', '#8aff6a'][i % 4] });
-      // dãy sạp hàng có mái bạt
-      band(p, 76, 128, '#5a4a48', '#4a3a38');
-      for (let i = 0; i < 8; i++) {
-        const x = 2 + i * 32, c = ['#e8443a', '#f6a83a', '#3a8ad0', '#e8443a', '#3aa86a', '#f6a83a', '#9a6ae0', '#e8443a'][i];
-        p.rect(x, 96, 30, 26, '#8a6a4a'); p.rect(x + 2, 104, 26, 10, '#3a2a2a');
-        for (let k = 0; k < 5; k++) p.rect(x + 3 + k * 5, 106, 4, 3, ['#f6c445', '#d86a3a', '#ffffff', '#c84a2a', '#8bc87a'][(k + i) % 5]);
-        for (let k = 0; k < 6; k++) p.rect(x + k * 5, 86, 5, 10, k % 2 ? c : '#ffffff');
-        for (let k = 0; k < 6; k++) p.rect(x + k * 5 + 1, 96, 3, 1, k % 2 ? c : '#f0f0f0');
-        p.rect(x + 6, 116, 18, 6, '#c8c0b0');
-        L.neon.push({ x: x + 5, y: 80, w: 20, h: 5, c: ['#ffe04a', '#ff6a8a', '#6af0ff'][i % 3] });
-      }
-      string(p, L, 0, 256, 72, 6, ['#e8443a', '#ffb040'], 10);
-      tiles(p, 128, 192, '#6a6068', '#585058', 10);
-      for (let i = 0; i < 40; i++) p.rect(Math.floor(L.r() * 256), 130 + Math.floor(L.r() * 60), 2, 1, '#ffd88a30');
-    },
+    draw: drawFengjia,
     fx: [{ k: 'steam', x: 40, y: 100, n: 3 }, { k: 'steam', x: 136, y: 100, n: 3 }, { k: 'steam', x: 200, y: 100, n: 2 }, { k: 'glow', x: 128, y: 110, r: 120, c: '#ffb04a', night: true }],
     acts: [buy(30, 136, 'tra_sua', 7, '🧋 Trà sữa trân châu'), buy(110, 136, 'squid_bbq', 11, '🦑 Mực nướng'), buy(190, 136, 'keo_deo', 5, '🍬 Kẹo dẻo'), ph(128, 172), buy(220, 170, 'fried_shrimp', 10, '🍗 Gà rán khổng lồ')],
     lines: ['Thơm quá trời!', 'Thử đậu hũ thối không?', 'Đông vui ghê', 'Trà sữa ở đây ngon nhất', 'Mua thêm xiên nữa đi'],
@@ -541,22 +736,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
   },
   trip_gwangju_chungjang: {
     trip: 'gwangju', id: 'chungjang', name: 'Phố Chungjang', icon: '🍗', at: 216, walk: W(132), day: ['#80b8f0', '#e8f0ff'],
-    draw: (p, L) => {
-      sky(p, L, ['#80b8f0', '#e8f0ff'], 60, 50);
-      const cs = ['#e8d8d0', '#c8d0e0', '#f0e0c0', '#d0e0d0', '#e0c8d8', '#c8c8c8'];
-      for (let i = 0; i < 8; i++) bldg(p, L, i * 32, 120, 31, 56 + (i * 23) % 40, cs[i % 6], undefined, '#90b8d8', 6);
-      for (let i = 0; i < 8; i++) {
-        const x = i * 32 + 2, c = ['#ff4a8a', '#4ae0ff', '#ffe04a', '#8a6aff', '#ff8a3a', '#4aff9a', '#ff4a4a', '#4ab0ff'][i];
-        L.neon.push({ x: x + 22, y: 50 + (i % 3) * 8, w: 5, h: 24, c }, { x, y: 100, w: 27, h: 5, c: ['#ff6a4a', '#ffe04a', '#4ae0ff'][i % 3] });
-        p.rect(x, 106, 27, 14, '#c8e0f0'); p.rect(x + 2, 108, 23, 10, '#4a5a6a'); L.wins.push([x + 2, 108, 23, 10]);
-      }
-      // quán gà nướng có ô dù và bàn nhựa
-      band(p, 120, 132, '#a0a0a8', '#909098');
-      tiles(p, 132, 192, '#7a7480', '#6a6470', 12);
-      for (let i = 0; i < 3; i++) { const x = 40 + i * 80; p.rect(x - 10, 150, 20, 2, '#d8302a'); p.rect(x - 1, 152, 2, 10, '#c8c8c8'); p.rect(x - 8, 162, 16, 3, '#3a7ad0'); p.rect(x - 7, 165, 2, 6, '#3a7ad0'); p.rect(x + 5, 165, 2, 6, '#3a7ad0'); }
-      for (let x = 0; x < 256; x += 40) { p.rect(x + 18, 112, 2, 20, '#4a4a5a'); L.lamps.push({ x: x + 17, y: 108, c: '#fff0b0' }); }
-      p.rect(60, 128, 136, 1, '#ffffff'); for (let x = 70; x < 190; x += 14) p.rect(x, 136, 8, 2, '#f0f0f0');
-    },
+    draw: drawChungjang,
     fx: [{ k: 'steam', x: 40, y: 150, n: 2 }, { k: 'steam', x: 200, y: 150, n: 2 }, { k: 'glow', x: 128, y: 80, r: 110, c: '#ff4a8a', night: true }, { k: 'sparkle', x: 0, y: 40, w: 256, h: 70, n: 10, night: true }],
     acts: [buy(40, 140, 'tteokbokki', 8, '🌶️ Tteokbokki'), buy(120, 140, 'fried_shrimp', 10, '🍗 Gà/tôm chiên giòn'), buy(200, 140, 'kem_que', 5, '🍦 Kem que'), ph(128, 176), say(220, 178, '🎤 Hát busking', 'Hai bạn song ca một bài K-pop, mọi người vỗ tay rần rần 🎶', 'sing')],
     lines: ['Chimaek đi!', 'Quán này đông ghê', 'Hát hay quá 🎤', 'Đi karaoke không?', 'Đèn đẹp ghê'],
@@ -572,19 +752,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
   },
   trip_hoian_river: {
     trip: 'hoian', id: 'river', name: 'Sông Hoài', icon: '🪷', at: 190, walk: W(154), day: ['#f0a870', '#ffe0b0'],
-    draw: (p, L) => {
-      sky(p, L, ['#f0a870', '#ffe0b0'], 56, 200);
-      for (let i = 0; i < 9; i++) bldg(p, L, i * 29, 74, 27, 24 + (i % 3) * 6, '#e8c050', '#a84a2a', '#5a3a2a');
-      string(p, L, 0, 256, 34, 8, ['#e8443a', '#f6c445', '#f59ab3', '#3aa86a'], 8);
-      water(p, L, 74, 150, '#2a6a7a', '#1a4a5a');
-      // bóng đèn dưới nước
-      for (let x = 6; x < 256; x += 13) for (let y = 80; y < 112; y += 3) if (L.r() < 0.6) p.rect(x + Math.round(Math.sin(y) * 2), y, 2, 1, ['#e8443a', '#f6c445', '#f59ab3'][x % 3] + '80');
-      band(p, 150, 192, '#a88a68', '#987a58'); p.rect(0, 150, 256, 3, '#7a5a3a');
-      for (let x = 10; x < 256; x += 30) { p.rect(x, 146, 3, 8, '#5a3a2a'); }
-      // gánh hàng hoa đăng
-      for (let k = 0; k < 6; k++) { p.rect(30 + k * 6, 164, 5, 3, '#f59ab3'); p.px(32 + k * 6, 163, '#ffe060'); }
-      p.rect(28, 167, 38, 2, '#6a3a22');
-    },
+    draw: drawHoianRiver,
     fx: [{ k: 'shim', x: 0, y: 76, w: 256, h: 72, n: 30, c: '#ffe0a0' }, { k: 'move', spr: 'sampan', x: 30, y: 124, dx: 180, dur: 22 }, { k: 'move', spr: 'sampan', x: 220, y: 100, dx: -160, dur: 26 }, { k: 'glow', x: 128, y: 40, r: 90, c: '#ffa040', night: true }],
     acts: [{ k: 'float', x: 120, y: 160, label: '🪷 Thả hoa đăng', ry: 146 }, { k: 'ride', x: 200, y: 160, label: '🛶 Đi thuyền sông Hoài', spr: 'sampan', ry: 130, say: 'Chú lái thuyền chèo chậm rãi, đèn lồng soi bóng lung linh 🏮' }, buy(46, 176, 'banh_trang', 5, '🫓 Bánh tráng nướng'), ph(140, 182)],
     lines: ['Thả đèn ước đi', 'Đi thuyền không em?', 'Lung linh quá', 'Ước gì cũng thành 🪷', 'Mua hoa đăng đi'],
@@ -600,52 +768,14 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
   },
   trip_tokyo_ueno: {
     trip: 'tokyo', id: 'ueno', name: 'Công viên Ueno', icon: '🌸', at: 128, walk: W(140), day: ['#a0d0f8', '#fff0f6'],
-    draw: (p, L) => {
-      sky(p, L, ['#a0d0f8', '#fff0f6'], 70, 60);
-      for (let i = 0; i < 12; i++) bldg(p, L, i * 22, 70, 20, 14 + (i * 7) % 16, '#b8c0d0');
-      // hồ Shinobazu
-      water(p, L, 70, 110, '#5aa0c8', '#4a88b0');
-      for (let i = 0; i < 18; i++) { const x = Math.floor(L.r() * 256), y = 98 + Math.floor(L.r() * 10); circle(p, x, y, 2, '#4a8a4a'); }
-      band(p, 110, 192, '#9ac87a', '#7ab060');
-      // lối đi giữa
-      for (let y = 140; y < 192; y++) p.rect(0, y, 256, 1, y < 146 ? '#d8c8a8' : mix('#9ac87a', '#7ab060', (y - 140) / 52));
-      tiles(p, 140, 160, '#e0d0b0', '#d0c0a0', 10);
-      // hàng anh đào
-      for (let i = 0; i < 7; i++) {
-        const x = 18 + i * 38, y = 136;
-        p.rect(x - 1, y - 18, 3, 18, '#5a3a2a'); p.rect(x - 6, y - 16, 6, 1, '#5a3a2a'); p.rect(x + 2, y - 14, 6, 1, '#5a3a2a');
-        for (let k = 0; k < 4; k++) circle(p, x - 9 + k * 6, y - 22 - (k % 2) * 4, 7, ['#f8b8cc', '#ffd0dc', '#f6a8c0', '#ffe0e8'][k]);
-        speckle(p, L, x - 14, y - 32, 28, 18, 14, ['#ffffff', '#f088a8']);
-      }
-      speckle(p, L, 0, 160, 256, 30, 90, ['#f8b8cc', '#ffd8e4']);
-      // thảm picnic xanh
-      p.rect(170, 168, 34, 14, '#3a8ad0'); for (let k = 0; k < 34; k += 6) p.rect(170 + k, 168, 3, 14, '#5aa8e8');
-      p.rect(180, 172, 6, 4, '#f6c445'); p.rect(190, 173, 5, 3, '#ffffff');
-      for (let x = 30; x < 256; x += 60) L.lamps.push({ x, y: 112, c: '#ffd8e4' });
-    },
+    draw: drawUeno,
     fx: [{ k: 'fall', n: 28, c: ['#f8b8cc', '#ffd8e4', '#ffffff'], size: 2, slow: true }, { k: 'shim', x: 0, y: 72, w: 256, h: 24, n: 12 }, { k: 'move', spr: 'swan', x: 40, y: 92, dx: 120, dur: 20 }],
     acts: [{ k: 'ride', x: 70, y: 120, label: '🦢 Đạp vịt thiên nga', spr: 'swan', ry: 96, say: 'Hai đứa đạp vịt thiên nga giữa hồ sen, cười muốn xỉu 🦢' }, buy(186, 160, 'sushi', 12, '🍣 Hộp sushi picnic'), { ...say(120, 176, '🌸 Hanami', 'Nằm dưới gốc anh đào, cánh hoa rơi lên tóc em 🌸', 'sit'), at: { x: 184, y: 178 } }, ph(30, 176)],
     lines: ['Hoa nở rộ rồi!', 'Picnic ở đây đi', 'Cánh hoa rơi kìa 🌸', 'Kirei~', 'Đạp vịt không?'],
   },
   trip_tokyo_shibuya: {
     trip: 'tokyo', id: 'shibuya', name: 'Ngã tư Shibuya', icon: '🚦', at: 216, walk: W(124), day: ['#88b8e8', '#e0ecff'],
-    draw: (p, L) => {
-      sky(p, L, ['#88b8e8', '#e0ecff'], 50, 230);
-      const cs = ['#a8b0c0', '#c8c0b8', '#9098a8', '#b8b8c8', '#d0c8c0'];
-      for (let i = 0; i < 7; i++) bldg(p, L, i * 37, 120, 36, 70 + (i * 29) % 46, cs[i % 5], undefined, '#a0c0e0', 5);
-      L.neon.push({ x: 8, y: 62, w: 24, h: 4, c: '#ff4a8a' }, { x: 120, y: 54, w: 5, h: 30, c: '#4af0ff' }, { x: 160, y: 70, w: 26, h: 4, c: '#ffe04a' }, { x: 230, y: 60, w: 5, h: 26, c: '#8aff6a' }, { x: 44, y: 106, w: 60, h: 4, c: '#ff6a3a' });
-      // màn hình lớn
-      p.rect(74, 40, 44, 28, '#2a2a3a'); p.rect(150, 80, 36, 22, '#2a2a3a');
-      band(p, 120, 192, '#4a4a54', '#3a3a44');
-      // vạch qua đường kẻ chéo
-      for (let k = 0; k < 9; k++) p.rect(30 + k * 22, 130, 12, 8, '#e8e8e8');
-      for (let k = 0; k < 9; k++) p.rect(30 + k * 22, 176, 12, 8, '#e8e8e8');
-      for (let k = 0; k < 4; k++) { p.rect(10, 140 + k * 9, 14, 5, '#e8e8e8'); p.rect(232, 140 + k * 9, 14, 5, '#e8e8e8'); }
-      for (let k = 0; k < 14; k++) p.rect(60 + k * 10, 140 + k * 2.6, 7, 3, '#d8d8d8');
-      // đèn tín hiệu + tượng Hachiko
-      p.rect(28, 108, 2, 22, '#3a3a3a'); p.rect(25, 104, 8, 5, '#2a2a2a'); L.neon.push({ x: 26, y: 105, w: 3, h: 3, c: '#4aff6a' });
-      p.rect(210, 156, 22, 6, '#8a8a8a'); p.rect(214, 146, 12, 10, '#7a6a4a'); p.rect(222, 140, 6, 8, '#7a6a4a'); p.rect(226, 142, 3, 2, '#5a4a3a'); p.px(223, 141, '#3a2a1a');
-    },
+    draw: drawShibuya,
     fx: [{ k: 'screen', x: 76, y: 42, w: 40, h: 24 }, { k: 'screen', x: 152, y: 82, w: 32, h: 18 }, { k: 'sparkle', x: 0, y: 30, w: 256, h: 90, n: 12, night: true }, { k: 'glow', x: 128, y: 70, r: 120, c: '#6a8aff', night: true }],
     acts: [ph(220, 172), say(128, 150, '🚦 Băng qua ngã tư', 'Đèn xanh! Hàng nghìn người cùng băng qua một lúc — nắm tay chặt nha 🤝', 'cross'), buy(60, 170, 'mi_ly', 5, '🍜 Mì ly konbini'), buy(180, 140, 'sandwich', 6, '🥪 Sandwich')],
     lines: ['Đông quá trời!', 'Chụp với Hachiko', 'Màn hình to ghê', 'Đi Shibuya Sky không?', 'Sumimasen~'],
@@ -691,52 +821,14 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
   },
   trip_paris_seine: {
     trip: 'paris', id: 'seine', name: 'Bờ sông Seine', icon: '🎨', at: 40, walk: W(148), day: ['#98c0f0', '#f6e8e0'],
-    draw: (p, L) => {
-      sky(p, L, ['#98c0f0', '#f6e8e0'], 72, 210);
-      // Nhà thờ Đức Bà xa xa
-      p.rect(40, 30, 14, 42, '#c8bca8'); p.rect(70, 30, 14, 42, '#c8bca8'); p.rect(54, 44, 16, 28, '#b8ac98'); circle(p, 62, 52, 4, '#8a7a9a'); p.rect(30, 50, 70, 22, '#c0b4a0');
-      p.rect(120, 22, 3, 30, '#a89c88');
-      for (let i = 0; i < 7; i++) bldg(p, L, 110 + i * 21, 72, 20, 20, '#e8dcc8', '#5a6a80', '#8aa0b8', 6);
-      water(p, L, 72, 128, '#5a88a8', '#3a6a8a');
-      // cầu đá vòm
-      p.rect(0, 80, 256, 4, '#c8b898'); for (let k = 0; k < 5; k++) { const cx = 26 + k * 52; for (let dx = -18; dx <= 18; dx++) p.rect(cx + dx, 84, 1, Math.round(Math.sqrt(324 - dx * dx) * 0.55), '#c8b898'); }
-      for (let x = 0; x < 256; x += 5) p.rect(x, 78, 2, 2, '#a89878');
-      for (let x = 0; x < 256; x += 26) L.lamps.push({ x: x + 6, y: 72, c: '#ffe8a0' });
-      // kè đá, sạp sách xanh
-      band(p, 128, 148, '#c8b8a0', '#b8a890'); for (let x = 0; x < 256; x += 12) p.rect(x, 128, 11, 4, '#a89880');
-      for (let i = 0; i < 4; i++) { const x = 8 + i * 40; p.rect(x, 134, 32, 12, '#2a5a3a'); p.rect(x - 1, 132, 34, 2, '#1a4a2a'); for (let k = 0; k < 8; k++) p.rect(x + 2 + k * 4, 136, 3, 6, ['#d8302a', '#f6c445', '#3a6ad0', '#ffffff', '#8a5a3a'][(k + i) % 5]); }
-      tiles(p, 148, 192, '#d0c4b0', '#c0b4a0', 9);
-      // giá vẽ của hoạ sĩ
-      p.rect(200, 150, 2, 22, '#7a5a3a'); p.rect(212, 150, 2, 22, '#7a5a3a'); p.rect(198, 144, 18, 14, '#ffffff'); p.rect(200, 146, 14, 10, '#8ac0e8'); circle(p, 207, 151, 3, '#f8b8cc'); p.rect(200, 154, 14, 2, '#6aa850');
-      for (let x = 0; x < 256; x += 40) tree(p, x + 180, 128, 6, '#5a9a4a');
-    },
+    draw: drawSeine,
     fx: [{ k: 'shim', x: 0, y: 92, w: 256, h: 34, n: 20 }, { k: 'move', spr: 'bateau', x: 220, y: 116, dx: -200, dur: 28, loop: true }, { k: 'fall', n: 8, c: ['#e8b84a', '#d8903a'], size: 2, slow: true }],
     acts: [{ k: 'ride', x: 128, y: 120, label: '🛳️ Du thuyền Bateau', spr: 'bateau', ry: 118, say: 'Du thuyền lướt dưới những cây cầu cổ, Paris lên đèn rực rỡ 🌃' }, buy(60, 156, 'books', 11, '📚 Sách cũ'), { ...say(206, 176, '🎨 Vẽ chân dung', 'Hoạ sĩ vẽ hai bạn ngồi tựa vai nhau — tranh đẹp như mơ 🖼️', 'paint'), at: { x: 186, y: 172 } }, ph(140, 176)],
     lines: ['Sông Seine thơ mộng ghê', 'Mua sách không?', 'Tranh đẹp quá', 'Merci~', 'Đi thuyền tối nay nhé'],
   },
   trip_paris_cafe: {
     trip: 'paris', id: 'cafe', name: 'Cà phê vỉa hè', icon: '☕', at: 216, walk: W(140), day: ['#a0c4f0', '#f8ece4'],
-    draw: (p, L) => {
-      sky(p, L, ['#a0c4f0', '#f8ece4'], 40, 40);
-      // nhà kiểu Haussmann ban công sắt
-      for (let i = 0; i < 4; i++) {
-        const x = i * 64; p.rect(x, 20, 63, 104, '#ece0c8'); p.rect(x, 14, 63, 6, '#5a6a80'); for (let k = 0; k < 4; k++) p.rect(x + 6 + k * 15, 8, 6, 6, '#5a6a80');
-        for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) { const wx = x + 5 + k * 15, wy = 26 + r * 18; p.rect(wx, wy, 8, 12, '#7a9ab8'); L.wins.push([wx, wy, 8, 12]); p.rect(wx - 1, wy + 12, 10, 1, '#2a2a2a'); for (let b = 0; b < 10; b += 2) p.px(wx - 1 + b, wy + 11, '#2a2a2a'); }
-        for (let k = 0; k < 4; k++) circle(p, x + 9 + k * 15, 37 + 2 * 18, 2, '#e8443a');
-      }
-      // mái hiên đỏ quán cà phê
-      for (let k = 0; k < 20; k++) p.rect(20 + k * 8, 96, 8, 10, k % 2 ? '#c82a2a' : '#f0e0d0');
-      for (let k = 0; k < 20; k++) p.rect(20 + k * 8 + 1, 106, 6, 2, k % 2 ? '#c82a2a' : '#f0e0d0');
-      p.rect(20, 108, 160, 16, '#3a2a22'); p.rect(26, 110, 60, 12, '#c8a070'); L.wins.push([26, 110, 60, 12]); p.rect(110, 110, 60, 12, '#c8a070'); L.wins.push([110, 110, 60, 12]);
-      L.neon.push({ x: 70, y: 90, w: 60, h: 4, c: '#ffd88a' });
-      band(p, 124, 192, '#b8aca0', '#a89c90');
-      for (let y = 128; y < 192; y += 6) for (let x = (y / 6 % 2) * 6; x < 256; x += 12) p.rect(x, y, 10, 5, mix('#b8aca0', '#8a8078', (x + y) % 3 / 6));
-      // bàn ghế mây
-      for (let i = 0; i < 4; i++) { const x = 34 + i * 46, y = 150; circle(p, x, y, 6, '#e8e8e8'); p.rect(x, y, 1, 10, '#3a3a3a'); p.rect(x - 12, y, 6, 10, '#c8a060'); p.rect(x + 7, y, 6, 10, '#c8a060'); p.rect(x - 2, y - 4, 3, 3, '#ffffff'); }
-      for (let x = 200; x < 256; x += 22) { p.rect(x + 4, 120, 2, 30, '#2a2a2a'); L.lamps.push({ x: x + 3, y: 116, c: '#ffe8a0' }); }
-      // hàng hoa
-      for (let k = 0; k < 6; k++) { p.rect(200 + k * 8, 170, 6, 6, '#8a5a3a'); circle(p, 203 + k * 8, 167, 3, ['#e8443a', '#f6c445', '#f59ab3'][k % 3]); }
-    },
+    draw: drawCafe,
     fx: [{ k: 'steam', x: 34, y: 146, n: 1 }, { k: 'steam', x: 80, y: 146, n: 1 }, { k: 'steam', x: 126, y: 146, n: 1 }, { k: 'bird', x: 200, y: 60, icon: '🕊️', n: 2 }],
     acts: [buy(60, 140, 'ca_phe_sua', 6, '☕ Café au lait'), buy(140, 140, 'cupcake', 7, '🧁 Bánh macaron'), { ...say(220, 160, '🪗 Nghệ sĩ accordion', 'La vie en rose~ 🎶 nhạc accordion vang khắp con phố', 'sit'), at: { x: 116, y: 160 } }, ph(100, 176)],
     lines: ['Un café, s\'il vous plaît', 'Ngồi đây ngắm phố đi', 'Bánh ngon quá', 'Lãng mạn ghê', 'Nhạc hay quá 🎶'],
@@ -745,20 +837,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
   // ═════════ VENICE ═════════
   trip_venice_canal: {
     trip: 'venice', id: 'canal', name: 'Kênh đào Gondola', icon: '🛶', at: 70, walk: W(160), day: ['#88c4f0', '#fff0d8'],
-    draw: (p, L) => {
-      sky(p, L, ['#88c4f0', '#fff0d8'], 40, 128);
-      const cs = ['#e8a87a', '#f0d088', '#d8786a', '#f0c0a0', '#e89a6a', '#d8c098'];
-      for (let i = 0; i < 4; i++) { bldg(p, L, i * 26, 120, 25, 80 + (i % 2) * 10, cs[i], '#a84a3a', '#4a3a3a', 6); bldg(p, L, 152 + i * 26, 120, 25, 76 + (i % 2) * 12, cs[i + 2], '#a84a3a', '#4a3a3a', 6); }
-      for (let i = 0; i < 8; i++) { const x = i < 4 ? 4 + i * 26 : 156 + (i - 4) * 26; p.rect(x, 80, 18, 2, '#ffffff'); for (let k = 0; k < 4; k++) circle(p, x + 2 + k * 5, 79, 1, '#e8443a'); }
-      // cầu Rialto vòm đá
-      water(p, L, 108, 162, '#3a9aa8', '#2a7888');
-      for (let x = 70; x < 186; x++) { const t = (x - 70) / 116, lift = Math.round(Math.sin(t * Math.PI) * 22); p.rect(x, 96 - lift, 1, 14 + lift - Math.round(Math.sin(t * Math.PI) * 16), '#e8dcc0'); }
-      p.rect(108, 66, 40, 10, '#e8dcc0'); for (let k = 0; k < 5; k++) p.rect(111 + k * 7, 68, 4, 6, '#8a7a68'); p.rect(106, 63, 44, 3, '#a84a3a');
-      // cọc buộc thuyền sọc
-      for (let x = 20; x < 256; x += 56) { for (let k = 0; k < 6; k++) p.rect(x, 128 + k * 4, 3, 4, k % 2 ? '#ffffff' : '#3a5ad0'); }
-      band(p, 162, 192, '#d0b890', '#c0a880'); p.rect(0, 162, 256, 2, '#a89070');
-      for (let x = 0; x < 256; x += 64) L.lamps.push({ x: x + 30, y: 150, c: '#ffd88a' });
-    },
+    draw: drawCanal,
     fx: [{ k: 'shim', x: 0, y: 110, w: 256, h: 50, n: 26 }, { k: 'move', spr: 'gondola', x: 20, y: 150, dx: 180, dur: 24 }, { k: 'move', spr: 'gondola', x: 210, y: 128, dx: -170, dur: 30 }],
     acts: [{ k: 'ride', x: 128, y: 172, label: '🛶 Đi gondola', spr: 'gondola', ry: 146, say: 'O sole mio~ 🎶 Anh lái thuyền hát vang dưới cầu Rialto' }, buy(40, 178, 'kem_que', 6, '🍨 Gelato'), ph(210, 178), say(128, 90, '🌉 Cầu Rialto', 'Cây cầu đá 400 năm — đứng bờ kênh ngắm gondola lướt qua dưới cầu', 'gaze')],
     lines: ['Ciao!', 'Gondola đẹp ghê', 'Nước trong xanh quá', 'Gelato ngon tuyệt', 'Lạc đường rồi 😂'],
@@ -781,26 +860,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
   },
   trip_swiss_chalet: {
     trip: 'swiss', id: 'chalet', name: 'Làng chalet bên hồ', icon: '🏠', at: 196, walk: W(150), day: ['#78b8f0', '#eef6ff'],
-    draw: (p, L) => {
-      sky(p, L, ['#78b8f0', '#eef6ff'], 70, 210);
-      ridge(p, 70, 44, 30, '#8a9ab8', 1.3, '#ffffff'); ridge(p, 78, 22, 16, '#4a8a5a', 0.2);
-      water(p, L, 78, 118, '#4aa0d0', '#3a88b8');
-      // phản chiếu núi
-      for (let x = 0; x < 256; x += 2) p.rect(x, 80 + Math.round(Math.sin(x / 9) * 2), 1, 6, '#6a8ab0' + '60');
-      band(p, 118, 192, '#8ac870', '#70b058');
-      for (let i = 0; i < 4; i++) {
-        const x = 8 + i * 62, yb = 148;
-        p.rect(x, yb - 26, 44, 26, '#a8683a'); for (let k = 0; k < 6; k++) p.rect(x, yb - 26 + k * 5, 44, 1, '#8a5030');
-        for (let k = 0; k < 7; k++) { const h = 16 - Math.abs(k - 3) * 4; p.rect(x - 4 + k * 7.4, yb - 26 - h, 8, h, '#5a2a1a'); }
-        p.rect(x - 4, yb - 28, 52, 2, '#ffffff');
-        for (let k = 0; k < 2; k++) { const wx = x + 6 + k * 24; p.rect(wx, yb - 20, 9, 8, '#fff0c8'); L.wins.push([wx, yb - 20, 9, 8]); p.rect(wx - 1, yb - 12, 11, 3, '#6a3a22'); for (let f = 0; f < 5; f++) p.px(wx + f * 2, yb - 13, ['#e8443a', '#f6c445', '#f59ab3'][f % 3]); }
-        p.rect(x + 18, yb - 12, 8, 12, '#5a2a1a');
-        p.rect(x + 34, yb - 44, 4, 10, '#7a7a7a');
-      }
-      // cầu tàu gỗ
-      p.rect(100, 112, 50, 6, '#8a6a4a'); for (let x = 102; x < 150; x += 8) p.rect(x, 112, 1, 10, '#5a3a2a');
-      for (let i = 0; i < 6; i++) tree(p, 14 + i * 46, 186, 6, '#4a9a4a');
-    },
+    draw: drawChalet,
     fx: [{ k: 'shim', x: 0, y: 84, w: 256, h: 30, n: 16 }, { k: 'move', spr: 'swan', x: 30, y: 108, dx: 60, dur: 18 }, { k: 'move', spr: 'boat', x: 200, y: 100, dx: -80, dur: 22 }, { k: 'steam', x: 44, y: 102, n: 2 }, { k: 'steam', x: 106, y: 102, n: 2 }, { k: 'steam', x: 168, y: 102, n: 2 }, { k: 'fall', n: 8, c: ['#ffffff'], size: 2, slow: true }],
     acts: [{ k: 'ride', x: 124, y: 126, label: '⛵ Thuyền dạo hồ', spr: 'boat', ry: 108, say: 'Thuyền trôi trên hồ gương, núi tuyết in bóng dưới nước 🏔️' }, buy(40, 160, 'cheese', 7, '🫕 Phô mai fondue'), buy(200, 160, 'chocolate', 10, '☕ Sô-cô-la nóng'), ph(128, 180)],
     lines: ['Nhà gỗ xinh quá', 'Hồ như gương vậy', 'Ăn fondue không?', 'Muốn ở đây luôn', 'Hít thở khí núi nào'],
