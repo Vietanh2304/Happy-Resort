@@ -1767,3 +1767,9 @@ textarea { resize: vertical; }
 .stage { filter: saturate(1.04) contrast(1.05); }
 .stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 450;
   background: linear-gradient(rgba(255, 236, 190, .12), transparent 40%), radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(60, 30, 50, .26) 100%); }
+
+/* Lễ hội pixel */
+.fest-fall i.px-fall { position: absolute; top: -10px; display: block; image-rendering: pixelated; box-shadow: 0 0 0 1px #3a242030; }
+.spr.flicker { animation: flicker 1.4s ease-in-out infinite; filter: drop-shadow(0 0 4px #ffb040); }
+.spr.twinkle-lights { animation: twlights 1.2s steps(2) infinite; }
+@keyframes twlights { 50% { filter: brightness(1.35) drop-shadow(0 0 3px #ffe060); } }

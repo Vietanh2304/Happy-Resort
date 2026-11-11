@@ -3,7 +3,7 @@ import type { WeatherType } from './content';
 
 export interface Weather { type: WeatherType; temp: number; code: number }
 /** Thời tiết ngoài trời của cảnh đang xem — NPC ngoài trời mặc theo (World cập nhật mỗi lần vẽ) */
-export const outWx = { on: false, type: 'clear' as WeatherType, temp: 20, hour: 12, fest: '' };
+export const outWx = { on: false, type: 'clear' as WeatherType, temp: 20, hour: 12, fest: '', theme: '' };
 /** Câu nói vu vơ hợp hoàn cảnh: thời tiết, giờ giấc, lễ hội. kid = lời trẻ con */
 export function wxChatter(kid = false): string[] {
   const o: string[] = [];
@@ -27,11 +27,24 @@ export function pickChatter(base: string[], n: number, kid = false) {
   return c.length && n % 3 !== 2 ? c[n % c.length] : base[n % base.length];
 }
 /** NPC: lạnh quàng khăn, rét mặc áo khoác */
-export function wxLook<T extends { outfit?: number; acc?: number; design?: unknown }>(look: T): T {
+export function wxLook<T extends { outfit?: number; acc?: number; design?: unknown; gender?: string }>(look: T): T {
+  look = festLook(look);
   if (!outWx.on) return look;
   if (outWx.temp < 3) return { ...look, outfit: 11, acc: 3, design: null };
   if (outWx.temp < 10) return { ...look, acc: 10 };
   return look;
+}
+/** NPC mặc theo lễ: Tết áo dài, Noel mũ len + áo khoác, Halloween tai mèo, Trung Thu kẹp sao, ngày lãng mạn cài hoa, tiệc thắt nơ */
+export function festLook<T extends { outfit?: number; acc?: number; design?: unknown }>(look: T): T {
+  switch (outWx.theme) {
+    case 'tet': return { ...look, outfit: 12, design: null };
+    case 'winter': return { ...look, outfit: 11, acc: 3, design: null };
+    case 'halloween': return { ...look, acc: 5 };
+    case 'lantern': return { ...look, acc: 9 };
+    case 'romantic': return { ...look, acc: 2 };
+    case 'party': return { ...look, acc: 1 };
+    default: return look;
+  }
 }
 export const wxRain = () => outWx.on && outWx.type === 'rain';
 export interface Place {

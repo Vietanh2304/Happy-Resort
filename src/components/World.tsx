@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, Fragment } from 'react';
 import type { Decor, FarmRow, FestDecor, Guest, Kid, Pet, Profile } from '../lib/api';
 import * as api from '../lib/api';
 import { notify } from '../lib/realtime';
@@ -69,6 +69,7 @@ import { beachSetSprite, loungeBackground, type SeaSpot } from '../lib/seaView';
 const PUDDLES: [number, number, number][] = [[30, 150, 18], [88, 128, 14], [140, 170, 20], [205, 140, 16], [60, 200, 15], [170, 215, 18]];
 import { tripOf, type TripId } from '../lib/trips';
 import { TripContent } from './Trip';
+import { FEST, festSprite, garland } from '../lib/festArt';
 import { spotBackground, spotOf, type SpotScene } from '../lib/tripSpots';
 import { FxList, SpotContent } from './TripSpot';
 import { mainBackground, mainOf, tripWeather } from '../lib/tripMain';
@@ -355,7 +356,7 @@ function SceneContent(p: WorldProps) {
     else if (w.temp >= 30 && w.type === 'clear') l = { ...look, acc: look.acc ? look.acc : 6 };
     return { look: l, umbrella: w.type === 'rain' };
   };
-  { const w = p.myView.weather; outWx.on = !!w && def.outdoor && scene !== 'sky' && scene !== 'reef' && !(scene === 'hill' && !p.hillReal); if (w) { outWx.type = w.type; outWx.temp = w.temp; } outWx.hour = p.myView.time.hour; outWx.fest = p.theme ? ({ romantic: 'ngày đặc biệt', party: 'ngày hội', calm: 'ngày đáng nhớ', tet: 'Tết', lantern: 'Trung Thu', winter: 'Giáng Sinh' } as Record<string, string>)[p.theme] ?? '' : ''; }
+  { const w = p.myView.weather; outWx.on = !!w && def.outdoor && scene !== 'sky' && scene !== 'reef' && !(scene === 'hill' && !p.hillReal); if (w) { outWx.type = w.type; outWx.temp = w.temp; } outWx.hour = p.myView.time.hour; outWx.theme = p.theme ? festKey(p.theme, p.myView.time.date) : ''; outWx.fest = p.theme ? ({ romantic: 'ngày đặc biệt', party: 'ngày hội', calm: 'ngày đáng nhớ', tet: 'Tết', lantern: 'Trung Thu', winter: 'Giáng Sinh' } as Record<string, string>)[p.theme] ?? '' : ''; }
   const rent = (look: Profile['avatar'], o?: number | null) => (scene.startsWith('trip_') && o != null ? { ...look, outfit: o, design: null } : look);
   const tripDress = (d: { look: Profile['avatar']; umbrella: boolean }, act?: string | null) => {
     if (!scene.startsWith('trip_')) return d;
@@ -542,7 +543,8 @@ function SceneContent(p: WorldProps) {
       {def.outdoor && realSky && wx === 'snow' && <div className="px-snow" style={{ '--s': s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'fog' && <div className="px-fog" />}
       {def.outdoor && scene !== 'hill' && <div className={`tint tint-${phase}`} />}
-      {p.theme && (def.outdoor || scene === 'house') && <FestFall theme={p.theme} />}
+      {p.theme && (def.outdoor || scene === 'house') && <FestFall theme={p.theme} date={p.myView.time.date} />}
+      {p.theme && def.outdoor && scene !== 'town' && scene !== 'sky' && scene !== 'reef' && def.walk && <FestScene theme={p.theme} date={p.myView.time.date} w={def.w} h={def.h} floor={def.walk && def.walk !== 'room' ? def.walk.y1 : def.h - 6} />}
       {p.theme && def.outdoor && <div className={`fest-tint fest-${p.theme}`} />}
     </>
   );
@@ -1148,17 +1150,26 @@ function Happening({ kind, dark }: { kind: ReturnType<typeof happeningOf>; dark:
 
 // ───────── Ngày đặc biệt: cảnh làng ─────────
 
+const festKey = (theme: Theme, date: string): keyof typeof FEST => (date.slice(5) === '10-31' ? 'halloween' : theme);
+
 function FestTown(p: WorldProps & { theme: Theme }) {
-  const th = THEMES[p.theme];
+  const k = festKey(p.theme, p.myView.time.date), F = FEST[k];
   const props: [number, number][] = [[150, 150], [234, 150], [176, 206], [210, 206], [120, 176], [266, 180]];
+  const lamps = TOWN.lamps;
   return (
     <>
-      {TOWN.lamps.map(([x, y], i) => <Spr key={`fh${i}`} sprite={emojiSprite(th.hang, 9)} x={x + 5} y={y - 22} z={y + 1} className="swing" />)}
-      {props.map(([x, y], i) => <Spr key={`fp${i}`} sprite={emojiSprite(th.props[i % th.props.length], 14)} x={x} y={y} className={i % 2 ? 'bob' : ''} />)}
-      {p.theme === 'romantic' && <Spr sprite={emojiSprite('💞', 22)} x={TOWN.fountain.x} y={TOWN.fountain.y - 18} z={TOWN.fountain.y + 14} className="bob" />}
-      {p.theme === 'winter' && <Spr sprite={emojiSprite('🎄', 34)} x={150} y={146} />}
-      {p.theme === 'party' && <Spr sprite={emojiSprite('🎂', 22)} x={TOWN.fountain.x} y={TOWN.fountain.y - 16} z={TOWN.fountain.y + 14} className="bob" />}
-      <Tag x={TOWN.fountain.x} y={84} className={`fest-banner fest-${p.theme}`}>{({ romantic: '💕 Ngày của hai đứa 💕', party: '🎉 Hôm nay vui quá 🎉', calm: '🌸 Một ngày đáng nhớ 🌸', tet: '🧧 Chúc Mừng Năm Mới 🧧', lantern: '🏮 Trung Thu Đoàn Viên 🏮', winter: '🎄 Merry Christmas 🎄' })[p.theme]}</Tag>
+      {lamps.map(([x, y], i) => <Spr key={`fh${i}`} sprite={festSprite(F.hang)} x={x + 5} y={y - 18} z={y + 1} className="swing" />)}
+      {lamps.slice(0, -1).map(([x, y], i) => { const [x2] = lamps[i + 1]; if (Math.abs(x2 - x) > 140 || x2 <= x) return null; return <Spr key={`fg${i}`} sprite={garland(F.garland, Math.round(x2 - x))} x={(x + x2) / 2} y={y - 24} z={y} />; })}
+      {props.map(([x, y], i) => <Spr key={`fp${i}`} sprite={festSprite(F.props[i % F.props.length])} x={x} y={y} className={i % 2 ? 'bob' : ''} />)}
+      {/* trang trí trước cửa từng toà nhà */}
+      {BUILDINGS.map((b, i) => k === 'tet' ? (
+        <Fragment key={`fb${i}`}><Spr sprite={festSprite(i % 2 ? 'dao' : 'mai')} x={b.door.x - 18} y={b.door.y + 4} /><Spr sprite={festSprite('caudoi')} x={b.door.x + 14} y={b.door.y - 2} /></Fragment>
+      ) : k === 'winter' ? <Spr key={`fb${i}`} sprite={festSprite('wreath')} x={b.door.x} y={b.door.y - 22} z={b.door.y + 2} />
+        : k === 'halloween' ? <Spr key={`fb${i}`} sprite={festSprite('pumpkin')} x={b.door.x - 14} y={b.door.y + 4} className="flicker" />
+          : k === 'lantern' ? <Spr key={`fb${i}`} sprite={festSprite('lantern')} x={b.door.x - 12} y={b.door.y - 6} className="swing" /> : null)}
+      {F.big && <Spr sprite={festSprite(F.big)} x={TOWN.fountain.x + 34} y={TOWN.fountain.y + 6} className={k === 'winter' ? 'twinkle-lights' : ''} />}
+      {p.theme === 'romantic' && <Spr sprite={festSprite('heart')} x={TOWN.fountain.x} y={TOWN.fountain.y - 18} z={TOWN.fountain.y + 14} className="bob" />}
+      <Tag x={TOWN.fountain.x} y={84} className={`fest-banner fest-${p.theme}`}>{({ romantic: '💕 Ngày của hai đứa 💕', party: '🎉 Hôm nay vui quá 🎉', calm: '🌸 Một ngày đáng nhớ 🌸', tet: '🧧 Chúc Mừng Năm Mới 🧧', lantern: '🏮 Trung Thu vui vẻ 🏮', winter: '🎄 Merry Christmas 🎄' } as Record<string, string>)[k === 'halloween' ? 'party' : p.theme] ?? ''}{k === 'halloween' ? ' 🎃' : ''}</Tag>
       {p.festDecor.map(d => (
         <Spr key={d.id} sprite={emojiSprite(d.icon, 14)} x={d.x} y={d.y} title={p.festIcon ? 'Chạm để gỡ' : ''}
           className={p.festIcon ? 'fest-item removable' : 'fest-item'}
@@ -1169,12 +1180,24 @@ function FestTown(p: WorldProps & { theme: Theme }) {
   );
 }
 
-function FestFall({ theme }: { theme: Theme }) {
-  const items = THEMES[theme].fall;
+/** Các map ngoài trời khác (biển, nông trại, phố, du lịch…): dây trang trí giăng phía trên + đồ lễ hai góc */
+function FestScene({ theme, date, w, h, floor }: { theme: Theme; date: string; w: number; h: number; floor: number }) {
+  const F = FEST[festKey(theme, date)], segs = Math.max(1, Math.round(w / 128)), sw = Math.round(w / segs);
+  return (
+    <>
+      {Array.from({ length: segs }, (_, i) => <Spr key={`g${i}`} sprite={garland(F.garland, sw)} x={i * sw + sw / 2} y={Math.round(h * 0.1)} z={2} />)}
+      <Spr sprite={festSprite(F.props[0])} x={14} y={floor} />
+      <Spr sprite={festSprite(F.props[1 % F.props.length])} x={w - 14} y={floor} className="bob" />
+    </>
+  );
+}
+
+function FestFall({ theme, date }: { theme: Theme; date: string }) {
+  const cs = FEST[festKey(theme, date)].fall, snow = theme === 'winter';
   return (
     <div className="fest-fall" aria-hidden>
-      {Array.from({ length: 12 }, (_, i) => (
-        <i key={i} style={{ left: `${(i * 17 + 3) % 100}%`, animationDelay: `${i * 1.1}s`, animationDuration: `${8 + (i % 4) * 2}s` }}>{items[i % items.length]}</i>
+      {Array.from({ length: 22 }, (_, i) => (
+        <i key={i} className="px-fall" style={{ left: `${(i * 17 + 3) % 100}%`, animationDelay: `${i * 0.7}s`, animationDuration: `${8 + (i % 4) * 2}s`, background: cs[i % cs.length], width: snow ? 5 : i % 3 ? 5 : 7, height: snow ? 5 : i % 3 ? 4 : 5, borderRadius: snow ? '50%' : i % 2 ? '50% 0' : 0 }} />
       ))}
     </div>
   );
