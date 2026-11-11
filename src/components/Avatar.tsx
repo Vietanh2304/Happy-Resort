@@ -152,7 +152,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
         style={{
           width: sprite.w * ps, height: sprite.h * ps,
           marginLeft: -Math.round(ax * ps), transformOrigin: `${Math.round(ax * ps)}px 50%`, marginTop: -Math.round(sprite.h * ps),
-          transform: pair ? undefined : shown.left ? 'scaleX(-1)' : undefined,
+          transform: pair || (af !== null && act && ['lift', 'point', 'heartR'].includes(act.n)) ? undefined : shown.left ? 'scaleX(-1)' : undefined,   // dáng chụp ảnh: giữ đúng tay trái/phải
           scale: pair?.f === 'side' && duo!.side === 'R' ? '-1 1' : undefined,
           translate: riding ? `${Math.round((shown.left ? 3 : -3) * ps)}px ${-Math.round(20 * ps)}px` : undefined, position: riding ? 'relative' : undefined,
         }}

@@ -79,6 +79,7 @@ import { outWx } from '../lib/weather';
 import { DiarySheet, FestivalSheet, festKindOf, LanternParade, TravelSheet } from './Festive';
 import { seeded } from '../lib/rng';
 import { tripCtx, tripOf, type TripId } from '../lib/trips';
+import { TripShopSheet } from './TripExtras';
 import { FlightOverlay } from './Trip';
 import { spotOf } from '../lib/tripSpots';
 import { ChatDock } from './ChatDock';
@@ -94,7 +95,7 @@ type SheetState =
   | { kind: 'animal'; id: string }
   | { kind: 'ranchshop' }
   | { kind: 'stall'; id: StallId }
-  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'diary' } | { kind: 'festival' } | { kind: 'travel' } | { kind: 'pen'; pen: 'stable' | 'pond' }
+  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'diary' } | { kind: 'festival' } | { kind: 'travel' } | { kind: 'tripshop' } | { kind: 'pen'; pen: 'stable' | 'pond' }
   | { kind: 'workshop' }
   | { kind: 'tailor' }
   | { kind: 'work' }
@@ -155,6 +156,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const scene = live.mine.scene;
   const theirs = partnerOnline ? live.theirs : null;
   const tripHere = scene.startsWith('trip_') ? scene.split('_')[1] : scene === 'restaurant' ? tripCtx.at : '';
+  const theirTrip = partnerOnline && theirs ? (theirs.scene.startsWith('trip_') ? theirs.scene.split('_')[1] as TripId : theirs.scene === 'restaurant' && theirs.tripAt ? theirs.tripAt as TripId : '') : '';
   const partnerHere = theirs?.scene === scene && (scene !== 'restaurant' || (theirs?.tripAt ?? '') === (live.mine.tripAt ?? ''));
   const partnerName = partner?.display_name || 'người ấy';
 
@@ -418,6 +420,13 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   useEffect(() => onEvent('couple-act', (d: { kind: 'hug' | 'kiss'; side: 'L' | 'R'; hold?: boolean }) => {
     showCouple({ kind: d.kind, at: Date.now(), mySide: d.side === 'L' ? 'R' : 'L' }, d.hold);
   }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Tạo dáng trái tim: đứng cạnh nhau, mỗi người giơ một tay chụm lại trên đầu
+  useEffect(() => onEvent('pose-heart', (d: { side: 'L' | 'R' }) => doAct(d.side === 'L' ? 'heartR' : 'point')), []); // eslint-disable-line react-hooks/exhaustive-deps
+  function heartPose() {
+    if (!partnerHere || !theirs) return toast(`🫶 ${partnerName} cần ở cùng chỗ với bạn mới tạo dáng tim được`);
+    const side: 'L' | 'R' = live.mine.pos.x <= theirs.pos.x ? 'L' : 'R';
+    go({ x: theirs.pos.x + (side === 'L' ? -9 : 9), y: theirs.pos.y }, () => { doAct(side === 'L' ? 'point' : 'heartR'); sendEvent('pose-heart', { side }); live.say('🫶'); });
+  }
   function coupleDo(kind: 'hug' | 'kiss', hold = false) {
     const icon = kind === 'hug' ? '🤗' : '😘💋';
     if (!partnerHere || !theirs) return toast(`${icon} ${partnerName} cần ở cùng chỗ với bạn mới ${kind === 'hug' ? 'ôm' : 'hôn'} được`);
@@ -447,6 +456,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   }
   const [flight, setFlight] = useState<{ to: SceneId; name: string } | null>(null);
   const [kitchenOpen, setKitchenOpen] = useState(false);
+  const [classOpen, setClassOpen] = useState(false);
+  useEffect(() => onEvent('trip-class', () => toast(`👩‍🍳 ${partnerName} vào lớp nấu ăn rồi — bấm “Lớp nấu ăn” để học cùng!`)), [partnerName]);
   const [playing, setPlaying] = useState<GameId | null>(null);
   function openGame(g: GameId, invite = true) {
     if (FULLSCREEN.includes(g)) {               // trò toàn màn hình
@@ -989,7 +1000,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           theme={theme} festDecor={festDecor} festIcon={scene === 'town' ? festIcon : null}
           twin={{ planes, touch }}
           dance={danceMv}
-          acts={acts} onAnim={doAct} onKiss={() => coupleDo('kiss')} onCamera={openCam}
+          acts={acts} onAnim={doAct} onKiss={() => coupleDo('kiss')} onCamera={openCam} onTripShop={() => setSheet({ kind: 'tripshop' })} onTripClass={() => { setClassOpen(true); sendEvent('trip-class'); }}
           kids={kids} meetupLeft={meetupLeft} pet={pet} petWith={petWith} ride={ride} campHeat={live.mine.act === 'roast' ? campHeat : null}
           screen={scene === 'cinema' ? <CinemaScreen rtc={rtc} mode={cinemaMode} bubbles={live.bubbles} onReact={e => live.say(e)} yt={yt} onYt={setYt} /> : scene === 'restaurant' ? <DinnerTiles remote={call.remoteVideo ? call.remote : null} local={call.cam ? call.local : null} firstSeat={firstSeat} /> : null}
           go={go} enter={enter} arrived={arrived}
@@ -1020,6 +1031,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
             star: tapStar,
           }}
         />
+        {theirTrip && !tripHere && !flight && <button className="exit-chip fly-chip" onClick={() => { if (confirm(`✈️ Bay tới ${tripOf(theirTrip)?.name} với ${partnerName}?`)) setFlight({ to: `trip_${theirTrip}` as SceneId, name: tripOf(theirTrip)?.name ?? '' }); }}>✈️ Bay tới chỗ {partnerName} ({tripOf(theirTrip)?.icon} {tripOf(theirTrip)?.name})</button>}
         {exit && <button className="exit-chip" onClick={() => { if (exit[0] === 'town' && scene.startsWith('trip_')) { if (confirm('✈️ Kết thúc chuyến đi và bay về làng?')) setFlight({ to: 'town', name: 'làng' }); return; } enter(exit[0], exit[1]); }}>{exit[2]}</button>}
         {live.mine.horse && <button className="exit-chip dismount" onClick={dismount}>🐴 Xuống ngựa · về chuồng</button>}
       </main>
@@ -1185,6 +1197,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'diary' && <DiarySheet me={me} partner={partner} today={myTime.date} mems={mems} onClose={close} />}
       {sheet?.kind === 'festival' && festKind && <FestivalSheet kind={festKind} me={me} partner={partner} today={myTime.date} mems={mems} inventory={inventory} kids={kids} onClose={close} />}
+      {sheet?.kind === 'tripshop' && tripHere && <TripShopSheet trip={tripHere as TripId} coins={couple?.coins ?? 0} onClose={close} onBought={(url, name) => { doAct('rummage'); setTimeout(() => { doAct('cheer'); window.dispatchEvent(new CustomEvent('trip-pop', { detail: { url } })); live.say(`🛍️ Mua ${name} mang về trang trí nhà!`); }, 900); }} />}
       {sheet?.kind === 'travel' && <TravelSheet me={me} partner={partner} coins={couple?.coins ?? 0} mems={mems} today={myTime.date} onClose={close} kids={kids.filter(k => k.name).map(k => ({ id: k.id, name: k.name }))} kidWith={live.mine.walkKid ?? null} onFly={startTrip} />}
       {flight && <FlightOverlay to={flight.name} onDone={() => { const f = flight; setFlight(null); tripCtx.at = f.to.startsWith('trip_') ? (f.to.slice(5) as TripId) : ''; enter(f.to); }} />}
       {festKind === 'midautumn' && myTime.hour >= 18 && <LanternParade mems={mems} year={myTime.date.slice(0, 4)} />}
@@ -1239,6 +1252,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           : playing === 'boat' ? <Boat {...pp} /> : playing === 'hide' ? <HideSeek {...pp} /> : null;
       })()}
       {scene === 'bakery' && !kitchenOpen && <KitchenRoom variant="bakery" me={me} partner={partner} inventory={inventory} date={myTime.date} onLeave={() => enter('street', { x: 186, y: 108 })} />}
+      {classOpen && tripHere && <KitchenRoom variant="class" trip={tripHere} title={`👩‍🍳 Lớp nấu ăn ${tripOf(tripHere)?.name ?? ''}`} me={me} partner={partner} inventory={inventory} date={myTime.date} onLeave={() => setClassOpen(false)} />}
       {kitchenOpen && <KitchenRoom me={me} partner={partner} inventory={inventory} date={myTime.date} onLeave={() => setKitchenOpen(false)} />}
       {sheet?.kind === 'shop' && <ShopSheet coins={couple?.coins ?? 0} inventory={inventory} onClose={close} />}
       {sheet?.kind === 'seed' && <SeedSheet inventory={inventory} onPick={c => sow(sheet.cell, c)} onClose={close} />}
@@ -1272,6 +1286,11 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           <div className="cam-bar">
             {partner && <button className="btn small" onClick={() => coupleDo('hug', true)}>🤗 Ôm</button>}
             <button className="cam-shutter" aria-label="Chụp" onClick={() => void snap()} />
+            <span className="cam-poses">
+              <button className="btn small ghost" onClick={() => doAct('lift')}>🙌 Đỡ tháp</button>
+              <button className="btn small ghost" onClick={() => doAct('point')}>👉 Chỉ tay</button>
+              {partner && <button className="btn small ghost" onClick={heartPose}>🫶 Tim đôi</button>}
+            </span>
             {partner && <button className="btn small" onClick={() => coupleDo('kiss', true)}>💋 Hôn</button>}
             <button className="btn small ghost" onClick={() => { setCam(false); setHugAct(null); }}>✖</button>
           </div>

@@ -118,6 +118,8 @@ export const loadOven = (userId: string) =>
 export const loadClaimsOn = (userId: string, day: string) =>
   run<{ key: string }[]>(supabase.from('claims').select('key').eq('user_id', userId).like('key', `%${day}%`))
     .then(rows => rows.map(r => r.key));
+export const loadClaimKeys = (ids: string[], prefix: string) =>
+  run<{ user_id: string; key: string }[]>(supabase.from('claims').select('user_id, key').in('user_id', ids).like('key', `${prefix}%`));
 export const hasClaim = (userId: string, key: string) =>
   run<{ key: string }[]>(supabase.from('claims').select('key').eq('user_id', userId).eq('key', key)).then(r => r.length > 0);
 export const collect = (entries: string[]) => run(supabase.rpc('collect', { p_entries: entries }));

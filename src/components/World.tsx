@@ -67,7 +67,9 @@ import { ranchBackground } from '../lib/ranchArt';
 import { beachSetSprite, loungeBackground, type SeaSpot } from '../lib/seaView';
 /** Vũng nước khi mưa: [x, y, rộng] (toạ độ cảnh) */
 const PUDDLES: [number, number, number][] = [[30, 150, 18], [88, 128, 14], [140, 170, 20], [205, 140, 16], [60, 200, 15], [170, 215, 18]];
-import { tripOf, type TripId } from '../lib/trips';
+import { tripCtx, tripOf, type TripId } from '../lib/trips';
+import { TripExtras } from './TripExtras';
+import { bigUmbrellaSprite } from '../lib/tripArt';
 import { TripContent } from './Trip';
 import { FEST, festSprite, garland } from '../lib/festArt';
 import { spotBackground, spotOf, type SpotScene } from '../lib/tripSpots';
@@ -104,6 +106,8 @@ export interface WorldProps {
   onAnim?: (n: import('../lib/acts').AnimName) => void;
   onKiss?: () => void;
   onCamera?: () => void;
+  onTripShop?: () => void;
+  onTripClass?: () => void;
   scene: SceneId;
   me: Profile;
   partner: Profile | null;
@@ -364,6 +368,9 @@ function SceneContent(p: WorldProps) {
     return ['tent', 'ride', 'sit', 'paint'].includes(act ?? '') ? { ...d, umbrella: false } : d;
   };
   const myDress = tripDress(dress(rent(me.avatar, live.mine.outfit), p.myView), live.mine.act), theirDress = tripDress(dress(rent(partner?.avatar ?? {}, live.theirs?.outfit), p.myView), live.theirs?.act);
+  // che chung ô: đứng sát nhau dưới mưa thì gộp thành một chiếc ô to
+  const shareUmb = !!(p.partnerHere && theirs && myDress.umbrella && theirDress.umbrella && Math.abs(live.mine.pos.x - theirs.pos.x) < 26 && Math.abs(live.mine.pos.y - theirs.pos.y) < 12);
+  if (shareUmb) { myDress.umbrella = false; theirDress.umbrella = false; }
   const bedOf = (who: typeof live.mine | null) => (who && (who.act === 'sleep' || who.act === 'intimate') && who.bed ? p.decor.find(d => d.id === who.bed && d.island === scene) : undefined);
   const myBed = bedOf(live.mine), theirBed = p.partnerHere ? bedOf(theirs) : undefined;
   // Trong phòng: đứng ở phía trước một món (bên phải hoặc bên dưới chân đồ) thì luôn vẽ đè lên món đó
@@ -394,7 +401,8 @@ function SceneContent(p: WorldProps) {
 
       {spotOf(scene) && <SpotContent spot={spotOf(scene)!} scene={scene as SpotScene} me={me} live={live} partnerHere={!!p.partnerHere} looks={{ me: myDress.look, them: theirDress.look }} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} onCamera={() => p.onCamera?.()} today={p.myView.time.date} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland_aurora'} go={go} />}
       {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <FxList fx={mainOf(scene.slice(5) as TripId).fx} scene={scene} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland'} />}
-      {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <TripContent trip={tripOf(scene.slice(5))!} me={me} today={p.myView.time.date} go={go} enter={enter} live={live} onAnim={n => p.onAnim?.(n)} onCamera={() => p.onCamera?.()} />}
+      {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <TripContent trip={tripOf(scene.slice(5))!} me={me} today={p.myView.time.date} go={go} enter={enter} live={live} onAnim={n => p.onAnim?.(n)} onCamera={() => p.onCamera?.()} onShop={() => p.onTripShop?.()} onClass={() => p.onTripClass?.()} />}
+      {scene.startsWith('trip_') && tripOf(scene.split('_')[1]) && <TripExtras scene={scene} trip={scene.split('_')[1] as TripId} spot={spotOf(scene)} me={me} partner={partner} live={live} partnerHere={!!p.partnerHere} go={go} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} night={phase === 'night' || phase === 'sunset'} today={p.myView.time.date} />}
       {scene === 'city' && <CityContent go={go} night={phase === 'night'} onStall={id => p.stall?.(id)} onOffice={() => enter('office')} onHome={() => enter('town', { x: TOWN.bus.x + 10, y: TOWN.bus.y + 4 })} />}
       {scene === 'office' && p.job && p.work && (
         <>
@@ -512,6 +520,7 @@ function SceneContent(p: WorldProps) {
       {p.screen}
       {scene === 'cinema' && (p.cinemaMode === 'movie' ? <div className="cinema-dark" /> : <Karaoke />)}
       {scene === 'restaurant' && <RestaurantContent {...p} />}
+      {scene === 'restaurant' && tripCtx.at && <TripWindow trip={tripCtx.at} hour={p.myView.time.hour} />}
       {scene === 'cafe' && <CafeContent {...p} dark={dark} />}
       {scene === 'wheel' && <WheelContent {...p} />}
       {scene === 'twin' && <TwinContent {...p} />}
@@ -535,6 +544,11 @@ function SceneContent(p: WorldProps) {
         />
       )}
 
+      {shareUmb && theirs && (() => {
+        const u = bigUmbrellaSprite(me.avatar.gender === 'm' ? '#8db8ef' : '#f08aa6'), ps = avatarPx(s);
+        const mx = (live.mine.pos.x + theirs.pos.x) / 2, my = Math.min(live.mine.pos.y, theirs.pos.y);
+        return <img src={u.url} alt="" className="spr share-umb" style={{ left: mx * s - 17 * ps, top: my * s - 42 * ps, width: u.w * ps, height: u.h * ps, zIndex: Math.round(Math.max(live.mine.pos.y, theirs.pos.y)) + 3 }} />;
+      })()}
       {def.outdoor && realSky && p.skyFx?.rainbow && <button className="rainbow" aria-label="Cầu vồng" onClick={e => { e.stopPropagation(); p.onRainbow?.(); }} />}
       {def.outdoor && realSky && p.skyFx?.meteor && [0, 1, 2].map(i => <button key={i} className="meteor" aria-label="Sao băng" style={{ left: `${20 + i * 27}%`, top: `${4 + (i % 2) * 8}%`, animationDelay: `${i * 2.7}s` }} onClick={e => { e.stopPropagation(); p.onMeteor?.(); }} />)}
       {def.outdoor && realSky && wx === 'rain' && <div className="px-rain" style={{ '--s': s } as CSSProperties} />}
@@ -1699,4 +1713,20 @@ function FlyingVisitor({ id, home, name, className, onClick }: { id: string; hom
   }, [home.x, home.y]);
   const s = useScale();   // nhỏ bằng nửa cỡ cảnh: chim sẻ / bướm nhỏ xíu so với người
   return <Follower sprite={critterSprite(id, 0)} walk={critterSprite(id, 1)} x={at.x} y={at.y} title={name} className={className} onClick={onClick} flap speed={18} ps={s * (id.startsWith('bird_') ? 0.5 : 0.55)} />;
+}
+
+/** Nhà hàng ở điểm du lịch: cửa sổ vòm nhìn ra địa danh của nơi đó (sáng/tối theo giờ) */
+const WINDOW_FOCUS: Record<TripId, number> = { taichung: 0.3, gwangju: 0.45, hoian: 0.55, tokyo: 0.23, paris: 0.87, venice: 0.64, swiss: 0.58, iceland: 0.5 };
+function TripWindow({ trip, hour }: { trip: TripId; hour: number }) {
+  const s = useScale();
+  const ph: Phase = hour >= 19 || hour < 5 ? 'night' : hour >= 17 ? 'sunset' : hour < 7 ? 'dawn' : 'day';
+  const bg = mainBackground(trip, ph);
+  const ih = (64 * s) / 0.62, iw = ih * bg.w / bg.h;
+  const left = Math.max(-(iw - 52 * s), Math.min(0, 26 * s - WINDOW_FOCUS[trip] * iw));
+  return (
+    <div className="trip-window" style={{ left: 70 * s, top: 8 * s, width: 52 * s, height: 64 * s, borderRadius: `${26 * s}px ${26 * s}px 0 0`, zIndex: 1 }}>
+      <img src={bg.url} alt="" style={{ height: ih, width: iw, marginLeft: left }} />
+      <i style={{ left: 25 * s, width: 2 * s }} /><b style={{ top: 42 * s, height: s }} />
+    </div>
+  );
 }

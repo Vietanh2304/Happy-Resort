@@ -55,7 +55,9 @@ const RAW = new Set(['salad', 'sushi']);
 export const NOCUT = new Set(['rice', 'grape', 'shrimp', 'corn']);
 /** Tiệm bánh: bơ và trứng phải đem ra bàn nhào cùng bột; sữa, mật ong, phô mai, dâu cho thẳng vào */
 const NOKNEAD = new Set(['milk', 'honey', 'cheese', 'strawberry']);
-export const needsCut = (id: string) => (variant === 'bakery' ? !NOKNEAD.has(id) : !NOCUT.has(id));
+/** Lớp nấu ăn du lịch: những thứ cho thẳng vào nồi/máy xay, không cần thái */
+const CLASS_NOCUT = new Set(['milk', 'tapioca', 'tea_leaf', 'rice', 'egg', 'butter', 'cheese', 'flour', 'noodle_raw', 'honey', 'shrimp', 'bread']);
+export const needsCut = (id: string) => (variant === 'bakery' ? !NOKNEAD.has(id) : variant === 'class' ? !CLASS_NOCUT.has(id) : !NOCUT.has(id));
 const HOME_RECIPES: KRecipe[] = content.recipes
   .filter(r => item(r.id).kind === 'dish' && r.id !== 'bouquet')
   .map(r => ({ id: r.id, needs: r.needs.flatMap(n => Array<string>(n.n).fill(n.id)), m: BLEND.has(r.id) ? 'L' : RAW.has(r.id) ? 'plate' : 'S' }));
@@ -64,18 +66,30 @@ const BAKERY_RECIPES: KRecipe[] = [
   { id: 'cupcake', needs: ['butter', 'egg', 'milk'], m: 'S' }, { id: 'honey_cake', needs: ['egg', 'egg', 'honey', 'milk'], m: 'S' },
   { id: 'cheesecake', needs: ['butter', 'cheese', 'egg'], m: 'S' },
 ];
+/** Lớp học nấu món đặc sản ở từng điểm du lịch (nguyên liệu lớp phát, không tốn tủ lạnh) */
+export const CLASS_RECIPES: Record<string, KRecipe[]> = {
+  taichung: [{ id: 'tw_bubble_tea', needs: ['milk', 'tea_leaf', 'tapioca'], m: 'L' }, { id: 'tw_beef_noodle', needs: ['noodle_raw', 'beef', 'cabbage'], m: 'S' }],
+  gwangju: [{ id: 'kr_tteokgalbi', needs: ['beef', 'garlic'], m: 'S' }, { id: 'kr_kimbap', needs: ['rice', 'carrot', 'egg'], m: 'plate' }],
+  hoian: [{ id: 'vn_cao_lau', needs: ['noodle_raw', 'pork', 'cabbage'], m: 'S' }, { id: 'vn_banh_mi_hoian', needs: ['bread', 'pork', 'carrot'], m: 'plate' }],
+  tokyo: [{ id: 'jp_ramen', needs: ['noodle_raw', 'pork', 'egg'], m: 'S' }, { id: 'jp_tempura', needs: ['shrimp', 'flour', 'egg'], m: 'S' }],
+  paris: [{ id: 'fr_crepe', needs: ['flour', 'egg', 'milk'], m: 'S' }, { id: 'fr_onion_soup', needs: ['garlic', 'butter', 'bread'], m: 'S' }],
+  venice: [{ id: 'it_pizza', needs: ['flour', 'tomato', 'cheese'], m: 'S' }, { id: 'it_pasta', needs: ['noodle_raw', 'tomato', 'garlic'], m: 'S' }],
+  swiss: [{ id: 'ch_fondue', needs: ['cheese', 'cheese', 'bread'], m: 'S' }, { id: 'ch_rosti', needs: ['potato', 'butter'], m: 'S' }],
+  iceland: [{ id: 'is_salmon', needs: ['salmon', 'butter'], m: 'S' }, { id: 'is_lamb_soup', needs: ['beef', 'potato', 'carrot'], m: 'S' }],
+};
 export let KRECIPES: KRecipe[] = HOME_RECIPES;
 export let INGREDIENTS = [...new Set(KRECIPES.flatMap(r => r.needs))];
-let variant: 'home' | 'bakery' = 'home';
+let variant: 'home' | 'bakery' | 'class' = 'home';
+let classTrip = '';
 export const kitchenVariant = () => variant;
 /** Đổi sơ đồ & công thức (bếp nhà ↔ tiệm bánh) trước khi vẽ phòng */
-export function setKitchenVariant(v: 'home' | 'bakery') {
-  if (v === variant) return;
-  variant = v;
+export function setKitchenVariant(v: 'home' | 'bakery' | 'class', trip = '') {
+  if (v === variant && trip === classTrip) return;
+  variant = v; classTrip = trip;
   LAYOUT = v === 'bakery' ? BAKERY_LAYOUT : HOME_LAYOUT;
   COLS = LAYOUT[0].length; ROWS = LAYOUT.length;
   CHAIRS.length = 0; LAYOUT.forEach((row, y) => [...row].forEach((c, x) => { if (c === 'h') CHAIRS.push([x, y]); }));
-  KRECIPES = v === 'bakery' ? BAKERY_RECIPES : HOME_RECIPES;
+  KRECIPES = v === 'bakery' ? BAKERY_RECIPES : v === 'class' ? CLASS_RECIPES[trip] ?? [] : HOME_RECIPES;
   INGREDIENTS = [...new Set(KRECIPES.flatMap(r => r.needs))];
   Object.assign(TILE_NAME, v === 'bakery' ? BAKERY_NAMES : HOME_NAMES);
 }

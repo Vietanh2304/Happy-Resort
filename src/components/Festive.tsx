@@ -1,4 +1,5 @@
 // Nhật ký chung, hoạt động lễ hội (Tết, Trung Thu, Halloween, Giáng Sinh) và du lịch gửi bưu thiếp.
+import { StampBook } from './TripExtras';
 import { useState } from 'react';
 import * as api from '../lib/api';
 import { item } from '../lib/content';
@@ -215,6 +216,7 @@ export function TravelSheet({ me, partner, coins, mems, onClose, onFly, kids = [
       <div className="bag-grid">
         {TRIPS.map(t => <button key={t.id} className="bag-item" disabled={coins < cost(t)} onClick={() => void go(t)}><span style={{ fontSize: 26 }}>{t.icon}</span><small>{t.name}</small><small>🪙 {cost(t)}</small></button>)}
       </div>
+      <StampBook me={me} partner={partner} />
       <h4>📮 Bưu thiếp ({cards.length})</h4>
       <div className="postcards">
         {cards.map(c => { const t = TRIPS.find(x => x.id === c.data.trip); if (!t) return null; return (

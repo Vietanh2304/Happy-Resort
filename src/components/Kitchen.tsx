@@ -27,13 +27,16 @@ const DV: Record<Dir, [number, number]> = { u: [0, -1], d: [0, 1], l: [-1, 0], r
 const KEYS: Record<string, Dir> = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', w: 'u', s: 'd', a: 'l', d: 'r', W: 'u', S: 'd', A: 'l', D: 'r' };
 interface Pos { x: number; y: number; f: Dir; mv: boolean }
 
-export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = 'home' }: {
-  variant?: 'home' | 'bakery';
+export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = 'home', trip = '', title }: {
+  variant?: 'home' | 'bakery' | 'class'; trip?: string; title?: string;
   me: api.Profile; partner: api.Profile | null; inventory: api.InvRow[]; date: string; onLeave: () => void;
 }) {
-  setKitchenVariant(variant);
+  setKitchenVariant(variant, trip);
+  const lesson = variant === 'class';
   const them = partner?.id ?? '';
-  const [fridge] = useSynced('fridge', api.loadFridge, [] as api.InvRow[]);
+  const [homeFridge] = useSynced('fridge', api.loadFridge, [] as api.InvRow[]);
+  // Lớp nấu ăn: rổ nguyên liệu do lớp phát, lấy bao nhiêu cũng được
+  const fridge = useMemo(() => (lesson ? INGREDIENTS.map(id => ({ item_id: id, qty: 99 }) as api.InvRow) : homeFridge), [lesson, homeFridge, trip]); // eslint-disable-line react-hooks/exhaustive-deps
   const [room, setRoom] = useState<Room>(() => newRoom(me.id));
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -55,13 +58,13 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
   const hostAct = (by: string, m: Msg) => {
     const res = act(roomRef.current, by, m.x, m.y, Date.now(), m.o ?? {});
     commit(res.r);
-    if (res.used?.length) {
+    if (res.used?.length && !lesson) {
       const n: Record<string, number> = {};
       res.used.forEach(id => { n[id] = (n[id] ?? 0) + 1; });
       api.fridgeUse(Object.entries(n).map(([id, k]) => ({ id, n: k }))).then(() => notify('fridge'), e => console.error('fridge', e));
     }
   };
-  const send = useGameChannel((variant === 'bakery' ? 'bake' : 'cook') as 'cook', me.id, m => {
+  const send = useGameChannel((variant === 'bakery' ? 'bake' : variant === 'class' ? 'cookclass' : 'cook') as 'cook', me.id, m => {
     const mine = m.by === me.id;
     if (m.t === 'act' && roomRef.current.host === me.id) { hostAct(m.by, m); return; }
     if (mine) return;
@@ -317,13 +320,13 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
   return createPortal(
     <div className="kitchen-full" role="dialog" aria-label="Phòng bếp">
       <div className="k-top">
-        <b>{variant === 'bakery' ? '🍰 Bếp tiệm bánh' : '👩‍🍳 Phòng bếp'}</b>
+        <b>{title ?? (variant === 'bakery' ? '🍰 Bếp tiệm bánh' : '👩‍🍳 Phòng bếp')}</b>
         <span className="k-who">{them && theirPos ? `🟢 ${partner?.display_name} đang trong bếp` : `💤 ${partner?.display_name ?? 'Người ấy'} chưa vào bếp`}</span>
         <span className="row">
           {small && <button className="btn small ghost" onClick={() => setWide(v => !v)}>{wide ? '🔎 Phóng to' : '🔍 Xem cả bếp'}</button>}
           <button className={`btn small ${panel === 'book' ? '' : 'ghost'}`} onClick={() => setPanel(panel === 'book' ? null : 'book')}>📖 Công thức</button>
-          <button className={`btn small ${panel === 'fridge' ? '' : 'ghost'}`} onClick={() => { setAtFridge(null); setPanel(panel === 'fridge' ? null : 'fridge'); }}>{variant === 'bakery' ? '🧊 Tủ nguyên liệu' : '🧊 Tủ lạnh'}</button>
-          <button className="btn small ghost" onClick={onLeave}>{variant === 'bakery' ? '🚪 Ra phố' : '🚪 Ra khỏi bếp'}</button>
+          <button className={`btn small ${panel === 'fridge' ? '' : 'ghost'}`} onClick={() => { setAtFridge(null); setPanel(panel === 'fridge' ? null : 'fridge'); }}>{variant === 'bakery' ? '🧊 Tủ nguyên liệu' : lesson ? '🧺 Rổ nguyên liệu' : '🧊 Tủ lạnh'}</button>
+          <button className="btn small ghost" onClick={onLeave}>{variant === 'bakery' || lesson ? '🚪 Ra phố' : '🚪 Ra khỏi bếp'}</button>
         </span>
       </div>
       <div className="k-view" style={{ width: viewW, height: viewH }}>
@@ -373,7 +376,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
 
       {panel === 'fridge' && (
         <div className="k-panel">
-          <h4>🧊 Tủ lạnh chung <small className="muted">· đồ của cả hai, ai cũng lấy được</small></h4>
+          <h4>{lesson ? <>🧺 Rổ nguyên liệu của lớp <small className="muted">· cô giáo phát, lấy thoải mái</small></> : <>🧊 Tủ lạnh chung <small className="muted">· đồ của cả hai, ai cũng lấy được</small></>}</h4>
           {!atFridge && <p className="muted small-note">Muốn lấy đồ ra nấu thì đi tới tủ lạnh trong bếp rồi bấm vào tủ nhé.</p>}
           {holdingDish && atFridge && <button className="btn small" onClick={() => { doAct(atFridge[0], atFridge[1], { stash: true }); setPanel(null); }}>📦 Cất món đang cầm vào túi</button>}
           <div className="bag-grid">
@@ -384,17 +387,17 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
                   <button className="bag-item" disabled={!atFridge || !!hand || n < 1}
                     onClick={() => { if (atFridge) doAct(atFridge[0], atFridge[1], { pick: r.item_id }); setPanel(null); }}>
                     <img src={emojiSprite(it.icon).url} className="px-img" alt="" />
-                    <small>{it.name} ×{n}</small>
+                    <small>{it.name}{lesson ? '' : ` ×${n}`}</small>
                     <i>{atFridge ? (hand ? 'tay đang bận' : 'lấy ra nấu') : ''}</i>
                   </button>
-                  <button className="chip" title="Lấy về túi" disabled={n < 1}
-                    onClick={() => api.fridgeTake(r.item_id, 1).then(() => notify('fridge', 'inventory'), toastError)}>↩️ về túi</button>
+                  {!lesson && <button className="chip" title="Lấy về túi" disabled={n < 1}
+                    onClick={() => api.fridgeTake(r.item_id, 1).then(() => notify('fridge', 'inventory'), toastError)}>↩️ về túi</button>}
                 </div>
               );
             })}
           </div>
           {fridge.every(r => r.qty <= 0) && <p className="muted">Tủ đang trống. Trồng rau, câu cá hoặc mua ở 🐱 Cửa hàng (quầy 🥬 Nguyên liệu) rồi cất vào đây.</p>}
-          <PutBox inventory={inventory} />
+          {!lesson && <PutBox inventory={inventory} />}
           <button className="btn small ghost" onClick={() => setPanel(null)}>Đóng</button>
         </div>
       )}

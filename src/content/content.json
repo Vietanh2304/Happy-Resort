@@ -1823,6 +1823,253 @@
       "icon": "🍰",
       "kind": "dish",
       "price": 570
+    },
+    {
+      "id": "tw_sky_lantern",
+      "name": "Đèn trời Thập Phần",
+      "icon": "🏮",
+      "kind": "decor"
+    },
+    {
+      "id": "tw_rainbow_art",
+      "name": "Tranh Làng Cầu Vồng",
+      "icon": "🌈",
+      "kind": "decor"
+    },
+    {
+      "id": "kr_maple_frame",
+      "name": "Khung lá phong Mudeung",
+      "icon": "🍁",
+      "kind": "decor"
+    },
+    {
+      "id": "kr_hanbok_doll",
+      "name": "Búp bê hanbok",
+      "icon": "👘",
+      "kind": "decor"
+    },
+    {
+      "id": "hoian_lanterns",
+      "name": "Chùm đèn lồng Hội An",
+      "icon": "🏮",
+      "kind": "decor"
+    },
+    {
+      "id": "hoian_basket_boat",
+      "name": "Thuyền thúng mini",
+      "icon": "🛶",
+      "kind": "decor"
+    },
+    {
+      "id": "jp_maneki",
+      "name": "Mèo vẫy tay Maneki",
+      "icon": "🐱",
+      "kind": "decor"
+    },
+    {
+      "id": "jp_daruma",
+      "name": "Búp bê Daruma",
+      "icon": "🔴",
+      "kind": "decor"
+    },
+    {
+      "id": "fr_eiffel_model",
+      "name": "Mô hình tháp Eiffel",
+      "icon": "🗼",
+      "kind": "decor"
+    },
+    {
+      "id": "fr_paris_poster",
+      "name": "Tranh Paris hoàng hôn",
+      "icon": "🖼️",
+      "kind": "decor"
+    },
+    {
+      "id": "it_gondola_model",
+      "name": "Mô hình gondola",
+      "icon": "🛶",
+      "kind": "decor"
+    },
+    {
+      "id": "it_carnival_mask",
+      "name": "Mặt nạ carnival",
+      "icon": "🎭",
+      "kind": "decor"
+    },
+    {
+      "id": "ch_cuckoo_clock",
+      "name": "Đồng hồ cúc cu",
+      "icon": "🕰️",
+      "kind": "decor"
+    },
+    {
+      "id": "ch_cowbell_deco",
+      "name": "Chuông bò Thuỵ Sĩ",
+      "icon": "🔔",
+      "kind": "decor"
+    },
+    {
+      "id": "is_aurora_painting",
+      "name": "Tranh cực quang",
+      "icon": "🌌",
+      "kind": "decor"
+    },
+    {
+      "id": "is_puffin_plush",
+      "name": "Gấu bông chim puffin",
+      "icon": "🐧",
+      "kind": "decor"
+    },
+    {
+      "id": "travel_globe",
+      "name": "Quả địa cầu du lịch",
+      "icon": "🌏",
+      "kind": "decor",
+      "rarity": "rare"
+    },
+    {
+      "id": "tea_leaf",
+      "name": "Lá trà",
+      "icon": "🍃",
+      "kind": "goods"
+    },
+    {
+      "id": "tapioca",
+      "name": "Trân châu",
+      "icon": "🫘",
+      "kind": "goods"
+    },
+    {
+      "id": "noodle_raw",
+      "name": "Mì sợi",
+      "icon": "🍝",
+      "kind": "goods"
+    },
+    {
+      "id": "beef",
+      "name": "Thịt bò",
+      "icon": "🥩",
+      "kind": "goods"
+    },
+    {
+      "id": "pork",
+      "name": "Thịt heo",
+      "icon": "🥓",
+      "kind": "goods"
+    },
+    {
+      "id": "flour",
+      "name": "Bột mì",
+      "icon": "🌾",
+      "kind": "goods"
+    },
+    {
+      "id": "bread",
+      "name": "Bánh mì gối",
+      "icon": "🍞",
+      "kind": "goods"
+    },
+    {
+      "id": "salmon",
+      "name": "Cá hồi",
+      "icon": "🐟",
+      "kind": "goods"
+    },
+    {
+      "id": "tw_bubble_tea",
+      "name": "Trà sữa trân châu tự pha",
+      "icon": "🧋",
+      "kind": "dish"
+    },
+    {
+      "id": "tw_beef_noodle",
+      "name": "Mì bò Đài Loan",
+      "icon": "🍜",
+      "kind": "dish"
+    },
+    {
+      "id": "kr_tteokgalbi",
+      "name": "Tteokgalbi nướng",
+      "icon": "🍖",
+      "kind": "dish"
+    },
+    {
+      "id": "kr_kimbap",
+      "name": "Cơm cuộn kimbap",
+      "icon": "🍙",
+      "kind": "dish"
+    },
+    {
+      "id": "vn_cao_lau",
+      "name": "Cao lầu",
+      "icon": "🍜",
+      "kind": "dish"
+    },
+    {
+      "id": "vn_banh_mi_hoian",
+      "name": "Bánh mì Hội An",
+      "icon": "🥖",
+      "kind": "dish"
+    },
+    {
+      "id": "jp_ramen",
+      "name": "Ramen tự nấu",
+      "icon": "🍜",
+      "kind": "dish"
+    },
+    {
+      "id": "jp_tempura",
+      "name": "Tempura tôm",
+      "icon": "🍤",
+      "kind": "dish"
+    },
+    {
+      "id": "fr_crepe",
+      "name": "Bánh crêpe",
+      "icon": "🥞",
+      "kind": "dish"
+    },
+    {
+      "id": "fr_onion_soup",
+      "name": "Súp hành Pháp",
+      "icon": "🥣",
+      "kind": "dish"
+    },
+    {
+      "id": "it_pizza",
+      "name": "Pizza Ý",
+      "icon": "🍕",
+      "kind": "dish"
+    },
+    {
+      "id": "it_pasta",
+      "name": "Mì Ý sốt cà",
+      "icon": "🍝",
+      "kind": "dish"
+    },
+    {
+      "id": "ch_fondue",
+      "name": "Fondue phô mai",
+      "icon": "🫕",
+      "kind": "dish"
+    },
+    {
+      "id": "ch_rosti",
+      "name": "Rösti khoai tây",
+      "icon": "🥔",
+      "kind": "dish"
+    },
+    {
+      "id": "is_salmon",
+      "name": "Cá hồi nướng bơ",
+      "icon": "🐟",
+      "kind": "dish"
+    },
+    {
+      "id": "is_lamb_soup",
+      "name": "Súp thịt Iceland",
+      "icon": "🍲",
+      "kind": "dish"
     }
   ],
   "animals": [

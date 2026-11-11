@@ -3,6 +3,7 @@
 import { ellipse, isoSprite, shade, type IsoPen } from './iso';
 import { EXTRA_ART } from './appliances';
 import { HOLIDAY_ART } from './holiday';
+import { TRIP_ART } from './tripArt';
 import { makeSprite, mix, type Pen, type Sprite } from './pixel';
 
 // hang: treo được — đặt trên sàn, ngoài vườn, hoặc treo lên tường
@@ -341,6 +342,7 @@ export const ART: Record<string, Art> = {
   swing: { place: 'garden', size: [2, 1], sprite: swing },
   ...EXTRA_ART,
   ...HOLIDAY_ART,
+  ...TRIP_ART,
 };
 
 function xy(p: [number, number]): [number, number] {

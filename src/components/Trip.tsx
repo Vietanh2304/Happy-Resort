@@ -1,11 +1,8 @@
 // Bản đồ du lịch: điểm tham quan bấm vào được, quán đặc sản (vào nhà hàng), quầy lưu niệm, chụp bưu thiếp, người đi dạo.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as api from '../lib/api';
-import { item } from '../lib/content';
-import { notify } from '../lib/realtime';
 import { seeded } from '../lib/rng';
 import { characterSprite, type Held } from '../lib/sprites';
-import { toast, toastError } from '../lib/toast';
 import { TRIP_WALK, tripCtx, type Trip } from '../lib/trips';
 import type { Pt, SceneId } from '../lib/world';
 import { spotsOf } from '../lib/tripSpots';
@@ -71,21 +68,16 @@ export function Stroller({ seed, i, box = TRIP_WALK, lines = TOURIST, jobs, call
   );
 }
 
-export function TripContent({ trip, me, today, go, enter, live, onAnim, onCamera }: { trip: Trip; me: api.Profile; today: string; go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void; live: Live; onAnim: (n: AnimName) => void; onCamera: () => void }) {
-  const run = async (f: () => Promise<unknown>) => { try { await f(); } catch (e) { toastError(e); } };
-  const souvenir = () => run(async () => {
-    const it = item(trip.souvenir), price = 10;
-    if (!confirm(`Mua quà lưu niệm ${it.icon} ${it.name} (${price} xu)?`)) return;
-    await api.buyItem(trip.souvenir, price); notify('inventory', 'profiles'); onAnim('cheer'); live.say(`${it.icon} Quà ${trip.name} nè!`); toast(`🛍️ Mua ${it.icon} ${it.name} làm kỷ niệm`);
-  });
+export function TripContent({ trip, go, enter, onCamera, onShop, onClass }: { trip: Trip; me: api.Profile; today: string; go: (to: Pt, then?: () => void) => void; enter: (s: SceneId, at?: Pt) => void; live: Live; onAnim: (n: AnimName) => void; onCamera: () => void; onShop: () => void; onClass: () => void }) {
   return (
     <>
       {spotsOf(trip.id).map((s, k) => (
         <Tag key={s.scene} x={s.at} y={96 + (k % 2) * 6} className="label" onClick={() => go({ x: s.at, y: TRIP_WALK.y0 + 26 }, () => enter(s.scene))}>{s.icon} {s.name} ➜</Tag>
       ))}
-      <Tag x={44} y={140} className="label" onClick={() => go({ x: 44, y: 174 }, () => { tripCtx.at = trip.id; enter('restaurant'); })}>🍽️ Quán {trip.food.icon} {trip.food.name}</Tag>
-      <Tag x={128} y={140} className="label" onClick={() => go({ x: 128, y: 174 }, onCamera)}>📸 Chụp kỉ niệm</Tag>
-      <Tag x={212} y={140} className="label" onClick={() => go({ x: 212, y: 174 }, () => void souvenir())}>🛍️ Quà lưu niệm {item(trip.souvenir).icon}</Tag>
+      <Tag x={40} y={136} className="label" onClick={() => go({ x: 40, y: 174 }, () => { tripCtx.at = trip.id; enter('restaurant'); })}>🍽️ Quán {trip.food.icon} {trip.food.name}</Tag>
+      <Tag x={100} y={148} className="label" onClick={() => go({ x: 100, y: 180 }, () => { tripCtx.at = trip.id; onClass(); })}>👩‍🍳 Lớp nấu ăn</Tag>
+      <Tag x={158} y={136} className="label" onClick={() => go({ x: 158, y: 174 }, onCamera)}>📸 Chụp kỉ niệm</Tag>
+      <Tag x={216} y={148} className="label" onClick={() => go({ x: 216, y: 180 }, onShop)}>🛍️ Chợ lưu niệm</Tag>
     </>
   );
 }
