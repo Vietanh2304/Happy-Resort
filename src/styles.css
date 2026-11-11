@@ -1853,3 +1853,4 @@ textarea { resize: vertical; }
 .festoon i { position: absolute; border-radius: 45% 45% 50% 50%; background: var(--c); opacity: .85; }
 .festoon.on i { background: radial-gradient(circle at 40% 35%, #ffffff, var(--c) 55%); box-shadow: 0 0 4px 1px var(--c), 0 0 10px 2px color-mix(in srgb, var(--c) 45%, transparent); opacity: 1; animation: bulbtw 1.4s ease-in-out infinite alternate; }
 @keyframes bulbtw { from { filter: brightness(1); } to { filter: brightness(1.45); } }
+.pot-bar { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%, 640px); border-radius: 14px 14px 0 0; background: #22163ae8; z-index: 2; }

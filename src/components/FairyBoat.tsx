@@ -475,7 +475,7 @@ export function BoatRide({ at: t0, me, them, onExit }: { at: number; me: AvatarL
   }, [t0, pics]);
   useEffect(() => { if (!done) return; const t = setTimeout(() => exitRef.current(), 15000); return () => clearTimeout(t); }, [done]);
   return createPortal(
-    <div className="coaster">
+    <div className="coaster" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
       <canvas ref={cv} width={W * Z} height={HH * Z} />
       {!done && line && <b className="coaster-line">{line}</b>}
       {done && (

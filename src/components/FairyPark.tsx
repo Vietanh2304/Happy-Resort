@@ -506,7 +506,7 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
   // hết chuyến: hiện ảnh 15 giây rồi tự xuống tàu
   useEffect(() => { if (!done) return; const t = setTimeout(() => exitRef.current(), 15000); return () => clearTimeout(t); }, [done]);
   return createPortal(
-    <div className="coaster">
+    <div className="coaster" onClick={e => e.stopPropagation()} onPointerDown={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
       <canvas ref={cv} width={W * Z} height={HH * Z} />
       {!done && line && <b className="coaster-line">{line}</b>}
       {flash && <i className="coaster-flash" />}
