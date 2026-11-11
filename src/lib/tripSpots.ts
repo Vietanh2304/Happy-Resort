@@ -903,7 +903,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
   trip_fairy_castle: {
     trip: 'fairy', id: 'castle', name: 'Lâu đài Người Đẹp Ngủ', icon: '🏰', at: 128, walk: W(146), day: ['#7ab8f8', '#ffe8f4'],
     draw: drawFairyCastle,
-    fx: [{ k: 'shim', x: 0, y: 129, w: 256, h: 10, n: 14 }, { k: 'sparkle', x: 70, y: 20, w: 116, h: 110, n: 18 }, { k: 'bird', x: 60, y: 30, icon: '🕊️', n: 2 }, { k: 'glow', x: 128, y: 90, r: 90, c: '#ff8ad8', night: true }],
+    fx: [{ k: 'shim', x: 0, y: 131, w: 256, h: 10, n: 14 }, { k: 'sparkle', x: 70, y: 20, w: 116, h: 110, n: 18 }, { k: 'bird', x: 60, y: 30, icon: '🕊️', n: 2 }, { k: 'glow', x: 128, y: 90, r: 90, c: '#ff8ad8', night: true }],
     acts: [
       { k: 'park', x: 128, y: 142, label: '🎆 Pháo hoa lâu đài', ride: 'show', at: { x: 128, y: 178 } },
       { k: 'park', x: 40, y: 136, label: '👑 Hoá trang hoàng gia', ride: 'royal' },

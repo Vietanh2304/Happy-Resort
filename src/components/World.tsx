@@ -263,8 +263,8 @@ export function World(raw: WorldProps) {
       key={scene}
       w={def.w} h={def.h} bg={bg} className={`world-stage scene-${scene}`}
       onTap={walkable ? tap : undefined}
-      follow={follow}
-      view={scene.startsWith('trip_fairy') ? 192 : undefined}
+      follow={follow && scene.startsWith('trip_fairy') ? { x: follow.x, y: 192 } : follow}
+      view={scene.startsWith('trip_fairy') ? 150 : undefined}
     >
       <SceneContent {...props} />
     </Stage>

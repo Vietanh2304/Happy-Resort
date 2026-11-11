@@ -217,6 +217,11 @@ const LINEUP: ({ float: FloatId; on: Who[] } | { walk: Who[] })[] = [
   { walk: ['drum', 'drum'] }, { float: 'teaparty', on: ['prince', 'princess'] }, { walk: ['flag', 'dancer', 'flag'] }, { float: 'dragon', on: ['prince'] },
 ];
 const GAP = 76;
+/** Chỗ đứng trên từng xe hoa: y = chân, behind = đứng sau thành xe (thành xe che chân), dx = lệch ngang từng người */
+const DECK: Record<FloatId, { y: number; behind: boolean; dx: number[] }> = {
+  castle: { y: 167, behind: true, dx: [-9, 9] }, star: { y: 182, behind: false, dx: [-26] }, pumpkin: { y: 163, behind: true, dx: [4] },
+  unicorn: { y: 182, behind: false, dx: [-28] }, teaparty: { y: 183, behind: false, dx: [-22, 18] }, dragon: { y: 172, behind: true, dx: [6] },
+};
 function Performer({ who, k, now, x, y, z }: { who: Who; k: number; now: number; x: number; y: number; z: number }) {
   const s = useScale(), ps = avatarPx(s), look = LOOKS[who][k % LOOKS[who].length];
   const beat = Math.floor(now / 300 + k);
@@ -262,7 +267,7 @@ function Parade({ at, now, night }: { at: number; now: number; night: boolean })
         return (
           <span key={idx}>
             <Spr sprite={floatSprite(u.float, true)} x={x} y={188 + bob} z={188} className="fa-lit fa-twinkle" />
-            {u.on.map((who, j) => <Performer key={j} who={who} k={idx + j} now={now} x={x - 8 + (j - (u.on.length - 1) / 2) * 16} y={150 + bob} z={189} />)}
+            {u.on.map((who, j) => { const d = DECK[u.float]; return <Performer key={j} who={who} k={idx + j} now={now} x={x + (d.dx[j] ?? 0)} y={d.y + bob} z={d.behind ? 187 : 190} />; })}
           </span>
         );
       })}

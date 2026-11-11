@@ -208,7 +208,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       {soaking && <Tag x={mine.pos.x} y={mine.pos.y + 4} className="label" onClick={() => live.update({ act: null, pos: { x: mine.pos.x, y: spot.walk.y0 + 4 } })}>🚶 Lên bờ</Tag>}
       {tent && tented > 0 && <Tag x={tent.x + 6} y={tent.y - 6} className="bed-bubble" onClick={() => mine.act === 'tent' && live.update({ act: null, pos: near(tent) })}>{tented > 1 ? '💑 Hai đứa trong lều' : '⛺ Có người trong lều'}{mine.act === 'tent' ? ' · bấm để ra' : ''}</Tag>}
       {invite && (() => { const a = spot.acts[invite.i]; return a ? <Tag x={a.x} y={Math.max(20, a.y - 30)} className="label invite-chip" onClick={joinRide}>💑 Người ấy rủ {lbl(a).replace(/^\S+\s/, '')} — lên cùng!</Tag> : null; })()}
-      {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className={`label ${Math.abs(mine.pos.x - a.x) < 26 && mine.pos.y - a.y > -8 && mine.pos.y - a.y < 52 ? 'dim' : ''}`} onClick={() => doAct(a, i)}>{lbl(a)}</Tag>)}
+      {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className={`label ${a.k !== 'park' && Math.abs(mine.pos.x - a.x) < 26 && mine.pos.y - a.y > -8 && mine.pos.y - a.y < 52 ? 'dim' : ''}`} onClick={() => doAct(a, i)}>{lbl(a)}</Tag>)}
     </>
   );
 }

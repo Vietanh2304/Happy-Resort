@@ -79,7 +79,7 @@ export const castleSprite = (k: number, mono?: string) => {
   const w = Math.ceil(140 * k) + 4, h = Math.ceil(184 * k) + 4;
   return makeSprite(`castle:${k}:${mono ?? ''}`, w, h, p => castle(p, DUMMY(), w / 2, h - 1, k, mono), null);
 };
-export const CASTLE_SPOT = { cx: 128, base: 128, k: 0.55 };
+export const CASTLE_SPOT = { cx: 128, base: 130, k: 0.48 };
 
 // ───────── nền các map ─────────
 function shop(p: Pen, L: Light, x: number, yb: number, w: number, h: number, wall: string, trim: string, dome = false) {
@@ -148,7 +148,7 @@ export function drawFairyMain(p: Pen, L: Light) {
   sky(p, L, ['#8ac8f8', '#ffe0f0'], 108, 214);
   band(p, 86, 110, '#8ac878', '#6aa858');
   for (let i = 0; i < 11; i++) tree(p, 66 + i * 12, 106, 5, i % 2 ? '#4a9a5a' : '#3a8a4a');
-  castle(p, L, 128, 110, 0.44);
+  castle(p, L, 128, 112, 0.38);
   shop(p, L, 2, 110, 44, 40, '#fbe0ec', '#e8507a', true); shop(p, L, 48, 110, 38, 32, '#dcecff', '#4a8ad8');
   shop(p, L, 170, 110, 38, 32, '#fff2cc', '#f6a83a'); shop(p, L, 210, 110, 44, 40, '#e4f6e4', '#9a6ae0', true);
   tiles(p, 110, 192, '#f0dcc4', '#e4ccb0', 8);
@@ -168,8 +168,8 @@ export function drawFairyCastle(p: Pen, L: Light) {
   for (let i = 0; i < 9; i++) tree(p, 6 + i * 31, 124, 7 + (i % 3), i % 2 ? '#3a8a4a' : '#4a9a5a');
   const { cx, base, k } = CASTLE_SPOT;
   castle(p, L, cx, base, k);
-  water(p, L, 128, 140, '#5aa8e0', '#3a88c8');
-  p.rect(116, 126, 24, 16, '#c8b8a0'); for (let x = 117; x < 140; x += 3) p.rect(x, 126, 1, 16, '#a89880'); p.rect(114, 126, 2, 16, GOLD_D); p.rect(140, 126, 2, 16, GOLD_D);
+  water(p, L, 130, 142, '#5aa8e0', '#3a88c8');
+  p.rect(118, 128, 20, 16, '#c8b8a0'); for (let x = 119; x < 138; x += 3) p.rect(x, 128, 1, 16, '#a89880'); p.rect(116, 128, 2, 16, GOLD_D); p.rect(138, 128, 2, 16, GOLD_D);
   band(p, 140, 192, '#8ac870', '#6aa858');
   for (let y = 140; y < 192; y++) { const w = 14 + (y - 140) * 0.9; p.rect(128 - w, y, w * 2, 1, (y % 6) ? '#f0e4d0' : '#dccfb8'); }
   speckle(p, L, 0, 144, 256, 48, 180, ['#ffffff', '#f6e04a', '#e8507a', '#b08ae0', '#ff8ad8']);
@@ -183,7 +183,7 @@ export function drawFairyCastle(p: Pen, L: Light) {
 export function drawFairyParade(p: Pen, L: Light) {
   sky(p, L, ['#80c0f8', '#ffe4f0'], 100, 200);
   band(p, 76, 100, '#7ab868', '#5a9a50');
-  castle(p, L, 128, 98, 0.34);
+  castle(p, L, 128, 98, 0.3);
   shop(p, L, 0, 102, 30, 34, '#fbe0ec', '#e8507a', true); shop(p, L, 32, 102, 30, 28, '#dcecff', '#4a8ad8'); shop(p, L, 64, 102, 28, 24, '#fff2cc', '#8bc87a');
   shop(p, L, 164, 102, 28, 24, '#e8dcf8', '#9a6ae0'); shop(p, L, 194, 102, 30, 28, '#fff2cc', '#e8443a'); shop(p, L, 226, 102, 30, 34, '#e4f6e4', '#f6a83a', true);
   tiles(p, 102, 150, '#f0dcc4', '#e4ccb0', 8);
