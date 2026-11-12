@@ -2096,6 +2096,12 @@
       "kind": "decor"
     },
     {
+      "id": "ha_leaf_grasshopper",
+      "name": "Cào cào lá dừa Bảy Mẫu",
+      "icon": "🦗",
+      "kind": "decor"
+    },
+    {
       "id": "fa_churro",
       "name": "Churros quế",
       "icon": "🥨",

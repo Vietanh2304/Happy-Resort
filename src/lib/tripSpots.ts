@@ -9,7 +9,7 @@ import { drawFairyCastle, drawFairyParade, drawFairyRides } from './fairyArt';
 export type SpotScene =
   | 'trip_taichung_rainbow' | 'trip_taichung_fengjia' | 'trip_taichung_sunmoon'
   | 'trip_gwangju_mudeung' | 'trip_gwangju_penguin' | 'trip_gwangju_chungjang'
-  | 'trip_hoian_lantern' | 'trip_hoian_river'
+  | 'trip_hoian_lantern' | 'trip_hoian_river' | 'trip_hoian_coconut'
   | 'trip_tokyo_asakusa' | 'trip_tokyo_ueno' | 'trip_tokyo_shibuya'
   | 'trip_paris_eiffel' | 'trip_paris_seine' | 'trip_paris_cafe'
   | 'trip_venice_canal' | 'trip_venice_sanmarco'
@@ -35,7 +35,7 @@ export type Act =
   | { k: 'fortune'; x: number; y: number; label: string }
   | { k: 'ride'; x: number; y: number; label: string; spr: MiniId; ry: number; say: string }
   | { k: 'float'; x: number; y: number; label: string; ry: number }
-  | { k: 'pottery'; x: number; y: number; label: string; price: number }
+  | { k: 'pottery' | 'basket'; x: number; y: number; label: string; price: number }
   | { k: 'park'; x: number; y: number; label: string; ride: ParkAct; at?: { x: number; y: number } }
   | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind; res?: { icon: string; x: number; y: number }; outfit?: number; at?: { x: number; y: number } };
 /** Trò ở Disneyland (xử lý trong FairyPark) */
@@ -570,6 +570,48 @@ const drawHoianRiver = (p: Pen, L: Light) => {
   p.rect(28, 167, 38, 2, '#6a3a22');
 };
 
+// ═══ HỘI AN: Rừng dừa Bảy Mẫu (Cẩm Thanh) — dừa nước um tùm, thúng tròn chú lái đội nón lá, bến tre, sạp dừa tươi ═══
+function nipaP(p: Pen, L: Light, x: number, y: number, h: number) {
+  const cols = ['#3a9a4a', '#4ab05a', '#2a8a3e', '#5ac06a'], n = 6 + Math.floor(L.r() * 3);
+  for (let f = 0; f < n; f++) {
+    const side = f < n / 2 ? -1 : 1, a = -Math.PI / 2 + (f - (n - 1) / 2) * 0.3 + (L.r() - 0.5) * 0.15, len = h * (0.7 + L.r() * 0.4);
+    for (let t = 0; t <= 1; t += 0.03) {
+      const bend = t * t * 0.7 * side, px = Math.round(x + Math.cos(a + bend) * len * t), py = Math.round(y + Math.sin(a + bend) * len * t);
+      p.px(px, py, '#6a7a3a');
+      if (t > 0.12) { const ll = Math.round((1 - t) * 6 + 2); for (const sd of [-1, 1]) for (let k = 1; k < ll; k++) p.px(px + sd * k, py + k, cols[(f + k) % 4]); }
+    }
+  }
+}
+function thungP(p: Pen, x: number, y: number, w: number) {
+  const h = Math.round(w / 3.2);
+  for (let dy = 0; dy < h; dy++) { const hw = Math.round(Math.sqrt(1 - (dy / h) ** 2) * w / 2); p.rect(x - hw, y + dy, hw * 2, 1, dy % 2 ? '#7a5230' : '#8a6238'); }
+  p.rect(x - w / 2 - 1, y - 1, w + 2, 2, '#b08a54'); for (let k = -w / 2 + 2; k < w / 2 - 1; k += 3) p.px(x + k, y + 2, '#a87c48');
+}
+function boatman(p: Pen, x: number, y: number, shirt: string) {
+  p.rect(x - 2, y - 9, 4, 7, shirt); p.rect(x - 1, y - 12, 3, 3, '#e0aa80');
+  for (let k = 0; k < 4; k++) p.rect(x - 4 + k, y - 13 - k, 9 - k * 2, 1, k % 2 ? '#d8c890' : '#ead8a0');
+}
+const drawHoianCoconut = (p: Pen, L: Light) => {
+  sky(p, L, ['#7ac8f0', '#e0f6ff'], 66, 60);
+  for (let x = 0; x < 256; x++) { const h = 8 + Math.round(Math.sin(x / 19) * 3 + Math.sin(x / 7) * 2); p.rect(x, 66 - h, 1, h, '#4a8a6a'); }
+  water(p, L, 66, 152, '#6aa88a', '#3a7a6a');
+  // rừng dừa nước bờ xa và hai bên
+  for (let k = 0; k < 14; k++) nipaP(p, L, k * 19 + Math.floor(L.r() * 8), 76, 24 + L.r() * 10);
+  p.rect(0, 74, 256, 3, '#5a6a3a');
+  for (let k = 0; k < 4; k++) { nipaP(p, L, 8 + k * 9, 146, 40 + L.r() * 10); nipaP(p, L, 222 + k * 9, 146, 40 + L.r() * 10); }
+  // các thúng trên sông, chú lái đội nón lá; một thúng mang loa phát nhạc
+  for (const [x, y, c] of [[70, 108, '#4a8ae8'], [128, 94, '#e84a6a'], [184, 116, '#f6c445'], [104, 130, '#3aa86a']] as const) { boatman(p, x + 4, y, c); thungP(p, x, y - 2, 22); for (let k = 0; k < 3; k++) p.rect(x - 14 - k * 3, y + 3 + k, 6, 1, '#ffffff50'); }
+  p.rect(130, 86, 6, 5, '#2a2a2a'); p.rect(132, 87, 2, 2, '#5a5a5a');
+  // bến tre + bờ cát, sạp dừa tươi
+  band(p, 152, 192, '#d8b888', '#c8a878'); p.rect(0, 152, 256, 2, '#8a6a42');
+  for (let x = 96; x < 166; x += 2) p.rect(x, 140, 2, 12, x % 4 ? '#a87444' : '#9a6a3a'); for (let x = 98; x < 166; x += 14) p.rect(x, 140, 2, 16, '#5a3a22');
+  p.rect(96, 139, 70, 1, '#c8945a');
+  p.rect(200, 158, 40, 3, '#8a5a32'); p.rect(202, 161, 2, 12, '#6a4a2a'); p.rect(236, 161, 2, 12, '#6a4a2a');
+  for (let k = 0; k < 9; k++) circle(p, 206 + (k % 5) * 6, 155 - Math.floor(k / 5) * 4, 3, k % 2 ? '#5aa84a' : '#4a983a');
+  p.rect(198, 144, 44, 3, '#3a8a3a'); for (let x = 198; x < 242; x += 3) p.px(x, 147, '#2a6a2a');
+  speckle(p, L, 0, 156, 256, 34, 160, ['#c8a070', '#e0c898', '#b89060']);
+};
+
 // ═══ TOKYO: Ueno — đại lộ anh đào, đèn lồng giấy bonbori, hồ Shinobazu sen, điện Bentendo bát giác ═══
 const drawUeno = (p: Pen, L: Light) => {
   sky(p, L, ['#a0d0f8', '#fff0f6'], 64, 60);
@@ -762,18 +804,25 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
 
   // ═════════ HỘI AN ═════════
   trip_hoian_lantern: {
-    trip: 'hoian', id: 'lantern', name: 'Phố đèn lồng & Chùa Cầu', icon: '🌉', at: 80, walk: W(130), day: ['#f6b878', '#ffe8b8'],
+    trip: 'hoian', id: 'lantern', name: 'Phố đèn lồng & Chùa Cầu', icon: '🌉', at: 40, walk: W(130), day: ['#f6b878', '#ffe8b8'],
     draw: drawHoianLantern,
     fx: [{ k: 'sway', x: 20, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 60, y: 86, c: '#f6c445', big: true }, { k: 'sway', x: 100, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 186, y: 86, c: '#f59ab3', big: true }, { k: 'sway', x: 226, y: 86, c: '#e8443a', big: true }, { k: 'shim', x: 0, y: 104, w: 256, h: 10, n: 8 }],
     acts: [buy(220, 160, 'lantern', 10, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 5, '🥖 Bánh mì'), ph(148, 124), { k: 'pottery', x: 100, y: 118, label: '🏺 Làm gốm Thanh Hà', price: 20 }, { ...say(130, 170, '👗 May áo dài', 'Áo dài may xong rồi, mặc vào xinh quá trời 👗', 'dress'), outfit: 12 }],
     lines: ['Đèn lồng đẹp quá', 'Phố cổ yên bình ghê', 'Cầu này trên tờ 20 nghìn đó', 'Ăn cao lầu chưa?', 'Chụp áo dài đi'],
   },
   trip_hoian_river: {
-    trip: 'hoian', id: 'river', name: 'Sông Hoài', icon: '🪷', at: 190, walk: W(154), day: ['#f0a870', '#ffe0b0'],
+    trip: 'hoian', id: 'river', name: 'Sông Hoài', icon: '🪷', at: 128, walk: W(154), day: ['#f0a870', '#ffe0b0'],
     draw: drawHoianRiver,
     fx: [{ k: 'shim', x: 0, y: 76, w: 256, h: 72, n: 30, c: '#ffe0a0' }, { k: 'move', spr: 'sampan', x: 30, y: 124, dx: 180, dur: 22 }, { k: 'move', spr: 'sampan', x: 220, y: 100, dx: -160, dur: 26 }, { k: 'glow', x: 128, y: 40, r: 90, c: '#ffa040', night: true }],
     acts: [{ k: 'float', x: 120, y: 160, label: '🪷 Thả hoa đăng', ry: 146 }, { k: 'ride', x: 200, y: 160, label: '🛶 Đi thuyền sông Hoài', spr: 'sampan', ry: 130, say: 'Chú lái thuyền chèo chậm rãi, đèn lồng soi bóng lung linh 🏮' }, buy(46, 176, 'banh_trang', 5, '🫓 Bánh tráng nướng'), ph(140, 182)],
     lines: ['Thả đèn ước đi', 'Đi thuyền không em?', 'Lung linh quá', 'Ước gì cũng thành 🪷', 'Mua hoa đăng đi'],
+  },
+  trip_hoian_coconut: {
+    trip: 'hoian', id: 'coconut', name: 'Rừng dừa Bảy Mẫu', icon: '🥥', at: 216, walk: W(156), day: ['#7ac8f0', '#e0f6ff'],
+    draw: drawHoianCoconut,
+    fx: [{ k: 'shim', x: 0, y: 84, w: 256, h: 64, n: 26, c: '#ffffffa0' }, { k: 'bird', icon: '🐦', x: 40, y: 20, n: 3 }],
+    acts: [{ k: 'basket', x: 128, y: 120, label: '🧺 Đi thuyền thúng', price: 25 }, buy(220, 136, 'coconut', 5, '🥥 Dừa tươi'), ph(52, 166)],
+    lines: ['Thúng xoay chóng mặt quá!', 'Câu được cua chưa?', 'Rừng dừa mát ghê', 'Đan cho em con cào cào đi', 'Nghe nhạc loa kìa 🎶'],
   },
 
   // ═════════ TOKYO ═════════

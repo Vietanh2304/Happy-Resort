@@ -140,8 +140,17 @@ const haVase = () => makeSprite('tv:ha_vase', 12, 18, p => {
   p.px(3, 10, '#ffffff'); p.px(3, 11, '#ffffff'); p.rect(2, 17, 8, 1, '#8a6a5a');
 }, '#1a2a4a');
 
+// ── Cào cào lá dừa (thuyền thúng rừng dừa Bảy Mẫu)
+const leafHopper = () => makeSprite('tv:ha_leaf_grasshopper', 16, 12, p => {
+  const G = '#5ab84a', D = '#3a8a3a';
+  for (let k = 0; k < 6; k++) p.rect(2 + k * 2, 6 + (k % 2), 2, 3, k % 2 ? G : D);
+  for (let k = 0; k < 5; k++) p.rect(5 + k, 5 - k, 2, 1, G);
+  p.rect(13, 5, 3, 3, G); p.px(14, 5, '#1a1a1a'); p.px(14, 2, D); p.px(15, 1, D); p.px(13, 3, D);
+  p.px(4, 10, D); p.px(3, 11, D); p.px(9, 10, D); p.px(10, 11, D);
+}, '#1a3a1a');
+
 export const TRIP_ART: Record<string, Art> = {
-  ha_vase: { place: 'any', sprite: haVase },
+  ha_vase: { place: 'any', sprite: haVase }, ha_leaf_grasshopper: { place: 'any', sprite: leafHopper },
   tw_sky_lantern: { place: 'any', sprite: skyLantern, glow: true }, tw_rainbow_art: { place: 'wall', sprite: rainbowArt },
   kr_maple_frame: { place: 'wall', sprite: mapleFrame }, kr_hanbok_doll: { place: 'any', sprite: hanbokDoll },
   hoian_lanterns: { place: 'wall', sprite: hoianLanterns, glow: true }, hoian_basket_boat: { place: 'any', sprite: basketBoat },

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { InviteBanner } from './InviteBanner';
 import * as api from '../lib/api';
 import { animal, content, item, type Combo } from '../lib/content';
 import {
@@ -14,7 +15,7 @@ import { useGuests } from '../lib/useGuests';
 import { shared, useLive } from '../lib/useLive';
 import { useCall } from '../lib/useCall';
 import { loadMusicPref, music, saveMusicPref, type Mood } from '../lib/music';
-import { occupant } from '../lib/placement';
+import { cradleSpots, occupant } from '../lib/placement';
 import { weatherIcon } from '../lib/weather';
 import { villageWeather } from '../lib/villageWeather';
 import { BATH, BEACH, BUILDINGS, NURSERY, RIDE_MS, SCENES, TOWN, farmCell, type GameId, type Pt, type SceneId } from '../lib/world';
@@ -250,7 +251,9 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     route.current = [];
     setEditing(false);
     editor.setSelection(null);
-    live.update({ scene: target, pos: at ?? SCENES[target].spawn, act: null, dish: null, jump: null, ...(target.startsWith('trip_') ? {} : { outfit: null }), tripAt: target === 'restaurant' ? tripCtx.at : '' });
+    // vào cảnh mới: hai người xuất hiện lệch nhau một chút, không chồng lên nhau
+    const sp = SCENES[target].spawn, side = partner && me.id > partner.id ? 1 : -1;
+    live.update({ scene: target, pos: at ?? { x: sp.x + side * 7, y: sp.y }, act: null, dish: null, jump: null, ...(target.startsWith('trip_') ? {} : { outfit: null }), tripAt: target === 'restaurant' ? tripCtx.at : '' });
   }
 
   async function run(f: () => Promise<unknown>) {
@@ -906,7 +909,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const atSink = (act: 'wash' | 'brush' | 'face') => {
     const [say, ms, done] = act === 'wash' ? ['🧼💦', 4000, '🧼 Tay sạch thơm rồi!'] : act === 'brush' ? ['🪥🫧', 6000, '🪥 Răng trắng tinh, hơi thở thơm mát!'] : ['🫧💦', 5000, '🫧 Mặt mũi tươi tỉnh rồi!'] as const;
     const step = () => {
-      live.update({ pos: BATH.sink, act }); live.say(say);
+      const th = liveNow.current.theirs, busy = th && th.scene === liveNow.current.mine.scene && Math.abs(th.pos.x - BATH.sink.x) < 6 && Math.abs(th.pos.y - BATH.sink.y) < 6;
+      live.update({ pos: busy ? { x: BATH.sink.x + 10, y: BATH.sink.y + 2 } : BATH.sink, act }); live.say(say);
       setTimeout(() => { if (liveNow.current.mine.act === act) { live.update({ act: null }); live.say('✨'); toast(done); } }, ms);
     };
     if (Math.hypot(live.mine.pos.x - BATH.sink.x, live.mine.pos.y - BATH.sink.y) < 3) step(); else go(BATH.toiletStand, step);
@@ -915,7 +919,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Chăm bé sơ sinh bằng động tác thật: tới nôi rồi bế / cho bú / thay tã / hát ru; tắm thì bế bé sang phòng tắm
   const babyCare = (id: string, kid: api.Kid) => {
     const babies = kids.filter(k => k.name && k.born_on <= myTime.date && kidStage(k, myTime.date) === 'baby');
-    const cs = NURSERY.cradleStands[Math.max(0, babies.findIndex(k => k.id === kid.id)) % NURSERY.cradleStands.length];
+    const cs = cradleSpots(decor)[Math.max(0, babies.findIndex(k => k.id === kid.id)) % 3].stand;
     const plan: Record<string, [SceneId, Pt, string, number]> = {
       bottle: ['bedroom', cs, 'babyfeed', 7000], diaper: ['bedroom', cs, 'diaper', 5000],
       lullaby: ['bedroom', cs, 'lull', 9000], hold: ['bedroom', cs, 'carry', 10000],
@@ -1037,7 +1041,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         {live.mine.horse && <button className="exit-chip dismount" onClick={dismount}>🐴 Xuống ngựa · về chuồng</button>}
       </main>
       {link === 'down' && <div className="link-down">📡 Mất kết nối đồng bộ với người ấy — đang thử nối lại… (kiểm tra mạng, hoặc tải lại trang)</div>}
-      {gameInvite && sheet?.kind !== 'game' && <button className="invite-chip" onClick={() => { openGame(gameInvite, false); setGameInvite(null); }}>🎮 Vào chơi {TITLES[gameInvite]}</button>}
+      {gameInvite && sheet?.kind !== 'game' && <InviteBanner text={`🎮 Người ấy rủ chơi ${TITLES[gameInvite]}`} yes="Vào chơi!" onYes={() => { openGame(gameInvite, false); setGameInvite(null); }} onNo={() => setGameInvite(null)} />}
 
       {room ? (
         <div className="room-bar">

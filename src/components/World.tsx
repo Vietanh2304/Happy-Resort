@@ -18,7 +18,7 @@ import { arcadeRoom, picnicSprite, BATH_WATERS, tubBackSprite, tubFrontSprite, t
 import { emojiSprite, makeSprite, type Sprite } from '../lib/pixel';
 import type { Act } from '../lib/acts';
 import { dropSprite } from '../lib/playSprites';
-import { cellsOf, floorDepth, isWallCell, rotSize } from '../lib/placement';
+import { cellsOf, cradleSpots, floorDepth, isWallCell, rotSize } from '../lib/placement';
 import type { Ghost } from '../lib/useDecorEditor';
 import { SKY } from '../lib/sky';
 import { bobberSprite, cinemaBackground, cloudSprite, dockSprite, palmSprite } from '../lib/sprites';
@@ -74,7 +74,7 @@ import { bigUmbrellaSprite } from '../lib/tripArt';
 import { TripContent } from './Trip';
 import { FEST, festSprite, garland } from '../lib/festArt';
 import { spotBackground, spotOf, type SpotScene } from '../lib/tripSpots';
-import { FxList, SpotContent } from './TripSpot';
+import { FxList, riderAt, SpotContent } from './TripSpot';
 import { mainBackground, mainOf, tripWeather } from '../lib/tripMain';
 import { liveStatus } from './SeedSheet';
 
@@ -239,10 +239,14 @@ export function World(raw: WorldProps) {
   } as Record<string, () => ReturnType<typeof townBackground> | undefined>)[scene]();
 
   const walkable = (!!def.walk && !editing) || (!!props.festIcon && scene === 'town');
+  // đang ngồi thuyền / cáp treo / tàu: camera chạy theo xe
+  const riding = props.live.mine.act === 'ride' && !!spotOf(scene);
+  const [rideNow, setRideNow] = useState(Date.now());
+  useEffect(() => { if (!riding) return; const t = setInterval(() => setRideNow(Date.now()), 150); return () => clearInterval(t); }, [riding]);
   const follow = editing && scene === 'town'
     ? { x: GARDEN.x + (GARDEN.cols * GARDEN.cw) / 2, y: GARDEN.y + (GARDEN.rows * GARDEN.ch) / 2 }
     : editing && scene === 'farm' ? { x: FARM.x + (FARM.cols * FARM.cw) / 2, y: FARM.y + (FARM.rows * FARM.ch) / 2 }
-    : walkable ? props.live.mine.pos : undefined;
+    : walkable ? (riding && spotOf(scene) && props.live.mine.trip ? riderAt(spotOf(scene)!, props.live.mine.trip, rideNow) ?? props.live.mine.pos : props.live.mine.pos) : undefined;
 
   function tap(x: number, y: number) {
     if (props.festIcon && scene === 'town') { props.on.festPlace(x, y); return; }
@@ -534,12 +538,12 @@ function SceneContent(p: WorldProps) {
       {/* Nhân vật */}
       {(myBed || theirBed) && <BedLayer {...p} myBed={myBed} theirBed={theirBed} />}
       <KidLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />
-      {!myBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin', 'boat', 'pottery'].includes(live.mine.act ?? '')) && <Avatar
+      {!myBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin', 'boat', 'pottery', 'basket'].includes(live.mine.act ?? '')) && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')} makeup={live.mine.act === 'makeup'} riding={live.mine.horse && SCENES[scene].outdoor ? horseKind(p.animals, live.mine.horse) : undefined}
         sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : SINK_ACTS.includes(live.mine.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
-      {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin', 'boat', 'pottery'].includes(theirs.act ?? '')) && (
+      {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin', 'boat', 'pottery', 'basket'].includes(theirs.act ?? '')) && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')} makeup={theirs.act === 'makeup'} riding={theirs.horse && SCENES[scene].outdoor ? horseKind(p.animals, theirs.horse) : undefined}
@@ -1068,7 +1072,7 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
     const walker = live.mine.walkKid === k.id || live.mine.walkAll ? 'me' : live.theirs?.walkKid === k.id || live.theirs?.walkAll ? 'partner' : null;
     if (walker) {
       const who = walker === 'me' ? live.mine : theirs;
-      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom' || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask', 'coaster', 'spin', 'boat', 'pottery'].includes(who.act ?? ''))) continue;
+      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom' || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask', 'coaster', 'spin', 'boat', 'pottery', 'basket'].includes(who.act ?? ''))) continue;
       const seat = walker === 'me' ? p.mySeat : p.theirSeat;
       // nhiều bé cùng đi: xếp xen kẽ hai bên, xa dần
       const n = nWith[walker]++, side = n % 2 ? -1 : 1, gap = 10 + Math.floor(n / 2) * 9;
@@ -1078,7 +1082,7 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
     }
     if (stage === 'baby' && scene === 'bedroom') {
       const bi = born.filter(b => kidStage(b, today) === 'baby').indexOf(k);
-      const c = NURSERY.cradles[bi % NURSERY.cradles.length];
+      const c = cradleSpots(p.decor)[bi % 3].cradle;
       const acts = [live.mine.care === k.id ? live.mine.act : null, theirs?.care === k.id ? theirs.act : null];
       const out_ = acts.some(a => BABY_OUT.includes(a ?? ''));      // bé đang được bế / cho bú
       const lull = acts.includes('lull'), diaper = acts.includes('diaper'), feed = acts.includes('babyfeed');

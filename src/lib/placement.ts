@@ -1,7 +1,7 @@
 // Luật đặt đồ trang trí: sàn/tường trong phòng, ô vườn ngoài làng, đồ to chiếm nhiều ô.
 import type { Decor } from './api';
 import { placeOf, sizeOf } from './furniture';
-import { FARM, GARDEN, RESERVED, ROOM, WALL_L, WALL_R } from './world';
+import { FARM, GARDEN, RESERVED, ROOM, roomPt, WALL_L, WALL_R } from './world';
 
 export const OUTDOOR_ISLANDS = ['garden', 'farm'];
 export const ROOM_ISLANDS = ['house', 'bedroom', 'bathroom'];
@@ -76,4 +76,14 @@ export function floorDepth(island: string, items: Decor[], base: (d: Decor) => n
     if (!changed) break;
   }
   return new Map(box.map(b => [b.d.id, b.z]));
+}
+
+/** Nôi em bé trong phòng ngủ: chọn chỗ trống, tránh đồ đã đặt (nhất là bàn trang điểm + ghế đôn) để không bấm nhầm */
+const CRADLE_SPOTS: [number, number][] = [[4.6, 2.6], [5.9, 2.4], [4.4, 4.2], [6.3, 4.6], [2.8, 5.4], [5.2, 6.0], [3.2, 3.2], [6.6, 1.4], [1.6, 4.4]];
+export function cradleSpots(decor: Decor[]) {
+  const cells = decor.filter(d => d.island === 'bedroom' && !isWallCell('bedroom', d.y))
+    .flatMap(d => cellsOf('bedroom', d.item_id, d.x, d.y, d.rot).map(([x, y]) => ({ x, y, m: d.item_id === 'dresser' ? 1.2 : 0.6 })));
+  const free = CRADLE_SPOTS.filter(([gx, gy]) => !cells.some(c => gx > c.x - c.m && gx < c.x + 1 + c.m && gy > c.y - c.m && gy < c.y + 1 + c.m));
+  const pick = [...free, ...CRADLE_SPOTS.filter(sp => !free.includes(sp))].slice(0, 3);
+  return pick.map(([gx, gy]) => ({ cradle: roomPt(gx, gy), stand: roomPt(gx + 0.1, gy + 1.1) }));
 }

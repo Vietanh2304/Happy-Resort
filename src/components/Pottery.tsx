@@ -10,6 +10,8 @@ import { onEvent, sendEvent } from '../lib/realtime';
 export const POT_WAIT = 6000;
 const SHAPE = POT_WAIT, PAINT = SHAPE + 17000, KILN = PAINT + 11000, OUT = KILN + 8000;
 export const POT_MS = OUT + 7000;
+/** vào xưởng ngồi cạnh người ấy được tới trước lúc vẽ hoa văn */
+export const POT_JOIN = PAINT;
 const W = 320, HH = 180, Z = 2, TABLE = 132, SEATS = [124, 204];
 const img = (url: string) => { const i = new Image(); i.src = url; return i; };
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
@@ -110,7 +112,7 @@ for (let t = KILN + 900; t < KILN + 5700; t += BEAT) BEATS.push({ t, ph: 'kiln' 
 const N_OF = (ph: Ph) => BEATS.filter(b => b.ph === ph).length;
 const stars = (n: number) => (n >= 0.8 ? 3 : n >= 0.5 ? 2 : 1);
 
-export function PotteryRoom({ at: t0, me, them, onExit }: { at: number; me: AvatarLook; them: AvatarLook | null; onExit: () => void }) {
+export function PotteryRoom({ at: t0, me, mate, them, onExit }: { at: number; me: AvatarLook; mate: AvatarLook; them: AvatarLook | null; onExit: () => void }) {
   const cv = useRef<HTMLCanvasElement>(null);
   const [lineTxt, setLine] = useState('');
   const [photo, setPhoto] = useState('');
@@ -118,11 +120,13 @@ export function PotteryRoom({ at: t0, me, them, onExit }: { at: number; me: Avat
   const [now, setNow] = useState(Date.now());
   const [flash, setFlash] = useState<'hit' | 'miss' | null>(null);
   const meKey = JSON.stringify(me);
-  const looks = useMemo(() => [me, ...(them ? [them] : [])].sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1)), [meKey, JSON.stringify(them)]); // eslint-disable-line react-hooks/exhaustive-deps
-  const seats = useMemo(() => looks.map(l => ({
+  // ghế xếp theo cả hai người ngay từ đầu; người ấy vào sau thì ngồi ghế trống bên cạnh (bình mình không nhảy chỗ)
+  const looks = useMemo(() => [me, mate].sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1)), [meKey, JSON.stringify(mate)]); // eslint-disable-line react-hooks/exhaustive-deps
+  const seats = useMemo(() => looks.map(l => (l !== me && !them) ? null : ({
     key: JSON.stringify(l), sit: img(characterSprite(l, 'sit').url), work: img(characterSprite(l, 'actsit', undefined, 'front', 4).url), push: img(characterSprite(l, 'actsit', undefined, 'front', 5).url),
     yay: img(characterSprite(l, 'actsit', undefined, 'front', 12).url), g: GLAZE[hash(JSON.stringify(l)) % GLAZE.length],
-  })), [looks]);
+  })), [looks, !!them]); // eslint-disable-line react-hooks/exhaustive-deps
+  const filled = seats.filter((p): p is NonNullable<typeof p> => !!p);
   const npc = useMemo(() => ({ idle: img(characterSprite(NPC, 'idle').url), wave: img(characterSprite(NPC, 'act', undefined, 'front', 12).url) }), []);
   const seq = useMemo(() => { let x = t0 % 2147483647 || 7; return BEATS.map(() => { x = (x * 16807) % 2147483647; return x % 4; }); }, [t0]);
   // nhịp đã trúng của từng người (theo look), và lúc trúng gần nhất để nhân vật làm động tác
@@ -156,7 +160,7 @@ export function PotteryRoom({ at: t0, me, them, onExit }: { at: number; me: Avat
       for (let k = 0; k < 6; k++) { const ax = 20 + k * 56, sw = Math.sin(t * 1.3 + k) * 0.12, L = 10 + (k % 2) * 6, x = ax + Math.sin(sw) * L, y = 13 + Math.cos(sw) * L, col = ['#e8443a', '#f6c445', '#ff7ab0'][k % 3];
         line(ctx, ax, 13, x, y, 0.4, '#3a1a0a'); glow(ctx, x, y + 5, 12, '#ffc860', 0.4); ell(ctx, x, y + 5, 4, 5, col); for (let j = -2; j <= 2; j++) R(ctx, x + j * 1.4 - 0.25, y + 0.5, 0.5, 9, '#00000018'); R(ctx, x - 2.5, y, 5, 1, '#6a3a12'); R(ctx, x - 2.5, y + 9.5, 5, 1, '#6a3a12'); R(ctx, x - 0.25, y + 10.5, 0.5, 3, col); }
       // lò nung: lửa cháy to khi đang nung, bùng thêm mỗi lần quạt trúng nhịp
-      const kx = 262, fan = Math.max(0, ...seats.map(p => 1 - (Date.now() - (lastHit.current[p.key] ?? 0)) / 600)) * (el > KILN && el < KILN + 6000 ? 1 : 0);
+      const kx = 262, fan = Math.max(0, ...filled.map(p => 1 - (Date.now() - (lastHit.current[p.key] ?? 0)) / 600)) * (el > KILN && el < KILN + 6000 ? 1 : 0);
       const fire = (el > KILN && el < OUT ? 1 : 0.35) + fan * 0.8, fl = 0.75 + 0.25 * Math.sin(t * 13) * Math.sin(t * 7);
       glow(ctx, kx, 124, 18 + fire * 16, '#ff8a2a', Math.min(1, 0.5 * fire * fl + 0.2));
       for (let k = 0; k < 9; k++) { const x = kx - 9 + k * 2.2, h = (4 + Math.abs(Math.sin(t * 9 + k * 1.7)) * 7) * (0.5 + fire * 0.6); poly(ctx, [x - 1.4, 132, x, 132 - h, x + 1.4, 132], k % 2 ? '#ffb030' : '#ff5a1a'); R(ctx, x - 0.25, 131 - h * 0.5, 0.5, h * 0.4, '#ffe880'); }
@@ -189,7 +193,7 @@ export function PotteryRoom({ at: t0, me, them, onExit }: { at: number; me: Avat
         if (painting) { const a = act ? 0.9 : Math.sin(t * 2 + k) * 0.3, tipX = sx + 2.5 + Math.sin(a) * 2.5, tipY = base - 10 + (act ? -2 : 0); line(ctx, sx + 4, base - 8, tipX + 1, tipY, 0.8, '#c88a4a'); R(ctx, tipX, tipY - 0.5, 1, 1, p.g.ink); if (act) glow(ctx, tipX, tipY, 4, '#ffffff', 0.6); R(ctx, sx + 9, TABLE - 3, 4, 3, '#f8f0e0'); R(ctx, sx + 9.5, TABLE - 2.5, 3, 1, p.g.ink); }
         if (glazed) { glow(ctx, sx, base - 8, 14, '#fff6c0', 0.35 + 0.15 * Math.sin(t * 3)); for (let j = 0; j < 4; j++) if ((Math.floor(t * 3) + j + k) % 3 === 0) star(ctx, sx - 9 + j * 6, base - 18 - (j % 2) * 6, 1.4, '#ffe880'); }
         // tim bay lên khi cả hai cùng trúng một nhịp
-        if (act && seats.length > 1 && seats.every(q => Date.now() - (lastHit.current[q.key] ?? 0) < 450)) { const q = (Date.now() - lastHit.current[p.key]) / 450; heart(ctx, (SEATS[0] + SEATS[1]) / 2, 90 - q * 14, 3, '#ff5a8a'); }
+        if (act && filled.length > 1 && filled.every(q => Date.now() - (lastHit.current[q.key] ?? 0) < 450)) { const q = (Date.now() - lastHit.current[p.key]) / 450; heart(ctx, (SEATS[0] + SEATS[1]) / 2, 90 - q * 14, 3, '#ff5a8a'); }
       });
       // pháo giấy khi ra lò
       if (el > KILN + 7000) for (let k = 0; k < 40; k++) { const x = (k * 37 + Math.sin(t * 2 + k) * 6) % W, y = ((t - KILN / 1000 - 7) * 30 + k * 23) % 140; R(ctx, x, y, 1.6 * Math.abs(Math.sin(t * 4 + k)) + 0.3, 1.2, ['#e8443a', '#f6c445', '#5ab8ff', '#ff8ab0', '#ffffff'][k % 5]); }
@@ -208,7 +212,7 @@ export function PotteryRoom({ at: t0, me, them, onExit }: { at: number; me: Avat
   useEffect(() => { if (!done) return; const t = setTimeout(() => exitRef.current(), 15000); return () => clearTimeout(t); }, [done]);
   const el = now - t0, live = el > SHAPE && el < KILN + 6000;
   const total = (who: string) => (hits.current[who]?.size ?? 0) / BEATS.length;
-  const other = seats.find(p => p.key !== meKey);
+  const other = filled.find(p => p.key !== meKey);
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
   return createPortal(
     <div className="coaster" onClick={stop} onPointerDown={stop} onMouseDown={stop} onTouchStart={stop}>

@@ -6,7 +6,7 @@ import * as api from '../lib/api';
 import { item } from '../lib/content';
 import { useSynced } from '../lib/hooks';
 import {
-  act, CHAIRS, kitchenVariant, setKitchenVariant, COLS, dishOf, freshCount, HEAT, heatOf, INGREDIENTS, KRECIPES, LAYOUT, MEAL_MS, METHOD_LABEL, needsCut, newRoom,
+  act, CHAIRS, kitchenVariant, setKitchenVariant, COLS, dishOf, freshCount, fridgeOf, HEAT, heatOf, INGREDIENTS, KRECIPES, LAYOUT, MEAL_MS, METHOD_LABEL, needsCut, newRoom, storable,
   ROWS, stageOf, STAGE_LABEL, tick, tileAt, walkable, CHOP_N, WASH_N, type Opt, type Room, type Thing,
 } from '../lib/kitchen';
 import { emojiSprite, makeSprite, type Pen } from '../lib/pixel';
@@ -34,7 +34,8 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
   setKitchenVariant(variant, trip);
   const lesson = variant === 'class';
   const them = partner?.id ?? '';
-  const [homeFridge] = useSynced('fridge', api.loadFridge, [] as api.InvRow[]);
+  const fid = fridgeOf(variant);
+  const [homeFridge] = useSynced('fridge', () => api.loadFridge(fid), [] as api.InvRow[], [fid]);
   // Lớp nấu ăn: rổ nguyên liệu do lớp phát, lấy bao nhiêu cũng được
   const fridge = useMemo(() => (lesson ? INGREDIENTS.map(id => ({ item_id: id, qty: 99 }) as api.InvRow) : homeFridge), [lesson, homeFridge, trip]); // eslint-disable-line react-hooks/exhaustive-deps
   const [room, setRoom] = useState<Room>(() => newRoom(me.id));
@@ -61,7 +62,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
     if (res.used?.length && !lesson) {
       const n: Record<string, number> = {};
       res.used.forEach(id => { n[id] = (n[id] ?? 0) + 1; });
-      api.fridgeUse(Object.entries(n).map(([id, k]) => ({ id, n: k }))).then(() => notify('fridge'), e => console.error('fridge', e));
+      api.fridgeUse(Object.entries(n).map(([id, k]) => ({ id, n: k })), fid).then(() => notify('fridge'), e => console.error('fridge', e));
     }
   };
   const send = useGameChannel((variant === 'bakery' ? 'bake' : variant === 'class' ? 'cookclass' : 'cook') as 'cook', me.id, m => {
@@ -376,7 +377,7 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
 
       {panel === 'fridge' && (
         <div className="k-panel">
-          <h4>{lesson ? <>🧺 Rổ nguyên liệu của lớp <small className="muted">· cô giáo phát, lấy thoải mái</small></> : <>🧊 Tủ lạnh chung <small className="muted">· đồ của cả hai, ai cũng lấy được</small></>}</h4>
+          <h4>{lesson ? <>🧺 Rổ nguyên liệu của lớp <small className="muted">· cô giáo phát, lấy thoải mái</small></> : <>{fid === 'bakery' ? '🧁 Tủ nguyên liệu tiệm bánh' : '🧊 Tủ lạnh nhà'} <small className="muted">· riêng của bếp này, đồ của cả hai, ai cũng lấy được</small></>}</h4>
           {!atFridge && <p className="muted small-note">Muốn lấy đồ ra nấu thì đi tới tủ lạnh trong bếp rồi bấm vào tủ nhé.</p>}
           {holdingDish && atFridge && <button className="btn small" onClick={() => { doAct(atFridge[0], atFridge[1], { stash: true }); setPanel(null); }}>📦 Cất món đang cầm vào túi</button>}
           <div className="bag-grid">
@@ -391,13 +392,13 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
                     <i>{atFridge ? (hand ? 'tay đang bận' : 'lấy ra nấu') : ''}</i>
                   </button>
                   {!lesson && <button className="chip" title="Lấy về túi" disabled={n < 1}
-                    onClick={() => api.fridgeTake(r.item_id, 1).then(() => notify('fridge', 'inventory'), toastError)}>↩️ về túi</button>}
+                    onClick={() => api.fridgeTake(r.item_id, 1, fid).then(() => notify('fridge', 'inventory'), toastError)}>↩️ về túi</button>}
                 </div>
               );
             })}
           </div>
           {fridge.every(r => r.qty <= 0) && <p className="muted">Tủ đang trống. Trồng rau, câu cá hoặc mua ở 🐱 Cửa hàng (quầy 🥬 Nguyên liệu) rồi cất vào đây.</p>}
-          {!lesson && <PutBox inventory={inventory} />}
+          {!lesson && <PutBox inventory={inventory} fid={fid} />}
           <button className="btn small ghost" onClick={() => setPanel(null)}>Đóng</button>
         </div>
       )}
@@ -430,22 +431,35 @@ export function KitchenRoom({ me, partner, inventory, date, onLeave, variant = '
   );
 }
 
-/** Cất nguyên liệu trong túi mình vào tủ chung */
-function PutBox({ inventory }: { inventory: api.InvRow[] }) {
-  const rows = inventory.filter(r => INGREDIENTS.includes(r.item_id) && r.qty > 0);
+/** Cất đồ ăn trong túi mình vào tủ của bếp này: chọn món, chọn số lượng (hoặc cất hết) */
+function PutBox({ inventory, fid }: { inventory: api.InvRow[]; fid: api.FridgeId }) {
+  const rows = inventory.filter(r => storable(r.item_id) && r.qty > 0);
   const [busy, setBusy] = useState(false);
+  const [pick, setPick] = useState<string | null>(null);
+  const [n, setN] = useState(1);
+  const sel = rows.find(r => r.item_id === pick);
   const put = (items: { id: string; n: number }[]) => {
     setBusy(true);
-    api.fridgePut(items).then(() => { toast('🧊 Đã cất vào tủ lạnh chung'); notify('fridge', 'inventory'); }, toastError).finally(() => setBusy(false));
+    api.fridgePut(items, fid).then(() => { toast(`🧊 Đã cất vào ${fid === 'bakery' ? 'tủ tiệm bánh' : 'tủ lạnh nhà'}`); notify('fridge', 'inventory'); setPick(null); }, toastError).finally(() => setBusy(false));
   };
-  if (!rows.length) return <p className="muted small-note">Trong túi bạn chưa có nguyên liệu nào để cất.</p>;
+  if (!rows.length) return <p className="muted small-note">Trong túi bạn chưa có đồ ăn nào để cất.</p>;
   return (
     <div className="k-put">
-      <p className="small-note">🎒 Nguyên liệu trong túi bạn — bấm để cất 1 món vào tủ:</p>
+      <p className="small-note">🎒 Đồ ăn trong túi bạn — chọn món rồi chọn số lượng để cất:</p>
       <div className="row wrap">
-        {rows.map(r => <button key={r.item_id} className="chip" disabled={busy} onClick={() => put([{ id: r.item_id, n: 1 }])}>{item(r.item_id).icon} ×{r.qty}</button>)}
+        {rows.map(r => <button key={r.item_id} className={`chip ${pick === r.item_id ? 'on' : ''}`} disabled={busy} title={item(r.item_id).name} onClick={() => { setPick(r.item_id); setN(Math.min(n, r.qty) || 1); }}>{item(r.item_id).icon} ×{r.qty}</button>)}
       </div>
-      <button className="btn small" disabled={busy} onClick={() => put(rows.map(r => ({ id: r.item_id, n: r.qty })))}>📥 Cất hết vào tủ</button>
+      {sel && (
+        <div className="row center k-qty">
+          <b>{item(sel.item_id).icon} {item(sel.item_id).name}</b>
+          <button className="chip" disabled={busy || n <= 1} onClick={() => setN(v => Math.max(1, v - 1))}>−</button>
+          <input type="number" min={1} max={sel.qty} value={n} onChange={e => setN(Math.max(1, Math.min(sel.qty, Math.floor(+e.target.value) || 1)))} />
+          <button className="chip" disabled={busy || n >= sel.qty} onClick={() => setN(v => Math.min(sel.qty, v + 1))}>+</button>
+          <button className="chip" disabled={busy} onClick={() => setN(sel.qty)}>Tất cả ({sel.qty})</button>
+          <button className="btn small" disabled={busy} onClick={() => put([{ id: sel.item_id, n: Math.min(n, sel.qty) }])}>📥 Cất {Math.min(n, sel.qty)}</button>
+        </div>
+      )}
+      <button className="btn small ghost" disabled={busy} onClick={() => { if (confirm('Cất hết đồ ăn trong túi vào tủ này?')) put(rows.map(r => ({ id: r.item_id, n: r.qty }))); }}>📥 Cất hết vào tủ</button>
     </div>
   );
 }

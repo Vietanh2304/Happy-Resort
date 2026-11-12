@@ -19,6 +19,7 @@ import { Spr, Tag, useScale } from './Stage';
 import { Fireworks } from './TripExtras';
 import { FxList } from './TripSpot';
 import { FireworkShow } from './FireworkShow';
+import { InviteBanner } from './InviteBanner';
 import { BOAT_WAIT, BoatRide } from './FairyBoat';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
@@ -42,11 +43,13 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
   const tries = useRef(0);
 
   // ── lên trò chơi (đồng bộ thời điểm bắt đầu để hai người ngồi chung)
+  // xuống trò chơi: hai người đứng hai bên, không chồng lên nhau
+  const seat = JSON.stringify(looks.me) <= JSON.stringify(looks.them) ? -1 : 1;
   const board = (kind: RideKind, at: number) => {
     const act = kind === 'coaster' || kind === 'boat' ? kind : 'spin';
     L.current.update({ act, trip: { i: RIDE_I[kind], at }, dish: null, drink: null });
     if (kind === 'carousel' || kind === 'cups') {
-      const exit = kind === 'carousel' ? { x: RIDES.carousel.x - 30, y: 132 } : { x: RIDES.cups.x + 30, y: 136 };
+      const exit = kind === 'carousel' ? { x: RIDES.carousel.x - 30 + seat * 8, y: 132 } : { x: RIDES.cups.x + 30 + seat * 8, y: 136 };
       setTimeout(() => { const m = L.current.mine; if (m.act === 'spin' && m.trip?.at === at) L.current.update({ act: null, trip: null, pos: exit }); }, SPIN_MS - (Date.now() - at));
     }
   };
@@ -145,11 +148,11 @@ export function FairyContent({ scene, live, partnerHere, looks, go, onAnim, nigh
           {(mine.act === 'coaster' || theirs?.act === 'coaster') && <Tag x={36} y={64} className="bed-bubble">🎢 Tàu đang chạy…</Tag>}
         </>
       )}
-      {invite && <Tag x={128} y={40} className="label invite-chip" onClick={join}>💑 Người ấy rủ đi {RIDE_NAME[invite.kind]} — lên cùng!</Tag>}
-      {myBoat > 0 && <BoatRide at={myBoat} me={looks.me} them={theirs?.act === 'boat' && theirs.trip?.at === myBoat ? looks.them : null} onExit={() => L.current.update({ act: null, trip: null, pos: { x: 92, y: 152 } })} />}
+      {invite && <InviteBanner text={`💑 Người ấy rủ đi ${RIDE_NAME[invite.kind]}`} yes="Lên cùng!" onYes={join} onNo={() => setInvite(null)} />}
+      {myBoat > 0 && <BoatRide at={myBoat} me={looks.me} them={theirs?.act === 'boat' && theirs.trip?.at === myBoat ? looks.them : null} onExit={() => L.current.update({ act: null, trip: null, pos: { x: 92 + seat * 8, y: 152 } })} />}
       {scene === 'trip_fairy_castle' && (mine.act === 'boat' || theirs?.act === 'boat') && <Tag x={84} y={104} className="bed-bubble">🛶 Thuyền đang trôi qua hầm cổ tích…</Tag>}
       {myCoaster > 0 && <CoasterRide at={myCoaster} phase={phase} me={looks.me} them={theirs?.act === 'coaster' && theirs.trip?.at === myCoaster ? looks.them : null}
-        onExit={() => L.current.update({ act: null, trip: null, pos: { x: 40, y: 130 } })} />}
+        onExit={() => L.current.update({ act: null, trip: null, pos: { x: 40 + seat * 8, y: 130 } })} />}
     </>
   );
 }

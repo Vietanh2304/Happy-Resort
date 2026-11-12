@@ -180,10 +180,22 @@ export const sendMessage = (me: Profile, body: string) =>
 export const deleteMessage = (id: string) => run(supabase.from('messages').delete().eq('id', id));
 
 // ───────── Tủ lạnh chung trong bếp ─────────
-export const loadFridge = () => run<InvRow[]>(supabase.from('fridge').select('item_id, qty').gt('qty', 0));
-export const fridgePut = (items: Gift[]) => run(supabase.rpc('fridge_put', { p_items: items }));
-export const fridgeTake = (itemId: string, n = 1) => run(supabase.rpc('fridge_take', { p_item: itemId, p_n: n }));
-export const fridgeUse = (items: Gift[]) => run(supabase.rpc('fridge_use', { p_items: items }));
+// ───────── Tủ lạnh: mỗi bếp một tủ ('home' bếp nhà, 'bakery' tiệm bánh) ─────────
+// Chưa chạy migration 021 (chưa có cột kitchen) thì dùng tạm một tủ chung như cũ.
+export type FridgeId = 'home' | 'bakery';
+const OLD_FRIDGE = /kitchen|p_kitchen|fridge_(put|take|use)|function|schema cache/i;
+async function withKitchen<T>(next: () => Promise<T>, old: () => Promise<T>, kitchen: FridgeId): Promise<T> {
+  try { return await next(); } catch (e) { if (OLD_FRIDGE.test((e as Error).message)) { if (kitchen !== 'home') throw new Error('Cần chạy file supabase/migrations/021_fridge_kitchens.sql để tiệm bánh có tủ riêng'); return old(); } throw e; }
+}
+export const loadFridge = (kitchen: FridgeId = 'home') => withKitchen(
+  () => run<InvRow[]>(supabase.from('fridge').select('item_id, qty').eq('kitchen', kitchen).gt('qty', 0)),
+  () => run<InvRow[]>(supabase.from('fridge').select('item_id, qty').gt('qty', 0)), kitchen);
+export const fridgePut = (items: Gift[], kitchen: FridgeId = 'home') => withKitchen(
+  () => run(supabase.rpc('fridge_put', { p_items: items, p_kitchen: kitchen })), () => run(supabase.rpc('fridge_put', { p_items: items })), kitchen);
+export const fridgeTake = (itemId: string, n = 1, kitchen: FridgeId = 'home') => withKitchen(
+  () => run(supabase.rpc('fridge_take', { p_item: itemId, p_n: n, p_kitchen: kitchen })), () => run(supabase.rpc('fridge_take', { p_item: itemId, p_n: n })), kitchen);
+export const fridgeUse = (items: Gift[], kitchen: FridgeId = 'home') => withKitchen(
+  () => run(supabase.rpc('fridge_use', { p_items: items, p_kitchen: kitchen })), () => run(supabase.rpc('fridge_use', { p_items: items })), kitchen);
 export const craft = (take: Gift[], give: Gift[] = []) => run(supabase.rpc('craft', { p_take: take, p_give: give }));
 
 // ───────── Hũ xu chung ─────────

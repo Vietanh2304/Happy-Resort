@@ -166,7 +166,7 @@ export function CinemaScreen({ rtc, mode, bubbles, onReact, yt, onYt }: { rtc: R
   );
 }
 
-/** Camera ở nhà hàng: hình người ấy hiện trong khung vàng ngay trên ghế đối diện, hình mình nhỏ ở góc (dùng chung cuộc gọi) */
+/** Camera ở nhà hàng: hình người ấy hiện trong khung vàng cao phía trên ghế đối diện (không che bóng chat), hình mình nhỏ ở góc (dùng chung cuộc gọi) */
 export function DinnerTiles({ remote, local, firstSeat }: { remote: MediaStream | null; local: MediaStream | null; firstSeat: boolean }) {
   const s = useScale();
   const [left, right] = SEATS.restaurant!;
@@ -174,12 +174,12 @@ export function DinnerTiles({ remote, local, firstSeat }: { remote: MediaStream 
   return (
     <>
       {remote && (
-        <div className="dinner-frame" style={{ left: (other.x - 26) * s, top: 44 * s, width: 52 * s, height: 40 * s }}>
+        <div className="dinner-frame" style={{ left: (other.x - 23) * s, top: 20 * s, width: 46 * s, height: 36 * s }}>
           <StreamVideo stream={remote} muted className="tile-remote" />
         </div>
       )}
       {local && (
-        <div className="dinner-frame small" style={{ left: (mine.x - 14) * s, top: 66 * s, width: 28 * s, height: 22 * s }}>
+        <div className="dinner-frame small" style={{ left: (mine.x - 13) * s, top: 44 * s, width: 26 * s, height: 20 * s }}>
           <StreamVideo stream={local} muted className="tile-local" />
         </div>
       )}

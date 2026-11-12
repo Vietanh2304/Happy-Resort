@@ -52,7 +52,7 @@ export interface KRecipe { id: string; needs: string[]; m: Method }
 const BLEND = new Set(['grape_juice', 'watermelon_juice', 'peach_tea']);
 const RAW = new Set(['salad', 'sushi']);
 /** Nguyên liệu không cần thái */
-export const NOCUT = new Set(['rice', 'grape', 'shrimp', 'corn']);
+export const NOCUT = new Set(['rice', 'grape', 'shrimp', 'corn', 'egg', 'duck_egg', 'milk', 'cheese', 'butter', 'honey']);
 /** Tiệm bánh: bơ và trứng phải đem ra bàn nhào cùng bột; sữa, mật ong, phô mai, dâu cho thẳng vào */
 const NOKNEAD = new Set(['milk', 'honey', 'cheese', 'strawberry']);
 /** Lớp nấu ăn du lịch: những thứ cho thẳng vào nồi/máy xay, không cần thái */
@@ -61,6 +61,12 @@ export const needsCut = (id: string) => (variant === 'bakery' ? !NOKNEAD.has(id)
 const HOME_RECIPES: KRecipe[] = content.recipes
   .filter(r => item(r.id).kind === 'dish' && r.id !== 'bouquet')
   .map(r => ({ id: r.id, needs: r.needs.flatMap(n => Array<string>(n.n).fill(n.id)), m: BLEND.has(r.id) ? 'L' : RAW.has(r.id) ? 'plate' : 'S' }));
+/** Món bếp nhà dùng đồ nông trại (trứng gà, trứng vịt, sữa, phô mai) */
+const FARM_HOME: KRecipe[] = [
+  { id: 'fried_egg', needs: ['egg'], m: 'S' }, { id: 'omelette', needs: ['egg', 'egg', 'cheese'], m: 'S' },
+  { id: 'flan', needs: ['egg', 'egg', 'milk'], m: 'S' }, { id: 'salted_egg', needs: ['duck_egg', 'duck_egg'], m: 'S' },
+].filter(r => item(r.id).kind === 'dish' && !HOME_RECIPES.some(h => h.id === r.id)) as KRecipe[];
+HOME_RECIPES.push(...FARM_HOME);
 const BAKERY_RECIPES: KRecipe[] = [
   { id: 'cookie', needs: ['butter', 'egg'], m: 'S' }, { id: 'croissant', needs: ['butter', 'milk'], m: 'S' },
   { id: 'cupcake', needs: ['butter', 'egg', 'milk'], m: 'S' }, { id: 'honey_cake', needs: ['egg', 'egg', 'honey', 'milk'], m: 'S' },
@@ -94,6 +100,11 @@ export function setKitchenVariant(v: 'home' | 'bakery' | 'class', trip = '') {
   INGREDIENTS = [...new Set(KRECIPES.flatMap(r => r.needs))];
   Object.assign(TILE_NAME, v === 'bakery' ? BAKERY_NAMES : HOME_NAMES);
 }
+/** Đồ ăn được cất vào tủ (bất kỳ tủ nào): mọi nguyên liệu của mọi bếp + rau củ + cá */
+export const STORABLE = new Set<string>([...HOME_RECIPES, ...BAKERY_RECIPES, ...Object.values(CLASS_RECIPES).flat()].flatMap(r => r.needs));
+export const storable = (id: string) => STORABLE.has(id) || ['crop', 'fish'].includes(item(id).kind);
+/** Tủ của bếp đang ở */
+export const fridgeOf = (v: 'home' | 'bakery' | 'class') => (v === 'bakery' ? 'bakery' : 'home') as 'home' | 'bakery';
 export const METHOD_LABEL: Record<Method, string> = { S: '🔥 nấu trên bếp', L: '🥤 cho vào máy xay', plate: '🍽️ bày thẳng ra đĩa' };
 
 // ───────── Đồ vật ─────────

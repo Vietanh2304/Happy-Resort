@@ -14,7 +14,9 @@ import type { Pt } from '../lib/world';
 import { Spr, Tag, useScale } from './Stage';
 import { onEvent, sendEvent } from '../lib/realtime';
 import { Follower } from './Wander';
-import { POT_WAIT, PotteryRoom, potteryStallSprite } from './Pottery';
+import { POT_JOIN, PotteryRoom, potteryStallSprite } from './Pottery';
+import { BASKET_JOIN, BasketRide } from './Basket';
+import { InviteBanner } from './InviteBanner';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
 
@@ -51,7 +53,22 @@ export function FxList({ fx, scene, night }: { fx: Fx[]; scene: string; night: b
 }
 
 
-const RIDE_MS = 9000;
+export const RIDE_MS = 9000;
+/** Hoạt động hai người vào chung một màn riêng (xưởng gốm, thuyền thúng): trả xu nhận quà, rủ nhau, vào muộn được trong `join` ms */
+const SESS = {
+  pottery: { item: 'ha_vase', join: POT_JOIN, ask: (p: number) => `🏺 Học nặn gốm ở xưởng Thanh Hà (${p} xu)? Nặn xong mang bình về nhà nha`, joinAsk: (p: number) => `🏺 Vào xưởng gốm nặn cùng người ấy (${p} xu)?`,
+    invite: '🏺 Người ấy rủ vào xưởng nặn gốm Thanh Hà', yes: 'Vào ngồi cạnh!', late: 'Lớp nặn gốm bắt đầu mất rồi — lần sau nha' },
+  basket: { item: 'ha_leaf_grasshopper', join: BASKET_JOIN, ask: (p: number) => `🧺 Đi thuyền thúng rừng dừa (${p} xu)? Có câu cua, múa thúng, quăng chài, đan cào cào lá dừa mang về`, joinAsk: (p: number) => `🧺 Lên thúng cùng người ấy (${p} xu)?`,
+    invite: '🧺 Người ấy rủ đi thuyền thúng rừng dừa Bảy Mẫu', yes: 'Lên thúng cùng!', late: 'Thúng rời bến mất rồi — lần sau nha' },
+};
+type SessK = keyof typeof SESS;
+/** Vị trí xe/thuyền đang chở mình (để camera bám theo, chụp ảnh được) */
+export function riderAt(spot: SpotDef, trip: { i: number; at: number }, now: number): Pt | null {
+  const a = spot.acts[trip.i]; if (!a || a.k !== 'ride') return null;
+  const veh = vehicleSprite(a.spr), ltr = a.x < 128, x0 = ltr ? 6 : 250 - veh.w, dx = (ltr ? 1 : -1) * (244 - veh.w);
+  const p = Math.max(0, Math.min(1, (now - trip.at) / RIDE_MS));
+  return { x: x0 + veh.w / 2 + dx * p, y: a.ry };
+}
 const DRINKS = ['tra_sua', 'honey_tea', 'ca_phe_sua', 'peach_tea'];
 const KEEP = ['clock', 'books', 'lantern', 'rose_bloom', 'chocolate', 'cheese'];
 
@@ -98,7 +115,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   const [paintN, setPaintN] = useState(0);
   const [knots, setKnots] = useState<{ x: number; y: number }[]>([]);
   const [join, setJoin] = useState<{ i: number; at: number } | null>(null);
-  const [pot, setPot] = useState<{ i: number; at: number } | null>(null);
+  const [sess, setSess] = useState<{ i: number; at: number; k: SessK } | null>(null);
   const [doves, setDoves] = useState<{ x: number; y: number; n: number; dx: number }[]>([]);
   const L = useRef(live); L.current = live;
   const mine = live.mine, theirs = partnerHere ? live.theirs : null;
@@ -148,7 +165,9 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
   const beside = (p: Pt, side: number): Pt => side ? { x: Math.max(spot.walk.x0, Math.min(spot.walk.x1, p.x + side * 12)), y: p.y } : p;
   /** side: 0 = tự làm, 1 = chạy tới làm cùng người ấy (đứng lệch sang bên cạnh) */
   const doAct = (a: Act, i: number, side = 0) => { const to = (a.k === 'do' || a.k === 'park') && a.at ? a.at : near(a), th = L.current.theirs;
-    if (!side && a.k !== 'ride' && a.k !== 'park' && th && partnerHere && Math.abs(th.pos.x - to.x) < 10 && Math.abs(th.pos.y - to.y) < 8) side = th.pos.x <= to.x ? 1 : -1;
+    if (!side && a.k !== 'ride' && th && partnerHere && Math.abs(th.pos.x - to.x) < 10 && Math.abs(th.pos.y - to.y) < 8) side = th.pos.x <= to.x ? 1 : -1;
+    // ngâm khoáng / đắp mặt nạ: người ấy đã ở trong hồ chỗ đó thì ngồi lệch sang bên
+    if (!side && a.k === 'do' && (a.do === 'soak' || a.do === 'mask') && th && partnerHere && (th.act === 'soak' || th.act === 'mask') && Math.abs(th.pos.x - a.x) < 14) side = th.pos.x <= a.x ? 1 : -1;
     go(beside(to, side), () => {
     const at = L.current.mine.pos;
     if (!side && together(a) && L.current.theirs) sendEvent('trip-do', { scene, i, at: Date.now() });
@@ -164,11 +183,15 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       live.say(`${it.icon} Ngon quá!`);
     });
     if (a.k === 'photo') return onCamera();
-    if (a.k === 'pottery') return void run(async () => {
-      if (!confirm(`🏺 Học nặn gốm ở xưởng Thanh Hà (${a.price} xu)? Nặn xong mang bình về nhà nha`)) return;
-      await api.buyItem('ha_vase', a.price); notify('inventory', 'profiles');
-      const t0 = Date.now(); L.current.update({ act: 'pottery', trip: { i, at: t0 }, dish: null, drink: null });
-      if (L.current.theirs && partnerHere) sendEvent('trip-pottery', { scene, i, at: t0 });
+    if (a.k === 'pottery' || a.k === 'basket') return void run(async () => {
+      const S = SESS[a.k];
+      if (!confirm(S.ask(a.price))) return;
+      await api.buyItem(S.item, a.price); notify('inventory', 'profiles');
+      // người ấy đang ở trong rồi → vào cùng luôn, không mở phiên riêng
+      const th = partnerHere ? L.current.theirs : null;
+      if (th?.act === a.k && th.trip && Date.now() - th.trip.at < S.join) { setSess(null); L.current.update({ act: a.k, trip: { i, at: th.trip.at }, dish: null, drink: null }); return; }
+      const t0 = Date.now(); L.current.update({ act: a.k, trip: { i, at: t0 }, dish: null, drink: null });
+      if (th) sendEvent('trip-session', { scene, i, at: t0, k: a.k });
     });
     if (a.k === 'park') return void window.dispatchEvent(new CustomEvent('fairy-act', { detail: { ride: a.ride, i } }));
     if (a.k === 'fortune') {
@@ -206,7 +229,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       case 'cross': go({ x: spot.walk.x0 + 14, y: 148 }, () => go({ x: spot.walk.x1 - 14, y: 180 }, () => { anim('cheer'); pop(L.current.mine.pos.x, L.current.mine.pos.y - 34, '🎉', 2); })); break;
       case 'love': if (theirs) { onKiss(); pop(at.x, at.y - 36, '💕', 3); } else { hold({ act: 'gaze' }, 3500); setTimeout(() => { hold({ act: 'selfie' }, 3500); live.say('🤳 Chụp tự sướng với tháp gửi người ấy nè'); setTimeout(() => setFlash(Date.now()), 1800); }, 3500); } break;
       case 'tent': live.update({ act: 'tent', pos: { x: 66, y: 176 }, dish: null, drink: null }); break;
-      case 'soak': case 'mask': live.update({ act: a.do, pos: { x: a.x, y: a.y - 6 }, dish: null, drink: null }); break;
+      case 'soak': case 'mask': live.update({ act: a.do, pos: { x: a.x + side * 14, y: a.y - 6 }, dish: null, drink: null }); break;
     }
   }); };
   // Người ấy rủ đi thuyền / đạp vịt / cáp treo → đồng ý thì lên ngồi chung
@@ -222,17 +245,18 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     setJoin({ i: d.i, at: d.at });
     setTimeout(() => setJoin(v => (v && v.at === d.at ? null : v)), 9000);
   }), [scene, spot]);
-  // Người ấy rủ vào xưởng gốm → bấm là vào ngồi bàn xoay bên cạnh
-  useEffect(() => onEvent('trip-pottery', (d: { scene: string; i: number; at: number }) => {
-    if (d.scene !== scene || L.current.mine.act === 'pottery') return;
-    setPot({ i: d.i, at: d.at }); setTimeout(() => setPot(v => (v && v.at === d.at ? null : v)), POT_WAIT - 500);
+  // Người ấy rủ vào xưởng gốm / lên thuyền thúng → bấm là vào cùng
+  useEffect(() => onEvent('trip-session', (d: { scene: string; i: number; at: number; k: SessK }) => {
+    if (d.scene !== scene || !SESS[d.k] || L.current.mine.act === d.k) return;
+    setSess({ i: d.i, at: d.at, k: d.k }); setTimeout(() => setSess(v => (v && v.at === d.at ? null : v)), SESS[d.k].join - 500);
   }), [scene]);
-  const joinPot = () => { const d = pot; setPot(null); const a = d && spot.acts[d.i]; if (!d || !a || a.k !== 'pottery') return;
+  const joinSess = () => { const d = sess; setSess(null); const a = d && spot.acts[d.i]; if (!d || !a || a.k !== d.k) return;
+    const S = SESS[d.k];
     void run(async () => {
-      if (!confirm(`🏺 Vào xưởng gốm nặn cùng người ấy (${a.price} xu)?`)) return;
-      if (Date.now() - d.at > POT_WAIT) return toastError(new Error('Lớp nặn gốm bắt đầu mất rồi — lần sau nha'));
-      await api.buyItem('ha_vase', a.price); notify('inventory', 'profiles');
-      L.current.update({ act: 'pottery', trip: { i: d.i, at: d.at }, dish: null, drink: null });
+      if (!confirm(S.joinAsk(a.price))) return;
+      if (Date.now() - d.at > S.join) return toastError(new Error(S.late));
+      await api.buyItem(S.item, a.price); notify('inventory', 'profiles');
+      L.current.update({ act: d.k, trip: { i: d.i, at: d.at }, dish: null, drink: null });
     });
   };
   const joinRide = () => {
@@ -268,11 +292,12 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       {[mine, theirs].map((w, k) => (w?.act === 'soak' || w?.act === 'mask') && <i key={k} className="fx-soak" style={{ left: (w.pos.x - 11) * s, top: (w.pos.y - 10) * s, width: 22 * s, height: 11 * s, zIndex: Math.round(w.pos.y) + 2 }} />)}
       {soaking && <Tag x={mine.pos.x} y={mine.pos.y + 4} className="label" onClick={() => live.update({ act: null, pos: { x: mine.pos.x, y: spot.walk.y0 + 4 } })}>🚶 Lên bờ</Tag>}
       {tent && tented > 0 && <Tag x={tent.x + 6} y={tent.y - 6} className="bed-bubble" onClick={() => mine.act === 'tent' && live.update({ act: null, pos: near(tent) })}>{tented > 1 ? '💑 Hai đứa trong lều' : '⛺ Có người trong lều'}{mine.act === 'tent' ? ' · bấm để ra' : ''}</Tag>}
-      {invite && (() => { const a = spot.acts[invite.i]; return a ? <Tag x={a.x} y={Math.max(20, a.y - 30)} className="label invite-chip" onClick={joinRide}>💑 Người ấy rủ {lbl(a).replace(/^\S+\s/, '')} — lên cùng!</Tag> : null; })()}
-      {join && !invite && (() => { const a = spot.acts[join.i]; return a ? <Tag x={a.x} y={Math.max(20, a.y - 16)} className="label invite-chip" onClick={() => doAct(a, join.i, 1)}>💑 Người ấy đang {lbl(a).replace(/^\S+\s/, '')} — làm cùng!</Tag> : null; })()}
+      {invite && (() => { const a = spot.acts[invite.i]; return a ? <InviteBanner text={`💑 Người ấy rủ ${lbl(a).replace(/^\S+\s/, '')}`} yes="Lên cùng!" onYes={joinRide} onNo={() => setInvite(null)} /> : null; })()}
+      {join && !invite && (() => { const a = spot.acts[join.i]; return a ? <InviteBanner text={`💑 Người ấy đang ${lbl(a).replace(/^\S+\s/, '')}`} yes="Làm cùng!" onYes={() => doAct(a, join.i, 1)} onNo={() => setJoin(null)} /> : null; })()}
       {scene === 'trip_hoian_lantern' && <Spr sprite={potteryStallSprite()} x={100} y={152} z={152} />}
-      {mine.act === 'pottery' && mine.trip && <PotteryRoom at={mine.trip.at} me={looks.me} them={theirs?.act === 'pottery' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
-      {pot && (() => { const a = spot.acts[pot.i]; return a ? <Tag x={a.x} y={Math.max(20, a.y - 16)} className="label invite-chip" onClick={joinPot}>💑 Người ấy rủ nặn gốm — vào cùng!</Tag> : null; })()}
+      {mine.act === 'pottery' && mine.trip && <PotteryRoom at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'pottery' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
+      {mine.act === 'basket' && mine.trip && <BasketRide at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'basket' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
+      {sess && spot.acts[sess.i] && <InviteBanner text={SESS[sess.k].invite} yes={SESS[sess.k].yes} onYes={joinSess} onNo={() => setSess(null)} />}
       {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className={`label ${a.k !== 'park' && Math.abs(mine.pos.x - a.x) < 26 && mine.pos.y - a.y > -8 && mine.pos.y - a.y < 52 ? 'dim' : ''}`} onClick={() => doAct(a, i)}>{lbl(a)}</Tag>)}
     </>
   );
