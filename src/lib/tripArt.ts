@@ -155,7 +155,41 @@ const cableKey = () => makeSprite('tv:tw_cable_keychain', 12, 16, p => {
   p.rect(1, 6, 10, 9, '#c8303a'); p.rect(2, 8, 8, 4, '#bfe4ff'); p.px(3, 8, '#ffffff'); p.rect(1, 14, 10, 1, '#8a1a20'); p.rect(3, 13, 6, 1, '#f6c445');
 }, '#2a1a1a');
 
+
+// ── Quà từ các hoạt động hai người
+const capBalloon = () => makeSprite('tv:cap_balloon', 14, 22, p => {
+  const C = ['#e8304a', '#f6c445', '#ffffff', '#f6c445', '#e8304a'];
+  for (let y = 0; y < 12; y++) { const r = Math.round(Math.sqrt(Math.max(0, 1 - ((y - 6) / 6.5) ** 2)) * 6); for (let x = -r; x < r; x++) p.px(7 + x, y, C[Math.min(4, Math.floor((x + r) / (2 * r) * 5))]); }
+  for (let y = 12; y < 15; y++) { const r = 4 - (y - 12); p.rect(7 - r, y, r * 2, 1, '#e8304a'); }
+  p.px(4, 15, '#3a2a2a'); p.px(9, 15, '#3a2a2a'); p.px(4, 16, '#3a2a2a'); p.px(9, 16, '#3a2a2a'); p.rect(4, 17, 6, 3, '#a8743a'); p.rect(4, 17, 6, 1, '#c88a4a'); p.px(3, 3, '#ffffff'); p.rect(3, 20, 8, 2, '#8a8a92');
+}, '#3a1a1a');
+const glowJar = () => makeSprite('tv:mv_glow_jar', 12, 16, p => {
+  p.rect(3, 0, 6, 2, '#c8a060'); p.rect(2, 2, 8, 1, '#e8e0d0'); p.rect(1, 3, 10, 12, '#bfe8f0'); p.rect(2, 7, 8, 7, '#1a4a8a');
+  for (const [x, y] of [[3, 8], [6, 9], [8, 11], [4, 12], [7, 13], [5, 10]] as const) p.px(x, y, '#7afff0'); p.px(2, 4, '#ffffff'); p.px(2, 5, '#ffffff'); p.rect(1, 15, 10, 1, '#8aa8b8');
+}, '#0a2a4a');
+const snowGlobe = () => makeSprite('tv:swiss_snowglobe', 14, 16, p => {
+  for (let y = 0; y < 12; y++) { const r = Math.round(Math.sqrt(Math.max(0, 1 - ((y - 6) / 6) ** 2)) * 6); p.rect(7 - r, y, r * 2, 1, y < 8 ? '#cfeaff' : '#ffffff'); }
+  for (let k = 0; k < 4; k++) p.rect(7 - k, 3 + k * 1.5, k * 2 + 1, 1.5, '#2a7a4a'); p.px(7, 2, '#ffd84a'); p.px(4, 4, '#ffffff'); p.px(10, 6, '#ffffff'); p.px(3, 8, '#ffffff'); p.px(2, 3, '#ffffff');
+  p.rect(2, 12, 10, 3, '#a8303a'); p.rect(2, 12, 10, 1, '#f6c445'); p.rect(1, 15, 12, 1, '#6a1a20');
+}, '#2a3a5a');
+const iceLantern = () => makeSprite('tv:hb_ice_lantern', 12, 16, p => {
+  p.rect(1, 3, 10, 12, '#a8d8ff'); for (let y = 3; y < 15; y += 3) p.rect(1, y, 10, 1, '#e8f6ff'); p.rect(5, 3, 1, 12, '#e8f6ff');
+  p.rect(3, 6, 6, 7, '#ff8ad8'); p.rect(4, 7, 4, 4, '#fff0c0'); p.rect(2, 1, 8, 2, '#d8f0ff'); p.rect(4, 0, 4, 1, '#ffffff'); p.rect(0, 15, 12, 1, '#8ab8d8');
+}, '#1a3a5a');
+const silkLantern = () => makeSprite('tv:ha_silk_lantern', 12, 20, p => {
+  p.px(6, 0, '#6a3a12'); p.px(6, 1, '#6a3a12'); p.rect(4, 2, 4, 1, '#6a3a12');
+  for (let y = 0; y < 12; y++) { const r = Math.round(Math.sqrt(Math.max(0, 1 - ((y - 6) / 6.2) ** 2)) * 5); p.rect(6 - r, 3 + y, r * 2, 1, '#e8303a'); p.px(6 - r, 3 + y, '#b8202a'); }
+  for (const [x, y] of [[4, 7], [7, 9], [5, 11]] as const) { p.px(x, y, '#ffd84a'); p.px(x + 1, y, '#ffd84a'); } p.rect(4, 15, 4, 1, '#6a3a12'); for (let x = 4; x < 8; x++) p.rect(x, 16, 1, 3 + (x % 2), '#f6c445'); p.px(3, 6, '#ff8a8a');
+}, '#3a0a0a');
+const indigoSilk = () => makeSprite('tv:ha_indigo_silk', 18, 20, p => {
+  p.rect(0, 0, 18, 2, '#8a5a2a'); p.rect(2, 2, 14, 17, '#1e2e8a'); p.rect(2, 2, 14, 1, '#2a3ea8');
+  for (const [cx, cy] of [[6, 6], [12, 7], [9, 11], [5, 15], [13, 15]] as const) { p.px(cx, cy, '#e8eeff'); p.px(cx - 1, cy - 1, '#a8b8f0'); p.px(cx + 1, cy - 1, '#a8b8f0'); p.px(cx - 1, cy + 1, '#a8b8f0'); p.px(cx + 1, cy + 1, '#a8b8f0'); }
+  for (let x = 2; x < 16; x += 2) p.px(x, 19, '#1e2e8a');
+}, '#0a0a3a');
+
 export const TRIP_ART: Record<string, Art> = {
+  cap_balloon: { place: 'any', sprite: capBalloon }, mv_glow_jar: { place: 'any', sprite: glowJar, glow: true }, swiss_snowglobe: { place: 'any', sprite: snowGlobe },
+  hb_ice_lantern: { place: 'any', sprite: iceLantern, glow: true }, ha_silk_lantern: { place: 'any', sprite: silkLantern, glow: true }, ha_indigo_silk: { place: 'wall', sprite: indigoSilk },
   ha_vase: { place: 'any', sprite: haVase }, tw_cable_keychain: { place: 'any', sprite: cableKey }, ha_leaf_grasshopper: { place: 'any', sprite: leafHopper },
   tw_sky_lantern: { place: 'any', sprite: skyLantern, glow: true }, tw_rainbow_art: { place: 'wall', sprite: rainbowArt },
   kr_maple_frame: { place: 'wall', sprite: mapleFrame }, kr_hanbok_doll: { place: 'any', sprite: hanbokDoll },

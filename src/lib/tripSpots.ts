@@ -35,6 +35,7 @@ export type Act =
   | { k: 'fortune'; x: number; y: number; label: string }
   | { k: 'ride'; x: number; y: number; label: string; spr: MiniId; ry: number; say: string }
   | { k: 'float'; x: number; y: number; label: string; ry: number }
+  | { k: 'duo'; x: number; y: number; s: string; label: string }
   | { k: 'pottery' | 'basket' | 'cable' | 'kimchi'; x: number; y: number; label: string; price: number }
   | { k: 'park'; x: number; y: number; label: string; ride: ParkAct; at?: { x: number; y: number } }
   | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind; res?: { icon: string; x: number; y: number }; outfit?: number; at?: { x: number; y: number } };
@@ -795,7 +796,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
     trip: 'taichung', id: 'fengjia', name: 'Chợ đêm Phùng Giáp', icon: '🏮', at: 96, walk: W(128), day: ['#7ab8e8', '#e0f0ff'],
     draw: drawFengjia,
     fx: [{ k: 'steam', x: 40, y: 100, n: 3 }, { k: 'steam', x: 136, y: 100, n: 3 }, { k: 'steam', x: 200, y: 100, n: 2 }, { k: 'glow', x: 128, y: 110, r: 120, c: '#ffb04a', night: true }],
-    acts: [buy(30, 136, 'tra_sua', 7, '🧋 Trà sữa trân châu'), buy(110, 136, 'squid_bbq', 11, '🦑 Mực nướng'), buy(190, 136, 'keo_deo', 5, '🍬 Kẹo dẻo'), ph(128, 172), buy(220, 170, 'fried_shrimp', 10, '🍗 Gà rán khổng lồ')],
+    acts: [buy(30, 136, 'tra_sua', 7, '🧋 Trà sữa trân châu'), buy(110, 136, 'squid_bbq', 11, '🦑 Mực nướng'), buy(190, 136, 'keo_deo', 5, '🍬 Kẹo dẻo'), ph(128, 172), buy(220, 170, 'fried_shrimp', 10, '🍗 Gà rán khổng lồ'), { k: 'duo', x: 166, y: 108, s: 'skylantern', label: '🏮 Thả đèn trời Bình Khê' }],
     lines: ['Thơm quá trời!', 'Thử đậu hũ thối không?', 'Đông vui ghê', 'Trà sữa ở đây ngon nhất', 'Mua thêm xiên nữa đi'],
   },
   trip_taichung_sunmoon: {
@@ -841,14 +842,14 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
     trip: 'hoian', id: 'lantern', name: 'Phố đèn lồng & Chùa Cầu', icon: '🌉', at: 40, walk: W(130), day: ['#f6b878', '#ffe8b8'],
     draw: drawHoianLantern,
     fx: [{ k: 'sway', x: 20, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 60, y: 86, c: '#f6c445', big: true }, { k: 'sway', x: 100, y: 86, c: '#e8443a', big: true }, { k: 'sway', x: 186, y: 86, c: '#f59ab3', big: true }, { k: 'sway', x: 226, y: 86, c: '#e8443a', big: true }, { k: 'shim', x: 0, y: 104, w: 256, h: 10, n: 8 }],
-    acts: [buy(220, 160, 'lantern', 10, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 5, '🥖 Bánh mì'), ph(148, 124), { k: 'pottery', x: 100, y: 118, label: '🏺 Làm gốm Thanh Hà', price: 20 }, { ...say(130, 170, '👗 May áo dài', 'Áo dài may xong rồi, mặc vào xinh quá trời 👗', 'dress'), outfit: 12 }],
+    acts: [buy(220, 160, 'lantern', 10, '🏮 Mua đèn lồng'), buy(60, 150, 'banh_mi', 5, '🥖 Bánh mì'), ph(148, 124), { k: 'pottery', x: 100, y: 118, label: '🏺 Làm gốm Thanh Hà', price: 20 }, { k: 'duo', x: 196, y: 112, s: 'lanternmake', label: '🏮 Làm đèn lồng lụa' }, { ...say(130, 170, '👗 May áo dài', 'Áo dài may xong rồi, mặc vào xinh quá trời 👗', 'dress'), outfit: 12 }],
     lines: ['Đèn lồng đẹp quá', 'Phố cổ yên bình ghê', 'Cầu này trên tờ 20 nghìn đó', 'Ăn cao lầu chưa?', 'Chụp áo dài đi'],
   },
   trip_hoian_river: {
     trip: 'hoian', id: 'river', name: 'Sông Hoài', icon: '🪷', at: 128, walk: W(154), day: ['#f0a870', '#ffe0b0'],
     draw: drawHoianRiver,
     fx: [{ k: 'shim', x: 0, y: 76, w: 256, h: 72, n: 30, c: '#ffe0a0' }, { k: 'move', spr: 'sampan', x: 30, y: 124, dx: 180, dur: 22 }, { k: 'move', spr: 'sampan', x: 220, y: 100, dx: -160, dur: 26 }, { k: 'glow', x: 128, y: 40, r: 90, c: '#ffa040', night: true }],
-    acts: [{ k: 'float', x: 120, y: 160, label: '🪷 Thả hoa đăng', ry: 146 }, { k: 'ride', x: 200, y: 160, label: '🛶 Đi thuyền sông Hoài', spr: 'sampan', ry: 130, say: 'Chú lái thuyền chèo chậm rãi, đèn lồng soi bóng lung linh 🏮' }, buy(46, 176, 'banh_trang', 5, '🫓 Bánh tráng nướng'), ph(140, 182)],
+    acts: [{ k: 'float', x: 120, y: 160, label: '🪷 Thả hoa đăng', ry: 146 }, { k: 'ride', x: 200, y: 160, label: '🛶 Đi thuyền sông Hoài', spr: 'sampan', ry: 130, say: 'Chú lái thuyền chèo chậm rãi, đèn lồng soi bóng lung linh 🏮' }, buy(46, 176, 'banh_trang', 5, '🫓 Bánh tráng nướng'), ph(140, 182), { k: 'duo', x: 56, y: 126, s: 'silk', label: '🧵 Dệt lụa nhuộm chàm' }],
     lines: ['Thả đèn ước đi', 'Đi thuyền không em?', 'Lung linh quá', 'Ước gì cũng thành 🪷', 'Mua hoa đăng đi'],
   },
   trip_hoian_coconut: {
@@ -956,14 +957,14 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
     trip: 'swiss', id: 'station', name: 'Ga tàu núi', icon: '🚂', at: 60, walk: W(140), day: ['#70b0f0', '#e8f4ff'],
     draw: drawStation,
     fx: [{ k: 'move', spr: 'train', x: -80, y: 136, dx: 420, dur: 16, loop: true }, { k: 'fall', n: 10, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 10, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), { ...say(220, 170, '🐄 Bò sữa đeo chuông', 'Vuốt ve chú bò, chuông kêu leng keng~ 🐄', 'cow'), at: { x: 152, y: 176 } }],
+    acts: [{ k: 'ride', x: 160, y: 128, label: '🚂 Lên tàu đỏ', spr: 'train', ry: 136, say: 'Tàu Glacier Express leo dốc qua cầu đá, tuyết trắng hai bên cửa sổ 🚂' }, buy(60, 128, 'chocolate', 10, '🍫 Sô-cô-la Thuỵ Sĩ'), ph(128, 176), { ...say(220, 170, '🐄 Bò sữa đeo chuông', 'Vuốt ve chú bò, chuông kêu leng keng~ 🐄', 'cow'), at: { x: 152, y: 176 } }, { k: 'duo', x: 232, y: 118, s: 'skate', label: '⛸️ Chợ Giáng sinh · trượt băng' }],
     lines: ['Tàu tới rồi!', 'Núi tuyết đẹp quá', 'Grüezi!', 'Lạnh ghê', 'Uống sô-cô-la nóng đi'],
   },
   trip_swiss_chalet: {
     trip: 'swiss', id: 'chalet', name: 'Làng chalet bên hồ', icon: '🏠', at: 196, walk: W(150), day: ['#78b8f0', '#eef6ff'],
     draw: drawChalet,
     fx: [{ k: 'shim', x: 0, y: 84, w: 256, h: 30, n: 16 }, { k: 'move', spr: 'swan', x: 30, y: 108, dx: 60, dur: 18 }, { k: 'move', spr: 'boat', x: 200, y: 100, dx: -80, dur: 22 }, { k: 'steam', x: 44, y: 102, n: 2 }, { k: 'steam', x: 106, y: 102, n: 2 }, { k: 'steam', x: 168, y: 102, n: 2 }, { k: 'fall', n: 8, c: ['#ffffff'], size: 2, slow: true }],
-    acts: [{ k: 'ride', x: 124, y: 126, label: '⛵ Thuyền dạo hồ', spr: 'boat', ry: 108, say: 'Thuyền trôi trên hồ gương, núi tuyết in bóng dưới nước 🏔️' }, buy(40, 160, 'cheese', 7, '🫕 Phô mai fondue'), buy(200, 160, 'chocolate', 10, '☕ Sô-cô-la nóng'), ph(128, 180)],
+    acts: [{ k: 'ride', x: 124, y: 126, label: '⛵ Thuyền dạo hồ', spr: 'boat', ry: 108, say: 'Thuyền trôi trên hồ gương, núi tuyết in bóng dưới nước 🏔️' }, buy(40, 160, 'cheese', 7, '🫕 Phô mai fondue'), buy(200, 160, 'chocolate', 10, '☕ Sô-cô-la nóng'), ph(128, 180), { k: 'duo', x: 236, y: 124, s: 'choco', label: '🍫 Làm socola trái tim' }],
     lines: ['Nhà gỗ xinh quá', 'Hồ như gương vậy', 'Ăn fondue không?', 'Muốn ở đây luôn', 'Hít thở khí núi nào'],
   },
 

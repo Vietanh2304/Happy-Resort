@@ -189,6 +189,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       live.say(`${it.icon} Ngon quá!`);
     });
     if (a.k === 'photo') return onCamera();
+    if (a.k === 'duo') return void window.dispatchEvent(new CustomEvent('duo-start', { detail: a.s }));
     if (a.k === 'pottery' || a.k === 'basket' || a.k === 'cable' || a.k === 'kimchi') return void run(async () => {
       const S = SESS[a.k];
       if (!confirm(S.ask(a.price))) return;

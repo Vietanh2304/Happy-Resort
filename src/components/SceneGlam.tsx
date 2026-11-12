@@ -14,7 +14,8 @@ const mix = (a: string, b: string, t: number) => { const A = hx(a), B = hx(b); r
 const rr = (i: number, k: number) => ((Math.sin(i * 12.9898 + k * 78.233) * 43758.5453) % 1 + 1) % 1;
 
 /** canvas phủ cả cảnh, vẽ lại ~30 khung/giây; độ phân giải bám theo màn hình để nét không nhoè */
-function Glam({ z, draw, fps = 30 }: { z: number; draw: (c: Ctx, t: number, K: number) => void; fps?: number }) {
+function Glam({ z, draw, fps = 30, box = [0, 0, W, H] }: { z: number; draw: (c: Ctx, t: number, K: number) => void; fps?: number; box?: [number, number, number, number] }) {
+  const [bx, by, bw, bh] = box;
   const s = useScale();
   const K = Math.max(2, Math.min(6, Math.round(s * (window.devicePixelRatio || 1))));
   const ref = useRef<HTMLCanvasElement>(null);
@@ -25,13 +26,13 @@ function Glam({ z, draw, fps = 30 }: { z: number; draw: (c: Ctx, t: number, K: n
     const f = (now: number) => {
       raf = requestAnimationFrame(f);
       if (now - last < 1000 / fps) return; last = now;
-      ctx.setTransform(K, 0, 0, K, 0, 0); ctx.clearRect(0, 0, W, H); ctx.imageSmoothingEnabled = false;
+      ctx.setTransform(K, 0, 0, K, 0, 0); ctx.clearRect(0, 0, bw, bh); ctx.imageSmoothingEnabled = false;
       dr.current(ctx, now / 1000, K);
     };
     raf = requestAnimationFrame(f);
     return () => cancelAnimationFrame(raf);
-  }, [K, fps]);
-  return <canvas ref={ref} width={W * K} height={H * K} className="glam-cv" style={{ width: W * s, height: H * s, zIndex: z }} aria-hidden />;
+  }, [K, fps, bw, bh]);
+  return <canvas ref={ref} width={bw * K} height={bh * K} className="glam-cv" style={{ left: bx * s, top: by * s, width: bw * s, height: bh * s, zIndex: z }} aria-hidden />;
 }
 
 // ───────── nét vẽ dùng chung ─────────
@@ -326,4 +327,62 @@ export function LoungeLove({ phase }: { phase: Phase }) {
 
 function vignette(c: Ctx, a: number) {
   const g = c.createRadialGradient(W / 2, H * 0.55, H * 0.35, W / 2, H * 0.55, H * 0.95); g.addColorStop(0, '#00000000'); g.addColorStop(1, `rgba(20,8,30,${a})`); c.fillStyle = g; c.fillRect(0, 0, W, H);
+}
+
+// ═════════ VƯỜN NHÀ THEO MÙA THẬT (xuân anh đào · hạ đom đóm, dưa hấu · thu lá phong, nướng khoai · đông tuyết, người tuyết) ═════════
+export type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+export const seasonOf = (month: number): Season => (month >= 3 && month <= 5 ? 'spring' : month >= 6 && month <= 8 ? 'summer' : month >= 9 && month <= 11 ? 'autumn' : 'winter');
+/** box: vùng vườn trong bản đồ làng (toạ độ cảnh) */
+export function GardenSeason({ month, dark, box }: { month: number; dark: boolean; box: [number, number, number, number] }) {
+  const se = seasonOf(month), [, , bw, bh] = box;
+  const ground = (c: Ctx) => {
+    if (se === 'winter') { c.globalAlpha = 0.55; for (let k = 0; k < 90; k++) ell(c, rr(k, 1) * bw, 14 + rr(k, 2) * (bh - 16), 6 + rr(k, 3) * 10, 2 + rr(k, 4) * 2, '#f4f8ff'); c.globalAlpha = 1; }
+    if (se === 'autumn') for (let k = 0; k < 70; k++) ell(c, rr(k, 5) * bw, 14 + rr(k, 6) * (bh - 16), 1.2, 0.7, ['#e8603a', '#f6a83a', '#c83a2a', '#d88a3a'][k % 4], rr(k, 7) * 3);
+    if (se === 'spring') for (let k = 0; k < 60; k++) petal(c, rr(k, 8) * bw, 14 + rr(k, 9) * (bh - 16), rr(k, 10) * 3, k % 3 ? '#ffb0c8' : '#ffffff');
+  };
+  const front = (c: Ctx, t: number) => {
+    const R0 = bw - 14, B0 = 14;
+    if (se === 'spring') {
+      c.strokeStyle = '#6a4a3a'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 2); c.quadraticCurveTo(bw * 0.4, 12, bw * 0.75, 4); c.stroke();
+      for (let k = 0; k < 40; k++) { const u = k / 39, x = u * bw * 0.75, y = 2 + Math.sin(u * Math.PI) * 7 + (rr(k, 1) - 0.5) * 6; circ(c, x, y, 1.6 + rr(k, 2), k % 4 ? '#ffc0d4' : '#ffffff'); circ(c, x - 0.4, y - 0.4, 0.5, '#ff8ab0'); }
+      for (let k = 0; k < 24; k++) { const sp = 6 + rr(k, 3) * 6, x = (rr(k, 4) * bw + t * sp) % bw, y = (rr(k, 5) * bh + t * sp * 0.5 + Math.sin(t + k) * 3) % bh; petal(c, x, y, t * 2 + k, k % 3 ? '#ffb0c8' : '#ffffff'); }
+      for (let k = 0; k < 3; k++) { const x = bw * 0.5 + Math.sin(t * 0.6 + k * 2) * bw * 0.4, y = bh * 0.5 + Math.sin(t * 1.1 + k) * bh * 0.3, f = Math.abs(Math.sin(t * 12 + k)); const col = ['#ffd84a', '#ff8ab0', '#ffffff'][k]; ell(c, x - 0.9, y, 1.1 * f + 0.2, 1, col); ell(c, x + 0.9, y, 1.1 * f + 0.2, 1, col); }
+    } else if (se === 'summer') {
+      ell(c, R0, B0, 8, 2.4, '#ffffff'); for (let k = 0; k < 3; k++) { const x = R0 - 5 + k * 5; poly(c, [x - 2.4, B0 - 0.5, x + 2.4, B0 - 0.5, x, B0 - 5], '#3a9a3a'); poly(c, [x - 2, B0 - 1, x + 2, B0 - 1, x, B0 - 4.6], '#ff4a5a'); R(c, x - 0.2, B0 - 2.6, 0.4, 0.4, '#1a1a1a'); }
+      if (dark) for (let k = 0; k < 22; k++) { const x = (rr(k, 9) * bw + Math.sin(t * 0.3 + k) * 10 + bw) % bw, y = rr(k, 10) * bh + Math.sin(t * 0.5 + k * 2) * 5, a = 0.5 + 0.5 * Math.sin(t * 2 + k * 1.3); glow(c, x, y, 3 + a * 2, '#fff7a8', a * 0.8); circ(c, x, y, 0.4, '#ffffff'); }
+      else for (let k = 0; k < 3; k++) { const x = bw * 0.5 + Math.sin(t * 0.4 + k * 2.4) * bw * 0.42, y = 20 + Math.sin(t * 0.9 + k) * 14; R(c, x - 2.5, y, 5, 0.6, '#3a8ae8'); ell(c, x - 1, y - 0.8, 1.6, 0.6, '#d8f0ff'); ell(c, x + 1, y - 0.8, 1.6, 0.6, '#d8f0ff'); }
+    } else if (se === 'autumn') {
+      for (let k = 0; k < 26; k++) { const sp = 7 + rr(k, 3) * 6, x = (rr(k, 4) * bw + t * sp * 0.6) % bw, y = (rr(k, 5) * bh + t * sp) % bh; ell(c, x, y, 1.4, 0.8, ['#e8603a', '#f6a83a', '#c83a2a'][k % 3], t * 2 + k); }
+      for (let k = 0; k < 14; k++) ell(c, R0 - 8 + (k % 5) * 3, B0 + 2 - Math.floor(k / 5) * 1.6, 1.8, 1, ['#e8603a', '#f6a83a', '#c83a2a', '#d88a3a'][k % 4]);
+      const fl = 0.8 + 0.2 * Math.sin(t * 11); glow(c, R0 + 4, B0 - 1, 10, '#ff9a3a', 0.5); for (let k = 0; k < 4; k++) poly(c, [R0 + 1 + k * 2, B0, R0 + 2 + k * 2, B0 - (3 + (k % 2) * 2) * fl, R0 + 3 + k * 2, B0], k % 2 ? '#ffb030' : '#ff5a1a');
+      ell(c, R0 + 1, B0 + 1, 1.8, 1, '#8a3a5a'); ell(c, R0 + 6, B0 + 1, 1.8, 1, '#8a3a5a');
+      for (let k = 0; k < 3; k++) { const q = (t * 0.3 + k / 3) % 1; c.globalAlpha = (1 - q) * 0.3; circ(c, R0 + 4 + Math.sin(q * 6) * 2, B0 - 6 - q * 18, 1.5 + q * 3, '#d8d0c8'); c.globalAlpha = 1; }
+    } else {
+      const x = R0, y = B0; circ(c, x, y - 2, 4.6, '#f8fbff'); circ(c, x, y - 8.6, 3.2, '#ffffff'); R(c, x - 2.6, y - 13.6, 5.2, 1, '#2a2a3a'); R(c, x - 1.8, y - 16.4, 3.6, 2.8, '#2a2a3a'); R(c, x - 3.2, y - 6.2, 6.4, 1.2, '#e8303a'); R(c, x + 1.6, y - 6.2, 1.2, 3, '#e8303a');
+      R(c, x - 1.2, y - 9.4, 0.6, 0.6, '#1a1a1a'); R(c, x + 0.6, y - 9.4, 0.6, 0.6, '#1a1a1a'); poly(c, [x, y - 8.4, x + 2.6, y - 8, x, y - 7.6], '#ff8a3a'); for (let k = 0; k < 3; k++) R(c, x - 0.3, y - 4 + k * 1.6, 0.6, 0.6, '#2a2a3a');
+      line(c, x - 4, y - 4, x - 7, y - 7, 0.4, '#6a4a3a'); line(c, x + 4, y - 4, x + 7, y - 7, 0.4, '#6a4a3a');
+      line(c, 0, 3, bw, 3, 0.3, '#3a3a3a');
+      for (let k = 1; k < 16; k++) { const u = k / 16, xx = u * bw, yy = 3 + Math.sin(u * Math.PI) * 5, col = ['#fff1a8', '#ff8a9a', '#a8e0ff', '#a8ffb0'][k % 4], tw = 0.6 + 0.4 * Math.sin(t * 2.5 + k); if (dark) glow(c, xx, yy, 4, col, 0.6 * tw); circ(c, xx, yy, 0.6, col); }
+      for (let k = 0; k < 50; k++) { const sp = 5 + rr(k, 1) * 7, xx = (rr(k, 2) * bw + Math.sin(t * 0.7 + k) * 5) % bw, yy = (rr(k, 3) * bh + t * sp) % bh; circ(c, xx, yy, 0.4 + rr(k, 4) * 0.5, '#ffffff'); }
+    }
+  };
+  return <><Glam z={2} box={box} fps={4} draw={c => ground(c)} /><Glam z={300} box={box} draw={front} /></>;
+}
+
+// ═════════ BỒN TẮM: nến lung linh quanh thành bồn, cánh hồng & bọt nổi, hơi nước, ánh hồng ═════════
+export function BathLove({ pts, water, on }: { pts: [number, number][]; water: [number, number, number, number]; on: boolean }) {
+  const [wx, wy, ww, wh] = water;
+  const draw = (c: Ctx, t: number) => {
+    glow(c, wx + ww / 2, wy + wh / 2, 70, '#ff8ab0', 0.12);
+    if (on) {
+      c.save(); c.beginPath(); c.ellipse(wx + ww / 2, wy + wh / 2, ww / 2, wh / 2, 0, 0, TAU); c.clip();
+      for (let k = 0; k < 26; k++) { const x = wx + rr(k, 1) * ww + Math.sin(t * 0.4 + k) * 2, y = wy + rr(k, 2) * wh + Math.cos(t * 0.3 + k) * 1; petal(c, x, y, t * 0.3 + k, k % 3 ? '#e8204a' : '#ff6a8a'); }
+      for (let k = 0; k < 18; k++) { const x = wx + rr(k, 3) * ww, y = wy + rr(k, 4) * wh, r = 0.8 + rr(k, 5) * 1.4; c.strokeStyle = '#ffffffb0'; c.lineWidth = 0.3; c.beginPath(); c.arc(x, y, r, 0, TAU); c.stroke(); R(c, x - r * 0.4, y - r * 0.5, 0.5, 0.5, '#ffffff'); }
+      c.restore();
+      for (let k = 0; k < 6; k++) { const q = (t * 0.2 + k / 6) % 1; c.globalAlpha = (1 - q) * 0.25; circ(c, wx + ww * (0.2 + (k % 3) * 0.3) + Math.sin(q * 5 + k) * 4, wy - q * 26, 3 + q * 6, '#ffffff'); c.globalAlpha = 1; }
+      for (let k = 0; k < 4; k++) { const a = Math.sin(t * 1.2 + k * 1.6); if (a > 0.4) { c.globalAlpha = a - 0.4; heart(c, wx + ww * (0.2 + k * 0.2), wy - 10 - (t * 6 + k * 7) % 20, 1.2, '#ff8ab0'); c.globalAlpha = 1; } }
+    }
+    pts.forEach(([x, y], k) => { const fl = 0.8 + 0.2 * Math.sin(t * 10 + k * 2) * Math.sin(t * 6.3 + k); glow(c, x, y - 4, 12, '#ffc860', 0.45 * fl); R(c, x - 1.1, y - 3.4, 2.2, 3.4, '#fff4ec'); R(c, x - 1.1, y - 3.4, 2.2, 0.5, '#ffffff'); ell(c, x, y - 4.6, 0.6 * fl, 1.2 * fl, '#ffb040'); R(c, x - 0.2, y - 4.8, 0.4, 0.6, '#fff6c0'); });
+  };
+  return <Glam z={135} draw={draw} />;
 }

@@ -2111,6 +2111,70 @@
       "price": 40
     },
     {
+      "id": "cap_balloon",
+      "name": "Mô hình khinh khí cầu Cappadocia",
+      "icon": "🎈",
+      "kind": "decor"
+    },
+    {
+      "id": "mv_glow_jar",
+      "name": "Hũ biển phát sáng Maldives",
+      "icon": "🫙",
+      "kind": "decor"
+    },
+    {
+      "id": "swiss_snowglobe",
+      "name": "Quả cầu tuyết chợ Giáng sinh",
+      "icon": "🔮",
+      "kind": "decor"
+    },
+    {
+      "id": "hb_ice_lantern",
+      "name": "Đèn lồng băng Cáp Nhĩ Tân",
+      "icon": "🧊",
+      "kind": "decor"
+    },
+    {
+      "id": "ha_silk_lantern",
+      "name": "Đèn lồng lụa tự làm",
+      "icon": "🏮",
+      "kind": "decor"
+    },
+    {
+      "id": "ha_indigo_silk",
+      "name": "Tấm lụa nhuộm chàm tự dệt",
+      "icon": "🧵",
+      "kind": "decor"
+    },
+    {
+      "id": "swiss_choco",
+      "name": "Socola trái tim tự làm",
+      "icon": "🍫",
+      "kind": "crop",
+      "price": 15
+    },
+    {
+      "id": "love_cake",
+      "name": "Bánh kem kỉ niệm",
+      "icon": "🎂",
+      "kind": "dish",
+      "price": 160
+    },
+    {
+      "id": "choco_strawberry",
+      "name": "Dâu nhúng socola",
+      "icon": "🍓",
+      "kind": "dish",
+      "price": 70
+    },
+    {
+      "id": "hot_choco",
+      "name": "Socola nóng Thuỵ Sĩ",
+      "icon": "☕",
+      "kind": "dish",
+      "price": 60
+    },
+    {
       "id": "ha_vase",
       "name": "Bình gốm Thanh Hà tự nặn",
       "icon": "🏺",

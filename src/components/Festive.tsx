@@ -218,6 +218,10 @@ export function TravelSheet({ me, partner, coins, mems, onClose, onFly, kids = [
       <div className="bag-grid">
         {TRIPS.map(t => <button key={t.id} className="bag-item" disabled={coins < cost(t)} onClick={() => void go(t)}><span style={{ fontSize: 26 }}>{t.icon}</span><small>{t.name}</small><small>🪙 {cost(t)}</small></button>)}
       </div>
+      <h4>✨ Trải nghiệm đặc biệt (hai đứa đi ngay)</h4>
+      <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
+        {([['balloon', '🎈 Khinh khí cầu Cappadocia'], ['icecastle', '🏰 Lâu đài băng Cáp Nhĩ Tân'], ['glowsea', '🚤 Biển phát sáng Maldives']] as const).map(([k, l]) => <button key={k} className="btn small" onClick={() => { onClose(); window.dispatchEvent(new CustomEvent('duo-start', { detail: k })); }}>{l}</button>)}
+      </div>
       <StampBook me={me} partner={partner} />
       <h4>📮 Bưu thiếp ({cards.length})</h4>
       <div className="postcards">

@@ -44,7 +44,8 @@ import {
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
 import { LoungeContent } from './Lounge';
-import { CampGlam, HillGlam, LoungeLove } from './SceneGlam';
+import { CampGlam, HillGlam, LoungeLove, BathLove, GardenSeason } from './SceneGlam';
+import { DuoHost } from './Duo';
 import { SeaLife } from './SeaLife';
 import { ReefContent } from './Reef';
 import { SkyContent } from './Skydive';
@@ -396,6 +397,7 @@ function SceneContent(p: WorldProps) {
 
   return (
     <>
+      <DuoHost live={live} looks={{ me: myDress.look, them: theirDress.look }} />
       {scene === 'beach' && <Sky phase={phase} wx={wx} combos={p.combos} onStar={on.star} />}
 
       {scene === 'town' && <TownContent {...p} dark={dark} />}
@@ -406,6 +408,7 @@ function SceneContent(p: WorldProps) {
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
       {scene === 'lounge' && <LoungeLove phase={phase} />}
+      {scene === 'lounge' && <Tag x={156} y={64} className="label" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'glowsea' }))}>🚤 Biển phát sáng Maldives</Tag>}
 
       {spotOf(scene) && <SpotContent spot={spotOf(scene)!} scene={scene as SpotScene} me={me} live={live} partnerHere={!!p.partnerHere} looks={{ me: myDress.look, them: theirDress.look }} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} onCamera={() => p.onCamera?.()} today={p.myView.time.date} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland_aurora'} go={go} />}
       {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <FxList fx={mainOf(scene.slice(5) as TripId).fx} scene={scene} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland'} />}
@@ -494,6 +497,8 @@ function SceneContent(p: WorldProps) {
           {p.hillSky === 'aurora' && <div className="fx-aurora" />}
           {['night', 'meteor', 'aurora'].includes(p.hillSky) && <Fireflies n={10} area={[0, 100, 192, 44]} />}
           {realSky && p.combos.some(c => c.effect === 'rainbow') && <Rainbow />}
+          <Spr sprite={hotAirBalloonSprite('#e8304a')} x={160} y={104} z={104} className="bob" title="🎈 Khinh khí cầu Cappadocia" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'balloon' }))} />
+          <Tag x={160} y={74} className="label" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'balloon' }))}>🎈 Bay khinh khí cầu</Tag>
           <Hot x={0} y={130} w={40} h={14} title="Về làng" onClick={() => enter('town', { x: TOWN.toHill.x, y: TOWN.toHill.y + 4 })} />
           <Tag x={20} y={134} className="label">🏘️ Về làng</Tag>
         </>
@@ -584,6 +589,8 @@ function TownContent(p: WorldProps & { dark: boolean }) {
 
   return (
     <>
+      <GardenSeason month={p.myView.time.month} dark={dark} box={[GARDEN.x - 8, GARDEN.y - 14, GARDEN.cols * GARDEN.cw + 16, GARDEN.rows * GARDEN.ch + 16]} />
+      <Tag x={BUILDINGS[0].x - 22} y={BUILDINGS[0].y - 58} className="label" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'rooftop' }))}>🌙 Ngắm sao trên mái</Tag>
       {TOWN.trees.map(([k, x, y], i) => <Spr key={`t${i}`} sprite={tree(k)} x={x} y={y} className={season === 'autumn' && k !== 'round0' && k !== 'round1' && k !== 'round2' ? '' : `season-${season}`} />)}
       {TOWN.bushes.map(([x, y, v], i) => <Spr key={`b${i}`} sprite={bushSprite(v)} x={x} y={y} className={`season-${season}`} />)}
       <Happening kind={happeningOf(p.myView.time.date)} dark={dark} />
@@ -1357,6 +1364,8 @@ function BathContent(p: WorldProps) {
         {Array.from({ length: 7 }, (_, i) => <i key={i} style={{ left: `${10 + i * 13}%`, animationDelay: `${i * 0.5}s` }} />)}
       </div>
       <div className="bath-ambient" />
+      <BathLove on={p.live.mine.act === 'bath' || (!!p.partnerHere && p.live.theirs?.act === 'bath')} water={[front.x - 44, front.y - 58, 70, 22]}
+        pts={[roomPt(BATH.back.gx + 0.2, BATH.back.gy + 0.2, 13), roomPt(BATH.back.gx + BATH.w - 0.5, BATH.back.gy + 0.2, 13), roomPt(BATH.back.gx + 0.2, BATH.back.gy + BATH.d - 0.4, 13), roomPt(BATH.back.gx + BATH.w + 0.4, BATH.back.gy + BATH.d + 0.3), roomPt(BATH.back.gx - 0.4, BATH.back.gy + BATH.d - 0.2)].map(q => [q.x, q.y] as [number, number])} />
       <BathToys {...p} />
     </>
   );
@@ -1716,6 +1725,7 @@ function ShopInside({ kind, go, onOpen, onExit, holding }: { kind: 'florist' | '
   return (
     <>
       {spots.map((sp, i) => <Tag key={i} x={sp.x} y={sp.y - sp.dy} className="label" onClick={() => go(sp.stand, () => onOpen(sp.st))}>{sp.label}</Tag>)}
+      {kind === 'bakery' && <Tag x={150} y={40} className="label" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'cake' }))}>🎂 Nướng bánh kem kỉ niệm</Tag>}
       {holding && <Tag x={holding.at.x + 6} y={holding.at.y - 30} className="hold-icon">{holding.icon}</Tag>}
       {[0, 1, 2].map(i => <ShopNpc key={i} i={i} kind={kind} />)}
       <button className="hot" title="🚪 Ra phố" style={{ left: 82 * s, top: 132 * s, width: 28 * s, height: 12 * s }} onClick={e => { e.stopPropagation(); go({ x: 96, y: 138 }, onExit); }} />
