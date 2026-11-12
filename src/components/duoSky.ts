@@ -307,7 +307,7 @@ const mvTop = () => bake('duo:mvtop', W, WL, (c, rnd) => {
   R(c, 140, HZ + 6, 180, 1, '#5a4030');
   for (let k = 0; k < 8; k++) { const x = 146 + k * 22, y = HZ + 6; for (const dx of [2, 14]) R(c, x + dx, y, 1, 10, '#3a2a20'); R(c, x, y - 7, 18, 7, '#4a3424'); poly(c, [x - 3, y - 7, x + 9, y - 15, x + 21, y - 7], '#2a2018'); R(c, x + 4, y - 5, 4, 4, '#ffcf7a'); R(c, x + 10, y - 5, 4, 4, '#ffcf7a'); glow(c, x + 9, y - 3, 12, '#ffb048', 0.35); }
 });
-const PLANK = Array.from({ length: 320 }, (_, i) => ({ x: rr(i, 1) * 640, y: WL + 4 + rr(i, 2) * (H - WL - 6), d: 0.3 + rr(i, 3) * 0.7 }));
+const PLANK = Array.from({ length: 520 }, (_, i) => ({ x: rr(i, 1) * 640, y: WL + 3 + rr(i, 2) * (H - WL - 5), d: 0.3 + rr(i, 3) * 0.7, col: ['#3affe8', '#5ac8ff', '#6aff9a', '#9afff8'][i % 4] }));
 function drawGlow(f: F) {
   const { c, el, t } = f, wx = t * 9;
   grad(c, 0, HZ, ['#02051a', '#081440', '#14245a']);
@@ -318,7 +318,11 @@ function drawGlow(f: F) {
   for (let k = 0; k < 18; k++) { const y = HZ + 1 + k * 1.6, w = (3 + k) * (0.6 + 0.4 * Math.sin(t * 3 + k)); c.globalAlpha = 0.6; R(c, 64 + Math.sin(t + k * 2) * (1 + k * 0.4) - w / 2, y, w, 0.5, '#fff6d8'); c.globalAlpha = 1; }
   c.drawImage(mvTop(), 0, 0, W, WL);
   for (let k = 0; k < 8; k++) { const x = 146 + k * 22 + 9; for (let j = 0; j < 6; j++) { c.globalAlpha = 0.5 - j * 0.07; R(c, x - 2 + Math.sin(t * 2 + j + k) * 1.2, HZ + 18 + j * 2, 4, 0.6, '#ffcf7a'); } c.globalAlpha = 1; }
-  for (let k = 0; k < 10; k++) { const x = ((k * 41 - wx * 0.8) % (W + 40) + W + 40) % (W + 40) - 20, y = HZ + 8 + (k % 4) * 6, a = 0.5 + 0.5 * Math.sin(t * 2 + k); haloAt(c, x, y, 10, '#3affe8', a * 0.4); R(c, x - 8, y, 16, 0.6, '#8afff0'); }
+  // ngọn sóng phát quang xanh rực trên mặt biển + sóng vỗ bờ đảo sáng xanh
+  c.save(); c.globalCompositeOperation = 'lighter';
+  for (let k = 0; k < 16; k++) { const x = ((k * 41 - wx * 0.8) % (W + 40) + W + 40) % (W + 40) - 20, y = HZ + 5 + (k % 5) * 5.5, a = 0.5 + 0.5 * Math.sin(t * 2 + k); haloAt(c, x, y, 14, '#2affe0', a * 0.7); R(c, x - 10, y, 20, 0.8, '#bafff6'); R(c, x - 6, y - 0.6, 12, 0.5, '#ffffff'); }
+  for (let k = 0; k < 6; k++) { const x = 10 + k * 18, a = 0.5 + 0.5 * Math.sin(t * 1.6 + k * 1.3); haloAt(c, x, HZ + 2, 12, '#2affe0', a * 0.9); R(c, x - 8, HZ + 1.5, 16, 0.8, '#d8fff8'); }
+  c.restore();
   // dưới đáy kính: biển sâu sinh vật phù du phát sáng
   grad(c, WL, H, ['#05306a', '#032050', '#011030']);
   c.globalAlpha = 0.08; for (let k = 0; k < 5; k++) { const x = 40 + k * 60 + Math.sin(t * 0.3 + k) * 10; poly(c, [x, WL, x + 14, WL, x + 50, H, x + 26, H], '#a8e8ff'); } c.globalAlpha = 1;
@@ -326,26 +330,32 @@ function drawGlow(f: F) {
   for (let x = 0; x < W; x += 0.5) { const xx = x + wx * 0.6, h = 10 + Math.sin(xx / 17) * 5 + Math.sin(xx / 5) * 2; R(c, x, H - h, 0.5, h, '#0a2a4a'); }
   for (let k = 0; k < 16; k++) { const x = ((k * 29 - wx * 0.6) % (W + 30) + W + 30) % (W + 30) - 15, y = H - 10 - (k % 3) * 3, col = ['#ff6ad8', '#3affe8', '#ffd84a', '#8a7aff'][k % 4], a = 0.5 + 0.5 * Math.sin(t * 1.5 + k); haloAt(c, x, y, 8, col, a * 0.5); for (let j = 0; j < 5; j++) line(c, x, y + 3, x + Math.sin(t * 2 + j + k) * 2 + (j - 2) * 1.4, y - 3, 0.5, col); }
   c.save(); c.globalCompositeOperation = 'lighter';
-  const stirs = f.taps.filter(x => x.id === 'stir' && f.now - x.at < 2500);
-  for (const p of PLANK) { const x = ((p.x - wx * p.d * 1.6) % 640 + 640) % 640 * 0.5, y = p.y + Math.sin(t * 0.8 + p.x) * 2; let a = 0.25 + 0.35 * Math.sin(t * 2 + p.x * 3);
-    for (const s of stirs) { const q = (f.now - s.at) / 2500, d = Math.hypot(x - 150, (y - WL) * 1.5), r = q * 120; if (Math.abs(d - r) < 14) a += (1 - q) * 1.4; }
-    if (a > 0.1) { R(c, x, y, 0.6, 0.6, '#9afff8'); if (a > 0.5) haloAt(c, x, y, 3 + a * 2, '#3affe8', clamp(a * 0.5)); } }
+  // ánh xanh toả khắp lòng biển
+  haloAt(c, 150, 130, 160, '#0aa8c8', 0.22 + 0.06 * Math.sin(t * 0.7));
+  const stirs = f.taps.filter(x => x.id === 'stir' && f.now - x.at < 3000);
+  for (const p of PLANK) { const x = ((p.x - wx * p.d * 1.6) % 640 + 640) % 640 * 0.5, y = p.y + Math.sin(t * 0.8 + p.x) * 2; let a = 0.45 + 0.4 * Math.sin(t * 2 + p.x * 3);
+    const nb = Math.hypot(x - 150, (y - WL) * 2); if (nb < 50) a += (1 - nb / 50) * 0.35;   // quanh thân thuyền khuấy động → sáng hơn
+    for (const s of stirs) { const q = (f.now - s.at) / 3000, d = Math.hypot(x - 150, (y - WL) * 1.4), r = q * 170; if (Math.abs(d - r) < 14) a += (1 - q) * 1.1; }
+    R(c, x, y, 0.7, 0.7, p.col); if (a > 0.45) haloAt(c, x, y, 2.5 + a * 2.2, p.col, clamp(a * 0.32)); }
+  // vệt sáng kéo dài sau đuôi thuyền
+  for (let k = 0; k < 40; k++) { const u = k / 40, x = 150 - 28 - u * 140, y = WL + 2 + Math.sin(u * 12 - t * 3) * 2 * u + u * 6, a = (1 - u) * (0.6 + 0.4 * Math.sin(t * 5 + k)); haloAt(c, x, y, 4 + u * 5, '#3affe8', a * 0.5); R(c, x, y, 1.2, 0.6, '#e0fff8'); }
+  for (const s of stirs) { const q = (f.now - s.at) / 3000; haloAt(c, 150, WL + 10, 30 + q * 120, '#3affe8', (1 - q) * 0.25); }
   c.restore();
-  // cá đuối manta lượn, viền phát sáng
+  // cá đuối manta lượn, để lại vệt phù du sáng
   for (let k = 0; k < 2; k++) { const x = ((k * 190 + t * (8 + k * 3)) % (W + 120)) - 60, y = 128 + k * 18 + Math.sin(t * 0.6 + k) * 8, fl = Math.sin(t * 2 + k) * 4, s = 1 - k * 0.25;
-    haloAt(c, x, y, 22 * s, '#3ac8ff', 0.25); poly(c, [x + 12 * s, y, x, y - 3 * s, x - 14 * s, y - fl * s, x - 6 * s, y + 2 * s, x - 14 * s, y + 4 * s + fl * 0.5, x, y + 3 * s], '#0a1a30'); line(c, x - 6 * s, y + 1, x - 22 * s, y + 3, 0.4, '#0a1a30'); line(c, x + 12 * s, y, x - 14 * s, y - fl * s, 0.3, '#5affff'); }
-  // đàn cá bạc
-  for (let k = 0; k < 26; k++) { const q = t * 0.25 + k * 0.02, x = ((q * 140 + rr(k, 4) * 30) % (W + 60)) - 30, y = 114 + Math.sin(q * 6 + k * 0.3) * 8 + rr(k, 5) * 14; R(c, x, y, 2, 0.8, '#c8e8ff'); R(c, x - 0.8, y - 0.2, 0.8, 1.2, '#a8c8e8'); }
+    c.save(); c.globalCompositeOperation = 'lighter'; for (let j = 1; j < 14; j++) haloAt(c, x - 14 * s - j * 4, y + Math.sin(t * 2 - j * 0.5) * 2, 5 - j * 0.25, '#3affe8', 0.5 - j * 0.03); haloAt(c, x, y, 26 * s, '#3ac8ff', 0.4); c.restore();
+    poly(c, [x + 12 * s, y, x, y - 3 * s, x - 14 * s, y - fl * s, x - 6 * s, y + 2 * s, x - 14 * s, y + 4 * s + fl * 0.5, x, y + 3 * s], '#0a1a30'); line(c, x - 6 * s, y + 1, x - 22 * s, y + 3, 0.4, '#0a1a30'); line(c, x + 12 * s, y, x - 14 * s, y - fl * s, 0.5, '#8affff'); line(c, x + 12 * s, y + 3 * s, x - 14 * s, y + 4 * s + fl * 0.5, 0.4, '#5affff'); }
+  // đàn cá bạc lấp lánh ánh xanh
   // rùa biển
   { const x = ((t * 5) % (W + 60)) - 30, y = 150 + Math.sin(t * 0.4) * 4, fl = Math.sin(t * 3) * 1.5; ell(c, x, y, 6, 3.4, '#2a5a4a'); ell(c, x, y - 0.5, 4.5, 2.4, '#4a8a6a'); circ(c, x + 7, y, 1.6, '#3a6a5a'); ell(c, x + 3, y + 3 + fl, 2.6, 1, '#3a6a5a', 0.5); ell(c, x - 3, y + 3 - fl, 2.6, 1, '#3a6a5a', -0.5); }
   // thuyền đáy kính: thân gỗ, đèn mũi, ô kính nhìn xuống
-  const bx = 150, bob = Math.sin(t * 1.4) * 1;
-  c.globalAlpha = 0.35; R(c, bx - 26, WL + bob, 52, 6, '#bfeaff'); c.globalAlpha = 1;
-  for (const s of stirs) { const q = (f.now - s.at) / 2500; c.globalAlpha = (1 - q) * 0.9; c.strokeStyle = '#7afff0'; c.lineWidth = 0.6; c.beginPath(); c.ellipse(bx, WL + bob, 20 + q * 70, 3 + q * 8, 0, 0, TAU); c.stroke(); c.globalAlpha = 1; }
-  f.seats.forEach((p, i) => { if (!p) return; const im = f.last(i, 'stir') < 1000 ? p.img('actsit', 5) : p.img('sit'); f.put(im, bx - 16 + i * 14, WL - 20 + bob, 0.5); });
-  poly(c, [bx - 34, WL - 8 + bob, bx + 34, WL - 8 + bob, bx + 26, WL + 1 + bob, bx - 26, WL + 1 + bob], '#7a4a2a'); R(c, bx - 34, WL - 8 + bob, 68, 1.2, '#a8683a'); R(c, bx - 28, WL - 4 + bob, 56, 0.6, '#f6c445');
-  for (const dx of [-32, 32]) { R(c, bx + dx, WL - 16 + bob, 0.6, 8, '#3a2a1a'); haloAt(c, bx + dx, WL - 17 + bob, 9, '#ffb048', 0.7); R(c, bx + dx - 1, WL - 18 + bob, 2, 2.4, '#ffe0a0'); }
-  for (let j = 0; j < 4; j++) { c.globalAlpha = 0.5 - j * 0.1; R(c, bx - 30 - j * 8, WL + 1 + bob, 6, 0.6, '#8afff0'); c.globalAlpha = 1; }
+  const bx = 150, bob = Math.sin(t * 1.4) * 1, BY = WL - 7;   // thuyền nổi trên mặt nước, đáy kính chỉ nhú dưới mép nước
+  c.globalAlpha = 0.3; R(c, bx - 24, BY + 1 + bob, 48, 5, '#bfeaff'); c.globalAlpha = 1;
+  for (const s of stirs) { const q = (f.now - s.at) / 2500; c.globalAlpha = (1 - q) * 0.9; c.strokeStyle = '#7afff0'; c.lineWidth = 0.6; c.beginPath(); c.ellipse(bx, BY + bob, 20 + q * 70, 3 + q * 8, 0, 0, TAU); c.stroke(); c.globalAlpha = 1; }
+  f.seats.forEach((p, i) => { if (!p) return; const im = f.last(i, 'stir') < 1000 ? p.img('actsit', 5) : p.img('sit'); f.put(im, bx - 16 + i * 14, BY - 25 + bob, 0.5); });
+  poly(c, [bx - 34, BY - 8 + bob, bx + 34, BY - 8 + bob, bx + 26, BY + 1 + bob, bx - 26, BY + 1 + bob], '#7a4a2a'); R(c, bx - 34, BY - 8 + bob, 68, 1.2, '#a8683a'); R(c, bx - 28, BY - 4 + bob, 56, 0.6, '#f6c445');
+  for (const dx of [-32, 32]) { R(c, bx + dx, BY - 16 + bob, 0.6, 8, '#3a2a1a'); haloAt(c, bx + dx, BY - 17 + bob, 9, '#ffb048', 0.7); R(c, bx + dx - 1, BY - 18 + bob, 2, 2.4, '#ffe0a0'); }
+  for (let j = 0; j < 4; j++) { c.globalAlpha = 0.5 - j * 0.1; R(c, bx - 30 - j * 8, BY + 1 + bob, 6, 0.6, '#8afff0'); c.globalAlpha = 1; }
   void el;
 }
 const glowsea: DuoCfg = {

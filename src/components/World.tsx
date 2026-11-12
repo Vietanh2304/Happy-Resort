@@ -408,7 +408,7 @@ function SceneContent(p: WorldProps) {
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
       {scene === 'lounge' && <LoungeLove phase={phase} />}
-      {scene === 'lounge' && <Tag x={156} y={64} className="label" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'glowsea' }))}>🚤 Biển phát sáng Maldives</Tag>}
+      {scene === 'lounge' && p.seaSpot === 'maldives' && <Tag x={156} y={64} className="label" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'glowsea' }))}>🚤 Biển phát sáng Maldives</Tag>}
 
       {spotOf(scene) && <SpotContent spot={spotOf(scene)!} scene={scene as SpotScene} me={me} live={live} partnerHere={!!p.partnerHere} looks={{ me: myDress.look, them: theirDress.look }} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} onCamera={() => p.onCamera?.()} today={p.myView.time.date} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland_aurora'} go={go} />}
       {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <FxList fx={mainOf(scene.slice(5) as TripId).fx} scene={scene} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland'} />}
