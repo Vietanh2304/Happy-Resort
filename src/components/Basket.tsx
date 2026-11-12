@@ -165,24 +165,24 @@ export function BasketRide({ at: t0, me, mate, them, onExit }: { at: number; me:
           if (i === 2) people.push({ im: npcIm, x: x - npcIm.width / 2, y: by - npcIm.height + 6, z });
           else { const p = seats[i]; if (p) people.push({ im: z > 0 ? (Math.floor(t * 3 + i) % 2 ? p.yay : p.sit) : p.back, x: x - p.sit.width / 2, y: by - 44 + shaking + z * 2, z }); } });
       } else {
-        people.push({ im: npcIm, x: BX + 22 - npcIm.width / 2, y: by - npcIm.height + 8, z: -1 });
+        people.push({ im: npcIm, x: BX + 26 - npcIm.width / 2, y: by - npcIm.height + 6, z: -1 });
         seats.forEach((p, i) => { if (!p) return;
           const key = p.key, pulled = nowMs - (catchAt.current[key] ?? 0) < 700, weaving = el > NET + 1000 && el < WEAVE && nowMs - (weaveAt.current[key] ?? 0) < 400;
           const cheer = (el > NET + 3500 && el < NET + 6500) || (el > WEAVE - 2500 && el < WEAVE) || (el > P3 - 3000);
           const im = pulled ? p.pull : weaving ? p.work : cheer ? (Math.floor(t * 2 + i) % 2 ? p.yay : p.sit) : p.sit;
-          people.push({ im, x: BX - 30 + i * 26 - p.sit.width / 2, y: by - 44, z: 1 }); });
+          people.push({ im, x: (BX - 20 + i * 24) - p.sit.width / 2, y: by - 44, z: 1 }); });
       }
       people.sort((a, b) => a.z - b.z);
       // mọi người ngồi trong lòng thúng: vẽ người (sau → trước) rồi vẽ thân thúng che phần dưới
       people.forEach(p => put(p.im, p.x, p.y));
       // nón lá của chú lái
       { const np = people.find(p => p.im === npcIm); if (np) { const hx = np.x + npcIm.width / 2, hy = np.y + 6; poly(ctx, [hx - 12, hy + 2, hx, hy - 8, hx + 12, hy + 2], '#ead8a0'); R(ctx, hx - 12, hy + 1.5, 24, 1, '#c8b070'); line(ctx, hx - 5, hy - 2, hx + 5, hy - 2, 0.3, '#c8b070'); } }
-      thung(ctx, BX, by - 10, 74, 18, spinning ? spinA : 0);
+      thung(ctx, BX, by - 12, 92, 20, spinning ? spinA : 0);
       // mái chèo của chú lái
       if (rowing) { const np = people.find(p => p.im === npcIm)!, hx = np.x + 8, hy = np.y + 34; line(ctx, hx, hy, hx - 14 + rowStroke * 10, by + 14, 1.4, '#8a5a2a'); ell(ctx, hx - 14 + rowStroke * 10, by + 15, 3, 1.4, '#7a4a22'); }
       // ── câu cua: cần câu tre, phao đỏ trắng, cua cắn thì phao chìm ──
       if (el > P1 && el < CRAB + 800) seats.forEach((p, i) => { if (!p) return;
-        const dir = i ? 1 : -1, hx = BX - 30 + i * 26 + dir * 6, hy = by - 18, tipX = hx + dir * 30, tipY = hy - 20, fx = tipX + dir * 4;
+        const dir = i ? 1 : -1, hx = (BX - 20 + i * 24) + dir * 6, hy = by - 18, tipX = hx + dir * 30, tipY = hy - 20, fx = tipX + dir * 4;
         line(ctx, hx, hy, tipX, tipY, 1, '#c8a050');
         const bl = bites(i), live = bl.findIndex((b, k) => el >= b && el <= b + BITE_WIN && !caught.current[p.key]?.has(k));
         const got = nowMs - (catchAt.current[p.key] ?? 0) < 900;
@@ -191,7 +191,7 @@ export function BasketRide({ at: t0, me, mate, them, onExit }: { at: number; me:
         if (got) crab(ctx, fx, fy + 4, t); else { R(ctx, fx - 1, fy - 2, 2, 2, '#e8443a'); R(ctx, fx - 1, fy, 2, 1.5, '#ffffff'); }
         if (live >= 0 && !got) { ctx.strokeStyle = '#ffffffa0'; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.ellipse(fx, WL + 6, 5 + Math.sin(t * 20) * 1.5, 1.6, 0, 0, Math.PI * 2); ctx.stroke(); if (i === mySeat) { R(ctx, fx - 0.75, fy - 12, 1.5, 5, '#ffe040'); R(ctx, fx - 0.75, fy - 6, 1.5, 1.5, '#ffe040'); } }
         // giỏ cua trong thúng
-        const n = caught.current[p.key]?.size ?? 0; for (let k = 0; k < n; k++) crab(ctx, BX - 30 + i * 26 + (k % 3) * 5 - 5, by - 12 - Math.floor(k / 3) * 3, t + k);
+        const n = caught.current[p.key]?.size ?? 0; for (let k = 0; k < n; k++) crab(ctx, (BX - 20 + i * 24) + (k % 3) * 5 - 5, by - 12 - Math.floor(k / 3) * 3, t + k);
       });
       // ── quăng chài: lưới tròn bung ra trên không rồi rơi xuống, kéo lên đầy cá ──
       if (el > NET && el < WEAVE) {
@@ -202,7 +202,7 @@ export function BasketRide({ at: t0, me, mate, them, onExit }: { at: number; me:
       }
       // ── đan cào cào lá dừa: chú lái phát lá, mỗi lần bấm đan thêm một nếp ──
       if (el > NET + 1000 && el < P3) seats.forEach((p, i) => { if (!p) return;
-        const n = weave.current[p.key] ?? 0, gx = BX - 30 + i * 26, gy = by - 18;
+        const n = weave.current[p.key] ?? 0, gx = (BX - 20 + i * 24), gy = by - 18;
         grasshopper(ctx, gx, gy - (n >= WEAVE_N ? 8 + Math.sin(t * 3) * 2 : 0), n / WEAVE_N);
         if (n < WEAVE_N) for (let j = 0; j < 3; j++) line(ctx, gx - 6, gy + 2 + j, gx + 6 + Math.sin(t * 4 + j) * 2, gy - 2 + j, 0.6, '#6ac05a');
         if (n >= WEAVE_N && Math.floor(t * 3 + i) % 2) twinkle(ctx, gx + 6, gy - 14, 2, '#ffffff');

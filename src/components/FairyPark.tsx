@@ -226,9 +226,10 @@ const LINEUP: ({ float: FloatId; on: Who[] } | { walk: Who[] })[] = [
 ];
 const GAP = 76;
 /** Chỗ đứng trên từng xe hoa: y = chân, behind = đứng sau thành xe (thành xe che chân), dx = lệch ngang từng người */
+// (xe vẽ 76×54, neo chân ở y=188 → mặt sàn bệ xe ở y≈170, nóc thân xe lâu đài y≈162, lưng rồng y≈166)
 const DECK: Record<FloatId, { y: number; behind: boolean; dx: number[] }> = {
-  castle: { y: 167, behind: true, dx: [-9, 9] }, star: { y: 182, behind: false, dx: [-26] }, pumpkin: { y: 163, behind: true, dx: [4] },
-  unicorn: { y: 182, behind: false, dx: [-28] }, teaparty: { y: 183, behind: false, dx: [-22, 18] }, dragon: { y: 172, behind: true, dx: [6] },
+  castle: { y: 163, behind: false, dx: [-12, 12] }, star: { y: 171, behind: false, dx: [-25] }, pumpkin: { y: 179, behind: false, dx: [-15] },
+  unicorn: { y: 171, behind: false, dx: [25] }, teaparty: { y: 171, behind: false, dx: [-22, 20] }, dragon: { y: 167, behind: false, dx: [-4] },
 };
 function Performer({ who, k, now, x, y, z }: { who: Who; k: number; now: number; x: number; y: number; z: number }) {
   const s = useScale(), ps = avatarPx(s), look = LOOKS[who][k % LOOKS[who].length];
