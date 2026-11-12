@@ -16,6 +16,7 @@ import { onEvent, sendEvent } from '../lib/realtime';
 import { Follower } from './Wander';
 import { POT_JOIN, PotteryRoom, potteryStallSprite } from './Pottery';
 import { BASKET_JOIN, BasketRide } from './Basket';
+import { CABLE_JOIN, CableRide } from './Cable';
 import { InviteBanner } from './InviteBanner';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
@@ -60,6 +61,8 @@ const SESS = {
     invite: '🏺 Người ấy rủ vào xưởng nặn gốm Thanh Hà', yes: 'Vào ngồi cạnh!', late: 'Lớp nặn gốm bắt đầu mất rồi — lần sau nha' },
   basket: { item: 'ha_leaf_grasshopper', join: BASKET_JOIN, ask: (p: number) => `🧺 Đi thuyền thúng rừng dừa (${p} xu)? Có câu cua, múa thúng, quăng chài, đan cào cào lá dừa mang về`, joinAsk: (p: number) => `🧺 Lên thúng cùng người ấy (${p} xu)?`,
     invite: '🧺 Người ấy rủ đi thuyền thúng rừng dừa Bảy Mẫu', yes: 'Lên thúng cùng!', late: 'Thúng rời bến mất rồi — lần sau nha' },
+  cable: { item: 'tw_cable_keychain', join: CABLE_JOIN, ask: (p: number) => `🚡 Đi cáp treo ngắm toàn cảnh hồ Nhật Nguyệt (${p} xu)? Có móc khoá cabin làm quà`, joinAsk: (p: number) => `🚡 Lên chung cabin với người ấy (${p} xu)?`,
+    invite: '🚡 Người ấy rủ đi cáp treo ngắm hồ Nhật Nguyệt', yes: 'Lên chung cabin!', late: 'Cabin rời ga mất rồi — lần sau nha' },
 };
 type SessK = keyof typeof SESS;
 /** Vị trí xe/thuyền đang chở mình (để camera bám theo, chụp ảnh được) */
@@ -183,7 +186,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       live.say(`${it.icon} Ngon quá!`);
     });
     if (a.k === 'photo') return onCamera();
-    if (a.k === 'pottery' || a.k === 'basket') return void run(async () => {
+    if (a.k === 'pottery' || a.k === 'basket' || a.k === 'cable') return void run(async () => {
       const S = SESS[a.k];
       if (!confirm(S.ask(a.price))) return;
       await api.buyItem(S.item, a.price); notify('inventory', 'profiles');
@@ -297,6 +300,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       {scene === 'trip_hoian_lantern' && <Spr sprite={potteryStallSprite()} x={100} y={152} z={152} />}
       {mine.act === 'pottery' && mine.trip && <PotteryRoom at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'pottery' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
       {mine.act === 'basket' && mine.trip && <BasketRide at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'basket' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
+      {mine.act === 'cable' && mine.trip && <CableRide at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'cable' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
       {sess && spot.acts[sess.i] && <InviteBanner text={SESS[sess.k].invite} yes={SESS[sess.k].yes} onYes={joinSess} onNo={() => setSess(null)} />}
       {spot.acts.map((a, i) => <Tag key={i} x={a.x} y={a.y} className={`label ${a.k !== 'park' && Math.abs(mine.pos.x - a.x) < 26 && mine.pos.y - a.y > -8 && mine.pos.y - a.y < 52 ? 'dim' : ''}`} onClick={() => doAct(a, i)}>{lbl(a)}</Tag>)}
     </>

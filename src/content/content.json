@@ -2102,6 +2102,12 @@
       "kind": "decor"
     },
     {
+      "id": "tw_cable_keychain",
+      "name": "Móc khoá cabin cáp treo Nhật Nguyệt Đàm",
+      "icon": "🚡",
+      "kind": "decor"
+    },
+    {
       "id": "fa_churro",
       "name": "Churros quế",
       "icon": "🥨",

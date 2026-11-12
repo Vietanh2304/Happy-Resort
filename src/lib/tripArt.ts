@@ -149,8 +149,14 @@ const leafHopper = () => makeSprite('tv:ha_leaf_grasshopper', 16, 12, p => {
   p.px(4, 10, D); p.px(3, 11, D); p.px(9, 10, D); p.px(10, 11, D);
 }, '#1a3a1a');
 
+// ── Móc khoá cabin cáp treo Nhật Nguyệt Đàm
+const cableKey = () => makeSprite('tv:tw_cable_keychain', 12, 16, p => {
+  p.rect(5, 0, 2, 1, '#c8a050'); p.px(4, 1, '#c8a050'); p.px(7, 1, '#c8a050'); p.rect(5, 2, 2, 2, '#c8a050'); p.rect(5, 4, 2, 2, '#4a4a5a');
+  p.rect(1, 6, 10, 9, '#c8303a'); p.rect(2, 8, 8, 4, '#bfe4ff'); p.px(3, 8, '#ffffff'); p.rect(1, 14, 10, 1, '#8a1a20'); p.rect(3, 13, 6, 1, '#f6c445');
+}, '#2a1a1a');
+
 export const TRIP_ART: Record<string, Art> = {
-  ha_vase: { place: 'any', sprite: haVase }, ha_leaf_grasshopper: { place: 'any', sprite: leafHopper },
+  ha_vase: { place: 'any', sprite: haVase }, tw_cable_keychain: { place: 'any', sprite: cableKey }, ha_leaf_grasshopper: { place: 'any', sprite: leafHopper },
   tw_sky_lantern: { place: 'any', sprite: skyLantern, glow: true }, tw_rainbow_art: { place: 'wall', sprite: rainbowArt },
   kr_maple_frame: { place: 'wall', sprite: mapleFrame }, kr_hanbok_doll: { place: 'any', sprite: hanbokDoll },
   hoian_lanterns: { place: 'wall', sprite: hoianLanterns, glow: true }, hoian_basket_boat: { place: 'any', sprite: basketBoat },

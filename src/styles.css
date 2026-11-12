@@ -1868,3 +1868,7 @@ textarea { resize: vertical; }
 .bb-tap { font-size: 20px; padding: 12px 28px; touch-action: manipulation; }
 .bb-bar.hit .bb-tap { box-shadow: 0 0 16px 3px #6af09a; }
 .bb-bar.miss .bb-tap { box-shadow: 0 0 16px 3px #ff6a6a; }
+.cb-say { top: 52px; background: #fff6c0f0; }
+.cb-bar .row { gap: 10px; }
+.cb-photos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-width: 420px; }
+.cb-photos img { width: 100%; border-radius: 8px; border: 2px solid var(--ink); }
