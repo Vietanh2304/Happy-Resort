@@ -35,7 +35,7 @@ export type Act =
   | { k: 'fortune'; x: number; y: number; label: string }
   | { k: 'ride'; x: number; y: number; label: string; spr: MiniId; ry: number; say: string }
   | { k: 'float'; x: number; y: number; label: string; ry: number }
-  | { k: 'pottery' | 'basket' | 'cable'; x: number; y: number; label: string; price: number }
+  | { k: 'pottery' | 'basket' | 'cable' | 'kimchi'; x: number; y: number; label: string; price: number }
   | { k: 'park'; x: number; y: number; label: string; ride: ParkAct; at?: { x: number; y: number } }
   | { k: 'do'; x: number; y: number; label: string; say: string; do: DoKind; res?: { icon: string; x: number; y: number }; outfit?: number; at?: { x: number; y: number } };
 /** Trò ở Disneyland (xử lý trong FairyPark) */
@@ -825,7 +825,7 @@ export const SPOTS: Record<SpotScene, SpotDef> = {
     trip: 'gwangju', id: 'penguin', name: 'Làng Penguin', icon: '🏯', at: 128, walk: W(124), day: ['#88c0e8', '#f0e8d0'],
     draw: drawPenguin,
     fx: [{ k: 'sway', x: 150, y: 74, c: '#e8443a' }, { k: 'sway', x: 86, y: 74, c: '#3a6ad0' }, { k: 'fall', n: 8, c: ['#e8743a', '#f6c445'], size: 2, slow: true }],
-    acts: [buy(70, 140, 'clock', 15, '🕰️ Đồng hồ cổ'), { ...say(110, 128, '👘 Thuê hanbok', 'Mặc hanbok dạo phố cổ, như phim cổ trang luôn 👘', 'dress'), outfit: 13 }, buy(150, 150, 'tteokbokki', 8, '🌶️ Tteokbokki'), ph(34, 150), { ...say(210, 160, '🏺 Chum tương', 'Mở nắp chum ra… mùi tương đậu thơm lừng!', 'jar') }],
+    acts: [buy(70, 140, 'clock', 15, '🕰️ Đồng hồ cổ'), { ...say(110, 128, '👘 Thuê hanbok', 'Mặc hanbok dạo phố cổ, như phim cổ trang luôn 👘', 'dress'), outfit: 13 }, buy(150, 150, 'tteokbokki', 8, '🌶️ Tteokbokki'), ph(34, 150), { ...say(210, 160, '🏺 Chum tương', 'Mở nắp chum ra… mùi tương đậu thơm lừng!', 'jar') }, { k: 'kimchi', x: 186, y: 112, label: '🥬 Muối kim chi', price: 24 }],
     lines: ['Đồ cổ dễ thương quá', 'Nhà hanok mát ghê', 'Chụp với chú cánh cụt nè 🐧', 'Hồi xưa ông bà dùng cái này', 'Cổ kính ghê'],
   },
   trip_gwangju_chungjang: {

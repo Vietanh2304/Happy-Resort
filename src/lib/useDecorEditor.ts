@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react';
 import * as api from './api';
-import { cellsOf, occupant, whyNot } from './placement';
+import { cellsOf, occupant, topAt, whyNot } from './placement';
 import { notify } from './realtime';
 import { toast, toastError } from './toast';
 
 export type Selection = { kind: 'item'; itemId: string } | { kind: 'decor'; id: string } | null;
 
 /** Bóng xem trước: món đang cầm, chỗ định đặt, các ô nó chiếm, đặt được hay không */
-export interface Ghost { itemId: string; x: number; y: number; rot: number; cells: [number, number][]; why: string | null; movingId?: string }
+export interface Ghost { itemId: string; x: number; y: number; rot: number; cells: [number, number][]; why: string | null; movingId?: string; top?: number }
 
 export interface EditCtx { island: string | null; decor: api.Decor[]; blocked?: (x: number, y: number) => boolean }
 
@@ -32,6 +32,7 @@ export function useDecorEditor(inventory: api.InvRow[], ctx: EditCtx) {
     cells: cellsOf(island, itemId, pos.x, pos.y, rot),
     why: whyNot(island, itemId, pos.x, pos.y, decor, moving?.id, blocked, rot),
     movingId: moving?.id,
+    top: topAt(island, itemId, pos.x, pos.y, decor, moving?.id) ? 1 : undefined,
   } : null;
 
   function selectItem(id: string) {
@@ -59,11 +60,11 @@ export function useDecorEditor(inventory: api.InvRow[], ctx: EditCtx) {
     busy.current = true;
     try {
       if (selection?.kind === 'item') {
-        await api.placeDecor(itemId, island, p.x, p.y, rot);
+        await api.placeDecor(itemId, island, p.x, p.y, rot, topAt(island, itemId, p.x, p.y, decor));
         const left = inventory.find(r => r.item_id === itemId)?.qty ?? 0;
         if (left <= 1) cancel(); else setPos(null);
       } else if (moving) {
-        await api.moveDecor(moving.id, p.x, p.y, rot);
+        await api.moveDecor(moving.id, p.x, p.y, rot, topAt(island, itemId, p.x, p.y, decor, moving.id));
         cancel();
       }
       notify('decor', 'inventory');

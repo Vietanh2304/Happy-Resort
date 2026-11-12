@@ -19,7 +19,10 @@ export interface Profile {
   status_at?: string | null;
 }
 export interface Couple { id: string; invite_code: string; coins: number; anniversary?: string | null }
-export interface Decor { id: string; owner_id: string; island: string; item_id: string; x: number; y: number; rot?: number }
+/** top: đặt trên mặt bàn / tủ (đồ nhỏ như bình gốm) chứ không đặt dưới sàn */
+export interface Decor { id: string; owner_id: string; island: string; item_id: string; x: number; y: number; rot?: number; top?: boolean }
+/** đồ đặt trên mặt bàn/tủ lưu ô y cộng thêm TOP_Y — cùng ô với cái bàn mà không vướng chỉ mục ô */
+const TOP_Y = 100;
 export interface InvRow { item_id: string; qty: number }
 export interface Note { id: string; from_id: string; to_id: string; body: string; gift_item: string | null; read_at: string | null; created_at: string; voice_path?: string | null; voice_secs?: number | null }
 
@@ -56,13 +59,13 @@ export const enterResort = (code: string, name: string) =>
   run<string>(supabase.rpc('enter_resort', { p_code: code, p_name: name.trim() }));
 
 // Trang trí & túi đồ
-export const loadDecor = () => run<Decor[]>(supabase.from('decor').select('id, owner_id, island, item_id, x, y, rot'));
+export const loadDecor = async () => (await run<Decor[]>(supabase.from('decor').select('id, owner_id, island, item_id, x, y, rot'))).map(d => (d.y >= TOP_Y ? { ...d, y: d.y - TOP_Y, top: true } : d));
 export const loadInventory = (userId: string) =>
   run<InvRow[]>(supabase.from('inventory').select('item_id, qty').eq('user_id', userId).gt('qty', 0));
-export const placeDecor = (itemId: string, island: string, x: number, y: number, rot = 0) =>
-  run<string>(supabase.rpc('place_decor2', { p_item: itemId, p_island: island, p_x: x, p_y: y, p_rot: rot }));
-export const moveDecor = (id: string, x: number, y: number, rot = 0) =>
-  run(supabase.rpc('move_decor2', { p_id: id, p_x: x, p_y: y, p_rot: rot }));
+export const placeDecor = (itemId: string, island: string, x: number, y: number, rot = 0, top = false) =>
+  run<string>(supabase.rpc('place_decor2', { p_item: itemId, p_island: island, p_x: x, p_y: y + (top ? TOP_Y : 0), p_rot: rot }));
+export const moveDecor = (id: string, x: number, y: number, rot = 0, top = false) =>
+  run(supabase.rpc('move_decor2', { p_id: id, p_x: x, p_y: y + (top ? TOP_Y : 0), p_rot: rot }));
 export const removeDecor = (id: string) => run(supabase.rpc('remove_decor', { p_id: id }));
 
 /** Nhận thưởng một lần theo key; false nếu đã nhận */

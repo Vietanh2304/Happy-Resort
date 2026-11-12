@@ -65,6 +65,8 @@ const HOME_RECIPES: KRecipe[] = content.recipes
 const FARM_HOME: KRecipe[] = [
   { id: 'fried_egg', needs: ['egg'], m: 'S' }, { id: 'omelette', needs: ['egg', 'egg', 'cheese'], m: 'S' },
   { id: 'flan', needs: ['egg', 'egg', 'milk'], m: 'S' }, { id: 'salted_egg', needs: ['duck_egg', 'duck_egg'], m: 'S' },
+  // kim chi tự muối ở Gwangju mang về
+  { id: 'kimchi_fried_rice', needs: ['kimchi', 'rice', 'egg'], m: 'S' }, { id: 'kimchi_plate', needs: ['kimchi', 'kimchi'], m: 'plate' },
 ].filter(r => item(r.id).kind === 'dish' && !HOME_RECIPES.some(h => h.id === r.id)) as KRecipe[];
 HOME_RECIPES.push(...FARM_HOME);
 const BAKERY_RECIPES: KRecipe[] = [

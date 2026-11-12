@@ -12,13 +12,13 @@ import { THEMES, type Theme } from '../lib/festivals';
 import type { TwinPlane } from './Twin';
 import { discoRoom, hotAirBalloonSprite, kiteSprite, happeningOf, seasonOfMonth, LANDMARKS, PIN_AT, type CityKind, cityKind, citySprite, distanceKm, observatoryRoom, telescopeSprite, cafeBuildingSprite, cafeChairSprite, cafeRoom, cafeTableSprite, campBackground, campfireSprite, ferrisCabinSprite, ferrisFrameSprite, ferrisRimSprite, logSeatSprite, petSprite, tentSprite, wheelCabinSprite, wheelPanorama } from '../lib/places';
 import { animal, content, item, type Combo, type Phase, type WeatherType } from '../lib/content';
-import { ART, BED_PILLOWS, bedQuiltSprite, emojiPx } from '../lib/furniture';
+import { ART, BED_PILLOWS, bedQuiltSprite, emojiPx, SURFACE } from '../lib/furniture';
 import { growth, needsWater, plotStage, STAR_PERIOD, starVisible, type Pickup } from '../lib/game';
 import { arcadeRoom, picnicSprite, BATH_WATERS, tubBackSprite, tubFrontSprite, type BathWater, chandelierSprite, dinnerTableSprite, farmBackground, farmGateSprite, gameTentSprite, plantSprite, restaurantRoom, shopRoom, soilSprite, velvetChairSprite } from '../lib/interiors';
 import { emojiSprite, makeSprite, type Sprite } from '../lib/pixel';
 import type { Act } from '../lib/acts';
 import { dropSprite } from '../lib/playSprites';
-import { cellsOf, cradleSpots, floorDepth, isWallCell, rotSize } from '../lib/placement';
+import { cellsOf, cradleSpots, floorDepth, isWallCell, rotSize, surfaceAt } from '../lib/placement';
 import type { Ghost } from '../lib/useDecorEditor';
 import { SKY } from '../lib/sky';
 import { bobberSprite, cinemaBackground, cloudSprite, dockSprite, palmSprite } from '../lib/sprites';
@@ -44,6 +44,7 @@ import {
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
 import { LoungeContent } from './Lounge';
+import { CampGlam, HillGlam, LoungeLove } from './SceneGlam';
 import { SeaLife } from './SeaLife';
 import { ReefContent } from './Reef';
 import { SkyContent } from './Skydive';
@@ -303,7 +304,7 @@ const roomFoot = (d: Decor): Pt => {
 };
 /** Thứ tự lớp của đồ trên sàn phòng: món đứng trước luôn vẽ đè món đứng sau (kể cả giường to) */
 const roomDepth = (scene: string, decor: Decor[]) =>
-  floorDepth(scene, decor.filter(d => d.island === scene && !isWallCell(scene, d.y) && !ART[d.item_id]?.flat), d => Math.round(roomFoot(d).y));
+  floorDepth(scene, decor.filter(d => d.island === scene && !d.top && !isWallCell(scene, d.y) && !ART[d.item_id]?.flat), d => Math.round(roomFoot(d).y));
 
 function SceneContent(p: WorldProps) {
   const { scene, me, partner, live, go, enter, on } = p;
@@ -380,7 +381,7 @@ function SceneContent(p: WorldProps) {
   const bedOf = (who: typeof live.mine | null) => (who && (who.act === 'sleep' || who.act === 'intimate') && who.bed ? p.decor.find(d => d.id === who.bed && d.island === scene) : undefined);
   const myBed = bedOf(live.mine), theirBed = p.partnerHere ? bedOf(theirs) : undefined;
   // Trong phòng: đứng ở phía trước một món (bên phải hoặc bên dưới chân đồ) thì luôn vẽ đè lên món đó
-  const roomItems = def.walk === 'room' ? p.decor.filter(d => d.island === scene && !isWallCell(scene, d.y) && !ART[d.item_id]?.flat) : [];
+  const roomItems = def.walk === 'room' ? p.decor.filter(d => d.island === scene && !d.top && !isWallCell(scene, d.y) && !ART[d.item_id]?.flat) : [];
   const depth = def.walk === 'room' ? roomDepth(scene, p.decor) : new Map<string, number>();
   const zAt = def.walk === 'room' ? (x: number, y: number) => {
     const g = roomGrid({ x, y });
@@ -404,6 +405,7 @@ function SceneContent(p: WorldProps) {
           me={{ look: myDress.look, live: live.mine, bubble: live.bubbles.me, name: me.display_name }}
           them={p.partnerHere && partner && theirs ? { look: theirDress.look, live: theirs, bubble: live.bubbles.partner, name: partner.display_name } : null} />
       )}
+      {scene === 'lounge' && <LoungeLove phase={phase} />}
 
       {spotOf(scene) && <SpotContent spot={spotOf(scene)!} scene={scene as SpotScene} me={me} live={live} partnerHere={!!p.partnerHere} looks={{ me: myDress.look, them: theirDress.look }} onAnim={n => p.onAnim?.(n)} onKiss={() => p.onKiss?.()} onCamera={() => p.onCamera?.()} today={p.myView.time.date} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland_aurora'} go={go} />}
       {scene.startsWith('trip_') && tripOf(scene.slice(5)) && <FxList fx={mainOf(scene.slice(5) as TripId).fx} scene={scene} night={phase === 'night' || phase === 'sunset' || scene === 'trip_iceland'} />}
@@ -475,6 +477,7 @@ function SceneContent(p: WorldProps) {
 
       {scene === 'hill' && (
         <>
+          <HillGlam mode={p.hillSky} />
           <Spr sprite={treeSprite(0)} x={18} y={118} className={hillDark ? 'dim' : p.hillSky === 'sunset' ? 'warm' : ''} />
           <Spr sprite={cherrySprite()} x={176} y={124} className={hillDark ? 'dim' : p.hillSky === 'sunset' ? 'warm' : ''} />
           <Spr sprite={hillBenchSprite()} x={96} y={126} z={110} className={hillDark ? 'dim' : p.hillSky === 'sunset' ? 'warm' : ''} />
@@ -538,12 +541,12 @@ function SceneContent(p: WorldProps) {
       {/* Nhân vật */}
       {(myBed || theirBed) && <BedLayer {...p} myBed={myBed} theirBed={theirBed} />}
       <KidLayer {...p} mySeat={mySeat} theirSeat={theirSeat} />
-      {!myBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin', 'boat', 'pottery', 'basket', 'cable'].includes(live.mine.act ?? '')) && <Avatar
+      {!myBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin', 'boat', 'pottery', 'basket', 'cable', 'kimchi'].includes(live.mine.act ?? '')) && <Avatar
         key={`${scene}-me`} look={myTub ? bathLook(me.avatar) : myDress.look} umbrella={myDress.umbrella}
         x={myTub?.x ?? mySeat?.x ?? live.mine.pos.x} y={myTub?.y ?? mySeat?.y ?? live.mine.pos.y} faceLeft={myTub?.left ?? mySeat?.left ?? (BACK_ACTS.includes(live.mine.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(live.mine.act ?? '')} makeup={live.mine.act === 'makeup'} riding={live.mine.horse && SCENES[scene].outdoor ? horseKind(p.animals, live.mine.horse) : undefined}
         sitting={sitting || !!myTub || SIT_ACTS.includes(live.mine.act ?? '')} bubble={live.bubbles.me} onArrive={p.arrived} onClick={scene === 'farm' ? undefined : on.self} hold={holdFor(live.mine, true)} status={liveStatus(me)} zAt={myTub ? undefined : SINK_ACTS.includes(live.mine.act ?? '') ? () => Math.round(roomPt(BATH.back.gx, BATH.back.gy).y) - 1 : zAt} dance={scene === 'disco' ? p.dance.me : p.couple ? { m: p.couple.kind === 'hug' ? 7 : 8, at: p.couple.at, both: true } : undefined} act={p.acts.me} duo={scene === 'disco' ? { side: p.firstSeat ? 'L' : 'R', together: p.partnerHere } : p.couple ? { side: p.couple.mySide, together: true } : undefined} swim={scene === 'reef'} torch={scene === 'reef' && phase === 'night'} zoom={ZOOM[scene]}
       />}
-      {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin', 'boat', 'pottery', 'basket', 'cable'].includes(theirs.act ?? '')) && (
+      {p.partnerHere && partner && theirs && !theirBed && scene !== 'lounge' && scene !== 'sky' && !(scene.startsWith('trip_') && ['tent', 'ride', 'coaster', 'spin', 'boat', 'pottery', 'basket', 'cable', 'kimchi'].includes(theirs.act ?? '')) && (
         <Avatar
           key={`${scene}-partner`} look={theirTub ? bathLook(partner.avatar) : theirDress.look} umbrella={theirDress.umbrella} name={partner.display_name}
           x={theirTub?.x ?? theirSeat?.x ?? theirs.pos.x} y={theirTub?.y ?? theirSeat?.y ?? theirs.pos.y} faceLeft={theirTub?.left ?? theirSeat?.left ?? (BACK_ACTS.includes(theirs.act ?? '') ? true : undefined)} faceBack={BACK_ACTS.includes(theirs.act ?? '')} makeup={theirs.act === 'makeup'} riding={theirs.horse && SCENES[scene].outdoor ? horseKind(p.animals, theirs.horse) : undefined}
@@ -563,7 +566,7 @@ function SceneContent(p: WorldProps) {
       {p.snowball && Date.now() - p.snowball.at < 1500 && <i key={p.snowball.at} className="snowball" style={{ left: p.snowball.from.x * s, top: (p.snowball.from.y - 14) * s, '--dx': `${(p.snowball.to.x - p.snowball.from.x) * s}px`, '--dy': `${(p.snowball.to.y - p.snowball.from.y) * s}px`, width: 4 * s, height: 4 * s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'snow' && <div className="px-snow" style={{ '--s': s } as CSSProperties} />}
       {def.outdoor && realSky && wx === 'fog' && <div className="px-fog" />}
-      {def.outdoor && scene !== 'hill' && !scene.startsWith('trip_') && <div className={`tint tint-${phase}`} />}
+      {def.outdoor && scene !== 'hill' && scene !== 'camp' && !scene.startsWith('trip_') && <div className={`tint tint-${phase}`} />}
       {p.theme && (def.outdoor || scene === 'house') && <FestFall theme={p.theme} date={p.myView.time.date} />}
       {p.theme && def.outdoor && scene !== 'town' && scene !== 'sky' && scene !== 'reef' && def.walk && <FestScene theme={p.theme} date={p.myView.time.date} w={def.w} h={def.h} floor={def.walk && def.walk !== 'room' ? def.walk.y1 : def.h - 6} />}
       {p.theme && def.outdoor && <div className={`fest-tint fest-${p.theme}`} />}
@@ -924,6 +927,7 @@ function CampContent(p: WorldProps & { dark: boolean }) {
   const [left, right] = SEATS.camp!;
   return (
     <>
+      <CampGlam phase={p.myView.phase} />
       <Spr sprite={tentSprite()} x={156} y={100} />
       <Spr sprite={logSeatSprite()} x={left.x} y={124} z={124} />
       <Spr sprite={logSeatSprite()} x={right.x} y={124} z={124} />
@@ -1072,7 +1076,7 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
     const walker = live.mine.walkKid === k.id || live.mine.walkAll ? 'me' : live.theirs?.walkKid === k.id || live.theirs?.walkAll ? 'partner' : null;
     if (walker) {
       const who = walker === 'me' ? live.mine : theirs;
-      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom' || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask', 'coaster', 'spin', 'boat', 'pottery', 'basket', 'cable'].includes(who.act ?? ''))) continue;
+      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom' || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask', 'coaster', 'spin', 'boat', 'pottery', 'basket', 'cable', 'kimchi'].includes(who.act ?? ''))) continue;
       const seat = walker === 'me' ? p.mySeat : p.theirSeat;
       // nhiều bé cùng đi: xếp xen kẽ hai bên, xa dần
       const n = nWith[walker]++, side = n % 2 ? -1 : 1, gap = 10 + Math.floor(n / 2) * 9;
@@ -1257,6 +1261,13 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
           return <WallSpr key={d.id} sprite={decorSprite(d)} x={c.x} y={c.y} left={d.y === WALL_L} onHold={editing ? undefined : () => on.pickDecor(d)} className={`decor ${sel} ${d.id === p.ghost?.movingId ? 'moving' : ''}`} title={item(d.item_id).name} />;
         }
         const art = ART[d.item_id];
+        // bày trên mặt bàn / tủ: nâng lên bằng mặt bàn, vẽ đè lên cái bàn đó
+        const under = d.top ? surfaceAt(island, decor, d.x, d.y, d.id) : undefined;
+        if (d.top) {
+          const f = roomFoot(d), lift = under ? SURFACE[under.item_id] ?? 0 : 0;
+          return <Spr key={d.id} sprite={decorSprite(d)} x={f.x} y={f.y - lift} z={(under ? depth.get(under.id) ?? Math.round(f.y) : Math.round(f.y)) + 1} flip={!!d.rot}
+            onHold={editing ? undefined : () => on.pickDecor(d)} className={`decor ${sel} ${d.id === p.ghost?.movingId ? 'moving' : ''}`} title={item(d.item_id).name} />;
+        }
         const foot = roomFoot(d);
         return (
           <div key={d.id}>
@@ -1284,7 +1295,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
         );
       })}
 
-      {editing && p.ghost && <RoomGhost ghost={p.ghost} island={island} />}
+      {editing && p.ghost && <RoomGhost ghost={p.ghost} island={island} decor={decor} />}
       {editing && <RoomCells {...p} />}
       {!editing && (
         <>
@@ -1440,7 +1451,7 @@ function WallSpr({ sprite, x, y, left, className, title, onHold }: { sprite: Spr
   );
 }
 
-function RoomGhost({ ghost, island }: { ghost: Ghost; island: string }) {
+function RoomGhost({ ghost, island, decor }: { ghost: Ghost; island: string; decor: Decor[] }) {
   const cls = `ghost ${ghost.why ? 'bad' : 'ok'}`;
   if (isWallCell(island, ghost.y)) {
     const c = wallSlot(ghost.y, ghost.x);
@@ -1448,6 +1459,8 @@ function RoomGhost({ ghost, island }: { ghost: Ghost; island: string }) {
   }
   const art = ART[ghost.itemId];
   const foot = art ? roomPt(ghost.x + 1, ghost.y + 1) : { x: roomPt(ghost.x + 0.5, ghost.y + 0.5).x, y: roomPt(ghost.x + 0.5, ghost.y + 0.5).y + 4 };
+  const under = ghost.top ? surfaceAt(island, decor, ghost.x, ghost.y, ghost.movingId) : undefined;
+  if (under) foot.y -= SURFACE[under.item_id] ?? 0;
   return <Spr sprite={itemSprite(ghost.itemId)} x={foot.x} y={foot.y} z={460} flip={!!ghost.rot} className={cls} />;
 }
 

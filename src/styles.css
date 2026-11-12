@@ -1872,3 +1872,6 @@ textarea { resize: vertical; }
 .cb-bar .row { gap: 10px; }
 .cb-photos { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-width: 420px; }
 .cb-photos img { width: 100%; border-radius: 8px; border: 2px solid var(--ink); }
+
+/* lớp vẽ động làm lộng lẫy đồi ngắm cảnh, bãi cắm trại, ghế ngắm biển */
+.glam-cv { position: absolute; left: 0; top: 0; pointer-events: none; image-rendering: pixelated; }

@@ -2090,6 +2090,27 @@
       "kind": "decor"
     },
     {
+      "id": "kimchi",
+      "name": "Kim chi tự muối Gwangju",
+      "icon": "🥬",
+      "kind": "crop",
+      "price": 12
+    },
+    {
+      "id": "kimchi_fried_rice",
+      "name": "Cơm chiên kim chi",
+      "icon": "🍳",
+      "kind": "dish",
+      "price": 120
+    },
+    {
+      "id": "kimchi_plate",
+      "name": "Đĩa kim chi ăn kèm",
+      "icon": "🥗",
+      "kind": "dish",
+      "price": 40
+    },
+    {
       "id": "ha_vase",
       "name": "Bình gốm Thanh Hà tự nặn",
       "icon": "🏺",

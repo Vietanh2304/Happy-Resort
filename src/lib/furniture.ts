@@ -352,6 +352,10 @@ function xy(p: [number, number]): [number, number] {
 /** Nơi một món được đặt: đồ không vẽ tay (emoji) đặt được trên sàn và ngoài vườn */
 /** Đồ không vẽ tay nhưng treo được lên tường */
 const HANGABLE = new Set(['certificate', 'lantern', 'chime', 'guitar', 'photo_frame', 'den_ca_chep', 'bong_bay_tim', 'kite', 'star_lantern', 'kid_card', 'peach']);
+/** Mặt trên của bàn / tủ: cao bao nhiêu điểm ảnh (để bày đồ nhỏ lên) */
+export const SURFACE: Record<string, number> = { nightstand: 9, low_table: 8, desk: 10, bookshelf: 23, wardrobe: 27, dining_table: 8, dresser: 11, kitchen_counter: 11 };
+/** Món nhỏ bày được lên mặt bàn / tủ: đồ 1 ô đặt-đâu-cũng-được (trừ ghế) */
+export const canTop = (itemId: string) => placeOf(itemId) === 'any' && itemId !== 'chair' && sizeOf(itemId)[0] === 1 && sizeOf(itemId)[1] === 1;
 export const placeOf = (itemId: string): Place => (HANGABLE.has(itemId) ? 'hang' : ART[itemId]?.place ?? 'any');
 
 /**

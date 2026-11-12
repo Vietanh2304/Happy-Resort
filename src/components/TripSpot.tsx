@@ -17,6 +17,7 @@ import { Follower } from './Wander';
 import { POT_JOIN, PotteryRoom, potteryStallSprite } from './Pottery';
 import { BASKET_JOIN, BasketRide } from './Basket';
 import { CABLE_JOIN, CableRide } from './Cable';
+import { KIM_JOIN, KimchiRoom, kimchiStallSprite } from './Kimchi';
 import { InviteBanner } from './InviteBanner';
 
 const v = (o: Record<string, string | number>) => o as CSSProperties;
@@ -56,7 +57,9 @@ export function FxList({ fx, scene, night }: { fx: Fx[]; scene: string; night: b
 
 export const RIDE_MS = 9000;
 /** Hoạt động hai người vào chung một màn riêng (xưởng gốm, thuyền thúng): trả xu nhận quà, rủ nhau, vào muộn được trong `join` ms */
-const SESS = {
+const SESS: Record<'pottery' | 'basket' | 'cable' | 'kimchi', { item: string; n?: number; join: number; ask: (p: number) => string; joinAsk: (p: number) => string; invite: string; yes: string; late: string }> = {
+  kimchi: { item: 'kimchi', n: 3, join: KIM_JOIN, ask: (p: number) => `🥬 Vào lớp muối kim chi kiểu Gwangju (${p} xu)? Muối xong mang 3 hũ kim chi về cất tủ lạnh nấu ăn`, joinAsk: (p: number) => `🥬 Vào muối kim chi cùng người ấy (${p} xu)?`,
+    invite: '🥬 Người ấy rủ vào lớp muối kim chi làng Penguin', yes: 'Vào muối cùng!', late: 'Lớp muối kim chi bắt đầu trộn sốt mất rồi — lần sau nha' },
   pottery: { item: 'ha_vase', join: POT_JOIN, ask: (p: number) => `🏺 Học nặn gốm ở xưởng Thanh Hà (${p} xu)? Nặn xong mang bình về nhà nha`, joinAsk: (p: number) => `🏺 Vào xưởng gốm nặn cùng người ấy (${p} xu)?`,
     invite: '🏺 Người ấy rủ vào xưởng nặn gốm Thanh Hà', yes: 'Vào ngồi cạnh!', late: 'Lớp nặn gốm bắt đầu mất rồi — lần sau nha' },
   basket: { item: 'ha_leaf_grasshopper', join: BASKET_JOIN, ask: (p: number) => `🧺 Đi thuyền thúng rừng dừa (${p} xu)? Có câu cua, múa thúng, quăng chài, đan cào cào lá dừa mang về`, joinAsk: (p: number) => `🧺 Lên thúng cùng người ấy (${p} xu)?`,
@@ -186,10 +189,10 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       live.say(`${it.icon} Ngon quá!`);
     });
     if (a.k === 'photo') return onCamera();
-    if (a.k === 'pottery' || a.k === 'basket' || a.k === 'cable') return void run(async () => {
+    if (a.k === 'pottery' || a.k === 'basket' || a.k === 'cable' || a.k === 'kimchi') return void run(async () => {
       const S = SESS[a.k];
       if (!confirm(S.ask(a.price))) return;
-      await api.buyItem(S.item, a.price); notify('inventory', 'profiles');
+      await api.buyItems(S.item, Math.ceil(a.price / (S.n ?? 1)), S.n ?? 1); notify('inventory', 'profiles');
       // người ấy đang ở trong rồi → vào cùng luôn, không mở phiên riêng
       const th = partnerHere ? L.current.theirs : null;
       if (th?.act === a.k && th.trip && Date.now() - th.trip.at < S.join) { setSess(null); L.current.update({ act: a.k, trip: { i, at: th.trip.at }, dish: null, drink: null }); return; }
@@ -258,7 +261,7 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
     void run(async () => {
       if (!confirm(S.joinAsk(a.price))) return;
       if (Date.now() - d.at > S.join) return toastError(new Error(S.late));
-      await api.buyItem(S.item, a.price); notify('inventory', 'profiles');
+      await api.buyItems(S.item, Math.ceil(a.price / (S.n ?? 1)), S.n ?? 1); notify('inventory', 'profiles');
       L.current.update({ act: d.k, trip: { i: d.i, at: d.at }, dish: null, drink: null });
     });
   };
@@ -298,6 +301,8 @@ export function SpotContent({ spot, scene, me, today, night, go, live, partnerHe
       {invite && (() => { const a = spot.acts[invite.i]; return a ? <InviteBanner text={`💑 Người ấy rủ ${lbl(a).replace(/^\S+\s/, '')}`} yes="Lên cùng!" onYes={joinRide} onNo={() => setInvite(null)} /> : null; })()}
       {join && !invite && (() => { const a = spot.acts[join.i]; return a ? <InviteBanner text={`💑 Người ấy đang ${lbl(a).replace(/^\S+\s/, '')}`} yes="Làm cùng!" onYes={() => doAct(a, join.i, 1)} onNo={() => setJoin(null)} /> : null; })()}
       {scene === 'trip_hoian_lantern' && <Spr sprite={potteryStallSprite()} x={100} y={152} z={152} />}
+      {scene === 'trip_gwangju_penguin' && <Spr sprite={kimchiStallSprite()} x={186} y={146} z={146} />}
+      {mine.act === 'kimchi' && mine.trip && <KimchiRoom at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'kimchi' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
       {mine.act === 'pottery' && mine.trip && <PotteryRoom at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'pottery' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
       {mine.act === 'basket' && mine.trip && <BasketRide at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'basket' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
       {mine.act === 'cable' && mine.trip && <CableRide at={mine.trip.at} me={looks.me} mate={looks.them} them={theirs?.act === 'cable' && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
