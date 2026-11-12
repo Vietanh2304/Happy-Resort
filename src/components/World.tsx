@@ -497,8 +497,8 @@ function SceneContent(p: WorldProps) {
           {p.hillSky === 'aurora' && <div className="fx-aurora" />}
           {['night', 'meteor', 'aurora'].includes(p.hillSky) && <Fireflies n={10} area={[0, 100, 192, 44]} />}
           {realSky && p.combos.some(c => c.effect === 'rainbow') && <Rainbow />}
-          <Spr sprite={hotAirBalloonSprite('#e8304a')} x={160} y={104} z={104} className="bob" title="🎈 Khinh khí cầu Cappadocia" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'balloon' }))} />
-          <Tag x={160} y={74} className="label" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'balloon' }))}>🎈 Bay khinh khí cầu</Tag>
+          <Spr sprite={hotAirBalloonSprite('#e8304a')} x={160} y={104} z={104} className="bob" title="🎈 Khinh khí cầu Cappadocia" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'hillballoon' }))} />
+          <Tag x={160} y={74} className="label" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: 'hillballoon' }))}>🎈 Bay khinh khí cầu</Tag>
           <Hot x={0} y={130} w={40} h={14} title="Về làng" onClick={() => enter('town', { x: TOWN.toHill.x, y: TOWN.toHill.y + 4 })} />
           <Tag x={20} y={134} className="label">🏘️ Về làng</Tag>
         </>

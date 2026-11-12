@@ -151,7 +151,11 @@ function drawBalloon(f: F) {
   { const x = 500 * 0.3 + 160 - wx * 0.3, b = 140 + alt * 40; if (x > -60 && x < W + 60) { poly(c, [x - 40, b, x - 26, b - 30, x - 12, b - 44, x + 10, b - 46, x + 26, b - 30, x + 42, b], mix('#c89a8a', '#e8c8a8', k)); for (let j = 0; j < 22; j++) R(c, x - 26 + (j * 7.3) % 52, b - 6 - ((j * 13) % 34), 1.4, 2, '#5a3424'); R(c, x - 1, b - 52, 1, 6, '#c8302a'); poly(c, [x, b - 52, x + 6, b - 50, x, b - 48], '#e8302a'); } }
   tile(chimneys('duo:capp2', 110, 40, 1.5, [mix('#d0928a', '#f0c8a8', k), mix('#a8707a', '#d0a088', k), mix('#7a4a4a', '#8a5a3a', k)]), 0.35, 112 + alt * 60, 110);
   near.forEach(drawB);
-  // khinh khí cầu của hai đứa (giữa màn): bóng sọc lớn, giỏ mây, đèn đốt phụt lửa
+  ourBalloon(f, fire);
+}
+/** khinh khí cầu của hai đứa (giữa màn): bóng sọc lớn, giỏ mây, đèn đốt phụt lửa */
+function ourBalloon(f: F, fire: number) {
+  const { c, t } = f;
   const CX = 150, sway = Math.sin(t * 0.7) * 1.5, by = 112 + Math.sin(t * 0.9) * 1.5;
   const burn = fire > 0 || Math.sin(t * 0.9) > 0.92, bx = CX + sway;
   ell(c, bx, by - 64, 44, 50, '#e8304a'); c.save(); c.beginPath(); c.ellipse(bx, by - 64, 44, 50, 0, 0, Math.PI * 2); c.clip(); for (let j = -3; j <= 3; j++) ell(c, bx + j * 12.5, by - 64, 4.2 * (1 - Math.abs(j) * 0.18), 49.5, j % 2 ? '#ffffff' : '#f6c445'); ell(c, bx + 26, by - 60, 20, 52, '#00000022'); c.restore(); ell(c, bx - 16, by - 84, 9, 16, '#ffffff38');
@@ -163,6 +167,66 @@ function drawBalloon(f: F) {
   R(c, bx - 17, by + 2, 34, 13, '#a8743a'); for (let j = 0; j < 6; j++) R(c, bx - 17, by + 3 + j * 2, 34, 0.6, '#8a5a2a'); for (let j = 0; j < 9; j++) R(c, bx - 16 + j * 4, by + 2, 0.6, 13, '#c88a4a'); R(c, bx - 18, by + 1, 36, 2, '#6a4a2a');
   hearts(f, 'hug', 3000, () => [bx, by - 4]);
 }
+
+// ═════════ Khinh khí cầu trên đồi nhà mình: bay lên ngắm làng, bãi biển, biển, đảo — trời theo giờ thật ═════════
+type HPh = 'day' | 'sunset' | 'night' | 'dawn';
+const rose = (c: Ctx, x: number, y: number, r: number, col: string) => { circ(c, x, y, r, mix(col, '#000000', 0.25)); circ(c, x - r * 0.2, y - r * 0.2, r * 0.75, col); circ(c, x - r * 0.25, y - r * 0.3, r * 0.35, mix(col, '#ffffff', 0.35)); };
+const phNow = (): HPh => { const h = new Date().getHours(); return h >= 19 || h < 5 ? 'night' : h >= 17 ? 'sunset' : h < 7 ? 'dawn' : 'day'; };
+const HSKY: Record<HPh, string[]> = { day: ['#2a78e0', '#5aaaf2', '#a8dcff', '#e0f4ff'], sunset: ['#2a1e6a', '#7a2a8a', '#e8507a', '#ffa050', '#ffe0a0'], night: ['#040820', '#0a1440', '#1a2660', '#2e3a7a'], dawn: ['#3a3a9a', '#a06ac0', '#f0a0b8', '#ffd8b0'] };
+const homeLand = (ph: HPh) => bake(`duo:homeland:${ph}`, 640, 130, (c, rnd) => {
+  const dark = ph === 'night', dim = (col: string) => (dark ? mix(col, '#0a1030', 0.55) : ph === 'sunset' ? mix(col, '#ff8a5a', 0.15) : col);
+  // bãi cát + sóng trắng
+  R(c, 0, 0, 640, 3, dim('#ffffff')); R(c, 0, 3, 640, 14, dim('#f6e0b0')); for (let k = 0; k < 120; k++) R(c, rnd() * 640, 4 + rnd() * 12, 1, 0.5, dim('#e8c890'));
+  for (let k = 0; k < 26; k++) { const x = 10 + k * 24 + rnd() * 6; R(c, x, 6, 0.6, 5, dim('#8a6a4a')); ell(c, x, 6, 4, 1.6, dim(['#f08aa6', '#5aa8e0', '#f6c445'][k % 3])); }
+  for (let k = 0; k < 14; k++) { const x = rnd() * 640; line(c, x, 12, x + 2, 2, 0.8, dim('#8a5a3a')); for (let j = 0; j < 5; j++) { const a = -Math.PI + j * 0.7; line(c, x + 2, 2, x + 2 + Math.cos(a) * 6, 2 + Math.sin(a) * 2 + 2, 0.7, dim('#3a8a3a')); } }
+  // làng: cỏ, đường đá, nhà gỗ mái màu, cây tròn, anh đào, đài phun nước
+  R(c, 0, 17, 640, 113, dim('#8cc65c')); for (let k = 0; k < 600; k++) R(c, rnd() * 640, 18 + rnd() * 110, 1, 0.5, dim(rnd() < 0.5 ? '#7ab84a' : '#a8d870'));
+  R(c, 0, 52, 640, 5, dim('#d8c8a8')); for (let x = 30; x < 640; x += 90) R(c, x, 17, 4, 113, dim('#d8c8a8'));
+  for (let k = 0; k < 34; k++) { const x = 8 + (k % 17) * 37 + rnd() * 8, y = k < 17 ? 44 : 78 + rnd() * 6, w = 14 + rnd() * 6;
+    R(c, x, y - 8, w, 8, dim(['#fbefdc', '#f4e0c8', '#ffffff'][k % 3])); poly(c, [x - 2, y - 8, x + w / 2, y - 14, x + w + 2, y - 8], dim(['#e8605a', '#5a8ad8', '#f6a83a', '#e87aa8', '#6aa04a'][k % 5]));
+    for (const dx of [3, w - 6]) { R(c, x + dx, y - 6, 3, 3, dark ? '#ffd27a' : '#bfe4ff'); if (dark) glow(c, x + dx + 1.5, y - 4.5, 5, '#ffb048', 0.4); } R(c, x + w / 2 - 1.5, y - 4, 3, 4, dim('#8a5a3a')); }
+  for (let k = 0; k < 50; k++) { const x = rnd() * 640, y = 22 + rnd() * 100; if (Math.abs(y - 54) < 6) continue; circ(c, x, y, 3 + rnd() * 2, dim(rnd() < 0.2 ? '#ffb0c8' : rnd() < 0.5 ? '#4a9a4a' : '#5aae4a')); R(c, x - 0.5, y + 3, 1, 2, dim('#6a4a2a')); }
+  for (let k = 0; k < 4; k++) { const x = 70 + k * 160; ell(c, x, 66, 9, 3, dim('#c8c0b0')); ell(c, x, 65.5, 7, 2, dark ? '#3a5a9a' : '#7ac8f0'); R(c, x - 0.6, 58, 1.2, 7, dim('#e8e0d0')); }
+  // ruộng nông trại sọc luống
+  for (let k = 0; k < 3; k++) { const x0 = 120 + k * 200; for (let j = 0; j < 8; j++) R(c, x0, 96 + j * 3.5, 60, 2, dim(['#6aa03a', '#c8a050', '#e8c04a'][k])); }
+});
+function drawHomeBalloon(f: F) {
+  const { c, el, t } = f, ph = phNow(), dark = ph === 'night', s = clamp((el - CB) / CR);
+  const fire = f.taps.filter(x => x.id === 'fire' && f.now - x.at < 1500).length;
+  const alt = (s < 0.25 ? ease(s / 0.25) : s > 0.85 ? 1 - ease((s - 0.85) / 0.15) * 0.95 : 1) + Math.sin(t * 0.4) * 0.03 + fire * 0.02, wx = s * 560;
+  const HZ = 66 + alt * 14;
+  grad(c, 0, HZ, HSKY[ph]);
+  if (dark) { twinkles(c, t, 120, HZ - 6, 41); haloAt(c, 64, 22, 34, '#d8e0ff', 0.45); circ(c, 64, 22, 7, '#fff6d8'); circ(c, 67, 20, 6.2, HSKY.night[0]); }
+  else { const sx = ph === 'sunset' ? 230 : ph === 'dawn' ? 70 : 250, sy = ph === 'day' ? 22 : HZ - 10; c.save(); c.globalCompositeOperation = 'lighter'; haloAt(c, sx, sy, 70, ph === 'day' ? '#fff6c8' : '#ffb070', 0.6); haloAt(c, sx, sy, 22, '#ffffff', 0.6); c.restore(); circ(c, sx, sy, ph === 'day' ? 7 : 10, ph === 'day' ? '#fff6c0' : '#ffe0a0');
+    for (let j = 0; j < 6; j++) { const x = ((j * 71 - t * 1.4 - wx * 0.04) % (W + 80) + W + 80) % (W + 80) - 40; cloud(c, x, 14 + (j % 3) * 10, 26 + (j % 2) * 14, ph === 'day' ? '#ffffff' : '#ffc8c8', ph === 'day' ? '#dceeff' : '#c8709a'); } }
+  // biển + đảo dừa nhỏ ngoài khơi + hải đăng + thuyền buồm
+  const sea = dark ? '#16245a' : ph === 'sunset' ? '#c25a8a' : ph === 'dawn' ? '#9a90dc' : '#2aa8e8';
+  grad(c, HZ, H, [mix(sea, '#ffffff', 0.15), sea, mix(sea, '#000000', 0.25)]);
+  for (let k = 0; k < 40; k++) { const x = rr(k, 3) * W, y = HZ + 2 + rr(k, 4) ** 2 * 60, a = Math.sin(t * 2 + k * 2.1); if (a > 0.2) { c.globalAlpha = a - 0.2; R(c, x, y, 2 + rr(k, 5) * 3, 0.5, '#ffffff'); c.globalAlpha = 1; } }
+  { const x = 200 - wx * 0.05, y = HZ + 2; ell(c, x, y, 26, 3, dark ? '#1a2a3a' : '#e8d8a0'); ell(c, x, y - 1.5, 20, 3, dark ? '#1e3a2e' : '#4a9a4a'); for (let k = 0; k < 4; k++) { line(c, x - 12 + k * 8, y - 2, x - 10 + k * 8, y - 12, 0.7, '#5a3a2a'); for (let j = 0; j < 4; j++) { const a = -Math.PI + j * 0.9; line(c, x - 10 + k * 8, y - 12, x - 10 + k * 8 + Math.cos(a) * 5, y - 12 + Math.sin(a) * 2 + 2, 0.6, dark ? '#1e3a2e' : '#3a8a3a'); } } }
+  { const x = 290 - wx * 0.06, y = HZ; for (let k = 0; k < 8; k++) R(c, x - 1.4, y - 2 - k * 1.5, 2.8, 1.5, k % 3 === 1 ? '#e84a4a' : '#fbf6ee'); R(c, x - 1.6, y - 15, 3.2, 1.6, '#3a3a4a'); if (dark || Math.sin(t * 2) > 0) haloAt(c, x, y - 14, 6, '#fff0a0', 0.8); if (dark) { const a = t * 0.9; c.globalAlpha = 0.16; poly(c, [x, y - 14, x + Math.cos(a) * 80, y - 14 + Math.sin(a) * 10 - 3, x + Math.cos(a) * 80, y - 14 + Math.sin(a) * 10 + 3], '#fff6c0'); c.globalAlpha = 1; } }
+  for (let k = 0; k < 3; k++) { const x = ((t * (2 + k) + k * 110 - wx * 0.1) % (W + 40)) - 20, y = HZ + 6 + k * 5; R(c, x - 3, y, 6, 1.2, '#8a5a3a'); poly(c, [x, y - 0.5, x, y - 7, x + 4, y - 1], '#fffbf4'); }
+  // các khinh khí cầu khác của lễ hội làng bay quanh
+  for (let k = 0; k < 6; k++) { const d = 0.3 + rr(k, 8) * 0.6, x = ((rr(k, 9) * 600 - wx * (0.1 + d * 0.3) + t * 2) % (W + 80) + W + 80) % (W + 80) - 40, y = 40 + rr(k, 10) * 50 + Math.sin(t * 0.3 + k) * 3; balloon(c, x, y, 3 + d * 6, ['#f6c445', '#3a8ae8', '#ff8ab0', '#5ac87a', '#b87aff', '#ff8a3a'][k], '#ffffff', t, k, dark ? 1 : 0); }
+  // làng mình dưới chân (biển phía xa, bãi cát, làng, ruộng) — càng lên cao càng thấy rộng
+  { const cv = homeLand(ph), off = ((wx * 0.5) % 640 + 640) % 640, y = 112 + alt * 22; c.drawImage(cv, -off, y, 640, 130); c.drawImage(cv, 640 - off, y, 640, 130); }
+  // đồi ngắm cảnh — nơi cất cánh: vòm hoa hồng, ghế dài, khăn picnic (tụt dần xuống khi bay lên)
+  { const x = 150 - wx * 0.9, b = 150 + alt * 80; if (x > -120 && x < W + 120) {
+    c.fillStyle = dark ? '#2a5a4a' : ph === 'sunset' ? '#6a9a4a' : '#9fd067'; c.beginPath(); c.moveTo(x - 140, H + 30); c.quadraticCurveTo(x, b - 46, x + 140, H + 30); c.fill();
+    const ay = b - 26; c.strokeStyle = '#fbf6ee'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x - 14, ay + 18); c.lineTo(x - 14, ay); c.arc(x, ay, 14, Math.PI, 0); c.lineTo(x + 14, ay + 18); c.stroke();
+    for (let k = 0; k < 18; k++) { const a = Math.PI + (k / 17) * Math.PI; rose(c, x + Math.cos(a) * 14, ay + Math.sin(a) * 14, 1.2, ['#ff3a6a', '#ff8ab0', '#ffffff'][k % 3]); }
+    R(c, x - 10, ay + 10, 20, 2, '#c98a52'); R(c, x - 10, ay + 14, 20, 2, '#ecc18e'); R(c, x - 9, ay + 16, 1.2, 4, '#8a5a3c'); R(c, x + 8, ay + 16, 1.2, 4, '#8a5a3c');
+    for (let j = 0; j < 3; j++) for (let i = 0; i < 6; i++) R(c, x - 40 + i * 2.4, ay + 16 + j * 1.6, 2.4, 1.6, (i + j) % 2 ? '#e84a5a' : '#fff4ec');
+    if (dark || ph === 'sunset') for (let k = 0; k < 6; k++) haloAt(c, x - 14 + k * 5.6, ay - 13 + Math.abs(k - 2.5) * 2, 4, '#fff1a8', 0.6); } }
+  ourBalloon(f, fire);
+}
+const hillballoon: DuoCfg = {
+  title: 'Khinh khí cầu trên đồi', ms: CMS, join: CB, price: 15,
+  ask: '🎈 Bay khinh khí cầu từ đồi ngắm cảnh, ngắm cả làng mình từ trên cao', joinAsk: '🎈 Lên giỏ khinh khí cầu cùng người ấy', invite: '🎈 Người ấy rủ bay khinh khí cầu ngắm làng', yes: 'Lên giỏ cùng!', late: 'Khinh khí cầu cất cánh mất rồi — lần sau nha',
+  buttons: [{ id: 'fire', label: '🔥 Phun lửa', from: CB, to: CB + CR }, { id: 'hug', label: '💞 Ôm nhau', from: CB, to: CB + CR }, { id: 'photo', label: '📸 Chụp', from: CB, to: CB + CR }],
+  caption: el => { const s = (el - CB) / CR; return el < CB ? `🎈 Cởi dây neo trên đồi… ${Math.ceil((CB - el) / 1000)}` : s < 0.25 ? '🌹 Cất cánh khỏi vòm hoa hồng trên đồi' : s < 0.55 ? '🏘️ Nhìn kìa, làng mình bé xíu dưới chân!' : s < 0.85 ? '🏝️ Bãi biển, đảo dừa, hải đăng — đẹp quá trời' : s < 1 ? '🌾 Hạ cánh nhẹ nhàng xuống bãi cỏ' : '💞 Một vòng ngắm làng từ trên cao'; },
+  draw: drawHomeBalloon, snap: [CB + CR * 0.5], endTitle: '🎈 Ngắm làng mình từ trên cao', endNote: 'Hai đứa vừa bay một vòng quanh làng 💞',
+};
 const balloonCfg: DuoCfg = {
   title: 'Khinh khí cầu Cappadocia', ms: CMS, join: CB, price: 30, gift: { item: 'cap_balloon' },
   ask: '🎈 Bay khinh khí cầu ngắm bình minh Cappadocia', joinAsk: '🎈 Lên giỏ khinh khí cầu cùng người ấy', invite: '🎈 Người ấy rủ bay khinh khí cầu Cappadocia', yes: 'Lên giỏ cùng!', late: 'Khinh khí cầu cất cánh mất rồi — lần sau nha',
@@ -350,4 +414,4 @@ const skate: DuoCfg = {
   draw: drawXmas, snap: [FW + 9000], endTitle: '🎄 Một tối Giáng sinh ở Thuỵ Sĩ', endNote: 'Quả cầu tuyết đã vào túi đồ — lắc lên là tuyết rơi lấp lánh',
 };
 
-export const SKY_SCENES = { skylantern, balloon: balloonCfg, rooftop, glowsea, skate };
+export const SKY_SCENES = { skylantern, balloon: balloonCfg, hillballoon, rooftop, glowsea, skate };
