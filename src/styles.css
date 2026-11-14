@@ -1876,3 +1876,11 @@ textarea { resize: vertical; }
 
 /* lớp vẽ động làm lộng lẫy đồi ngắm cảnh, bãi cắm trại, ghế ngắm biển */
 .glam-cv { position: absolute; left: 0; top: 0; pointer-events: none; image-rendering: pixelated; }
+
+/* Hũ sao: ngôi sao giấy bay lên rồi mở thành lời nhắn */
+.star-open { position: fixed; inset: 0; z-index: 3000; background: radial-gradient(circle at 50% 45%, #2a2060ee, #05081eee); display: grid; place-items: center; cursor: pointer; }
+.star-fly { position: absolute; width: 60px; height: 60px; background: #ffd24a; clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); filter: drop-shadow(0 0 16px #ffd24a); animation: starfly 1.4s ease-in forwards; }
+@keyframes starfly { 0% { transform: translateY(40vh) scale(.3) rotate(0); } 70% { transform: translateY(0) scale(1.2) rotate(540deg); opacity: 1; } 100% { transform: scale(4) rotate(720deg); opacity: 0; } }
+.star-card { max-width: min(86vw, 420px); background: #fff8ec; color: #4a2a3a; border-radius: 14px; padding: 22px 20px; text-align: center; box-shadow: 0 0 40px #ffd24a88; opacity: 0; animation: starcard .6s 1.2s ease-out forwards; }
+.star-card p { font-size: 20px; line-height: 1.45; margin: 0 0 10px; white-space: pre-wrap; }
+@keyframes starcard { from { opacity: 0; transform: scale(.6) rotate(-6deg); } to { opacity: 1; transform: none; } }

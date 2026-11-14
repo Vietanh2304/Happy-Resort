@@ -36,6 +36,8 @@ export interface DuoCfg {
   snap: number[]; endTitle: string; endNote: string;
   gift?: { item: string; n?: number }; price: number;
   ask: string; joinAsk: string; invite: string; yes: string; late: string;
+  /** người bắt đầu chạy thêm việc (vd. nhận quà mỗi ngày) sau khi đồng ý */
+  onStart?: () => Promise<void>;
 }
 export type DuoKey = keyof typeof DUO_SCENES;
 export const isDuo = (k: string | null | undefined): k is DuoKey => !!k && k in DUO_SCENES;
@@ -171,7 +173,7 @@ export function DuoHost({ live, looks }: { live: Live; looks: { me: AvatarLook; 
       void (async () => {
         try {
           if (!confirm(cfg.price ? `${cfg.ask} (${cfg.price} xu)?` : `${cfg.ask}?`)) return;
-          await pay(cfg);
+          await pay(cfg); if (cfg.onStart) await cfg.onStart();
           const th = L.current.theirs;
           if (th?.act === k && th.trip && Date.now() - th.trip.at < cfg.join) { setInv(null); L.current.update({ act: k, trip: { i: 0, at: th.trip.at }, dish: null, drink: null }); return; }
           const at = Date.now(); L.current.update({ act: k, trip: { i: 0, at }, dish: null, drink: null });

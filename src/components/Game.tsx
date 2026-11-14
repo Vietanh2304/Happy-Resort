@@ -78,6 +78,8 @@ import { World, type Lantern, type View } from './World';
 import { CallButtons, CallTiles, EnterGate, RemoteAudio } from './Call';
 import { outWx } from '../lib/weather';
 import { DiarySheet, FestivalSheet, festKindOf, LanternParade, TravelSheet } from './Festive';
+import { CheerSheet } from './Cheer';
+import { dronePics } from './duoCheer';
 import { seeded } from '../lib/rng';
 import { tripCtx, tripOf, type TripId } from '../lib/trips';
 import { TripShopSheet } from './TripExtras';
@@ -96,7 +98,7 @@ type SheetState =
   | { kind: 'animal'; id: string }
   | { kind: 'ranchshop' }
   | { kind: 'stall'; id: StallId }
-  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'diary' } | { kind: 'festival' } | { kind: 'travel' } | { kind: 'tripshop' } | { kind: 'pen'; pen: 'stable' | 'pond' }
+  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'diary' } | { kind: 'cheer' } | { kind: 'festival' } | { kind: 'travel' } | { kind: 'tripshop' } | { kind: 'pen'; pen: 'stable' | 'pond' }
   | { kind: 'workshop' }
   | { kind: 'tailor' }
   | { kind: 'work' }
@@ -146,6 +148,10 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const [farm, , farmLoaded] = useSynced('farm', api.loadFarm, [] as api.FarmRow[]);
   const [photos] = useSynced('photos', api.loadPhotos, [] as api.Photo[]);
   const [mems] = useSynced('memories', api.loadMemories, [] as api.Memory[]);
+  // ảnh cho show drone (cũ trước, mới sau)
+  const [dpics] = useSynced('memories', api.loadDronePics, [] as api.Memory[]);
+  dronePics.list = dpics.filter(m => m.data?.img).map(m => ({ id: m.id, img: m.data.img as string }));
+  dronePics.msg = (mems.find(m => m.kind === 'dronemsg')?.data?.text as string) ?? '';
   const [capsules] = useSynced('capsules', api.loadCapsules, [] as api.Capsule[]);
   const [pet, , petLoaded] = useSynced('pets', api.loadPet, null as api.Pet | null);
   const [days] = useSynced('days', api.loadDays, [] as CustomDay[]);
@@ -154,6 +160,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
 
   const partnerOnline = !!partner && online.includes(partner.id);
   const live = useLive(partnerOnline);
+  const liveRef = useRef(live); liveRef.current = live;
   const scene = live.mine.scene;
   const theirs = partnerOnline ? live.theirs : null;
   const tripHere = scene.startsWith('trip_') ? scene.split('_')[1] : scene === 'restaurant' ? tripCtx.at : '';
@@ -877,6 +884,21 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // ───── Thông báo khi đang chạy nền ─────
   const lastNote = notes.find(n => n.to_id === me.id && !n.read_at)?.id;
   useEffect(() => { if (lastNote) void ping('📮 Thư mới', `${partnerName} vừa gửi thư cho bạn`, 'note'); }, [lastNote]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Quà hôm nay: hôm nào hai đứa cùng online lần đầu → người tặng (nhân vật nam) được mời tặng hoa + quà + hôn
+  useEffect(() => {
+    if (!partnerOnline || !partner) return;
+    const mineM = me.avatar?.gender === 'm', theirM = partner.avatar?.gender === 'm';
+    if (!(mineM && !theirM) && !(mineM === theirM && me.id < partner.id)) return;
+    const day = new Date().toLocaleDateString('sv'), key = `greet-asked:${day}`;
+    try { if (sessionStorage.getItem(key)) return; } catch { /* bỏ qua */ }
+    // chờ lúc cả hai đang rảnh (không ở giữa hoạt động nào) mới mời, để không chen ngang
+    const tm = setInterval(() => {
+      if (liveRef.current.mine.act || liveRef.current.theirs?.act || document.querySelector('.coaster')) return;
+      clearInterval(tm); try { sessionStorage.setItem(key, '1'); } catch { /* bỏ qua */ }
+      void api.hasClaim(me.id, `greet:${day}`).then(done => { if (!done) window.dispatchEvent(new CustomEvent('duo-start', { detail: 'greet' })); }).catch(() => {});
+    }, 5000);
+    return () => clearInterval(tm);
+  }, [partnerOnline]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (partnerOnline) void ping('💗 Người ấy vào resort', `${partnerName} vừa vào làng — vào chơi cùng nhé!`, 'online'); }, [partnerOnline]); // eslint-disable-line react-hooks/exhaustive-deps
   const kidNeeds = kids.filter(k => k.name && k.born_on <= myTime.date && kidMood(k).low.length).map(k => k.name).join(', ');
   useEffect(() => { if (kidNeeds) void ping('👶 Bé cần ba mẹ', `Bé ${kidNeeds} đang đói hoặc buồn ngủ rồi`, 'kid'); }, [kidNeeds, Math.floor(+now / 3 / 3600e3)]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1163,6 +1185,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           <DockButton icon="💬" label="Câu hỏi" badge={answeredToday ? 0 : 1} onClick={() => setSheet({ kind: 'question' })} />
           <DockButton icon="📔" label="Album" onClick={() => setSheet({ kind: 'album' })} />
           <DockButton icon="📓" label="Nhật ký" badge={mems.some(m => m.kind === 'diary' && m.user_id === me.id && m.day === myTime.date) ? 0 : 1} onClick={() => setSheet({ kind: 'diary' })} />
+          <DockButton icon="💝" label="Cổ vũ" badge={mems.some(m => m.kind === 'star' && m.data?.to === me.id && m.day === myTime.date) ? 1 : 0} onClick={() => setSheet({ kind: 'cheer' })} />
           <DockButton icon="✈️" label="Du lịch" onClick={() => setSheet({ kind: 'travel' })} />
           <DockButton icon="📖" label="Sổ tay" onClick={() => setSheet({ kind: 'collection' })} />
           <DockButton icon="⚙️" label="Cài đặt" onClick={() => setSheet({ kind: 'settings' })} />
@@ -1200,6 +1223,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'bugbook' && <BugBookSheet me={me} onClose={close} />}
       {sheet?.kind === 'pen' && <PenSheet pen={sheet.pen} animals={animals} inventory={inventory} onAnimal={id => setSheet({ kind: 'animal', id })} onShop={() => { close(); enter('ranch'); }} onClose={close} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
+      {sheet?.kind === 'cheer' && <CheerSheet me={me} partner={partner} mems={mems} pics={dpics} today={myTime.date} onClose={close} />}
       {sheet?.kind === 'diary' && <DiarySheet me={me} partner={partner} today={myTime.date} mems={mems} onClose={close} />}
       {sheet?.kind === 'festival' && festKind && <FestivalSheet kind={festKind} me={me} partner={partner} today={myTime.date} mems={mems} inventory={inventory} kids={kids} onClose={close} />}
       {sheet?.kind === 'tripshop' && tripHere && <TripShopSheet trip={tripHere as TripId} coins={couple?.coins ?? 0} onClose={close} onBought={(url, name) => { doAct('rummage'); setTimeout(() => { doAct('cheer'); window.dispatchEvent(new CustomEvent('trip-pop', { detail: { url } })); live.say(`🛍️ Mua ${name} mang về trang trí nhà!`); }, 900); }} />}

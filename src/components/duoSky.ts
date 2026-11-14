@@ -12,7 +12,7 @@ export const mix = (a: string, b: string, t: number) => { const A = hx(a), B = h
 const grad = (c: Ctx, y0: number, y1: number, cols: string[]) => { const g = c.createLinearGradient(0, y0, 0, y1); cols.forEach((col, i) => g.addColorStop(i / (cols.length - 1), col)); c.fillStyle = g; c.fillRect(0, y0, W, y1 - y0); };
 /** quầng sáng vẽ sẵn (vẽ hàng trăm cái mỗi khung vẫn nhẹ) */
 const halo = (col: string) => bake(`duo:halo:${col}`, 32, 32, c => glow(c, 16, 16, 16, col, 1), 2);
-const haloAt = (c: Ctx, x: number, y: number, r: number, col: string, a = 1) => { c.globalAlpha = a; c.drawImage(halo(col), x - r, y - r, r * 2, r * 2); c.globalAlpha = 1; };
+export const haloAt = (c: Ctx, x: number, y: number, r: number, col: string, a = 1) => { c.globalAlpha = a; c.drawImage(halo(col), x - r, y - r, r * 2, r * 2); c.globalAlpha = 1; };
 const twinkles = (c: Ctx, t: number, n: number, y1: number, seed = 1) => { for (let i = 0; i < n; i++) { const a = 0.45 + 0.55 * Math.sin(t * (0.8 + rr(i, seed + 3) * 2.4) + i); c.globalAlpha = clamp(a); const x = rr(i, seed) * W, y = rr(i, seed + 1) * y1; if (rr(i, seed + 2) < 0.18) twinkle(c, x, y, 1 + a * 1.2, '#fff6dc'); else R(c, x, y, 0.5, 0.5, '#ffffff'); c.globalAlpha = 1; } };
 const hearts = (f: F, id: string, ms: number, at: (i: number) => [number, number]) => { for (const tp of f.taps) { if (tp.id !== id || tp.i < 0) continue; const q = (f.now - tp.at) / ms; if (q < 0 || q > 1) continue; const [x, y] = at(tp.i); for (let j = 0; j < 5; j++) { f.c.globalAlpha = 1 - q; heart(f.c, x + Math.sin(j * 2.1 + q * 4) * 8, y - q * 34 - j * 5, 1.6 + (j % 2) * 0.8, j % 2 ? '#ff8ab0' : '#ff4a7a'); } f.c.globalAlpha = 1; } };
 

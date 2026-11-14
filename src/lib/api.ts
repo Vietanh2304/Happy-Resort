@@ -150,7 +150,9 @@ export const addWish = (me: Profile, body: string) =>
 
 // ───── Kỷ niệm chung (020): nhật ký, quà Giáng Sinh, đèn Trung Thu, trang trí cây thông, bưu thiếp ─────
 export interface Memory { id: string; couple_id: string; user_id: string; kind: string; day: string; data: Record<string, any>; open_at: string | null; created_at: string } // eslint-disable-line @typescript-eslint/no-explicit-any
-export const loadMemories = () => soft(run<Memory[]>(supabase.from('memories').select('*').order('created_at', { ascending: false }).limit(500)), [] as Memory[]);
+export const loadMemories = () => soft(run<Memory[]>(supabase.from('memories').select('*').neq('kind', 'dronepic').order('created_at', { ascending: false }).limit(500)), [] as Memory[]);
+/** ảnh cho show drone (nặng hơn nên tải riêng, tối đa 6 ảnh, cũ trước) */
+export const loadDronePics = () => soft(run<Memory[]>(supabase.from('memories').select('*').eq('kind', 'dronepic').order('created_at', { ascending: true }).limit(6)), [] as Memory[]);
 export const addMemory = (me: Profile, kind: string, data: object, day?: string, openAt?: string) =>
   run(supabase.from('memories').insert({ couple_id: me.couple_id, user_id: me.id, kind, data, ...(day ? { day } : {}), ...(openAt ? { open_at: openAt } : {}) }));
 export const delMemory = (id: string) => run(supabase.from('memories').delete().eq('id', id));
