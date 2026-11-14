@@ -175,8 +175,8 @@ export function samplePic(im: HTMLImageElement, L = picLayout(im.width, im.heigh
   return out;
 }
 const rrect = (c: Ctx, x: number, y: number, w: number, h: number, r: number) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
-const D_MS = 104000, ND = PIC_DOTS;
-const PH: { t: number; k: string }[] = [{ t: 0, k: 'ground' }, { t: 2500, k: 'cloud' }, { t: 8000, k: 'heart' }, { t: 16000, k: 'pic0' }, { t: 26000, k: 'star' }, { t: 33000, k: 'pic1' }, { t: 43000, k: 'flower' }, { t: 51000, k: 'pic2' }, { t: 61000, k: 'text' }, { t: 72000, k: 'pic3' }, { t: 82000, k: 'couple' }, { t: 91000, k: 'big' }];
+const D_MS = 110000, ND = PIC_DOTS;
+const PH: { t: number; k: string }[] = [{ t: 0, k: 'ground' }, { t: 2500, k: 'cloud' }, { t: 8000, k: 'heart' }, { t: 16000, k: 'pic0' }, { t: 26000, k: 'star' }, { t: 33000, k: 'pic1' }, { t: 43000, k: 'flower' }, { t: 51000, k: 'pic2' }, { t: 61000, k: 'text' }, { t: 78000, k: 'pic3' }, { t: 88000, k: 'couple' }, { t: 97000, k: 'big' }];
 const PI = (k: string) => PH.findIndex(p => p.k === k);
 const shuffle = <T,>(a: T[]) => a.map((v, i) => [rr(i, 77), v] as const).sort((x, y) => x[0] - y[0]).map(x => x[1]);
 const fill = (pts: Pt3[]): Pt3[] => (pts.length ? Array.from({ length: ND }, (_, i) => pts[Math.floor((i * pts.length) / ND)]) : []);
@@ -187,21 +187,36 @@ const sample = (w: number, h: number, draw: (c: CanvasRenderingContext2D) => voi
   return shuffle(out);
 };
 const shapes = new Map<string, Pt3[]>();
+/** chia lời nhắn thành các trang ≤ 2 dòng: mỗi đoạn (ngăn bằng "/") ngắt dòng cân đối, ở trọn trong trang của nó; tối đa 3 trang */
+function pages(msg: string): string[] {
+  const out: string[] = [];
+  for (const seg of msg.split('\n').map(x => x.trim()).filter(Boolean)) {
+    const words = seg.split(/\s+/), n = Math.ceil(seg.length / 18), lim = Math.max(seg.length / n + 3, ...words.map(w => w.length));
+    const lines: string[] = []; let cur = '';
+    for (const w of words) { if (cur && (cur + ' ' + w).length > lim) { lines.push(cur); cur = w; } else cur = cur ? cur + ' ' + w : w; }
+    if (cur) lines.push(cur);
+    for (let i = 0; i < lines.length; i += 2) out.push(lines.slice(i, i + 2).join('\n'));
+  }
+  while (out.length > 3) { const i = out.findIndex((x, k) => k < out.length - 1 && !x.includes('\n') && !out[k + 1].includes('\n')); if (i < 0) break; out.splice(i, 2, out[i] + '\n' + out[i + 1]); }
+  return (out.length ? out : ['♥']).slice(0, 3);
+}
+const textSpan = () => [PH[PI('text')].t, PH[PI('text') + 1].t] as const;
+const pageAt = (pg: string[], e: number) => { const [a, b] = textSpan(); return Math.max(0, Math.min(pg.length - 1, Math.floor(((e - a) / (b - a)) * pg.length))); };
 function shape(k: string, f: F, msg: string): Pt3[] {
   if (k.startsWith('pic')) { const n = dronePics.list.length, j = +k.slice(3);
     if (!n) return shape(['couple', 'flower', 'star', 'heart'][j % 4], f, msg);
     const pic = dronePics.list[j % n], key = `pic:${pic.id}`, hit = shapes.get(key); if (hit) return hit;
     const im = picImg(pic.id, pic.img); if (!im) return shape('heart', f, msg);   // ảnh chưa tải xong: tạm xếp tim
     const out = fill(shuffle(samplePic(im))); shapes.set(key, out); return out; }
-  const key = k === 'text' ? `text:${msg}` : k === 'couple' ? `couple:${f.seats.map(p => p?.key ?? '').join('|')}` : k;
+  const key = k === 'text' ? `text:${msg}` : k === 'couple' ? `couple:${f.all.map(p => p.key).join('|')}` : k;
   const hit = shapes.get(key); if (hit && hit.length) return hit;
   let pts: Pt3[] = [];
   if (k === 'cloud') pts = Array.from({ length: ND }, (_, i) => [30 + rr(i, 1) * 260, 20 + rr(i, 2) * 80, '#cfe8ff']);
   else if (k === 'heart' || k === 'big') { const s = k === 'big' ? 44 : 32; for (let i = 0; pts.length < ND && i < 20000; i++) { const x = rr(i, 3) * 2.6 - 1.3, y = rr(i, 4) * 2.6 - 1.3; const v = (x * x + y * y - 1) ** 3 - x * x * y ** 3; const edge = v > -0.06; if (v <= 0 && (edge || rr(i, 5) < 0.35)) pts.push([160 + x * s, 64 - y * s, edge ? '#ff3a7a' : '#ff8ab0']); } }
   else if (k === 'star') { for (let i = 0; i < ND; i++) { const a = rr(i, 6) * TAU, sp = Math.cos(5 * (a - Math.PI / 2)) * 0.5 + 0.5, rmax = 18 + sp ** 3 * 26, r = rmax * Math.sqrt(rr(i, 7) < 0.6 ? 0.85 + rr(i, 8) * 0.15 : rr(i, 8)); pts.push([160 + Math.cos(a) * r, 62 + Math.sin(a) * r, r > rmax * 0.8 ? '#fff0a0' : '#ffc83a']); } }
   else if (k === 'flower') { for (let i = 0; i < ND; i++) { const a = rr(i, 9) * TAU, rmax = 12 + 34 * Math.abs(Math.cos(2.5 * a)), u = Math.sqrt(rr(i, 10)), r = rmax * u; pts.push([160 + Math.cos(a) * r, 62 + Math.sin(a) * r, r < 9 ? '#ffd24a' : mix('#ff6ab8', '#9a6aff', u)]); } }
-  else if (k === 'text') { const lines = msg.split('\n').slice(0, 2); pts = sample(300, 80, c => { c.fillStyle = '#ffffff'; c.textAlign = 'center'; c.textBaseline = 'middle'; let fs = 34; c.font = `bold ${fs}px sans-serif`; while (fs > 12 && Math.max(...lines.map(l => c.measureText(l).width)) > 290) { fs -= 2; c.font = `bold ${fs}px sans-serif`; } lines.forEach((l, i) => c.fillText(l, 150, 40 + (i - (lines.length - 1) / 2) * fs * 1.05)); }, 160 - 150 * 0.72, 62 - 40 * 0.72, 0.72, 2).map(([x, y], i) => [x, y, mix('#8affff', '#ff9ad8', rr(i, 11))] as Pt3); }
-  else if (k === 'couple') { const ims = f.seats.map(p => p?.img('idle')); if (ims.every(im => !im || !im.width)) return shape('heart', f, msg);
+  else if (k === 'text') { const lines = msg.split('\n').slice(0, 2); pts = sample(300, 80, c => { c.fillStyle = '#ffffff'; c.textAlign = 'center'; c.textBaseline = 'middle'; let fs = 30; c.font = `bold ${fs}px sans-serif`; while (fs > 12 && Math.max(...lines.map(l => c.measureText(l).width)) > 290) { fs -= 2; c.font = `bold ${fs}px sans-serif`; } lines.forEach((l, i) => c.fillText(l, 150, 40 + (i - (lines.length - 1) / 2) * fs * 1.05)); }, 160 - 150 * 0.72, 62 - 40 * 0.72, 0.72, 2).map(([x, y], i) => [x, y, mix('#8affff', '#ff9ad8', rr(i, 11))] as Pt3); }
+  else if (k === 'couple') { const ims = f.all.map(p => p.img('idle')); if (ims.every(im => !im || !im.width)) return shape('heart', f, msg);
     pts = sample(120, 70, c => { c.imageSmoothingEnabled = false; ims.forEach((im, i) => { if (im && im.width) { const sc = 66 / im.height; c.drawImage(im, 30 + i * 30 - (im.width * sc) / 2 + 15, 2, im.width * sc, im.height * sc); } }); }, 160 - 60 * 1.1, 62 - 35 * 1.1, 1.1, 1); }
   const out = fill(pts); shapes.set(key, out); return out;
 }
@@ -217,21 +232,29 @@ const bayBg = () => bake('cheer:bay', W, H, (c, rnd) => {
 function drawDrone(f: F) {
   const { c, el, t } = f;
   c.drawImage(bayBg(), 0, 0, W, H);
+  // trăng + quầng sáng
+  c.save(); c.globalCompositeOperation = 'lighter'; haloAt(c, 286, 22, 34, '#d8e0ff', 0.5); c.restore(); circ(c, 286, 22, 7, '#fff8e0'); circ(c, 289, 20, 6, '#0a1036');
+  // cầu dây văng giăng đèn phía xa bên trái + đu quay phát sáng bên phải
+  { c.strokeStyle = '#2a2a50'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 118); c.lineTo(110, 118); c.stroke(); for (const tx of [26, 84]) { R(c, tx - 1, 92, 2, 26, '#2a2a50'); for (let j = -5; j <= 5; j++) line(c, tx, 93, tx + j * 5, 118, 0.3, '#3a3a6a'); }
+    c.save(); c.globalCompositeOperation = 'lighter'; for (let j = 0; j < 22; j++) { const x = j * 5, y = 118 - Math.abs(Math.sin((x / 58) * Math.PI)) * 0; haloAt(c, x, y - 0.5, 2.6, ['#ffd27a', '#ff8ad8', '#8affff'][(j + Math.floor(t * 2)) % 3], 0.7); } for (const tx of [26, 84]) haloAt(c, tx, 91, 5, '#ff4a6a', 0.5 + 0.5 * Math.sin(t * 3)); c.restore(); }
+  { const cx = 262, cy = 96, r = 24, a0 = t * 0.15; c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = '#ff8ad870'; c.lineWidth = 0.8; c.beginPath(); c.arc(cx, cy, r, 0, TAU); c.stroke();
+    for (let k = 0; k < 16; k++) { const a = a0 + (k * TAU) / 16, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r, col = ['#ff6ab8', '#ffd24a', '#6ad8ff', '#b88aff'][(k + Math.floor(t)) % 4]; line(c, cx, cy, x, y, 0.3, col + '60'); haloAt(c, x, y, 3, col, 0.8); } haloAt(c, cx, cy, 6, '#ffffff', 0.6); c.restore(); line(c, cx, cy, cx - 9, 132, 0.8, '#2a2a50'); line(c, cx, cy, cx + 9, 132, 0.8, '#2a2a50'); }
   // phố in bóng nước lăn tăn
   for (let k = 0; k < 60; k++) { const x = rr(k, 12) * W, y = 134 + rr(k, 13) * 40, a = Math.sin(t * 2 + k); if (a > 0) { c.globalAlpha = a * 0.6; R(c, x, y, 2 + rr(k, 14) * 4, 0.5, ['#ffd27a', '#8ad8ff', '#ff9ad8'][k % 3]); } } c.globalAlpha = 1;
-  const msg = (f.text(giverOf(f)) || f.text(1 - giverOf(f)) || dronePics.msg || 'EM GIỎI LẮM!\nCỐ LÊN NHA 💗').replace(/ ?\/ ?/g, '\n');
+  const msg = (f.text(giverOf(f)) || f.text(1 - giverOf(f)) || dronePics.msg || 'EM GIỎI LẮM!\nCỐ LÊN NHA 💗').replace(/ ?\/ ?/g, '\n'), pg = pages(msg);
   const cheer = f.taps.filter(x => x.id === 'cheer' && f.now - x.at < 2500).length;
   c.save(); c.globalCompositeOperation = 'lighter';
   const pos: [number, number, string][] = [];
   for (let i = 0; i < ND; i++) {
     const dl = rr(i, 15) * 900, e = el - dl; let k = 0; while (k + 1 < PH.length && PH[k + 1].t <= e) k++;
-    const at = (kk: number): Pt3 => { const s = PH[kk].k; if (s === 'ground') return [36 + rr(i, 16) * 250, 146 + rr(i, 17) * 4, '#ffffff']; const p = shape(s, f, msg)[i] ?? [160, 60, '#ffffff'];
+    const at = (kk: number): Pt3 => { const s = PH[kk].k; if (s === 'ground') return [36 + rr(i, 16) * 250, 146 + rr(i, 17) * 4, '#ffffff']; const p = shape(s, f, s === 'text' ? pg[pageAt(pg, e)] : msg)[i] ?? [160, 60, '#ffffff'];
       if (s === 'star') { const a = t * 0.9, dx = p[0] - 160; return [160 + dx * Math.cos(a), p[1], p[2]]; }
       if (s === 'flower') { const a = t * 0.25, dx = p[0] - 160, dy = p[1] - 62, bloom = 0.6 + 0.4 * ease(clamp((e - PH[PI('flower')].t) / 4000)); return [160 + (dx * Math.cos(a) - dy * Math.sin(a)) * bloom, 62 + (dx * Math.sin(a) + dy * Math.cos(a)) * bloom, p[2]]; }
       if (s === 'big') { const beat = 1 + 0.05 * Math.sin(t * 5); return [160 + (p[0] - 160) * beat, 64 + (p[1] - 64) * beat, mix('#ff3a7a', '#ffd24a', 0.5 + 0.5 * Math.sin(t * 2 + i * 0.05))]; }
       if (s === 'cloud') return [p[0] + Math.sin(t + i) * 2, p[1] + Math.cos(t * 0.8 + i) * 2, p[2]];
       return p; };
-    const to = at(k), from = k ? at(k - 1) : to, q = ease(clamp((e - PH[k].t) / 2600));
+    const to = at(k); let from = k ? at(k - 1) : to, q = ease(clamp((e - PH[k].t) / 2600));
+    if (PH[k].k === 'text') { const n = pageAt(pg, e); if (n > 0) { const [a, b] = textSpan(), ps = a + ((b - a) * n) / pg.length; from = shape('text', f, pg[n - 1])[i] ?? to; q = ease(clamp((e - ps) / 1300)); } }
     const x = lerp(from[0], to[0], q), y = lerp(from[1], to[1], q), col = q < 0.5 ? from[2] : to[2];
     pos.push([x, y, col]);
     const tw = 0.7 + 0.3 * Math.sin(t * 4 + i) + (cheer ? 0.4 : 0);
@@ -262,6 +285,14 @@ function drawDrone(f: F) {
         c.globalAlpha = a * 0.1; for (let i = 0; i < ND; i += 3) { const [x, y, col] = pos[i]; R(c, x - 0.4, y - 0.4, 0.8, 0.8, col); }
         c.restore(); } } }
   if (cheer) fireworks(c, el, 0, 900, [30, 8, 260, 50], 44);
+  // pháo hoa tự bắn hai bên suốt show (chừa khoảng giữa cho hình drone)
+  fireworks(c, el, 5000, 1700, [6, 6, 70, 46], 51); fireworks(c, el, 5800, 1900, [244, 6, 70, 46], 52);
+  // đèn trời bay lên chậm + thuyền thả đèn trên vịnh
+  c.save(); c.globalCompositeOperation = 'lighter';
+  for (let k = 0; k < 14; k++) { const x = (rr(k, 30) < 0.5 ? 8 + rr(k, 31) * 80 : 232 + rr(k, 31) * 80) + Math.sin(t * 0.4 + k) * 4, y = 132 - ((t * (3 + rr(k, 32) * 3) + rr(k, 33) * 130) % 130); haloAt(c, x, y, 5, '#ffa048', 0.55); R(c, x - 1, y - 1.5, 2, 2.6, '#ffd890'); }
+  for (let k = 0; k < 5; k++) { const x = ((k * 70 + t * 2.5) % (W + 40)) - 20, y = 140 + (k % 3) * 9; haloAt(c, x, y - 2, 6, '#ffd27a', 0.6); haloAt(c, x, y + 4, 4, '#ffd27a', 0.25); }
+  c.restore();
+  for (let k = 0; k < 5; k++) { const x = ((k * 70 + t * 2.5) % (W + 40)) - 20, y = 140 + (k % 3) * 9; poly(c, [x - 5, y, x + 5, y, x + 3, y + 2, x - 3, y + 2], '#1a1430'); R(c, x - 0.3, y - 6, 0.6, 6, '#3a3050'); R(c, x - 1, y - 3, 2, 2, '#ffd890'); }
   fireworks(c, el, PH[PI('big')].t + 1500, 650, [10, 4, 300, 60], 45);
   // hai đứa ngồi cầu tàu quay lưng ngắm
   f.seats.forEach((p, i) => { if (!p) return; const cheerMe = f.last(i, 'cheer') < 1500; putAt(f, cheerMe ? p.img('act', 12, 'back') : p.img('sit', 0, 'back'), 40 + i * 15, 158, 0.5); });

@@ -1831,7 +1831,7 @@ textarea { resize: vertical; }
 @keyframes fawob { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
 .coaster { position: fixed; inset: 0; z-index: 9000; background: #000; display: flex; align-items: center; justify-content: center; }
 .coaster canvas { width: min(100vw, 177.7vh); height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; }
-.coaster-line { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: #fffaf0ee; color: #3a2430; padding: 6px 14px; border-radius: 14px; font-size: 15px; white-space: nowrap; }
+.coaster-line { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); background: #fffaf0ee; color: #3a2430; padding: 6px 14px; border-radius: 14px; font-size: 15px; white-space: normal; text-align: center; width: max-content; max-width: calc(100% - 124px); box-sizing: border-box; line-height: 1.3; }
 .coaster-flash { position: absolute; inset: 0; background: #fff; animation: cfl .25s ease-out both; pointer-events: none; }
 @keyframes cfl { from { opacity: 1; } to { opacity: 0; } }
 .coaster-x { position: absolute; top: 10px; right: 10px; }

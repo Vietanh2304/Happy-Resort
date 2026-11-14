@@ -18,6 +18,8 @@ export interface Seat { key: string; img: (frame: Frame, step?: number, view?: V
 export interface F {
   c: Ctx; el: number; t: number; now: number; W: number; H: number;
   seats: (Seat | null)[]; n: number;
+  /** cả hai nhân vật (kể cả người chưa vào màn) — để vẽ hình hai đứa */
+  all: Seat[];
   /** ms từ lần trúng nhịp / bấm nút gần nhất của ghế i (chưa bấm = Infinity) */
   last: (i: number, id?: string) => number;
   /** tỉ lệ trúng nhịp của ghế i trong một công đoạn */
@@ -62,6 +64,7 @@ function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number;
     const cache = new Map<string, HTMLImageElement>();
     return { key: JSON.stringify(l), img: (frame, step = 0, view = 'front') => { const id = `${frame}:${step}:${view}`; let im = cache.get(id); if (!im) { im = new Image(); im.src = characterSprite(l, frame, undefined, view, step).url; cache.set(id, im); } return im; } };
   }), [looks, !!them]); // eslint-disable-line react-hooks/exhaustive-deps
+  const all = useMemo<Seat[]>(() => looks.map(l => { const cache = new Map<string, HTMLImageElement>(); return { key: JSON.stringify(l), img: (frame, step = 0, view = 'front') => { const id = `${frame}:${step}:${view}`; let im = cache.get(id); if (!im) { im = new Image(); im.src = characterSprite(l, frame, undefined, view, step).url; cache.set(id, im); } return im; } }; }), [looks]);
   const seatOf = (key: string) => seats.findIndex(s => s?.key === key);
   const BEATS = useMemo(() => (cfg.beats ?? []).flatMap(w => { const out: { t: number; ph: string }[] = []; for (let t = w.from + 1000; t < w.to - 300; t += BEAT) out.push({ t, ph: w.ph }); return out; }), [cfg]);
   const seq = useMemo(() => { let x = (t0 * 13) % 2147483647 || 17; return BEATS.map(() => { x = (x * 16807) % 2147483647; return x % 4; }); }, [t0, BEATS]);
@@ -97,7 +100,7 @@ function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number;
     let raf = 0, last = '', ended = false; const snapped = new Set<number>();
     snapRef.current = () => { const ph = document.createElement('canvas'); ph.width = 640; ph.height = Math.round(640 * H / W); const pc = ph.getContext('2d')!; pc.imageSmoothingEnabled = false; pc.drawImage(c, 0, 0, W * Z, H * Z, 0, 0, ph.width, ph.height); setPhotos(p => [...p.slice(-3), ph.toDataURL('image/jpeg', 0.88)]); };
     const f: F = {
-      c: ctx, el: 0, t: 0, now: 0, W, H, seats, n: seats.filter(Boolean).length,
+      c: ctx, el: 0, t: 0, now: 0, W, H, seats, all, n: seats.filter(Boolean).length,
       last: (i, id) => { const s = seats[i]; if (!s) return Infinity; const tp = taps.current.filter(x => x.i === i && (!id || x.id === id)).pop(); const a = id ? Infinity : Date.now() - (lastHit.current[s.key] ?? -1e12); return Math.min(a, tp ? Date.now() - tp.at : Infinity); },
       score: (i, ph) => { const s = seats[i]; const h = s && hits.current[s.key]; const n = BEATS.filter(b => b.ph === ph).length; if (!h || !n) return 0; let m = 0; h.forEach(b => { if (BEATS[b].ph === ph) m++; }); return m / n; },
       taps: [], text: i => (seats[i] ? texts.current[seats[i]!.key] ?? '' : ''),

@@ -87,13 +87,13 @@ const pretty = (m: string) => m.replace(/ ?\/ ?/g, ' · ');
 function DroneMsg({ me, mems }: { me: api.Profile; mems: api.Memory[] }) {
   const cur = mems.find(m => m.kind === 'dronemsg');
   const [text, setText] = useState<string>(cur?.data?.text ?? '');
-  const save = (v: string) => run(async () => { const t = v.trim().slice(0, 40); if (!t) return; await api.addMemory(me, 'dronemsg', { text: t }); notify('memories'); setText(t); toast('🛸 Drone sẽ xếp chữ: ' + pretty(t)); });
+  const save = (v: string) => run(async () => { const t = v.trim().slice(0, 80); if (!t) return; await api.addMemory(me, 'dronemsg', { text: t }); notify('memories'); setText(t); toast('🛸 Drone sẽ xếp chữ: ' + pretty(t)); });
   return (
     <>
       <h4>💬 Lời nhắn drone xếp trên trời</h4>
-      <p className="muted small-note">Đang dùng: <b>{pretty(cur?.data?.text ?? 'EM GIỎI LẮM! / CỐ LÊN NHA 💗')}</b> — gõ dấu “/” để xuống dòng (tối đa 2 dòng). Lúc đang xem vẫn đổi được bằng nút “Lời cho drone”.</p>
+      <p className="muted small-note">Đang dùng: <b>{pretty(cur?.data?.text ?? 'EM GIỎI LẮM! / CỐ LÊN NHA 💗')}</b> — gõ dấu “/” để xuống dòng; lời dài sẽ được drone xếp lần lượt từng cụm (tối đa ~80 chữ). Lúc đang xem vẫn đổi được bằng nút “Lời cho drone”.</p>
       <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>{MSG_IDEAS.map(m => <button key={m} className="btn small ghost" onClick={() => void save(m)}>{pretty(m)}</button>)}</div>
-      <div className="row" style={{ gap: 6, marginTop: 6 }}><input value={text} maxLength={40} onChange={e => setText(e.target.value)} placeholder="Tự viết lời nhắn…" style={{ flex: 1 }} /><button className="btn small" disabled={!text.trim()} onClick={() => void save(text)}>Lưu</button></div>
+      <div className="row" style={{ gap: 6, marginTop: 6 }}><input value={text} maxLength={80} onChange={e => setText(e.target.value)} placeholder="Tự viết lời nhắn…" style={{ flex: 1 }} /><button className="btn small" disabled={!text.trim()} onClick={() => void save(text)}>Lưu</button></div>
     </>
   );
 }
