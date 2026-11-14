@@ -50,6 +50,8 @@ interface Props {
   zoom?: number;
   /** Đứng quay lưng (đi tè, rửa tay) */
   faceBack?: boolean;
+  /** ẩn hình nhân vật (vẫn giữ tên, bong bóng chat) — khi cặp đôi khiêu vũ được vẽ riêng */
+  ghost?: boolean;
   /** Đang ngồi trang điểm: tay đưa lên mặt theo nhịp */
   makeup?: boolean;
   /** Đang cưỡi ngựa */
@@ -57,7 +59,7 @@ interface Props {
 }
 
 /** Nhân vật pixel: đổi (x, y) là tự đi tới đó, có bước chân và nhún nhảy */
-export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom, faceBack, makeup, riding }: Props) {
+export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, onClick, hold, status, umbrella, zAt, dance, act, duo, swim, torch, zoom, faceBack, makeup, riding, ghost }: Props) {
   const phase = useHoldPhase(hold?.mode);
   const s = useScale();
   const [shown, setShown] = useState({ x, y, ms: 0, left: !!faceLeft });
@@ -144,7 +146,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
       }}
       onClick={onClick && (e => { e.stopPropagation(); onClick(); })}
     >
-      {dancing && dance!.both && <span key={`h${dance!.at}`} className="dance-hearts">💞</span>}
+      {dancing && dance!.both && !ghost && <span key={`h${dance!.at}`} className="dance-hearts">💞</span>}
       {riding && (() => { const h = horseSprite(riding, moving && step % 2 ? 1 : 0, true), k = 1.05; return <img src={h.url} alt="" draggable={false} className="mount" style={{ position: 'absolute', width: h.w * ps * k, height: h.h * ps * k, left: -h.w * ps * k / 2, top: -h.h * ps * k + 2 * ps, transform: shown.left ? 'scaleX(-1)' : undefined }} />; })()}
       <img
         key={dancing ? `d${dance!.at}` : 'still'} className={pair ? `duo duo-${pair.cls} duo-${duo!.side}` : dancing ? `dancing dm-${dance!.m}` : undefined}
@@ -155,6 +157,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
           transform: pair || (af !== null && act && ['lift', 'point', 'heartR'].includes(act.n)) ? undefined : shown.left ? 'scaleX(-1)' : undefined,   // dáng chụp ảnh: giữ đúng tay trái/phải
           scale: pair?.f === 'side' && duo!.side === 'R' ? '-1 1' : undefined,
           translate: riding ? `${Math.round((shown.left ? 3 : -3) * ps)}px ${-Math.round(20 * ps)}px` : undefined, position: riding ? 'relative' : undefined,
+          opacity: ghost ? 0 : undefined,
         }}
       />
       {umbrella && !hold && (() => {
@@ -163,7 +166,7 @@ export function Avatar({ look, x, y, sitting, faceLeft, name, bubble, onArrive, 
         return <img src={u.url} alt="" draggable={false} className="umbrella"
           style={{ width: u.w * ps, height: u.h * ps, marginLeft: Math.round((handX - grip - 1) * ps), marginTop: Math.round(-(sitting ? 35 : 37) * ps), transform: shown.left ? 'scaleX(-1)' : undefined }} />;
       })()}
-      {name && <span className="avatar-name" style={{ top: 2 * s }}>{name}</span>}
+      {name && !ghost && <span className="avatar-name" style={{ top: 2 * s }}>{name}</span>}
       {status && !bubble && <span className="avatar-status" style={{ bottom: sprite.h * ps + 3 }}>{status}</span>}
       {bubble && <span className="speech" style={{ bottom: sprite.h * ps + 4 + (riding ? 20 * ps : 0) }}>{bubble}</span>}
     </div>

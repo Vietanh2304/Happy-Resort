@@ -2,12 +2,14 @@
 // Hai người cùng trúng một nhịp = "đồng điệu" 💞. Đồng bộ bằng kênh trò chơi 'dance'.
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import * as api from '../lib/api';
-import { DANCE_SONGS, type Mood } from '../lib/music';
+import { DANCE_SONGS, music, type Mood } from '../lib/music';
+import { arrowMs } from '../lib/tunes';
+import { danceStage } from '../lib/danceStage';
 import { seeded } from '../lib/rng';
 import { reward, useGameChannel, type Msg } from './gameKit';
 
 // Nhịp chậm, mũi tên chạy thong thả cho dễ bấm (điện thoại cũng kịp)
-export const BEATS = 32, BEAT_MS = 1200, WINDOW = 340, AHEAD = 6500;
+export const BEATS = 32, WINDOW = 340, AHEAD = 6500;
 const DIRS = [{ k: 'ArrowLeft', icon: '⬅️' }, { k: 'ArrowUp', icon: '⬆️' }, { k: 'ArrowDown', icon: '⬇️' }, { k: 'ArrowRight', icon: '➡️' }];
 /** Động tác ứng với mũi tên và nhịp (mỗi mũi tên có 2 kiểu cho đỡ nhàm) */
 export const moveOf = (d: number, k: number) => (d * 2 + (k % 2)) % 8;
@@ -42,8 +44,11 @@ export function DanceBar({ me, them, themName, date, onMove, onLeave, onSong }: 
   const [now, setNow] = useState(Date.now());
   const [flash, setFlash] = useState<'hit' | 'miss' | null>(null);
   useEffect(() => { let raf = 0; const loop = () => { setNow(Date.now()); raf = requestAnimationFrame(loop); }; raf = requestAnimationFrame(loop); return () => cancelAnimationFrame(raf); }, []);
+  const BEAT_MS = arrowMs(DANCE_SONGS[st.song]?.mood ?? 'waltz');   // mũi tên rơi đúng phách của bài
   const beatTime = (k: number) => st.at + k * BEAT_MS;
   const end = st.at + BEATS * BEAT_MS + 800;
+  danceStage.at = st.at; danceStage.end = end; danceStage.mood = DANCE_SONGS[st.at ? st.song : pick].mood;
+  useEffect(() => { if (st.at) music.cue(st.at); }, [st.at]);   // nhạc vào đúng lúc bắt đầu nhảy, khớp ở cả hai máy
   const running = st.at > 0 && now >= st.at - 300 && now < end;
   const over = st.at > 0 && now >= end;
   const mine = st.hits[me.id] ?? [], theirs = st.hits[them] ?? [];

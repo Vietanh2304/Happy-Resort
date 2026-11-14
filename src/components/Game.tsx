@@ -81,6 +81,7 @@ import { DiarySheet, FestivalSheet, festKindOf, LanternParade, TravelSheet } fro
 import { CheerSheet } from './Cheer';
 import { dronePics } from './duoCheer';
 import { duoPresence } from './Duo';
+import { danceStage } from '../lib/danceStage';
 import { seeded } from '../lib/rng';
 import { tripCtx, tripOf, type TripId } from '../lib/trips';
 import { TripShopSheet } from './TripExtras';
@@ -676,6 +677,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const danceMove = (who: 'me' | 'them', m: number, both: boolean) => {
     const at = Date.now();
     setDanceMv(d => ({ ...d, [who]: { m, at, both } }));
+    danceStage.hits = [...danceStage.hits.slice(-11), { who, m, at, both }];
     setTimeout(() => setDanceMv(d => (d[who]?.at === at ? { ...d, [who]: undefined } : d)), 750);
   };
 

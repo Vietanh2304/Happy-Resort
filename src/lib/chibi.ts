@@ -543,3 +543,48 @@ function glassesOn(P: HiPen, g: number, view: View, y: number) {
   lens(7, 7); lens(18, 7);
   if (g !== 4) { P.rect(14, y + 16, 4, 1, fr); P.rect(5, y + 16, 2, 1, fr); P.rect(25, y + 16, 2, 1, fr); }
 }
+
+// ───────── Bộ phận rời cho khiêu vũ đôi (Ballroom): đầu vẽ sẵn theo 3 hướng + màu trang phục, thân/tay/chân dựng bằng khung xương ─────────
+export interface DancerKit {
+  /** đầu (mặt, tóc, phụ kiện, kính) đã viền mực; khổ 34×54, gốc cổ ở (17, 25) */
+  head: Record<View, HTMLCanvasElement>;
+  /** đầu nhìn nghiêng, mắt nhắm (lúc ngả người, hôn) */
+  headShut: HTMLCanvasElement;
+  /** tóc dài xoã sau lưng (vẽ trước thân), null nếu tóc ngắn */
+  tail: Record<View, HTMLCanvasElement | null>;
+  skin: string; skinD: string; top: string; topD: string; bot: string; botD: string;
+  armUp: string; armLow: string; leg: string; legD: string; shoes: string;
+  bottom: 'pants' | 'shorts' | 'skirt' | 'gown'; hem: number; girl: boolean; puff: boolean;
+}
+const kits = new Map<string, DancerKit>();
+export function dancerKit(look: ChibiLook): DancerKit {
+  const key = JSON.stringify(look), hit = kits.get(key); if (hit) return hit;
+  const S = SKINS[look.skin ?? 0] ?? SKINS[0], H = HAIR_COLORS[look.hairColor ?? 0] ?? HAIR_COLORS[0], C = SHIRTS[look.shirt ?? 0] ?? SHIRTS[0];
+  const hairIx = (look.hair ?? 0) % HAIRS.length, out = look.outfit ?? 0, acc = look.acc ?? 0, glasses = look.glasses ?? (acc === 4 ? 1 : 0), girl = look.gender === 'f';
+  const Sd = mix(S, '#c07060', 0.28), Hd = mix(H, '#2a1a1a', 0.3), Hl = mix(H, '#ffffff', 0.32), hair = HAIRS[hairIx];
+  const o = look.design ? designOutfit(look.design) : outfitOf(out, C, S, girl);
+  const mk = (fn: (P: HiPen) => void) => { const cv = document.createElement('canvas'); cv.width = 34; cv.height = 54; const ctx = cv.getContext('2d')!; fn(hiPen(ctx, 1, 1)); gradeCanvas(ctx, 34, 54); outline(ctx, 34, 54, INK); return cv; };
+  const headOf = (view: View, pose: Pose) => mk(P => {
+    const a: Args = { S, H, C, hairIx, out, acc, glasses, girl, pose, view, step: 0, design: look.design ?? null };
+    if (view !== 'back') extraBehind(P, hair, view, 0, H, Hd);
+    head(P, a, 0, { S, Sd, H, Hd, Hl });
+    if (view === 'back') extraBehind(P, hair, view, 0, H, Hd);
+    accessory(P, acc, view, 0, H, Hd);
+    if (view !== 'back') glassesOn(P, glasses, view, 0);
+  });
+  const tailOf = (view: View) => ((hair.back ?? 0) > 20 && view !== 'back' ? mk(P => {
+    for (let yy = 12; yy < hair.back!; yy++) { const w = hair.wavy && yy % 4 < 2 ? 1 : 0; if (view === 'side') P.rect(3 - w, yy, 10 + 2 * w, 1, yy > hair.back! - 2 ? Hd : H); else P.rect(3 - w, yy, 26 + 2 * w, 1, yy > hair.back! - 2 ? Hd : H); }
+  }) : null);
+  const up = o.sleeve === 'none' ? S : o.top, low = o.sleeve === 'long' ? o.top : S;
+  const pants = o.bottom === 'pants';
+  const kit: DancerKit = {
+    head: { side: headOf('side', 'idle'), front: headOf('front', 'idle'), back: headOf('back', 'idle') }, headShut: headOf('side', 'kiss'),
+    tail: { side: tailOf('side'), front: tailOf('front'), back: null },
+    skin: S, skinD: Sd, top: o.top, topD: mix(o.top, '#2a2030', 0.22), bot: o.bot, botD: mix(o.bot, '#2a2030', 0.25),
+    armUp: up, armLow: low, leg: pants ? o.bot : o.legs ?? S, legD: pants ? mix(o.bot, '#2a2030', 0.25) : Sd, shoes: o.shoes,
+    bottom: o.bottom as DancerKit['bottom'], hem: o.hem ?? 44, girl, puff: o.sleeve === 'puff',
+  };
+  kits.set(key, kit); return kit;
+}
+/** viền mực quanh hình trên canvas nhỏ (dùng lại cho thân người dựng bằng khung xương) */
+export const inkOutline = (ctx: CanvasRenderingContext2D, w: number, h: number) => outline(ctx, w, h, INK);
