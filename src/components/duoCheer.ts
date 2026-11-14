@@ -61,7 +61,7 @@ function drawBubble(f: F) {
   void popped;
 }
 export const bubble: DuoCfg = {
-  title: 'Bong bóng xả stress', ms: B_MS, join: 15000, price: 0,
+  title: 'Bong bóng xả stress', ms: B_MS, join: 25000, price: 0,
   ask: '🫧 Thả hết mệt mỏi vào bong bóng rồi cùng đập vỡ nhé', joinAsk: '🫧 Đập bong bóng cùng người ấy', invite: '🫧 Người ấy rủ đập bong bóng xả stress', yes: 'Đập thôi!', late: 'Lần sau đập cùng nha',
   buttons: [{ id: 'write', label: '✍️ Viết điều mệt', from: 1000, to: B_FIN, prompt: 'Hôm nay điều gì làm bạn mệt? (viết vào bong bóng)' }, { id: 'pop', label: '💥 Đập!', from: 2000, to: B_FIN }, { id: 'popall', label: '🎆 Bùm hết', from: 8000, to: B_FIN }, { id: 'photo', label: '📸 Chụp', from: 2000, to: B_MS }],
   caption: el => el < 3000 ? '🌙 Ngồi bên hồ, thở thật sâu…' : el < 20000 ? '🫧 Mỗi điều mệt mỏi là một bong bóng — bấm "Đập!" cho vỡ tan' : el < B_FIN ? '✍️ Viết thêm điều gì làm mình buồn, rồi đập luôn!' : '🎆 Bùm! Mệt mỏi bay hết thành pháo hoa',
@@ -140,7 +140,7 @@ function drawFort(f: F) {
   if (el < 1200) { c.globalAlpha = 1 - el / 1200; c.fillStyle = '#000000'; c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
 }
 export const fort: DuoCfg = {
-  title: 'Đêm pháo đài gối', ms: P_MS, join: 15000, price: 0,
+  title: 'Đêm pháo đài gối', ms: P_MS, join: 30000, price: 0,
   ask: '🛋️ Dựng pháo đài chăn gối, ăn bắp rang, xem phim hoạt hình hai đứa', joinAsk: '🛋️ Chui vào pháo đài gối cùng người ấy', invite: '🛋️ Người ấy rủ vào pháo đài gối xem phim', yes: 'Chui vào!', late: 'Lần sau chui sớm nha',
   buttons: [{ id: 'cuddle', label: '🫂 Rúc vào nhau', from: 1500, to: P_MS }, { id: 'popcorn', label: '🍿 Ăn bắp', from: 1500, to: P_MS }, { id: 'photo', label: '📸 Chụp', from: 1500, to: P_MS }],
   caption: el => el < 4000 ? '🌧️ Ngoài trời mưa rồi… dựng pháo đài chăn gối thôi' : el < 25000 ? '🎬 Phim hoạt hình tối nay: “Hai đứa mình”' : el < 45000 ? '🍿 Bắp rang nóng hổi, mèo ngủ khò khò' : '🫂 Rúc vào nhau nghe mưa rơi…',
@@ -303,7 +303,7 @@ function drawDrone(f: F) {
   void ell; void glow; void poly; void line;
 }
 export const drone: DuoCfg = {
-  title: 'Show đèn drone cổ vũ người ấy', ms: D_MS, Z: 3, join: 9000, price: 0,
+  title: 'Show đèn drone cổ vũ người ấy', ms: D_MS, Z: 3, join: 45000, price: 0,
   ask: '🛸 Bật show đèn drone dành riêng cho người ấy', joinAsk: '🛸 Ra cầu tàu xem show drone', invite: '🛸 Người ấy có một show đèn drone dành cho bạn!', yes: 'Xem ngay!', late: 'Show bắt đầu mất rồi — lần sau nha',
   buttons: [{ id: 'msg', label: '💬 Lời cho drone', from: 1000, to: PH[PI('text')].t + 8000, prompt: 'Drone sẽ xếp thành chữ gì? (xuống dòng bằng " / ", vd: EM GIỎI LẮM / ANH THƯƠNG EM)' }, { id: 'cheer', label: '📣 Cổ vũ', from: 3000, to: D_MS }, { id: 'photo', label: '📸 Chụp', from: 3000, to: D_MS }],
   caption: el => { let i = 0; while (i + 1 < PH.length && PH[i + 1].t <= el) i++; const k = PH[i].k;
