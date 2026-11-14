@@ -40,7 +40,12 @@ export interface DuoCfg {
   ask: string; joinAsk: string; invite: string; yes: string; late: string;
   /** người bắt đầu chạy thêm việc (vd. nhận quà mỗi ngày) sau khi đồng ý */
   onStart?: () => Promise<void>;
+  /** người ấy đang online thì chờ vào cùng rồi mới chiếu (một mình thì chiếu luôn) */
+  wait?: boolean;
 }
+/** Game cập nhật: người ấy có đang online không */
+export const duoPresence = { partnerOnline: false };
+const COUNTDOWN = 3500;
 export type DuoKey = keyof typeof DUO_SCENES;
 export const isDuo = (k: string | null | undefined): k is DuoKey => !!k && k in DUO_SCENES;
 
@@ -48,8 +53,9 @@ const BEAT = 1500, HIT_WIN = 450, AHEAD = 6500;
 const DIRS = [{ k: 'ArrowLeft', icon: '⬅️' }, { k: 'ArrowUp', icon: '⬆️' }, { k: 'ArrowDown', icon: '⬇️' }, { k: 'ArrowRight', icon: '➡️' }];
 const stars = (n: number) => (n >= 0.8 ? 3 : n >= 0.5 ? 2 : 1);
 
-function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number; me: AvatarLook; mate: AvatarLook; them: AvatarLook | null; onExit: () => void }) {
+function DuoRoom({ k, at: sid, go, me, mate, them, onExit, onSolo }: { k: DuoKey; at: number; go?: number; me: AvatarLook; mate: AvatarLook; them: AvatarLook | null; onExit: () => void; onSolo: () => void }) {
   const cfg = DUO_SCENES[k] as DuoCfg;
+  const waiting = go === undefined, t0 = go ?? sid;
   const W = cfg.W ?? 320, H = cfg.H ?? 180, Z = cfg.Z ?? 2;
   const cv = useRef<HTMLCanvasElement>(null);
   const [lineTxt, setLine] = useState('');
@@ -72,13 +78,13 @@ function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number;
   const taps = useRef<{ i: number; id: string; at: number }[]>([]), texts = useRef<Record<string, string>>({});
   const mark = (who: string, b: number) => { (hits.current[who] ??= new Set()).add(b); lastHit.current[who] = Date.now(); };
   const tapIn = (who: string, id: string, text?: string) => { const i = seatOf(who); taps.current = [...taps.current.slice(-60), { i, id, at: Date.now() }]; if (text !== undefined) texts.current[who] = text; };
-  useEffect(() => onEvent('duo-hit', (d: { at: number; by: string; b: number }) => { if (d.at === t0 && d.by !== meKey) mark(d.by, d.b); }), [t0, meKey]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => onEvent('duo-tap', (d: { at: number; by: string; id: string; text?: string }) => { if (d.at === t0 && d.by !== meKey) tapIn(d.by, d.id, d.text); }), [t0, meKey, seats]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => onEvent('duo-hit', (d: { at: number; by: string; b: number }) => { if (d.at === sid && d.by !== meKey) mark(d.by, d.b); }), [sid, meKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => onEvent('duo-tap', (d: { at: number; by: string; id: string; text?: string }) => { if (d.at === sid && d.by !== meKey) tapIn(d.by, d.id, d.text); }), [sid, meKey, seats]); // eslint-disable-line react-hooks/exhaustive-deps
   const press = (d: number) => {
     const el = Date.now() - t0, mine = hits.current[meKey];
     const b = BEATS.findIndex((x, i) => Math.abs(el - x.t) <= HIT_WIN && seq[i] === d && !mine?.has(i));
     setFlash(b >= 0 ? 'hit' : 'miss'); setTimeout(() => setFlash(null), 180);
-    if (b >= 0) { mark(meKey, b); sendEvent('duo-hit', { at: t0, by: meKey, b }); }
+    if (b >= 0) { mark(meKey, b); sendEvent('duo-hit', { at: sid, by: meKey, b }); }
   };
   const pressRef = useRef(press); pressRef.current = press;
   useEffect(() => {
@@ -90,7 +96,7 @@ function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number;
     if (b.id === 'photo') return snapRef.current();
     let text: string | undefined;
     if (b.prompt) { const v = window.prompt(b.prompt, texts.current[meKey] ?? ''); if (v === null) return; text = v.trim().slice(0, 40); }
-    tapIn(meKey, b.id, text); sendEvent('duo-tap', { at: t0, by: meKey, id: b.id, text });
+    tapIn(meKey, b.id, text); sendEvent('duo-tap', { at: sid, by: meKey, id: b.id, text });
   };
   const exitRef = useRef(onExit); exitRef.current = onExit;
   const snapRef = useRef<() => void>(() => undefined);
@@ -110,6 +116,7 @@ function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number;
       const nowMs = Date.now(), el = nowMs - t0;
       setNow(nowMs);
       ctx.setTransform(Z, 0, 0, Z, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1;
+      if (waiting || el < 0) { ctx.fillStyle = '#0a0a1e'; ctx.fillRect(0, 0, W, H); raf = requestAnimationFrame(frame); return; }   // đang chờ người ấy / đếm ngược
       f.el = el; f.t = el / 1000; f.now = nowMs; f.taps = taps.current;
       cfg.draw(f);
       const ln = cfg.caption(el); if (ln !== last) { last = ln; setLine(ln); }
@@ -119,7 +126,7 @@ function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number;
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [t0, seats, cfg, BEATS]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [t0, waiting, seats, cfg, BEATS]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!done) return; const t = setTimeout(() => exitRef.current(), 25000); return () => clearTimeout(t); }, [done]);
 
   const el = now - t0;
@@ -132,8 +139,10 @@ function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number;
   return createPortal(
     <div className="coaster" onClick={stop} onPointerDown={stop} onMouseDown={stop} onTouchStart={stop}>
       <canvas ref={cv} width={W * Z} height={H * Z} />
-      {!done && lineTxt && <b className="coaster-line">{lineTxt}</b>}
-      {!done && win && (
+      {waiting && <div className="coaster-end duo-wait"><h3>💌 Đã rủ người ấy</h3><p>Đang chờ người ấy vào cùng… vào là hai đứa cùng xem từ đầu</p><div className="row"><button className="btn small ghost" onClick={onSolo}>▶️ Xem trước một mình</button></div></div>}
+      {!waiting && el < 0 && <div className="duo-count">{Math.ceil(-el / 1000)}</div>}
+      {!done && !waiting && el >= 0 && lineTxt && <b className="coaster-line">{lineTxt}</b>}
+      {!done && !waiting && win && (
         <div className="dance-bar pot-bar">
           <div className="dance-head"><span>🎯 Trúng {hits.current[meKey]?.size ?? 0}/{BEATS.length}{other ? ` · người ấy ${hits.current[other.key]?.size ?? 0}` : ''}</span></div>
           <div className={`dance-lane ${flash ?? ''}`}>
@@ -143,7 +152,7 @@ function DuoRoom({ k, at: t0, me, mate, them, onExit }: { k: DuoKey; at: number;
           <div className="dance-keys">{DIRS.map((d, i) => <button key={d.k} className="btn" disabled={!live} onPointerDown={e => { e.preventDefault(); press(i); }}>{d.icon}</button>)}</div>
         </div>
       )}
-      {!done && !win && btns.length > 0 && (
+      {!done && !waiting && el >= 0 && !win && btns.length > 0 && (
         <div className="dance-bar pot-bar bb-bar cb-bar">
           <div className="row center">{btns.map(b => <button key={b.id} className={`btn bb-tap ${b.id === 'photo' ? 'ghost' : ''}`} onClick={() => tap(b)}>{b.id === 'photo' ? `${b.label} (${photos.length}/4)` : b.label}</button>)}</div>
         </div>
@@ -178,8 +187,8 @@ export function DuoHost({ live, looks }: { live: Live; looks: { me: AvatarLook; 
           if (!confirm(cfg.price ? `${cfg.ask} (${cfg.price} xu)?` : `${cfg.ask}?`)) return;
           await pay(cfg); if (cfg.onStart) await cfg.onStart();
           const th = L.current.theirs;
-          if (th?.act === k && th.trip && Date.now() - th.trip.at < cfg.join) { setInv(null); L.current.update({ act: k, trip: { i: 0, at: th.trip.at }, dish: null, drink: null }); return; }
-          const at = Date.now(); L.current.update({ act: k, trip: { i: 0, at }, dish: null, drink: null });
+          if (th?.act === k && th.trip && (cfg.wait ? !th.trip.go || Date.now() - th.trip.go < cfg.join : Date.now() - th.trip.at < cfg.join)) { setInv(null); L.current.update({ act: k, trip: { i: 0, at: th.trip.at, ...(cfg.wait ? { go: th.trip.go ?? Date.now() + COUNTDOWN } : {}) }, dish: null, drink: null }); return; }
+          const at = Date.now(); L.current.update({ act: k, trip: { i: 0, at, ...(cfg.wait && !duoPresence.partnerOnline ? { go: at } : {}) }, dish: null, drink: null });
           sendEvent('duo-invite', { k, at });
         } catch (err) { toastError(err); }
       })();
@@ -188,25 +197,31 @@ export function DuoHost({ live, looks }: { live: Live; looks: { me: AvatarLook; 
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => onEvent('duo-invite', (d: { k: string; at: number }) => {
     if (!isDuo(d.k) || L.current.mine.act === d.k) return;
-    setInv({ k: d.k, at: d.at }); const j = (DUO_SCENES[d.k] as DuoCfg).join; setTimeout(() => setInv(v => (v && v.at === d.at ? null : v)), Math.max(3000, j - 500));
+    setInv({ k: d.k, at: d.at }); const cf = DUO_SCENES[d.k] as DuoCfg, j = cf.wait ? 15 * 60000 : cf.join; setTimeout(() => setInv(v => (v && v.at === d.at ? null : v)), Math.max(3000, j - 500));
   }), []);
   const join = () => {
     const d = inv; setInv(null); if (!d) return; const cfg = DUO_SCENES[d.k] as DuoCfg;
     void (async () => {
       try {
         if (!confirm(cfg.price ? `${cfg.joinAsk} (${cfg.price} xu)?` : `${cfg.joinAsk}?`)) return;
-        if (Date.now() - d.at > cfg.join) return toastError(new Error(cfg.late));
+        const th = L.current.theirs, sgo = th?.act === d.k && th.trip?.at === d.at ? th.trip.go : undefined;
+        if (cfg.wait ? (sgo !== undefined && Date.now() - sgo > cfg.join) || (th?.act !== d.k) : Date.now() - d.at > cfg.join) return toastError(new Error(cfg.late));
         await pay(cfg);
-        L.current.update({ act: d.k, trip: { i: 0, at: d.at }, dish: null, drink: null });
+        L.current.update({ act: d.k, trip: { i: 0, at: d.at, ...(cfg.wait ? { go: sgo ?? Date.now() + COUNTDOWN } : {}) }, dish: null, drink: null });
       } catch (err) { toastError(err); }
     })();
   };
   const mine = live.mine, theirs = live.theirs;
+  // người ấy vào cùng và chốt giờ chiếu → ghi lại vào trạng thái của mình (người ấy có rời đi thì show vẫn chạy tiếp)
+  const tgo = isDuo(mine.act) && (DUO_SCENES[mine.act] as DuoCfg).wait && mine.trip && !mine.trip.go && theirs?.act === mine.act && theirs.trip?.at === mine.trip.at ? theirs.trip.go : undefined;
+  useEffect(() => { if (tgo && L.current.mine.trip && !L.current.mine.trip.go) L.current.update({ trip: { ...L.current.mine.trip, go: tgo } }); }, [tgo]);
   return (
     <>
       {inv && <InviteBanner text={(DUO_SCENES[inv.k] as DuoCfg).invite} yes={(DUO_SCENES[inv.k] as DuoCfg).yes} onYes={join} onNo={() => setInv(null)} />}
       {isDuo(mine.act) && mine.trip && <DuoRoom key={`${mine.act}${mine.trip.at}`} k={mine.act} at={mine.trip.at} me={looks.me} mate={looks.them}
-        them={theirs?.act === mine.act && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })} />}
+        go={(DUO_SCENES[mine.act] as DuoCfg).wait ? mine.trip.go ?? (theirs?.act === mine.act && theirs.trip?.at === mine.trip.at ? theirs.trip.go : undefined) : mine.trip.at}
+        them={theirs?.act === mine.act && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })}
+        onSolo={() => { const tr = L.current.mine.trip; if (tr) L.current.update({ trip: { ...tr, go: Date.now() } }); }} />}
     </>
   );
 }

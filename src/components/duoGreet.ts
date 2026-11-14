@@ -93,7 +93,7 @@ function drawGreet(f: F) {
   if (el < 1200) { c.globalAlpha = 1 - el / 1200; c.fillStyle = '#000000'; c.fillRect(0, 0, W, H); c.globalAlpha = 1; }
 }
 export const greet: DuoCfg = {
-  title: 'Quà hôm nay cho người thương', ms: G_MS, join: G_WALK + 12000, price: 0,
+  title: 'Quà hôm nay cho người thương', ms: G_MS, join: G_WALK + 12000, wait: true, price: 0,
   ask: '💐 Hai đứa cùng vào rồi! Tặng hoa và quà hôm nay cho người ấy nhé', joinAsk: '💝 Nhận quà của người ấy', invite: '💐 Người ấy có bất ngờ cho bạn!', yes: 'Nhận quà 💝', late: 'Lỡ mất rồi, lần sau nhanh tay nha',
   buttons: [{ id: 'kiss', label: '💋 Hôn', from: G_KISS, to: G_MS }, { id: 'hug', label: '🤗 Ôm', from: G_KISS, to: G_MS }, { id: 'note', label: '💌 Lời nhắn', from: G_WALK, to: G_MS, prompt: 'Lời nhắn hôm nay cho người ấy:' }, { id: 'photo', label: '📸 Chụp', from: G_WALK, to: G_MS }],
   caption: el => el < G_WALK ? '🌹 Có người giấu gì sau lưng kìa…' : el < G_BQ ? '💐 Tặng em bó hoa hôm nay' : el < G_GIFT ? `🎁 Mở quà nào… ${item(giftToday()).name}!` : el < G_KISS ? '💗 Thích không?' : el < G_KISS + 6000 ? '💋 Chụt!' : '🤗 Ôm một cái thật lâu',

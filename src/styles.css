@@ -1884,3 +1884,7 @@ textarea { resize: vertical; }
 .star-card { max-width: min(86vw, 420px); background: #fff8ec; color: #4a2a3a; border-radius: 14px; padding: 22px 20px; text-align: center; box-shadow: 0 0 40px #ffd24a88; opacity: 0; animation: starcard .6s 1.2s ease-out forwards; }
 .star-card p { font-size: 20px; line-height: 1.45; margin: 0 0 10px; white-space: pre-wrap; }
 @keyframes starcard { from { opacity: 0; transform: scale(.6) rotate(-6deg); } to { opacity: 1; transform: none; } }
+
+/* Màn chờ người ấy vào cùng + đếm ngược */
+.duo-wait { pointer-events: auto; }
+.duo-count { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); font-size: 96px; font-weight: 800; color: #fff6f0; text-shadow: 0 0 24px #ff6a9a; animation: pop .9s ease-out infinite; pointer-events: none; }

@@ -80,6 +80,7 @@ import { outWx } from '../lib/weather';
 import { DiarySheet, FestivalSheet, festKindOf, LanternParade, TravelSheet } from './Festive';
 import { CheerSheet } from './Cheer';
 import { dronePics } from './duoCheer';
+import { duoPresence } from './Duo';
 import { seeded } from '../lib/rng';
 import { tripCtx, tripOf, type TripId } from '../lib/trips';
 import { TripShopSheet } from './TripExtras';
@@ -161,6 +162,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const partnerOnline = !!partner && online.includes(partner.id);
   const live = useLive(partnerOnline);
   const liveRef = useRef(live); liveRef.current = live;
+  duoPresence.partnerOnline = partnerOnline;
   const scene = live.mine.scene;
   const theirs = partnerOnline ? live.theirs : null;
   const tripHere = scene.startsWith('trip_') ? scene.split('_')[1] : scene === 'restaurant' ? tripCtx.at : '';

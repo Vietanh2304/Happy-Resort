@@ -16,7 +16,7 @@ export interface LiveState {
   act: string | null;     // 'fishing' khi đang câu cá
   dish: string | null;    // icon món đang đặt trên bàn ăn
   drink: string | null;
-  trip?: { i: number; at: number } | null;
+  trip?: { i: number; at: number; go?: number } | null;   // go: lúc bắt đầu chiếu (màn chờ người ấy vào cùng)
   outfit?: number | null;
   tripAt?: string;          // nhà hàng đang ngồi thuộc điểm du lịch nào ('' = nhà hàng làng)   // đang mặc đồ thuê ở điểm du lịch (áo dài, hanbok…)   // đang làm hoạt động du lịch thứ i (đi thuyền…) từ lúc at   // đồ uống trên bàn
   sky: HillSky | 'real';  // bầu trời chọn ngắm trên đồi

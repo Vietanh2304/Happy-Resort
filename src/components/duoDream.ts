@@ -70,7 +70,7 @@ function drawTiny(f: F) {
   fadeIn(c, el);
 }
 export const tiny: DuoCfg = {
-  title: 'Thu nhỏ phiêu lưu vườn khổng lồ', ms: T_MS, join: 25000, price: 0,
+  title: 'Thu nhỏ phiêu lưu vườn khổng lồ', ms: T_MS, join: 25000, wait: true, price: 0,
   ask: '🔦 Bật đèn pin thu nhỏ, hai đứa đi lạc vào khu vườn khổng lồ', joinAsk: '🔦 Thu nhỏ cùng người ấy', invite: '🔦 Người ấy rủ thu nhỏ đi phiêu lưu trong vườn', yes: 'Thu nhỏ thôi!', late: 'Người ấy thu nhỏ đi mất rồi — lần sau nha',
   buttons: [{ id: 'dew', label: '💧 Chạm giọt sương', from: T_SHRINK, to: T_FLY }, { id: 'firefly', label: '✨ Gọi đom đóm', from: T_SHRINK, to: T_MS }, { id: 'photo', label: '📸 Chụp', from: T_SHRINK, to: T_MS }],
   caption: el => el < T_SHRINK ? '🔦 Bật đèn pin thu nhỏ… bé dần, bé dần…' : el < T_FLY ? '🌼 Hoa cao như toà nhà, giọt sương to như hồ nước!' : el < T_SIT ? '🦋 Cưỡi bướm bay qua vườn hoa' : '🌸 Ngồi trên cánh hoa ngắm đom đóm lên đèn',
@@ -134,7 +134,7 @@ function drawGalaxy(f: F) {
   fadeIn(c, el);
 }
 export const galaxy: DuoCfg = {
-  title: 'Chuyến tàu ngân hà', ms: GX_MS, join: 25000, price: 0,
+  title: 'Chuyến tàu ngân hà', ms: GX_MS, join: 25000, wait: true, price: 0,
   ask: '🚂 Lên chuyến tàu bay xuyên dải ngân hà', joinAsk: '🚂 Lên tàu ngân hà cùng người ấy', invite: '🚂 Người ấy rủ đi tàu ngân hà', yes: 'Lên tàu!', late: 'Tàu đã bay lên trời mất rồi — lần sau nha',
   buttons: [{ id: 'wish', label: '🌠 Ước', from: GX_B, to: GX_MS }, { id: 'lean', label: '💞 Tựa vai', from: GX_B, to: GX_MS }, { id: 'photo', label: '📸 Chụp', from: GX_B, to: GX_MS }],
   caption: el => { const s = (el - GX_B) / GX_R; return el < GX_B ? `✦ Ga Ngân Hà — tàu sắp cất cánh… ${Math.ceil((GX_B - el) / 1000)}` : s < 0.36 ? '🪐 Hành tinh kẹo hồng có vành đai vàng' : s < 0.62 ? '🐋 Cá voi sao bơi ngang bầu trời' : s < 0.84 ? '🌹 Hành tinh nhỏ có một bông hồng' : s < 1 ? '🌠 Mưa sao băng! Ước đi nào' : '💫 Tới trạm cuối của dải ngân hà'; },
@@ -187,7 +187,7 @@ function drawCandy(f: F) {
   fadeIn(c, el);
 }
 export const candy: DuoCfg = {
-  title: 'Xứ bánh kẹo trên mây', ms: C_MS, join: 25000, price: 0,
+  title: 'Xứ bánh kẹo trên mây', ms: C_MS, join: 25000, wait: true, price: 0,
   ask: '🍭 Ngồi thuyền bánh quy trôi trên sông sô-cô-la, tới lâu đài bánh kem', joinAsk: '🍭 Lên thuyền bánh quy cùng người ấy', invite: '🍭 Người ấy rủ đi xứ bánh kẹo trên mây', yes: 'Lên thuyền!', late: 'Thuyền trôi đi mất rồi — lần sau nha',
   buttons: [{ id: 'taste', label: '🍭 Nếm kẹo', from: 2000, to: C_MS }, { id: 'rain', label: '🌈 Mưa kẹo', from: 2000, to: C_MS }, { id: 'photo', label: '📸 Chụp', from: 2000, to: C_MS }],
   caption: el => el < 4000 ? '☁️ Trôi lên những đám mây kẹo bông…' : el < 20000 ? '🍫 Sông sô-cô-la, nhà bánh gừng mái kem, cây kẹo mút' : el < C_END - 6000 ? '🌈 Qua cầu kẹo dẻo cầu vồng' : el < C_END ? '🎂 Lâu đài bánh kem hiện ra kìa!' : '🎆 Nến trên lâu đài bừng sáng, pháo hoa kẹo rực trời',
