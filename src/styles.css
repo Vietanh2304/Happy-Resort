@@ -412,6 +412,7 @@ textarea { resize: vertical; }
   border: 3px solid #e8c070; box-shadow: 0 0 0 2px #a8823a, 0 0 18px 4px #ffd27a88; }
 .dinner-frame video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 .dinner-frame .tile-remote video { transform: none; }
+.dinner-frame > .tile-local, .dinner-frame > .tile-remote { position: absolute; inset: 0; right: auto; bottom: auto; width: 100%; height: 100%; border: 0; transform: none; background: #2a1a2a; }
 .dinner-frame.small { border-width: 2px; opacity: .92; }
 .spr.pop { animation: pop .35s ease-out; }
 @keyframes pop { from { transform: scale(.2); opacity: 0; } }

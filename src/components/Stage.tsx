@@ -13,6 +13,7 @@ interface StageProps {
   onTap?: (x: number, y: number) => void;
   /** Cảnh rộng: phóng to vừa mắt và cho camera đi theo điểm này (tọa độ logic) */
   follow?: { x: number; y: number };
+  glide?: number;          // ms: camera lướt đều đúng chừng này mỗi lần cập nhật (đang ngồi xe)
   /** số pixel logic tối thiểu luôn thấy ở cạnh ngắn (mặc định VIEW) */
   view?: number;
   children?: ReactNode;
@@ -22,7 +23,7 @@ const VIEW = 145;  // cạnh ngắn của màn hình luôn thấy khoảng bấy
 const SPEED = 45; // khớp tốc độ đi của nhân vật để camera lướt theo
 
 /** Khung cảnh pixel: tự co giãn vừa chỗ trống, giữ đúng tỉ lệ, trả tọa độ chạm theo pixel logic */
-export function Stage({ w, h, bg, className = '', onTap, follow, view = VIEW, children }: StageProps) {
+export function Stage({ w, h, bg, className = '', onTap, follow, glide: fixed, view = VIEW, children }: StageProps) {
   const wrap = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ cw: 0, ch: 0 });
 
@@ -49,7 +50,7 @@ export function Stage({ w, h, bg, className = '', onTap, follow, view = VIEW, ch
   const last = useRef(follow);
   const glide = useRef(0);
   const dist = follow && last.current ? Math.hypot(follow.x - last.current.x, follow.y - last.current.y) : 0;
-  if (dist > 0) glide.current = Math.min(4000, (dist / SPEED) * 1000);
+  if (dist > 0) glide.current = fixed ?? Math.min(4000, (dist / SPEED) * 1000);
   last.current = follow;
   const ms = glide.current;
 

@@ -240,11 +240,12 @@ export function World(raw: WorldProps) {
     disco: discoRoom,
   } as Record<string, () => ReturnType<typeof townBackground> | undefined>)[scene]();
 
+  const RIDE_TICK = 120;
   const walkable = (!!def.walk && !editing) || (!!props.festIcon && scene === 'town');
   // đang ngồi thuyền / cáp treo / tàu: camera chạy theo xe
   const riding = props.live.mine.act === 'ride' && !!spotOf(scene);
   const [rideNow, setRideNow] = useState(Date.now());
-  useEffect(() => { if (!riding) return; const t = setInterval(() => setRideNow(Date.now()), 150); return () => clearInterval(t); }, [riding]);
+  useEffect(() => { if (!riding) return; const t = setInterval(() => setRideNow(Date.now()), RIDE_TICK); return () => clearInterval(t); }, [riding]);
   const follow = editing && scene === 'town'
     ? { x: GARDEN.x + (GARDEN.cols * GARDEN.cw) / 2, y: GARDEN.y + (GARDEN.rows * GARDEN.ch) / 2 }
     : editing && scene === 'farm' ? { x: FARM.x + (FARM.cols * FARM.cw) / 2, y: FARM.y + (FARM.rows * FARM.ch) / 2 }
@@ -270,6 +271,7 @@ export function World(raw: WorldProps) {
       w={def.w} h={def.h} bg={bg} className={`world-stage scene-${scene}`}
       onTap={walkable ? tap : undefined}
       follow={follow && scene.startsWith('trip_') ? { x: follow.x, y: 192 } : follow}
+      glide={riding ? RIDE_TICK + 30 : undefined}
       view={scene.startsWith('trip_fairy') ? 150 : scene.startsWith('trip_') ? 165 : undefined}
     >
       <SceneContent {...props} />
