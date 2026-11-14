@@ -40,6 +40,8 @@ class Lofi {
   private echo!: DelayNode;
   private noise!: AudioBuffer;
   private crackle: AudioBufferSourceNode | null = null;
+  private fb!: GainNode;
+  private crackleG: GainNode | null = null;
   private wind: { src: AudioBufferSourceNode; lfo: OscillatorNode } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private nextBeat = 0;
@@ -62,6 +64,7 @@ class Lofi {
     this.echo.delayTime.value = BEAT * 0.75;
     const fb = ctx.createGain();
     fb.gain.value = 0.32;
+    this.fb = fb;
     this.echo.connect(fb).connect(this.echo);
     this.echo.connect(this.tone);
     // Tiếng ồn trắng dùng cho trống và đĩa than
@@ -79,7 +82,8 @@ class Lofi {
     src.buffer = buf;
     src.loop = true;
     const g = ctx.createGain();
-    g.gain.value = 0.5;
+    g.gain.value = this.mood in TUNES ? 0 : 0.5;
+    this.crackleG = g;
     src.connect(g).connect(this.tone);
     src.start();
     this.crackle = src;
@@ -307,7 +311,6 @@ class Lofi {
     env.gain.exponentialRampToValueAtTime(0.0001, t + len + (soft ? 0.25 : 0.1));
     const out = acc ? ctx.createBiquadFilter() : null;
     if (out) { out.type = 'lowpass'; out.frequency.value = 2200; env.connect(out).connect(this.tone); } else env.connect(this.tone);
-    if (soft) env.connect(this.echo);
     for (const [type, det, k] of (acc ? [['sawtooth', -6, 0.5], ['square', 7, 0.3]] : soft ? [['triangle', -3, 1], ['sine', 4, 0.7]] : [['triangle', 0, 1], ['square', 0, 0.12]]) as [OscillatorType, number, number][]) {
       const o = ctx.createOscillator(), og = ctx.createGain();
       o.type = type; o.frequency.value = hz(m); o.detune.value = det; og.gain.value = k;
@@ -406,7 +409,16 @@ class Lofi {
   }
 
   setMood(m: Mood) {
+    const was = this.mood;
     this.mood = m;
+    // sàn nhảy: tắt tiếng vang & đĩa than của nhạc nền (lệch nhịp, nghe như lẫn hai bài); đổi bài thì chơi lại từ đầu
+    const dance = m in TUNES;
+    if (this.ctx) {
+      const now = this.ctx.currentTime;
+      this.fb.gain.setTargetAtTime(dance ? 0 : 0.32, now, 0.05);
+      this.crackleG?.gain.setTargetAtTime(dance ? 0 : 0.5, now, 0.1);
+      if (was !== m) { this.beat = 0; this.nextBeat = Math.max(this.nextBeat, now + 0.15); }
+    }
     if ((m === 'sea' || m === 'sky') && this.playing) this.startWind(); else if (m !== 'sea' && m !== 'sky') this.stopWind();
     if (this.ctx) this.tone.frequency.setTargetAtTime(m in TUNES ? 3200 : m === 'deep' ? 1100 : m === 'night' || m === 'camp' ? 1800 : m === 'love' || m === 'cafe' ? 2000 : 2400, this.ctx.currentTime, 1);
   }

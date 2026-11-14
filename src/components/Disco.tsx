@@ -77,8 +77,8 @@ export function DanceBar({ me, them, themName, date, onMove, onLeave, onSong }: 
           : over ? <span>🎉 Đồng điệu <b>{sync}/{BEATS}</b> · Bạn {mine.length} · {themName} {theirs.length} — {sync >= 22 ? 'Cặp đôi sàn nhảy! 🔥' : sync >= 12 ? 'Ăn ý ghê 💞' : 'Nhảy thêm vài bài nữa nào 😆'}</span>
             : st.at && now < st.at ? <span>🎶 Vào nhạc… {Math.ceil((st.at - now) / 1000)}</span>
               : <span>💃 {DANCE_SONGS[pick].name}: mũi tên chạy tới vòng tròn thì bấm đúng hướng (máy tính: phím mũi tên) — mỗi nhịp trúng là một động tác khiêu vũ đôi. Cùng trúng một nhịp = 💞</span>}
-        <div className="row">
-          {!running && DANCE_SONGS.map((sg, i) => <button key={sg.mood} className={`chip ${pick === i ? 'on' : ''}`} onClick={() => setPick(i)}>{sg.name}</button>)}
+        <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
+          {!running && DANCE_SONGS.map((sg, i) => <button key={sg.mood} className={`chip ${pick === i ? 'on' : ''}`} onClick={() => setPick(i)}>{sg.name.split(' · ')[0]}</button>)}
           {!running && <button className="btn small" onClick={() => send('new', { at: Date.now() + 3000, seed: Date.now(), song: pick })}>{st.at ? '🔄 Bài khác' : '🎶 Bắt đầu nhảy'}</button>}
           <button className="btn small ghost" onClick={onLeave}>🚪 Ra ngoài</button>
         </div>

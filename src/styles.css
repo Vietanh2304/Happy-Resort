@@ -1888,3 +1888,7 @@ textarea { resize: vertical; }
 /* Màn chờ người ấy vào cùng + đếm ngược */
 .duo-wait { pointer-events: auto; }
 .duo-count { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); font-size: 96px; font-weight: 800; color: #fff6f0; text-shadow: 0 0 24px #ff6a9a; animation: pop .9s ease-out infinite; pointer-events: none; }
+
+/* Sàn nhảy: chữ trên ô chọn bài (thanh nền tối làm chữ bị trắng) */
+.dance-bar .chip { color: #3b2834; }
+.dance-bar .chip.on { background: #ffd0e0; }
