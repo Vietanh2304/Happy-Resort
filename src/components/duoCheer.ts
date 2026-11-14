@@ -151,7 +151,7 @@ export const fort: DuoCfg = {
 type Pt3 = [number, number, string];
 /** ảnh kỷ niệm cho show drone: ảnh thật giữ nguyên tỉ lệ (không cắt), lưu trong dữ liệu chung của hai đứa.
  *  Drone xếp thành ảnh chấm sáng lấy màu từ ảnh → rồi chính tấm ảnh hiện dần trong khung đèn (giữ nguyên khuôn mặt). */
-export const PIC_DOTS = 4200, PCX = 160, PCY = 64, PMAXW = 230, PMAXH = 118;
+export const PIC_DOTS = 2200, PCX = 160, PCY = 64, PMAXW = 230, PMAXH = 118;
 export const dronePics: { list: { id: string; img: string }[]; msg: string } = { list: [], msg: '' };
 const picIms = new Map<string, HTMLImageElement>();
 export const picImg = (id: string, src: string) => { let im = picIms.get(id); if (!im) { im = new Image(); im.src = src; picIms.set(id, im); } return im.complete && im.width ? im : null; };
@@ -179,7 +179,9 @@ const D_MS = 110000, ND = PIC_DOTS;
 const PH: { t: number; k: string }[] = [{ t: 0, k: 'ground' }, { t: 2500, k: 'cloud' }, { t: 8000, k: 'heart' }, { t: 16000, k: 'pic0' }, { t: 26000, k: 'star' }, { t: 33000, k: 'pic1' }, { t: 43000, k: 'flower' }, { t: 51000, k: 'pic2' }, { t: 61000, k: 'text' }, { t: 78000, k: 'pic3' }, { t: 88000, k: 'couple' }, { t: 97000, k: 'big' }];
 const PI = (k: string) => PH.findIndex(p => p.k === k);
 const shuffle = <T,>(a: T[]) => a.map((v, i) => [rr(i, 77), v] as const).sort((x, y) => x[0] - y[0]).map(x => x[1]);
-const fill = (pts: Pt3[]): Pt3[] => (pts.length ? Array.from({ length: ND }, (_, i) => pts[Math.floor((i * pts.length) / ND)]) : []);
+const fill = (pts: Pt3[]): Pt3[] => (!pts.length ? [] : pts.length >= ND ? Array.from({ length: ND }, (_, i) => pts[Math.floor((i * pts.length) / ND)]) : Array.from({ length: ND }, (_, i) => (i < pts.length ? pts[i] : [pts[i % pts.length][0], pts[i % pts.length][1], ''] as Pt3)));
+/** điểm xếp đều theo lưới (giống drone thật cách đều nhau) */
+const grid = (sp: number, x0: number, y0: number, x1: number, y1: number, at: (x: number, y: number) => string | null): Pt3[] => { const out: Pt3[] = []; for (let y = y0; y <= y1; y += sp) for (let x = x0; x <= x1; x += sp) { const col = at(x, y); if (col) out.push([x, y, col]); } return shuffle(out); };
 const sample = (w: number, h: number, draw: (c: CanvasRenderingContext2D) => void, ox: number, oy: number, sc: number, step = 1): Pt3[] => {
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h; const c = cv.getContext('2d', { willReadFrequently: true })!; draw(c);
   const d = c.getImageData(0, 0, w, h).data, out: Pt3[] = [];
@@ -212,12 +214,12 @@ function shape(k: string, f: F, msg: string): Pt3[] {
   const hit = shapes.get(key); if (hit && hit.length) return hit;
   let pts: Pt3[] = [];
   if (k === 'cloud') pts = Array.from({ length: ND }, (_, i) => [30 + rr(i, 1) * 260, 20 + rr(i, 2) * 80, '#cfe8ff']);
-  else if (k === 'heart' || k === 'big') { const s = k === 'big' ? 44 : 32; for (let i = 0; pts.length < ND && i < 20000; i++) { const x = rr(i, 3) * 2.6 - 1.3, y = rr(i, 4) * 2.6 - 1.3; const v = (x * x + y * y - 1) ** 3 - x * x * y ** 3; const edge = v > -0.06; if (v <= 0 && (edge || rr(i, 5) < 0.35)) pts.push([160 + x * s, 64 - y * s, edge ? '#ff3a7a' : '#ff8ab0']); } }
-  else if (k === 'star') { for (let i = 0; i < ND; i++) { const a = rr(i, 6) * TAU, sp = Math.cos(5 * (a - Math.PI / 2)) * 0.5 + 0.5, rmax = 18 + sp ** 3 * 26, r = rmax * Math.sqrt(rr(i, 7) < 0.6 ? 0.85 + rr(i, 8) * 0.15 : rr(i, 8)); pts.push([160 + Math.cos(a) * r, 62 + Math.sin(a) * r, r > rmax * 0.8 ? '#fff0a0' : '#ffc83a']); } }
-  else if (k === 'flower') { for (let i = 0; i < ND; i++) { const a = rr(i, 9) * TAU, rmax = 12 + 34 * Math.abs(Math.cos(2.5 * a)), u = Math.sqrt(rr(i, 10)), r = rmax * u; pts.push([160 + Math.cos(a) * r, 62 + Math.sin(a) * r, r < 9 ? '#ffd24a' : mix('#ff6ab8', '#9a6aff', u)]); } }
-  else if (k === 'text') { const lines = msg.split('\n').slice(0, 2); pts = sample(300, 80, c => { c.fillStyle = '#ffffff'; c.textAlign = 'center'; c.textBaseline = 'middle'; let fs = 30; c.font = `bold ${fs}px sans-serif`; while (fs > 12 && Math.max(...lines.map(l => c.measureText(l).width)) > 290) { fs -= 2; c.font = `bold ${fs}px sans-serif`; } lines.forEach((l, i) => c.fillText(l, 150, 40 + (i - (lines.length - 1) / 2) * fs * 1.05)); }, 160 - 150 * 0.72, 62 - 40 * 0.72, 0.72, 2).map(([x, y], i) => [x, y, mix('#8affff', '#ff9ad8', rr(i, 11))] as Pt3); }
+  else if (k === 'heart' || k === 'big') { const s = k === 'big' ? 44 : 32; pts = grid(k === 'big' ? 3.1 : 2.8, 160 - s * 1.3, 64 - s * 1.3, 160 + s * 1.3, 64 + s * 1.3, (X, Y) => { const x = (X - 160) / s, y = (64 - Y) / s, v = (x * x + y * y - 1) ** 3 - x * x * y ** 3; return v > 0 ? null : v > -0.08 ? '#ff3a7a' : '#ff8ab0'; }); }
+  else if (k === 'star') pts = grid(2.8, 112, 14, 208, 110, (x, y) => { const a = Math.atan2(y - 62, x - 160), r = Math.hypot(x - 160, y - 62), sp = Math.cos(5 * (a + Math.PI / 2)) * 0.5 + 0.5, rmax = 18 + sp ** 3 * 28; return r > rmax ? null : r > rmax * 0.8 ? '#fff0a0' : '#ffc83a'; });
+  else if (k === 'flower') pts = grid(2.8, 112, 14, 208, 110, (x, y) => { const a = Math.atan2(y - 62, x - 160), r = Math.hypot(x - 160, y - 62), rmax = 12 + 34 * Math.abs(Math.cos(2.5 * a)); return r > rmax ? null : r < 9 ? '#ffd24a' : mix('#ff6ab8', '#9a6aff', r / rmax); });
+  else if (k === 'text') { const lines = msg.split('\n').slice(0, 2); pts = sample(300, 80, c => { c.fillStyle = '#ffffff'; c.textAlign = 'center'; c.textBaseline = 'middle'; let fs = 30; c.font = `bold ${fs}px sans-serif`; while (fs > 12 && Math.max(...lines.map(l => c.measureText(l).width)) > 290) { fs -= 2; c.font = `bold ${fs}px sans-serif`; } lines.forEach((l, i) => c.fillText(l, 150, 40 + (i - (lines.length - 1) / 2) * fs * 1.05)); }, 160 - 150 * 0.8, 62 - 40 * 0.8, 0.8, 3).map(([x, y], i) => [x, y, mix('#8affff', '#ff9ad8', rr(i, 11))] as Pt3); }
   else if (k === 'couple') { const ims = f.all.map(p => p.img('idle')); if (ims.every(im => !im || !im.width)) return shape('heart', f, msg);
-    pts = sample(120, 70, c => { c.imageSmoothingEnabled = false; ims.forEach((im, i) => { if (im && im.width) { const sc = 66 / im.height; c.drawImage(im, 30 + i * 30 - (im.width * sc) / 2 + 15, 2, im.width * sc, im.height * sc); } }); }, 160 - 60 * 1.1, 62 - 35 * 1.1, 1.1, 1); }
+    pts = sample(120, 70, c => { c.imageSmoothingEnabled = false; ims.forEach((im, i) => { if (im && im.width) { const sc = 66 / im.height; c.drawImage(im, 30 + i * 30 - (im.width * sc) / 2 + 15, 2, im.width * sc, im.height * sc); } }); }, 160 - 60 * 1.1, 62 - 35 * 1.1, 1.1, 2); }
   const out = fill(pts); shapes.set(key, out); return out;
 }
 const bayBg = () => bake('cheer:bay', W, H, (c, rnd) => {
@@ -255,18 +257,19 @@ function drawDrone(f: F) {
       return p; };
     const to = at(k); let from = k ? at(k - 1) : to, q = ease(clamp((e - PH[k].t) / 2600));
     if (PH[k].k === 'text') { const n = pageAt(pg, e); if (n > 0) { const [a, b] = textSpan(), ps = a + ((b - a) * n) / pg.length; from = shape('text', f, pg[n - 1])[i] ?? to; q = ease(clamp((e - ps) / 1300)); } }
-    const x = lerp(from[0], to[0], q), y = lerp(from[1], to[1], q), col = q < 0.5 ? from[2] : to[2];
+    const arc = Math.sin(q * Math.PI) * (rr(i, 41) - 0.5) * 36, hov = q > 0.98 ? 1 : 0;
+    const x = lerp(from[0], to[0], q) + arc * 0.4 + Math.sin(t * 1.3 + i) * 0.3 * hov, y = lerp(from[1], to[1], q) - Math.abs(arc) * 0.6 + Math.cos(t * 1.1 + i * 1.7) * 0.3 * hov, col = q < 0.5 ? from[2] : to[2];
     pos.push([x, y, col]);
     const tw = 0.7 + 0.3 * Math.sin(t * 4 + i) + (cheer ? 0.4 : 0);
     const pic = PH[k].k.startsWith('pic') && q > 0.9;
-    if (i % (pic ? 6 : 9) === 0) haloAt(c, x, y, (pic ? 1.8 : 2.2) + (cheer ? 1.2 : 0), col, (pic ? 0.3 : 0.32) * tw);
+    if (col) haloAt(c, x, y, (pic ? 1.5 : 1.7) + (cheer ? 0.8 : 0), col, (pic ? 0.45 : 0.6) * tw);
   }
   c.restore();
   // chấm drone vẽ thường (không cộng sáng) để hình sắc nét, không cháy trắng khi nhiều drone chồng nhau
-  for (let i = 0; i < ND; i++) { const [x, y, col] = pos[i]; R(c, x - 0.45, y - 0.45, 0.9, 0.9, col); }
+  for (let i = 0; i < ND; i++) { const [x, y, col] = pos[i]; if (!col) continue; R(c, x - 0.55, y - 0.55, 1.1, 1.1, col); R(c, x - 0.2, y - 0.2, 0.4, 0.4, '#ffffff'); }
   c.save(); c.globalCompositeOperation = 'lighter';
   // bóng drone trên mặt nước
-  c.globalAlpha = 0.18; for (let i = 0; i < ND; i += 4) { const [x, y, col] = pos[i]; if (y < 132) R(c, x + Math.sin(t * 2 + y) * 1, 132 + (132 - y) * 0.35, 0.8, 1.2, col); } c.globalAlpha = 1;
+  c.globalAlpha = 0.18; for (let i = 0; i < ND; i += 2) { const [x, y, col] = pos[i]; if (col && y < 132) R(c, x + Math.sin(t * 2 + y) * 1, 132 + (132 - y) * 0.35, 0.8, 1.2, col); } c.globalAlpha = 1;
   c.restore();
   // ảnh thật hiện dần trong khung bầu dục sáng khi drone đã xếp xong — mặt giữ y như ảnh gốc
   { let k = 0; while (k + 1 < PH.length && PH[k + 1].t <= el) k++;
@@ -282,7 +285,7 @@ function drawDrone(f: F) {
         for (let j = 0; j < nb; j++) { let u = ((j / nb + t * 0.02) % 1) * per, x: number, y: number; const ww = w + 6, hh = h + 6, X = x0 - 3, Y = y0 - 3;
           if (u < ww) { x = X + u; y = Y; } else if ((u -= ww) < hh) { x = X + ww; y = Y + u; } else if ((u -= hh) < ww) { x = X + ww - u; y = Y + hh; } else { u -= ww; x = X; y = Y + hh - u; }
           haloAt(c, x, y, 2.2, ['#ff8ad8', '#ffd24a', '#8affff'][j % 3], 0.5 + 0.4 * Math.sin(t * 3 + j)); }
-        c.globalAlpha = a * 0.1; for (let i = 0; i < ND; i += 3) { const [x, y, col] = pos[i]; R(c, x - 0.4, y - 0.4, 0.8, 0.8, col); }
+        c.globalAlpha = a * 0.1; for (let i = 0; i < ND; i++) { const [x, y, col] = pos[i]; if (col) R(c, x - 0.5, y - 0.5, 1, 1, col); }
         c.restore(); } } }
   if (cheer) fireworks(c, el, 0, 900, [30, 8, 260, 50], 44);
   // pháo hoa tự bắn hai bên suốt show (chừa khoảng giữa cho hình drone)
@@ -304,7 +307,7 @@ export const drone: DuoCfg = {
   ask: '🛸 Bật show đèn drone dành riêng cho người ấy', joinAsk: '🛸 Ra cầu tàu xem show drone', invite: '🛸 Người ấy có một show đèn drone dành cho bạn!', yes: 'Xem ngay!', late: 'Show bắt đầu mất rồi — lần sau nha',
   buttons: [{ id: 'msg', label: '💬 Lời cho drone', from: 1000, to: PH[PI('text')].t + 8000, prompt: 'Drone sẽ xếp thành chữ gì? (xuống dòng bằng " / ", vd: EM GIỎI LẮM / ANH THƯƠNG EM)' }, { id: 'cheer', label: '📣 Cổ vũ', from: 3000, to: D_MS }, { id: 'photo', label: '📸 Chụp', from: 3000, to: D_MS }],
   caption: el => { let i = 0; while (i + 1 < PH.length && PH[i + 1].t <= el) i++; const k = PH[i].k;
-    return ({ ground: '🛸 Bốn nghìn chiếc drone cất cánh trên vịnh…', cloud: '🛸 Bốn nghìn chiếc drone cất cánh trên vịnh…', heart: '💗 Một trái tim cho người giỏi nhất', star: '⭐ Ngôi sao xoay — em là ngôi sao của anh', flower: '🌸 Bông hoa nở rộ giữa trời đêm', text: '💬 Lời nhắn bằng đèn trên trời', couple: '👫 Là hai đứa mình đó!', big: '🎆 Trái tim khổng lồ và pháo hoa rực trời!' } as Record<string, string>)[k] ?? (dronePics.list.length ? '📸 Drone xếp lại kỷ niệm của hai đứa' : '✨ Drone vẽ hình trên trời'); },
+    return ({ ground: '🛸 Hơn hai nghìn chiếc drone cất cánh trên vịnh…', cloud: '🛸 Hơn hai nghìn chiếc drone cất cánh trên vịnh…', heart: '💗 Một trái tim cho người giỏi nhất', star: '⭐ Ngôi sao xoay — em là ngôi sao của anh', flower: '🌸 Bông hoa nở rộ giữa trời đêm', text: '💬 Lời nhắn bằng đèn trên trời', couple: '👫 Là hai đứa mình đó!', big: '🎆 Trái tim khổng lồ và pháo hoa rực trời!' } as Record<string, string>)[k] ?? (dronePics.list.length ? '📸 Drone xếp lại kỷ niệm của hai đứa' : '✨ Drone vẽ hình trên trời'); },
   draw: drawDrone, snap: [PH[PI('pic0')].t + 6000, PH[PI('pic1')].t + 6000, PH[PI('text')].t + 6000, PH[PI('big')].t + 5000], endTitle: '🛸 Show drone dành riêng cho em', endNote: 'Mỗi ngày đi làm vất vả rồi — có người luôn tự hào về em 💗',
 };
 

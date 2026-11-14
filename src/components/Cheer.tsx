@@ -54,7 +54,7 @@ function DronePhotos({ me, pics }: { me: api.Profile; pics: api.Memory[] }) {
   return (
     <>
       <h4>📸 Ảnh cho show drone ({pics.length}/{MAX_PICS})</h4>
-      <p className="muted small-note">Drone xếp lại từng ảnh bằng ~4200 chấm đèn, rồi ảnh thật hiện lên trong khung sáng — giữ nguyên tỉ lệ, không cắt. Ảnh chỉ lưu riêng cho hai đứa.</p>
+      <p className="muted small-note">Drone xếp lại từng ảnh bằng ~2200 chấm đèn, rồi ảnh thật hiện lên trong khung sáng — giữ nguyên tỉ lệ, không cắt. Ảnh chỉ lưu riêng cho hai đứa.</p>
       <div className="row" style={{ flexWrap: 'wrap', gap: 8 }}>
         {pics.map(p => (
           <div key={p.id} style={{ position: 'relative' }}>
