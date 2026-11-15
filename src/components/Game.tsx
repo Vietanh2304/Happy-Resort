@@ -978,7 +978,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     const runBack = () => { hold('kidback', 2600); toast(`🏃 ${kid.name} chạy về phòng các con`); };
     if (id === 'bath') at('bathroom', BATH.stand, () => { hold('kidbath', 9000, runBack); scrub(7); });
     else if (id === 'potty') at('bathroom', BATH.toiletStand, () => hold('kidpotty', 5000, () => go(BATH.sink, () => { hold('kidwash', 5000, runBack); scrub(4); })));
-    else if (id === 'nap' || id === 'bedtime') at('kidroom', KIDROOM.beds[gi].stand, () => { hold('kidbed', 16000, () => toast(`💤 ${kid.name} ngủ say rồi — con sẽ ngủ khoảng 3 tiếng`)); live.say('📖 Ngày xửa ngày xưa… ngủ ngon nha con 💤'); });
+    else if (id === 'nap' || id === 'bedtime') at('kidroom', KIDROOM.beds[gi].stand, () => { hold('kidbed', 16000, () => toast(`💤 ${kid.name} ngủ say rồi — con sẽ ngủ khoảng 1 tiếng rưỡi`)); live.say('📖 Ngày xửa ngày xưa… ngủ ngon nha con 💤'); });
     else if (id === 'study' || id === 'homework') at('kidroom', KIDROOM.desks[gi].stand, () => { hold('kidstudy', 14000); setTimeout(() => doAct('point'), 2200); });
     else if (id === 'draw' || id === 'card') at('kidroom', KIDROOM.desks[gi].stand, () => { hold('kiddraw', 12000); setTimeout(() => doAct('point'), 2500); });
     else if (id === 'puree' || id === 'meal') at('house', KID_FEED.stand, () => { hold('kidfeed', 11000); for (let k = 0; k < 6; k++) setTimeout(() => doAct('flick'), 600 + k * 1600); });

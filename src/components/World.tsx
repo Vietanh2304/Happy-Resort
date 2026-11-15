@@ -1181,8 +1181,8 @@ function KidAtPlay({ scene, idx, n, sprite, walk, onClick, name }: { scene: Scen
 /** Việc chăm con lớn (live.act) → con đang ở phòng nào */
 const KID_ACT_SCENE: Record<string, SceneId> = { kidbath: 'bathroom', kidpotty: 'bathroom', kidwash: 'bathroom', kidback: 'bathroom', kidfeed: 'house', kidbed: 'kidroom', kidstudy: 'kidroom', kiddraw: 'kidroom', kidtoy: 'kidroom', kidball: 'kidroom', kidtalk: 'kidroom' };
 const KID_ACTS = Object.keys(KID_ACT_SCENE);
-/** đi ngủ / ngủ trưa: con ngủ thật ~3 tiếng (tính từ lúc được ru ngủ) */
-const KID_SLEEP_MS = 3 * 3600e3;
+/** ru ngủ / kể chuyện đi ngủ ban ngày: con ngủ thật ~1 tiếng rưỡi (tính từ lúc được ru ngủ); ban đêm 21h–6h30 tự ngủ */
+const KID_SLEEP_MS = 1.5 * 3600e3;
 /** cỡ hình con khi ngồi / nằm (bằng cỡ lúc đi lại) */
 const KID_K = 1.25;
 const BATH_OUT = roomPt(0.5, 6.6);
