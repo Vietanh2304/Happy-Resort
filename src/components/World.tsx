@@ -1120,7 +1120,7 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
       const carer = [live.mine, live.theirs].find(w => !!w && (w.care === k.id || w.care === 'all') && KID_ACTS.includes(w.act ?? ''));
       const act = carer?.act ?? null, h = p.myView.time.hour + p.myView.time.minute / 60;
       const school = atSchool(k, local, p.myView.time.hour, p.myView.time.minute);
-      const asleep = !act && !school && (h >= 21 || h < 6.5 || (!!k.slept_at && Date.now() - Date.parse(k.slept_at) < KID_SLEEP_MS));
+      const asleep = !act && !school && (h >= 21 || h < 6.5 || (!!k.slept_at && Date.now() - Date.parse(k.slept_at) > 15000 && Date.now() - Date.parse(k.slept_at) < KID_SLEEP_MS));   // 15 giây đầu: chờ ba mẹ tới giường dắt con lên
       const where: SceneId | 'out' | null = act ? KID_ACT_SCENE[act] ?? 'kidroom' : school ? null : asleep ? 'kidroom' : playOut(local, p.myView.time.hour, p.myView.time.minute) ? 'out' : 'kidroom';
       const idle = kidSprite(stage, look, 'idle', girl), walkS = kidSprite(stage, look, 'walk', girl);
       const grown = born.filter(b => kidStage(b, today) !== 'baby');
@@ -1190,12 +1190,34 @@ type KidMode = 'play' | 'bed' | 'desk' | 'draw' | 'toy' | 'ball' | 'talk';
 /** Các con trong phòng riêng: chơi trên thảm · lên giường đắp chăn ngủ (đầu trên gối) · ngồi đôn học / vẽ · chơi gấu & xếp khối, đá bóng, tập nói với ba mẹ */
 function KidInRoom({ idx, order, mode, tuck, sprite, walk, sleep, sad, onClick, name }: { idx: number; order: number; mode: KidMode; tuck: boolean; sprite: Sprite; walk: Sprite; sleep: Sprite; sad: boolean; onClick: () => void; name: string }) {
   const [i, setI] = useState((order * 3) % KIDROOM.play.length);
-  const [settled, setSettled] = useState(false);
+  // vào phòng lúc con đang ngủ / đang ngồi học → con đã ở sẵn đó (không đi bộ lại từ đầu)
+  const [settled, setSettled] = useState(mode !== 'play');
+  const [climb, setClimb] = useState(false);          // đang trèo lên giường: ngồi mép giường rồi mới nằm xuống
+  const [from, setFrom] = useState<Pt | null>(null);   // vừa dậy / vừa đứng lên: bước đi bắt đầu từ chỗ cũ
   const [tick, setTick] = useState(0);
+  const prev = useRef(mode);
   useEffect(() => { if (mode !== 'play') return; const t = setInterval(() => setI(v => (v + 1) % KIDROOM.play.length), 5200); return () => clearInterval(t); }, [mode]);
-  useEffect(() => { setSettled(false); setTick(0); if (mode === 'play') return; const t = setTimeout(() => setSettled(true), 1900); return () => clearTimeout(t); }, [mode]);   // đi tới nơi rồi mới leo lên giường / ngồi xuống
+  useEffect(() => {
+    const was = prev.current;
+    if (was === mode) return;
+    prev.current = mode;
+    const posOf = (m: KidMode): Pt => (m === 'bed' ? KIDROOM.beds[idx].stand : m === 'desk' || m === 'draw' ? KIDROOM.desks[idx].stand : m === 'toy' ? KIDROOM.toy.kid : m === 'ball' ? KIDROOM.ball.kid : m === 'talk' ? KIDROOM.talk.kid : KIDROOM.play[i]);
+    const a = posOf(was), b = posOf(mode), walkMs = (Math.hypot(b.x - a.x, b.y - a.y) / 45) * 1000 + 400;
+    const ts: ReturnType<typeof setTimeout>[] = [];
+    setSettled(false); setClimb(false); setTick(0);
+    if (was !== 'play') { setFrom(a); ts.push(setTimeout(() => setFrom(null), 120)); }   // bước xuống giường / rời bàn rồi đi tiếp
+    if (mode !== 'play') {
+      if (mode === 'bed') { ts.push(setTimeout(() => setClimb(true), walkMs)); ts.push(setTimeout(() => { setClimb(false); setSettled(true); }, walkMs + 700)); }
+      else ts.push(setTimeout(() => setSettled(true), walkMs));
+    }
+    return () => ts.forEach(clearTimeout);
+  }, [mode]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (!settled || mode === 'bed' || mode === 'play') return; const t = setInterval(() => setTick(v => v + 1), 700); return () => clearInterval(t); }, [settled, mode]);
   const H = sprite.h;
+  if (mode === 'bed' && climb) {   // ngồi lên mép giường, chuẩn bị chui vào chăn
+    const pl = kidPillow(idx), st = KIDROOM.beds[idx].stand;
+    return <SprPx sprite={sprite} x={(pl.x + st.x) / 2} y={pl.y + H - 1} z={pl.z + 4} k={KID_K} clip="inset(0 0 30% 0)" onClick={onClick} title={`👶 ${name} leo lên giường`} />;
+  }
   if (mode === 'bed' && settled) {
     const pl = kidPillow(idx), foot = kidBedFoot(idx);
     return (
@@ -1233,7 +1255,7 @@ function KidInRoom({ idx, order, mode, tuck, sprite, walk, sleep, sad, onClick, 
   const at = mode === 'bed' ? KIDROOM.beds[idx].stand : mode === 'desk' || mode === 'draw' ? desk.stand : spot ?? KIDROOM.play[i];
   return (
     <>
-      <Follower sprite={sprite} walk={walk} x={at.x} y={at.y} title={`👶 ${name}`} onClick={onClick} />
+      <Follower sprite={sprite} walk={walk} x={(from ?? at).x} y={(from ?? at).y} title={`👶 ${name}`} onClick={onClick} />
       {sad && mode === 'play' && <Tag x={at.x} y={at.y - 24} className="hint">🥺</Tag>}
     </>
   );
