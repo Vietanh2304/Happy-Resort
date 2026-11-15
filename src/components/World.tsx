@@ -1114,9 +1114,9 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
           {feed && (() => { const who = live.mine.act === 'babyfeed' ? live.mine : theirs!; return <Tag x={who.pos.x + 5} y={who.pos.y - 20} className="float-notes">🍼</Tag>; })()}
         </div>,
       );
-    } else if (stage !== 'baby' && scene === 'town' && playOut(today, p.myView.time.hour, p.myView.time.minute)) {
+    } else if (stage !== 'baby' && PLAY_SPOTS[scene] && playOut(today, p.myView.time.hour, p.myView.time.minute)) {
       const gi = born.filter(b => kidStage(b, today) !== 'baby').indexOf(k);
-      out.push(<KidAtPlay key={k.id} idx={gi} n={born.filter(b => kidStage(b, today) !== 'baby').length} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} onClick={() => p.on.kid(k.id)} name={k.name} />);
+      out.push(<KidAtPlay key={k.id} scene={scene} idx={gi} n={born.filter(b => kidStage(b, today) !== 'baby').length} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} onClick={() => p.on.kid(k.id)} name={k.name} />);
     } else if (stage !== 'baby' && scene === 'kidroom' && !atSchool(k, today, p.myView.time.hour, p.myView.time.minute)) {
       const gi = kidSlot(k, born.filter(b => kidStage(b, today) !== 'baby'));
       const doing = (a: string) => [live.mine, theirs].some(w => w?.act === a && (w.care === k.id || w.care === 'all'));
@@ -1138,15 +1138,38 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
 }
 
 /** Giờ ra chơi: các con đuổi bắt nhau vòng quanh đài phun nước giữa làng (đứa sau chạy theo đứa trước) */
-function KidAtPlay({ idx, n, sprite, walk, onClick, name }: { idx: number; n: number; sprite: Sprite; walk: Sprite; onClick: () => void; name: string }) {
+/** Giờ ra chơi: các con rủ nhau đi khắp làng — mỗi ~25 giây chuyển sang một chỗ chơi mới (cả hai máy giống nhau vì tính theo giờ) */
+type PlaySpot = { x: number; y: number; r: number; kind: 'chase' | 'garden' | 'ball' | 'tree' | 'kite' | 'sand' | 'shell' | 'animal'; say: string };
+const PLAY_SPOTS: Partial<Record<SceneId, PlaySpot[]>> = {
+  town: [
+    { x: TOWN.fountain.x, y: TOWN.fountain.y + 16, r: 42, kind: 'chase', say: '🏃 Đuổi bắt quanh đài phun nước' },
+    { x: GARDEN.x + 70, y: GARDEN.y + 34, r: 40, kind: 'garden', say: '🌷 Ngắm hoa, bắt bướm trong vườn' },
+    { x: TOWN.twin.x, y: TOWN.twin.y + 6, r: 24, kind: 'ball', say: '⚽ Đá bóng trên bãi cỏ' },
+    { x: 340, y: 120, r: 26, kind: 'tree', say: '🌳 Trốn tìm sau gốc cây' },
+    { x: 290, y: 190, r: 28, kind: 'kite', say: '🪁 Thả diều gần lối ra nông trại' },
+    { x: 200, y: 250, r: 30, kind: 'chase', say: '🏃 Chạy ra phía bãi biển' },
+  ],
+  beach: [{ x: 60, y: 100, r: 28, kind: 'sand', say: '🏰 Xây lâu đài cát' }, { x: 130, y: 112, r: 36, kind: 'shell', say: '🐚 Nhặt vỏ sò, đuổi sóng' }, { x: 96, y: 80, r: 40, kind: 'chase', say: '🏃 Chạy trên cát' }],
+  farm: [{ x: 70, y: 150, r: 34, kind: 'animal', say: '🐣 Xem gà con, cho thỏ ăn' }, { x: 180, y: 160, r: 40, kind: 'chase', say: '🏃 Đuổi nhau quanh ruộng' }],
+};
+const PLAY_ICON: Record<PlaySpot['kind'], string[]> = {
+  chase: ['😆', '🏃', '🤸'], garden: ['🦋', '🌷', '🌼'], ball: ['⚽', '🥅', '😆'], tree: ['🙈', '🌳', '👀'], kite: ['🪁', '🌤️', '😆'], sand: ['🏰', '🪣', '🐚'], shell: ['🐚', '🌊', '🦀'], animal: ['🐣', '🐰', '🥕'],
+};
+function KidAtPlay({ scene, idx, n, sprite, walk, onClick, name }: { scene: SceneId; idx: number; n: number; sprite: Sprite; walk: Sprite; onClick: () => void; name: string }) {
   const [tick, setTick] = useState(0);
   useEffect(() => { const t = setInterval(() => setTick(v => v + 1), 1400); return () => clearInterval(t); }, []);
-  const lap = Math.floor(tick / 18) % 2, a = tick * 0.55 * (lap ? -1 : 1) - (idx * Math.PI * 2) / Math.max(2, n) * 0.35, r = 40 + (idx % 2) * 6;
-  const at = { x: TOWN.fountain.x + Math.cos(a) * r, y: TOWN.fountain.y + 16 + Math.sin(a) * r * 0.42 };
+  const spots = PLAY_SPOTS[scene]!, slot = Math.floor(Date.now() / 25000), spot = spots[slot % spots.length];
+  let at: Pt;
+  if (spot.kind === 'chase') { const a = tick * 0.55 * (Math.floor(tick / 18) % 2 ? -1 : 1) - ((idx * Math.PI * 2) / Math.max(2, n)) * 0.35, r = spot.r + (idx % 2) * 6; at = { x: spot.x + Math.cos(a) * r, y: spot.y + Math.sin(a) * r * 0.42 }; }
+  else if (spot.kind === 'ball') { const side = idx % 2 ? 1 : -1, k = Math.sin(tick * 0.9 + idx); at = { x: spot.x + side * (12 + 6 * k), y: spot.y + (idx > 1 ? 8 : 0) }; }
+  else { const a = ((idx * 2.4 + tick * 0.35) % (Math.PI * 2)), d = spot.r * (0.35 + 0.6 * ((Math.sin(tick * 0.5 + idx * 1.7) + 1) / 2)); at = { x: spot.x + Math.cos(a) * d, y: spot.y + Math.sin(a) * d * 0.45 }; }
+  const ic = PLAY_ICON[spot.kind];
   return (
     <>
-      <Follower sprite={sprite} walk={walk} x={at.x} y={at.y} speed={60} title={`👶 ${name} đang chơi đuổi bắt`} onClick={onClick} />
-      {tick % 9 === idx % 9 && <Tag x={at.x} y={at.y - 22} className="float-notes">{['😆', '🏃', '🎈', '⚽', '🤸'][(tick + idx) % 5]}</Tag>}
+      <Follower sprite={sprite} walk={walk} x={at.x} y={at.y} speed={spot.kind === 'chase' ? 60 : 38} title={`👶 ${name} · ${spot.say}`} onClick={onClick} />
+      {spot.kind === 'ball' && idx === 0 && <Tag x={spot.x + Math.sin(tick * 0.9) * 14} y={spot.y - 2} className="float-notes">⚽</Tag>}
+      {spot.kind === 'kite' && idx === 0 && <Tag x={at.x + 14} y={at.y - 38 + Math.sin(tick) * 3} className="float-notes">🪁</Tag>}
+      {tick % 7 === idx % 7 && <Tag x={at.x} y={at.y - 22} className="float-notes">{ic[(tick + idx) % ic.length]}</Tag>}
     </>
   );
 }

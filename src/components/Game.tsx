@@ -1288,7 +1288,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <Settings me={me} couple={couple} onSaved={reloadMe} onClose={close} onAvatar={() => setSheet({ kind: 'avatar' })} />
       )}
       {sheet?.kind === 'avatar' && <AvatarEditor me={me} onSaved={reloadMe} onClose={close} />}
-      {sheet?.kind === 'emote' && <EmoteMenu onCamera={openCam} onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)} onCouple={partner ? coupleDo : undefined} onSnow={partner && outWx.on && outWx.type === 'snow' ? throwSnow : undefined}
+      {sheet?.kind === 'emote' && <EmoteMenu onCallKids={kids.some(k => k.name && k.born_on <= myTime.date && kidStage(k, myTime.date) !== 'baby') ? () => { live.update({ walkAll: true, walkKid: kids.find(k => k.name && kidStage(k, myTime.date) !== 'baby')?.id ?? null }); live.say('📣 Các con ơi, về với ba mẹ nào!'); toast('👣 Các con chạy về nắm tay đi cùng bạn'); } : undefined} onCamera={openCam} onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)} onCouple={partner ? coupleDo : undefined} onSnow={partner && outWx.on && outWx.type === 'snow' ? throwSnow : undefined}
         onStatus={st => run(async () => { await api.setStatus(me, st); reloadMe(); notify('profiles'); if (st) toast(`💭 ${partnerName} sẽ thấy: ${st}`); })} />}
       {sheet?.kind === 'bag' && <BagSheet inventory={inventory} partner={partner} onClose={close} />}
       {playing && (() => {
