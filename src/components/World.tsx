@@ -118,6 +118,8 @@ export interface WorldProps {
   partner: Profile | null;
   /** Trời chung trong làng (random theo mùa) */
   myView: View;
+  /** ngày dùng để tính tuổi các con — chung cho cả hai (lệch múi giờ thì lấy ngày của người chưa qua ngày mới) */
+  kidDay: string;
   /** Trời thật thành phố mình — chỉ dùng ở Đài quan sát */
   realView: View;
   /** Giờ và trời thật thành phố người ấy */
@@ -1075,7 +1077,7 @@ function BedLayer(p: WorldProps & { myBed?: Decor; theirBed?: Decor }) {
 
 function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?: Pt & { left: boolean } }) {
   const { scene, live } = p;
-  const today = p.myView.time.date;
+  const today = p.kidDay, local = p.myView.time.date;
   const born = p.kids.filter(k => k.name && k.born_on <= today);
   if (!born.length) return null;
   const theirs = p.partnerHere ? live.theirs : null;
@@ -1114,13 +1116,13 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
           {feed && (() => { const who = live.mine.act === 'babyfeed' ? live.mine : theirs!; return <Tag x={who.pos.x + 5} y={who.pos.y - 20} className="float-notes">🍼</Tag>; })()}
         </div>,
       );
-    } else if (stage !== 'baby' && PLAY_SPOTS[scene] && playOut(today, p.myView.time.hour, p.myView.time.minute)) {
+    } else if (stage !== 'baby' && PLAY_SPOTS[scene] && playOut(local, p.myView.time.hour, p.myView.time.minute)) {
       const gi = born.filter(b => kidStage(b, today) !== 'baby').indexOf(k);
       out.push(<KidAtPlay key={k.id} scene={scene} idx={gi} n={born.filter(b => kidStage(b, today) !== 'baby').length} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} onClick={() => p.on.kid(k.id)} name={k.name} />);
-    } else if (stage !== 'baby' && scene === 'kidroom' && !atSchool(k, today, p.myView.time.hour, p.myView.time.minute)) {
+    } else if (stage !== 'baby' && scene === 'kidroom' && !atSchool(k, local, p.myView.time.hour, p.myView.time.minute)) {
       const gi = kidSlot(k, born.filter(b => kidStage(b, today) !== 'baby'));
       const doing = (a: string) => [live.mine, theirs].some(w => w?.act === a && (w.care === k.id || w.care === 'all'));
-      if (playOut(today, p.myView.time.hour, p.myView.time.minute) && !doing('kidstudy') && !doing('kidbed')) continue;   // giờ ra chơi: các con đang ở ngoài làng
+      if (playOut(local, p.myView.time.hour, p.myView.time.minute) && !doing('kidstudy') && !doing('kidbed')) continue;   // giờ ra chơi: các con đang ở ngoài làng
       const h = p.myView.time.hour, mode = doing('kidstudy') ? 'desk' : doing('kidbed') || h >= 21 || h < 6 ? 'bed' : 'play';
       out.push(<KidInRoom key={k.id} idx={gi} mode={mode} tuck={doing('kidbed')} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} sleep={kidSprite(stage, look, 'sleep', girl)} sad={sad} onClick={() => p.on.kid(k.id)} name={k.name} />);
     } else if (stage !== 'baby' && scene === 'bathroom') {
@@ -1130,7 +1132,7 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
       if (w.act === 'kidbath') { const st = BATH.seats[0]; out.push(<div key={k.id}><SprPx sprite={idle} x={st.x + 2} y={st.y + 3} z={Math.round(st.y) + 1} k={0.85} /><Tag x={st.x + 2} y={st.y - 14} className="float-notes">🫧 🦆 🫧</Tag></div>); }
       else if (w.act === 'kidpotty') { const t = BATH.toilet; out.push(<div key={k.id}><SprPx sprite={idle} x={t.x} y={t.y - 2} z={Math.round(t.y) + 2} k={0.85} /><SprPx sprite={toiletFrontSprite()} x={t.x} y={t.y + 3} z={Math.round(t.y) + 3} k={0.85} /></div>); }
       else { const s0 = roomPt(1.35, 2.75); out.push(<div key={k.id}><SprPx sprite={idle} x={s0.x} y={s0.y} z={Math.round(s0.y) + 2} k={0.85} /><Tag x={s0.x} y={s0.y - 18} className="float-notes">💧 🧼 💧</Tag></div>); }
-    } else if (stage !== 'baby' && scene === 'house' && !atSchool(k, today, p.myView.time.hour, p.myView.time.minute) && !playOut(today, p.myView.time.hour, p.myView.time.minute)) {
+    } else if (stage !== 'baby' && scene === 'house' && !atSchool(k, local, p.myView.time.hour, p.myView.time.minute) && !playOut(local, p.myView.time.hour, p.myView.time.minute)) {
       out.push(<KidAtHome key={k.id} idx={homeIdx++} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} sad={sad} onClick={() => p.on.kid(k.id)} name={k.name} />);
     }
   }
@@ -1422,13 +1424,13 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
             </>
           )}
           {scene === 'house' && p.theme && <Tag x={96} y={8} className="fest-banner small">{THEMES[p.theme].hang} {THEMES[p.theme].label.slice(3)} {THEMES[p.theme].hang}</Tag>}
-          {scene === 'house' && p.kids.some(k => k.name && k.born_on <= p.myView.time.date && kidStage(k, p.myView.time.date) !== 'baby') && <Tag x={164} y={44} className="label" onClick={() => go(roomPt(6.3, 1.2), () => enter('kidroom'))}>🧸 Phòng các con</Tag>}
+          {scene === 'house' && p.kids.some(k => k.name && k.born_on <= p.kidDay && kidStage(k, p.kidDay) !== 'baby') && <Tag x={164} y={44} className="label" onClick={() => go(roomPt(6.3, 1.2), () => enter('kidroom'))}>🧸 Phòng các con</Tag>}
           {scene === 'house' && <Hot x={58} y={106} w={28} h={13} title="Ra ngoài" onClick={() => go(HOUSE.door, () => enter('town', BUILDINGS[0].door))} />}
         </>
       )}
       {scene === 'bathroom' && <BathContent {...p} />}
-      {scene === 'bathroom' && p.kids.some(k => k.name && k.born_on <= p.myView.time.date && kidStage(k, p.myView.time.date) === 'baby') && (() => {
-        const t = NURSERY.babyTub, careId = p.live.mine.act === 'babybath' ? p.live.mine.care : p.live.theirs?.care, kid = p.kids.find(k => k.id === careId) ?? p.kids.find(k => k.name && kidStage(k, p.myView.time.date) === 'baby')!;
+      {scene === 'bathroom' && p.kids.some(k => k.name && k.born_on <= p.kidDay && kidStage(k, p.kidDay) === 'baby') && (() => {
+        const t = NURSERY.babyTub, careId = p.live.mine.act === 'babybath' ? p.live.mine.care : p.live.theirs?.care, kid = p.kids.find(k => k.id === careId) ?? p.kids.find(k => k.name && kidStage(k, p.kidDay) === 'baby')!;
         const bathing = [p.live.mine.act, p.partnerHere ? p.live.theirs?.act : null].includes('babybath');
         return (
           <>

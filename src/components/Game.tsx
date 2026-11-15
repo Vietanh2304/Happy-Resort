@@ -227,6 +227,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const rainbow = villageWeather(coupleId, now.getTime() - 3 * 3600_000, myTime.month).type === 'rain' && !['rain', 'snow'].includes(myWeather.type) && myTime.hour >= 7 && myTime.hour < 18;
   const meteor = (myTime.hour >= 20 || myTime.hour < 4) && myWeather.type !== 'rain' && myWeather.type !== 'cloudy' && seeded(`${coupleId}:meteor:${myTime.hour < 4 ? addDays(myTime.date, -1) : myTime.date}`)() < 0.25;
   const partnerTime = partner?.tz ? localTime(partner.tz, now) : null;
+  // tuổi các con tính theo một ngày chung: hai múi giờ lệch nhau thì con chỉ lớn khi CẢ HAI đã qua ngày mới (không bị người thấy con lớn, người thì chưa)
+  const kidDay = partnerTime && partnerTime.date < myTime.date ? partnerTime.date : myTime.date;
   const partnerView: View | null = partnerTime ? { weather: partnerWeather, time: partnerTime, phase: phaseOf(partnerTime.hour) } : null;
   const myShore = { weather: myWeather?.type ?? 'clear', phase: myView.phase } as const;
 
@@ -762,7 +764,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     if (!inv) return;
     if (ok && inv.kind === 'love') goToBed(inv.bed);
     if (ok && inv.kind === 'baby') {
-      try { await api.planKid(addDays(myTime.date, 1)); notify('kids'); toast('🐦 Ngày mai cò sẽ mang em bé tới nhà mình 💕'); }
+      try { await api.planKid(addDays(kidDay, 1)); notify('kids'); toast('🐦 Ngày mai cò sẽ mang em bé tới nhà mình 💕'); }
       catch (e) { toastError(e); return sendEvent('bed-answer', { kind: inv.kind, ok: false, bed: inv.bed }); }
     }
     sendEvent('bed-answer', { kind: inv.kind, ok, bed: inv.bed });
@@ -777,16 +779,16 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   }
 
   // ───── Em bé ─────
-  const expecting = kids.find(k => k.born_on > myTime.date);
+  const expecting = kids.find(k => k.born_on > kidDay);
   // Ngày đầu tiên đi học: ghé trường đúng lúc bé đang học thì ghi vào kỷ niệm
   const firstDay = scene === 'school' || scene === 'campus' ? kids.find(k => k.name && atSchool(k, myTime.date, myTime.hour, myTime.minute) && !k.milestones.includes('school')) : undefined;
   useEffect(() => {
     if (!firstDay) return;
     api.kidMilestone(firstDay.id, 'school').then(ok => { if (ok) { toast(`🌟 Mốc đáng nhớ: 🏫 Ngày đầu tiên đi học của bé ${firstDay.name}!`); notify('kids'); } }, console.error);
   }, [firstDay?.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  const unnamed = kids.find(k => !k.name && k.born_on <= myTime.date);
+  const unnamed = kids.find(k => !k.name && k.born_on <= kidDay);
   // Con đi học: tối dạy con học, chiều tan học về khoe điểm, 10 ngày họp phụ huynh một lần
-  const students = kids.filter(k => k.name && kidStage(k, myTime.date) === 'student');
+  const students = kids.filter(k => k.name && kidStage(k, kidDay) === 'student');
   const studyLeft = students.reduce((n, k) => n + subjectsOn(myTime.date).filter(s => !scores.some(x => x.kid_id === k.id && x.day === myTime.date && x.subject === s)).length, 0);
   const bragged = useRef('');
   useEffect(() => {
@@ -905,7 +907,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     return () => clearInterval(tm);
   }, [partnerOnline]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (partnerOnline) void ping('💗 Người ấy vào resort', `${partnerName} vừa vào làng — vào chơi cùng nhé!`, 'online'); }, [partnerOnline]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kidNeeds = kids.filter(k => k.name && k.born_on <= myTime.date && kidMood(k).low.length).map(k => k.name).join(', ');
+  const kidNeeds = kids.filter(k => k.name && k.born_on <= kidDay && kidMood(k).low.length).map(k => k.name).join(', ');
   useEffect(() => { if (kidNeeds) void ping('👶 Bé cần ba mẹ', `Bé ${kidNeeds} đang đói hoặc buồn ngủ rồi`, 'kid'); }, [kidNeeds, Math.floor(+now / 3 / 3600e3)]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (capsulesReady) toast(`💌 Có ${capsulesReady} thư hẹn giờ đã tới ngày mở — ghé 📮 Hòm thư nhé`); }, [capsulesReady > 0]); // eslint-disable-line react-hooks/exhaustive-deps
   const answeredToday = answers.some(a => a.user_id === me.id && a.day === myTime.date);
@@ -946,8 +948,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const washHands = () => atSink('wash');
   // Chăm bé sơ sinh bằng động tác thật: tới nôi rồi bế / cho bú / thay tã / hát ru; tắm thì bế bé sang phòng tắm
   const babyCare = (id: string, kid: api.Kid) => {
-    if (kidStage(kid, myTime.date) !== 'baby') return grownCare(id, kid);
-    const babies = kids.filter(k => k.name && k.born_on <= myTime.date && kidStage(k, myTime.date) === 'baby');
+    if (kidStage(kid, kidDay) !== 'baby') return grownCare(id, kid);
+    const babies = kids.filter(k => k.name && k.born_on <= kidDay && kidStage(k, kidDay) === 'baby');
     const cs = cradleSpots(decor)[Math.max(0, babies.findIndex(k => k.id === kid.id)) % 3].stand;
     const plan: Record<string, [SceneId, Pt, string, number]> = {
       bottle: ['bedroom', cs, 'babyfeed', 7000], diaper: ['bedroom', cs, 'diaper', 5000],
@@ -967,7 +969,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   };
   /** Chăm các con lớn bằng động tác thật: dắt vào phòng tắm tắm bồn, ngồi bồn cầu rồi rửa tay, dắt lên giường đắp chăn kể chuyện, ngồi bàn học kèm bài */
   const grownCare = (id: string, kid: api.Kid) => {
-    const grown = kids.filter(k => k.name && k.born_on <= myTime.date && kidStage(k, myTime.date) !== 'baby'), gi = kidSlot(kid, grown);
+    const grown = kids.filter(k => k.name && k.born_on <= kidDay && kidStage(k, kidDay) !== 'baby'), gi = kidSlot(kid, grown);
     const scrub = (n: number) => { for (let k = 0; k < n; k++) setTimeout(() => doAct('wash'), k * 1100); };
     const hold = (act: string, ms: number, after?: () => void) => { live.update({ act, care: kid.id }); setTimeout(() => { if (liveNow.current.mine.act === act) { live.update({ act: null }); after?.(); } }, ms); };
     const at = (where: SceneId, stand: Pt, then: () => void) => { if (scene === where) go(stand, then); else { enter(where, stand); setTimeout(then, 400); } };
@@ -1024,7 +1026,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <button className="chip" onClick={shoot} title="Chụp ảnh khoảnh khắc (đếm ngược 3 giây)">📸</button>
         <button className="chip" onClick={() => setSheet({ kind: 'calendar' })}>📅 Lịch</button>
         {expecting && <span className="chip glow">🐦 Cò sắp mang bé tới</span>}
-        {kids.some(k => k.name && k.born_on <= myTime.date) && <button className="chip" onClick={() => setSheet({ kind: 'kid' })}>👶 Bé</button>}
+        {kids.some(k => k.name && k.born_on <= kidDay) && <button className="chip" onClick={() => setSheet({ kind: 'kid' })}>👶 Bé</button>}
         {fests.map(f => (
           <button key={f.id} className="chip glow" onClick={startFestDecor} title="Bày thêm đồ trang trí cho ngày hôm nay">{f.icon} {f.name} · 🎀</button>
         ))}
@@ -1036,7 +1038,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
 
       <main className="world">
         <World
-          scene={scene} me={me} partner={partner} myView={myView} realView={realView} partnerView={partnerView}
+          scene={scene} me={me} partner={partner} myView={myView} kidDay={kidDay} realView={realView} partnerView={partnerView}
           live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
           decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} snowball={snowball} skyFx={{ rainbow, meteor }} onRainbow={() => run(async () => { const ok = await api.grantCoins(`rainbow:${myTime.date}:${me.id}`, 20); notify('profiles'); toast(ok ? '🌈 Ngắm cầu vồng sau mưa — may mắn cả ngày! +20 xu' : '🌈 Cầu vồng đẹp quá…'); })} onMeteor={() => { const w = prompt('🌠 Sao băng! Ước một điều đi:'); if (w?.trim()) void run(async () => { await api.addWish(me, `🌠 ${w.trim()}`); notify('wishes'); toast('🌠 Điều ước đã vào lọ “Muốn cùng làm”'); }); }} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: (station?: string) => setSheet({ kind: 'bakery', station: (station ?? 'case') as BakeStation }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
@@ -1234,7 +1236,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onSleep={() => { live.update({ act: 'sleep', bed: sheet.bed }); setSheet(null); toast('😴 Chúc ngủ ngon…'); }}
           onInvite={() => askBed('love', sheet.bed)} onBaby={() => askBed('baby', sheet.bed)} onClose={close} />
       )}
-      {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={myTime.date} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
+      {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={kidDay} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
       {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} riding={live.mine.horse === sheet.id} onDismount={() => { close(); dismount(); }} onRide={() => { close(); live.update({ horse: sheet.id }); live.say('🐎 Hí hí! Đi dạo nào!'); enter('town', TOWN.toFarm); }} />}
       {sheet?.kind === 'flowershop' && <FlowerShopSheet date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
       {sheet?.kind === 'bakery' && <BakeryStationSheet station={sheet.station ?? 'case'} hold={bakeHold} setHold={setBakeHoldSaved} me={me} date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
@@ -1288,7 +1290,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <Settings me={me} couple={couple} onSaved={reloadMe} onClose={close} onAvatar={() => setSheet({ kind: 'avatar' })} />
       )}
       {sheet?.kind === 'avatar' && <AvatarEditor me={me} onSaved={reloadMe} onClose={close} />}
-      {sheet?.kind === 'emote' && <EmoteMenu onCallKids={kids.some(k => k.name && k.born_on <= myTime.date && kidStage(k, myTime.date) !== 'baby') ? () => { live.update({ walkAll: true, walkKid: kids.find(k => k.name && kidStage(k, myTime.date) !== 'baby')?.id ?? null }); live.say('📣 Các con ơi, về với ba mẹ nào!'); toast('👣 Các con chạy về nắm tay đi cùng bạn'); } : undefined} onCamera={openCam} onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)} onCouple={partner ? coupleDo : undefined} onSnow={partner && outWx.on && outWx.type === 'snow' ? throwSnow : undefined}
+      {sheet?.kind === 'emote' && <EmoteMenu onCallKids={kids.some(k => k.name && k.born_on <= kidDay && kidStage(k, kidDay) !== 'baby') ? () => { live.update({ walkAll: true, walkKid: kids.find(k => k.name && kidStage(k, kidDay) !== 'baby')?.id ?? null }); live.say('📣 Các con ơi, về với ba mẹ nào!'); toast('👣 Các con chạy về nắm tay đi cùng bạn'); } : undefined} onCamera={openCam} onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)} onCouple={partner ? coupleDo : undefined} onSnow={partner && outWx.on && outWx.type === 'snow' ? throwSnow : undefined}
         onStatus={st => run(async () => { await api.setStatus(me, st); reloadMe(); notify('profiles'); if (st) toast(`💭 ${partnerName} sẽ thấy: ${st}`); })} />}
       {sheet?.kind === 'bag' && <BagSheet inventory={inventory} partner={partner} onClose={close} />}
       {playing && (() => {
