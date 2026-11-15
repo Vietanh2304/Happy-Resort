@@ -8,6 +8,9 @@ export interface LocalTime {
 }
 
 const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+/** Giờ gia đình: cả làng chạy chung theo giờ Đài Loan (giờ thật của từng người chỉ xem ở Đài quan sát) */
+export const FAMILY_TZ = 'Asia/Taipei';
+export const familyTime = (at = new Date()) => localTime(FAMILY_TZ, at);
 
 export function localTime(tz: string | null | undefined, at = new Date()): LocalTime {
   let parts: Intl.DateTimeFormatPart[];

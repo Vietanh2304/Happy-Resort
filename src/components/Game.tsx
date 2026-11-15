@@ -7,7 +7,7 @@ import {
 } from '../lib/game';
 import { useNow, useSynced, useWeather } from '../lib/hooks';
 import { joinCouple, notify, onEvent, onLink, sendEvent, type LinkState } from '../lib/realtime';
-import { clock, localTime, phaseOf } from '../lib/time';
+import { clock, familyTime, localTime, phaseOf } from '../lib/time';
 import { toast, toastError } from '../lib/toast';
 import { useDecorEditor } from '../lib/useDecorEditor';
 import type { HillSky } from '../lib/townSprites';
@@ -117,7 +117,8 @@ const FULLSCREEN: GameId[] = ['golf', 'snow', 'boat', 'hide'];
 export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }) {
   const coupleId = me.couple_id;
   const now = useNow(30_000);
-  const myTime = localTime(me.tz, now);
+  // giờ trong game = giờ gia đình (Đài Loan) cho cả hai; realTime = giờ thật bên mình, chỉ dùng ở Đài quan sát
+  const myTime = familyTime(now), realTime = localTime(me.tz, now);
 
   // Presence: ai đang online
   const [online, setOnline] = useState<string[]>([]);
@@ -219,16 +220,15 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // Trời thật của hai thành phố: chỉ hiện ở Đài quan sát (và hiện tượng hai bờ)
   const realWeather = useWeather(me.lat, me.lon);
   const partnerWeather = useWeather(partner?.lat, partner?.lon);
-  const realView: View = { weather: realWeather, time: myTime, phase: phaseOf(myTime.hour) };
+  const realView: View = { weather: realWeather, time: realTime, phase: phaseOf(realTime.hour) };
   // Trời chung trong làng: random theo mùa, hai người thấy giống nhau, quyết định ô/khăn/áo
   const myWeather = villageWeather(coupleId, now.getTime(), myTime.month);
-  const myView: View = { ...realView, weather: myWeather };
+  const myView: View = { weather: myWeather, time: myTime, phase: phaseOf(myTime.hour) };
   // Cầu vồng: vừa tạnh mưa (khung 3 tiếng trước mưa, giờ hết) và trời còn sáng. Sao băng: khoảng 1/4 số đêm
   const rainbow = villageWeather(coupleId, now.getTime() - 3 * 3600_000, myTime.month).type === 'rain' && !['rain', 'snow'].includes(myWeather.type) && myTime.hour >= 7 && myTime.hour < 18;
   const meteor = (myTime.hour >= 20 || myTime.hour < 4) && myWeather.type !== 'rain' && myWeather.type !== 'cloudy' && seeded(`${coupleId}:meteor:${myTime.hour < 4 ? addDays(myTime.date, -1) : myTime.date}`)() < 0.25;
   const partnerTime = partner?.tz ? localTime(partner.tz, now) : null;
-  // tuổi các con tính theo một ngày chung: hai múi giờ lệch nhau thì con chỉ lớn khi CẢ HAI đã qua ngày mới (không bị người thấy con lớn, người thì chưa)
-  const kidDay = partnerTime && partnerTime.date < myTime.date ? partnerTime.date : myTime.date;
+  const kidDay = myTime.date;   // giờ gia đình chung nên tuổi các con hai bên luôn giống nhau
   const partnerView: View | null = partnerTime ? { weather: partnerWeather, time: partnerTime, phase: phaseOf(partnerTime.hour) } : null;
   const myShore = { weather: myWeather?.type ?? 'clear', phase: myView.phase } as const;
 
@@ -500,7 +500,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
 
   // ───── Hiện tượng khi thời tiết hai nơi kết hợp ─────
   const combos = realWeather && partnerView?.weather
-    ? activeCombos({ weather: realWeather.type, phase: myView.phase }, { weather: partnerView.weather.type, phase: partnerView.phase })
+    ? activeCombos({ weather: realWeather.type, phase: realView.phase }, { weather: partnerView.weather.type, phase: partnerView.phase })
     : [];
   const claimCombo = (c: Combo) => run(async () => {
     if (await api.claim(`combo:${c.id}:${myTime.date}`, [{ id: c.reward, n: 1 }], [`combo:${c.id}`])) {
@@ -1008,7 +1008,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         <span title="Số ngày cả hai cùng ghé">💞 {bridge.planks}</span>
         <span title="Điểm thiện cảm — mỗi lần ăn một món +1">💗 {affection}</span>
         <button className={`chip ${quizLeft ? 'glow' : ''}`} onClick={() => setSheet({ kind: 'quizday' })}>🧠 Đố vui {quizRight}/5</button>
-        <span title="Trời trong làng">{wxIcon(myView)} {myWeather.temp}° · {clock(myTime)}</span>
+        <span title="Trời & giờ trong làng — giờ gia đình (Đài Loan), giờ thật xem ở Đài quan sát">{wxIcon(myView)} {myWeather.temp}° · 🏡 {clock(myTime)}</span>
         {combos.map(c => {
           const done = claimed.includes(`combo:${c.id}:${myTime.date}`);
           return c.effect === 'stars'
@@ -1122,7 +1122,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
                 onPointerDown={e => { e.preventDefault(); holdTouch(true); }} onPointerUp={() => holdTouch(false)} onPointerLeave={() => { if (touch.me) holdTouch(false); }} onContextMenu={e => e.preventDefault()}>
                 🤚 Giữ để chạm tay qua kính{touched ? ' 💞' : touch.them ? ' · người ấy đang chạm!' : ''}
               </button>
-              <button className="btn small ghost" onClick={() => live.say(`🌤️ Bên mình đang ${realWeather ? `${weatherIcon[realWeather.type]} ${realWeather.temp}°` : ''} ${clock(myTime)}`)}>🌤️ Kể trời bên mình</button>
+              <button className="btn small ghost" onClick={() => live.say(`🌤️ Bên mình đang ${realWeather ? `${weatherIcon[realWeather.type]} ${realWeather.temp}°` : ''} ${clock(realTime)}`)}>🌤️ Kể trời bên mình</button>
             </div>
             <div className="row wrap">
               {PLANE_NOTES.map(t => <button key={t} className="btn small ghost" onClick={() => sendPlane(t)}>✈️ {t}</button>)}

@@ -837,7 +837,7 @@ function TwinContent(p: WorldProps) {
     { who: p.partner, view: p.partnerView, x: 100, label: p.partner?.display_name ?? 'Người ấy', hand: p.twin.touch.them, mine: false },
   ];
   const km = distanceKm(p.me, p.partner);
-  const diff = p.partnerView ? Math.round(((p.partnerView.time.hour * 60 + p.partnerView.time.minute) - (p.myView.time.hour * 60 + p.myView.time.minute)) / 60) : null;
+  const diff = p.partnerView ? Math.round(((p.partnerView.time.hour * 60 + p.partnerView.time.minute) - (p.realView.time.hour * 60 + p.realView.time.minute)) / 60) : null;
   const both = p.twin.touch.me && p.twin.touch.them;
   const mini = s * 0.75;
   return (

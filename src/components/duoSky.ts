@@ -1,3 +1,4 @@
+import { familyTime } from '../lib/time';
 // Các màn ngắm cảnh hai người: thả đèn trời Bình Khê, khinh khí cầu Cappadocia, ngắm sao trên mái nhà,
 // thuyền đáy kính biển phát sáng Maldives, chợ Giáng sinh + trượt băng + pháo hoa.
 import type { DuoCfg, F } from './Duo';
@@ -171,7 +172,7 @@ function ourBalloon(f: F, fire: number) {
 // ═════════ Khinh khí cầu trên đồi nhà mình: bay lên ngắm làng, bãi biển, biển, đảo — trời theo giờ thật ═════════
 type HPh = 'day' | 'sunset' | 'night' | 'dawn';
 const rose = (c: Ctx, x: number, y: number, r: number, col: string) => { circ(c, x, y, r, mix(col, '#000000', 0.25)); circ(c, x - r * 0.2, y - r * 0.2, r * 0.75, col); circ(c, x - r * 0.25, y - r * 0.3, r * 0.35, mix(col, '#ffffff', 0.35)); };
-const phNow = (): HPh => { const h = new Date().getHours(); return h >= 19 || h < 5 ? 'night' : h >= 17 ? 'sunset' : h < 7 ? 'dawn' : 'day'; };
+const phNow = (): HPh => { const h = familyTime().hour; return h >= 19 || h < 5 ? 'night' : h >= 17 ? 'sunset' : h < 7 ? 'dawn' : 'day'; };
 const HSKY: Record<HPh, string[]> = { day: ['#2a78e0', '#5aaaf2', '#a8dcff', '#e0f4ff'], sunset: ['#2a1e6a', '#7a2a8a', '#e8507a', '#ffa050', '#ffe0a0'], night: ['#040820', '#0a1440', '#1a2660', '#2e3a7a'], dawn: ['#3a3a9a', '#a06ac0', '#f0a0b8', '#ffd8b0'] };
 const homeLand = (ph: HPh) => bake(`duo:homeland:${ph}`, 640, 130, (c, rnd) => {
   const dark = ph === 'night', dim = (col: string) => (dark ? mix(col, '#0a1030', 0.55) : ph === 'sunset' ? mix(col, '#ff8a5a', 0.15) : col);

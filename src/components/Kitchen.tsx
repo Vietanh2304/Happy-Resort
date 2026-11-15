@@ -1,3 +1,4 @@
+import { familyTime } from '../lib/time';
 // Phòng bếp chung: hai người đi lại trong bếp, lấy đồ trong tủ lạnh chung, thái, nấu, bưng nồi, bày đĩa,
 // bày lên bàn ăn rồi cùng ngồi ăn; ăn xong rửa bát. Một máy giữ trạng thái bếp ("chủ bếp"), máy kia gửi thao tác.
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -630,7 +631,7 @@ function drawTile(p: Pen, c: string, X: number, Y: number, x: number, y: number)
 /** Khách đứng ngoài quầy: bấm để xem muốn bánh gì; bán đúng bánh thì khách đó đi. Lượt khách mới mỗi 4 tiếng. */
 const CUST = [{ gender: 'f' as const, hair: 5, hairColor: 2, skin: 1, shirt: 8, outfit: 1 }, { gender: 'm' as const, hair: 2, hairColor: 0, skin: 2, shirt: 10, outfit: 4 }, { gender: 'f' as const, hair: 1, hairColor: 3, skin: 0, shirt: 4, outfit: 14 }];
 function BakeryCustomers({ date, last, s }: { date: string; last: { id: string; dishes: string[] } | null; s: number }) {
-  const block = orderBlock(new Date().getHours()), key = `bk-gone:${date}:${block}`;
+  const block = orderBlock(familyTime().hour), key = `bk-gone:${date}:${block}`;
   const orders = bakeOrders(date, block);
   const [gone, setGone] = useState<number[]>(() => { try { return JSON.parse(localStorage.getItem(key) ?? '[]'); } catch { return []; } });
   const [ask, setAsk] = useState<number | null>(null);
