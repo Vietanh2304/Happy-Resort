@@ -70,7 +70,7 @@ export function KidSheet({ kids, me, partner, today, live, pick, onClose, onDo }
         }
       } else if (a.id === 'talk') say = `🗣️ "${callMe}!"`;
       live.say(say);
-      if (onDo && (stage === 'baby' || ['bath', 'potty', 'nap', 'bedtime', 'study', 'homework'].includes(a.id))) { onDo(a.id, kid); onClose(); }
+      if (onDo && (stage === 'baby' || ['bath', 'potty', 'nap', 'bedtime', 'study', 'homework', 'draw', 'card', 'puree', 'meal', 'toy', 'ball', 'talk', 'walk'].includes(a.id))) { onDo(a.id, kid); onClose(); }
       else if (a.id === 'hold') { live.update({ act: 'carry' }); setTimeout(() => live.update({ act: null }), 9000); onClose(); }
       notify('kids');
     } catch (e) { toastError(e); }

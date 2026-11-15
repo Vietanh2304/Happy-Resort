@@ -53,7 +53,7 @@ import { SkyContent } from './Skydive';
 import { reefBackground } from '../lib/reef';
 import { SWIMMERS } from '../lib/critters';
 import { Follower, Wanderer } from './Wander';
-import { KIDROOM, kidSlot, kidDeskSprite, kidQuiltSprite, kidRoomBg, toiletFrontSprite } from '../lib/kidRoom';
+import { KID_FEED, KIDROOM, kidBedFoot, kidPillow, kidPropSprite, kidSlot, kidQuiltSprite, toiletFrontSprite } from '../lib/kidRoom';
 import { atSchool, playOut, classroomSprite, SCHOOL, type StallId } from '../lib/school';
 import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite, stoolSprite, babyTubSprite } from '../lib/campusArt';
 import { CampusContent } from './Campus';
@@ -232,7 +232,7 @@ export function World(raw: WorldProps) {
     house: () => roomBackground('house'),
     bedroom: () => roomBackground('bedroom'),
     bathroom: () => roomBackground('bath'),
-    kidroom: kidRoomBg,
+    kidroom: () => roomBackground('kid'),
     farm: farmBackground,
     arcade: arcadeRoom,
     shop: shopRoom,
@@ -511,7 +511,7 @@ function SceneContent(p: WorldProps) {
         </>
       )}
 
-      {(scene === 'house' || scene === 'bedroom' || scene === 'bathroom') && <RoomContent {...p} dark={phase === 'night'} />}
+      {(scene === 'house' || scene === 'bedroom' || scene === 'bathroom' || scene === 'kidroom') && <RoomContent {...p} dark={phase === 'night'} />}
       {scene === 'kidroom' && <KidRoomFront dark={phase === 'night' || phase === 'sunset'} />}
 
       {scene === 'shop' && (
@@ -1082,7 +1082,6 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
   if (!born.length) return null;
   const theirs = p.partnerHere ? live.theirs : null;
   const out: ReactNode[] = [];
-  let homeIdx = 0;
   const nWith = { me: 0, partner: 0 };
   for (const k of born) {
     const stage = kidStage(k, today);
@@ -1092,7 +1091,7 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
     const walker = live.mine.walkKid === k.id || live.mine.walkAll ? 'me' : live.theirs?.walkKid === k.id || live.theirs?.walkAll ? 'partner' : null;
     if (walker) {
       const who = walker === 'me' ? live.mine : theirs;
-      if (!who || (walker === 'partner' && !p.partnerHere) || scene === 'bathroom' || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask', 'coaster', 'spin', 'boat', 'pottery', 'basket', 'cable', 'kimchi'].includes(who.act ?? ''))) continue;
+      if (!who || (walker === 'partner' && !p.partnerHere) || (scene === 'bathroom' && stage === 'baby') || (scene.startsWith('trip_') && ['ride', 'tent', 'soak', 'mask', 'coaster', 'spin', 'boat', 'pottery', 'basket', 'cable', 'kimchi'].includes(who.act ?? ''))) continue;
       const seat = walker === 'me' ? p.mySeat : p.theirSeat;
       // nhiều bé cùng đi: xếp xen kẽ hai bên, xa dần
       const n = nWith[walker]++, side = n % 2 ? -1 : 1, gap = 10 + Math.floor(n / 2) * 9;
@@ -1116,24 +1115,28 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
           {feed && (() => { const who = live.mine.act === 'babyfeed' ? live.mine : theirs!; return <Tag x={who.pos.x + 5} y={who.pos.y - 20} className="float-notes">🍼</Tag>; })()}
         </div>,
       );
-    } else if (stage !== 'baby' && PLAY_SPOTS[scene] && playOut(local, p.myView.time.hour, p.myView.time.minute)) {
-      const gi = born.filter(b => kidStage(b, today) !== 'baby').indexOf(k);
-      out.push(<KidAtPlay key={k.id} scene={scene} idx={gi} n={born.filter(b => kidStage(b, today) !== 'baby').length} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} onClick={() => p.on.kid(k.id)} name={k.name} />);
-    } else if (stage !== 'baby' && scene === 'kidroom' && !atSchool(k, local, p.myView.time.hour, p.myView.time.minute)) {
-      const gi = kidSlot(k, born.filter(b => kidStage(b, today) !== 'baby'));
-      const doing = (a: string) => [live.mine, theirs].some(w => w?.act === a && (w.care === k.id || w.care === 'all'));
-      if (playOut(local, p.myView.time.hour, p.myView.time.minute) && !doing('kidstudy') && !doing('kidbed')) continue;   // giờ ra chơi: các con đang ở ngoài làng
-      const h = p.myView.time.hour, mode = doing('kidstudy') ? 'desk' : doing('kidbed') || h >= 21 || h < 6 ? 'bed' : 'play';
-      out.push(<KidInRoom key={k.id} idx={gi} mode={mode} tuck={doing('kidbed')} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} sleep={kidSprite(stage, look, 'sleep', girl)} sad={sad} onClick={() => p.on.kid(k.id)} name={k.name} />);
-    } else if (stage !== 'baby' && scene === 'bathroom') {
-      const w = [live.mine, theirs].find(x => x?.care === k.id && ['kidbath', 'kidpotty', 'kidwash'].includes(x.act ?? ''));
-      if (!w) continue;
-      const idle = kidSprite(stage, look, 'idle', girl);
-      if (w.act === 'kidbath') { const st = BATH.seats[0]; out.push(<div key={k.id}><SprPx sprite={idle} x={st.x + 2} y={st.y + 3} z={Math.round(st.y) + 1} k={0.85} /><Tag x={st.x + 2} y={st.y - 14} className="float-notes">🫧 🦆 🫧</Tag></div>); }
-      else if (w.act === 'kidpotty') { const t = BATH.toilet; out.push(<div key={k.id}><SprPx sprite={idle} x={t.x} y={t.y - 2} z={Math.round(t.y) + 2} k={0.85} /><SprPx sprite={toiletFrontSprite()} x={t.x} y={t.y + 3} z={Math.round(t.y) + 3} k={0.85} /></div>); }
-      else { const s0 = roomPt(1.35, 2.75); out.push(<div key={k.id}><SprPx sprite={idle} x={s0.x} y={s0.y} z={Math.round(s0.y) + 2} k={0.85} /><Tag x={s0.x} y={s0.y - 18} className="float-notes">💧 🧼 💧</Tag></div>); }
-    } else if (stage !== 'baby' && scene === 'house' && !atSchool(k, local, p.myView.time.hour, p.myView.time.minute) && !playOut(local, p.myView.time.hour, p.myView.time.minute)) {
-      out.push(<KidAtHome key={k.id} idx={homeIdx++} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} sad={sad} onClick={() => p.on.kid(k.id)} name={k.name} />);
+    } else if (stage !== 'baby') {
+      // con lớn: ở đâu do việc đang được ba mẹ chăm quyết định; không thì ngủ / đi học / ra chơi / chơi trong phòng riêng
+      const carer = [live.mine, live.theirs].find(w => !!w && (w.care === k.id || w.care === 'all') && KID_ACTS.includes(w.act ?? ''));
+      const act = carer?.act ?? null, h = p.myView.time.hour + p.myView.time.minute / 60;
+      const school = atSchool(k, local, p.myView.time.hour, p.myView.time.minute);
+      const asleep = !act && !school && (h >= 21 || h < 6.5 || (!!k.slept_at && Date.now() - Date.parse(k.slept_at) < KID_SLEEP_MS));
+      const where: SceneId | 'out' | null = act ? KID_ACT_SCENE[act] ?? 'kidroom' : school ? null : asleep ? 'kidroom' : playOut(local, p.myView.time.hour, p.myView.time.minute) ? 'out' : 'kidroom';
+      const idle = kidSprite(stage, look, 'idle', girl), walkS = kidSprite(stage, look, 'walk', girl);
+      const grown = born.filter(b => kidStage(b, today) !== 'baby');
+      if (where === 'out' && PLAY_SPOTS[scene]) {
+        out.push(<KidAtPlay key={k.id} scene={scene} idx={grown.indexOf(k)} n={grown.length} sprite={idle} walk={walkS} onClick={() => p.on.kid(k.id)} name={k.name} />);
+      } else if (where === 'kidroom' && scene === 'kidroom') {
+        const mode: KidMode = act === 'kidbed' || asleep ? 'bed' : act === 'kidstudy' ? 'desk' : act === 'kiddraw' ? 'draw' : act === 'kidtoy' ? 'toy' : act === 'kidball' ? 'ball' : act === 'kidtalk' ? 'talk' : 'play';
+        out.push(<KidInRoom key={k.id} idx={kidSlot(k, grown)} order={grown.indexOf(k)} mode={mode} tuck={act === 'kidbed'} sprite={idle} walk={walkS} sleep={kidSprite(stage, look, 'sleep', girl)} sad={sad} onClick={() => p.on.kid(k.id)} name={k.name} />);
+      } else if (where === 'house' && scene === 'house') {
+        out.push(<KidEating key={k.id} sprite={idle} name={k.name} onClick={() => p.on.kid(k.id)} />);
+      } else if (where === 'bathroom' && scene === 'bathroom') {
+        if (act === 'kidbath') { const st = BATH.seats[0], H = idle.h; out.push(<div key={k.id}><SprPx sprite={idle} x={st.x + 2} y={st.y - 11 + H} z={Math.round(BATH.front.y) + 3} k={KID_K} clip="inset(0 0 48% 0)" /><Tag x={st.x + 2} y={st.y - 16} className="float-notes">🫧 🦆 🫧</Tag></div>); }
+        else if (act === 'kidpotty') { const t = BATH.toilet; out.push(<div key={k.id}><SprPx sprite={idle} x={t.x} y={t.y - 2} z={Math.round(t.y) + 2} k={KID_K} /><SprPx sprite={toiletFrontSprite()} x={t.x} y={t.y + 3} z={Math.round(t.y) + 3} k={0.85} /></div>); }
+        else if (act === 'kidwash') { const s0 = roomPt(1.35, 2.75); out.push(<div key={k.id}><SprPx sprite={idle} x={s0.x} y={s0.y} z={Math.round(s0.y) + 2} k={KID_K} /><Tag x={s0.x} y={s0.y - 20} className="float-notes">💧 🧼 💧</Tag></div>); }
+        else if (act === 'kidback') out.push(<Follower key={k.id} sprite={idle} walk={walkS} x={BATH_OUT.x} y={BATH_OUT.y} speed={34} title={`👶 ${k.name} chạy về phòng`} onClick={() => p.on.kid(k.id)} />);
+      }
     }
   }
   return <>{out}</>;
@@ -1175,26 +1178,59 @@ function KidAtPlay({ scene, idx, n, sprite, walk, onClick, name }: { scene: Scen
     </>
   );
 }
-/** Các con trong phòng riêng: chơi trên thảm · được dắt lên giường, nằm xuống đắp chăn (đêm tự ngủ) · ngồi vào bàn học */
-function KidInRoom({ idx, mode, tuck, sprite, walk, sleep, sad, onClick, name }: { idx: number; mode: 'play' | 'bed' | 'desk'; tuck: boolean; sprite: Sprite; walk: Sprite; sleep: Sprite; sad: boolean; onClick: () => void; name: string }) {
-  const [i, setI] = useState((idx * 2) % KIDROOM.play.length);
+/** Việc chăm con lớn (live.act) → con đang ở phòng nào */
+const KID_ACT_SCENE: Record<string, SceneId> = { kidbath: 'bathroom', kidpotty: 'bathroom', kidwash: 'bathroom', kidback: 'bathroom', kidfeed: 'house', kidbed: 'kidroom', kidstudy: 'kidroom', kiddraw: 'kidroom', kidtoy: 'kidroom', kidball: 'kidroom', kidtalk: 'kidroom' };
+const KID_ACTS = Object.keys(KID_ACT_SCENE);
+/** đi ngủ / ngủ trưa: con ngủ thật ~3 tiếng (tính từ lúc được ru ngủ) */
+const KID_SLEEP_MS = 3 * 3600e3;
+/** cỡ hình con khi ngồi / nằm (bằng cỡ lúc đi lại) */
+const KID_K = 1.25;
+const BATH_OUT = roomPt(0.5, 6.6);
+type KidMode = 'play' | 'bed' | 'desk' | 'draw' | 'toy' | 'ball' | 'talk';
+/** Các con trong phòng riêng: chơi trên thảm · lên giường đắp chăn ngủ (đầu trên gối) · ngồi đôn học / vẽ · chơi gấu & xếp khối, đá bóng, tập nói với ba mẹ */
+function KidInRoom({ idx, order, mode, tuck, sprite, walk, sleep, sad, onClick, name }: { idx: number; order: number; mode: KidMode; tuck: boolean; sprite: Sprite; walk: Sprite; sleep: Sprite; sad: boolean; onClick: () => void; name: string }) {
+  const [i, setI] = useState((order * 3) % KIDROOM.play.length);
   const [settled, setSettled] = useState(false);
-  useEffect(() => { if (mode !== 'play') return; const t = setInterval(() => setI(v => (v + 1) % KIDROOM.play.length), 5000); return () => clearInterval(t); }, [mode]);
-  useEffect(() => { setSettled(false); if (mode === 'play') return; const t = setTimeout(() => setSettled(true), 1900); return () => clearTimeout(t); }, [mode]);   // đi tới nơi rồi mới leo lên giường / ngồi vào bàn
-  const bed = KIDROOM.beds[idx], desk = KIDROOM.desks[idx];
-  if (mode === 'bed' && settled) return (
+  const [tick, setTick] = useState(0);
+  useEffect(() => { if (mode !== 'play') return; const t = setInterval(() => setI(v => (v + 1) % KIDROOM.play.length), 5200); return () => clearInterval(t); }, [mode]);
+  useEffect(() => { setSettled(false); setTick(0); if (mode === 'play') return; const t = setTimeout(() => setSettled(true), 1900); return () => clearTimeout(t); }, [mode]);   // đi tới nơi rồi mới leo lên giường / ngồi xuống
+  useEffect(() => { if (!settled || mode === 'bed' || mode === 'play') return; const t = setInterval(() => setTick(v => v + 1), 700); return () => clearInterval(t); }, [settled, mode]);
+  const H = sprite.h;
+  if (mode === 'bed' && settled) {
+    const pl = kidPillow(idx), foot = kidBedFoot(idx);
+    return (
+      <>
+        <SprPx sprite={sleep} x={pl.x} y={pl.y - 5 + H} z={pl.z + 3} k={KID_K} clip="inset(0 0 52% 0)" onClick={onClick} title={`👶 ${name} đang ngủ`} />
+        <Spr sprite={kidQuiltSprite(idx)} x={foot.x} y={foot.y} z={pl.z + 2} onClick={onClick} />
+        <Tag x={pl.x + 7} y={pl.y - 12} className="zzz">{tuck ? '📖' : '💤'}</Tag>
+      </>
+    );
+  }
+  const desk = KIDROOM.desks[idx];
+  if ((mode === 'desk' || mode === 'draw') && settled) return (
     <>
-      <SprPx sprite={sleep} x={bed.x} y={bed.pillow + 7} z={100} k={0.85} onClick={onClick} />
-      <Tag x={bed.x + 8} y={bed.pillow - 8} className="float-notes">{tuck ? '📖 💤' : '💤'}</Tag>
+      <SprPx sprite={sprite} x={desk.seat.x} y={desk.seat.y - 5} z={Math.round(desk.seat.y) + 3} k={KID_K} onClick={onClick} title={`👶 ${name} ${mode === 'draw' ? 'đang vẽ' : 'đang học bài'}`} />
+      {mode === 'draw' && <SprPx sprite={kidPropSprite('paper')} x={desk.top.x} y={desk.top.y + 2} z={Math.round(desk.top.y) + 40} k={1} />}
+      <SprPx sprite={kidPropSprite(mode === 'draw' ? 'crayon' : 'pencil')} x={desk.top.x - 2 + (tick % 2) * 3} y={desk.top.y + 1 - (tick % 2)} z={Math.round(desk.top.y) + 41} k={1} />
     </>
   );
-  if (mode === 'desk' && settled) return (
-    <>
-      <SprPx sprite={sprite} x={desk.x - 5} y={desk.top - 1} z={100} k={0.85} onClick={onClick} />
-      <Tag x={desk.x - 2} y={desk.top - 18} className="float-notes">✏️ 📚</Tag>
-    </>
-  );
-  const at = mode === 'bed' ? { x: bed.x, y: 126 } : mode === 'desk' ? { x: desk.x - 2, y: 132 } : KIDROOM.play[i];
+  const spot = mode === 'toy' ? KIDROOM.toy.kid : mode === 'ball' ? KIDROOM.ball.kid : mode === 'talk' ? KIDROOM.talk.kid : null;
+  if (spot && settled) {
+    const st = mode === 'ball' ? KIDROOM.ball.stand : null, far = tick % 4 >= 2;
+    return (
+      <>
+        <SprPx sprite={sprite} x={spot.x} y={spot.y - (mode === 'talk' && tick % 2 ? 1 : 0)} z={Math.round(spot.y) + 1} k={KID_K} onClick={onClick} title={`👶 ${name}`} />
+        {mode === 'toy' && (
+          <>
+            <Spr sprite={ART.teddy.sprite()} x={spot.x - 9} y={spot.y + 1 - (tick % 2)} z={Math.round(spot.y) + 2} />
+            {[0, 1, 2].slice(0, 1 + (tick % 6 > 3 ? 2 : tick % 6 > 1 ? 1 : 0)).map(b => <SprPx key={b} sprite={kidPropSprite(`block${b}` as 'block0')} x={spot.x + 9} y={spot.y + 2 - b * 4.4} z={Math.round(spot.y) + 2 + b} k={0.75} />)}
+          </>
+        )}
+        {mode === 'ball' && st && <Spr sprite={kidPropSprite('ball')} x={far ? st.x - 6 : spot.x + 6} y={(far ? st.y : spot.y) + 1} z={Math.round(Math.max(st.y, spot.y)) + 2} style={{ transition: 'left 1.3s ease-in-out, top 1.3s ease-in-out' }} />}
+      </>
+    );
+  }
+  const at = mode === 'bed' ? KIDROOM.beds[idx].stand : mode === 'desk' || mode === 'draw' ? desk.stand : spot ?? KIDROOM.play[i];
   return (
     <>
       <Follower sprite={sprite} walk={walk} x={at.x} y={at.y} title={`👶 ${name}`} onClick={onClick} />
@@ -1202,31 +1238,30 @@ function KidInRoom({ idx, mode, tuck, sprite, walk, sleep, sad, onClick, name }:
     </>
   );
 }
-/** Đồ phủ phía trước trong phòng các con: chăn trên hai giường, mặt trước hai bàn học, đèn ngủ ấm */
+/** Phòng các con lúc tối: đèn ngủ nấm & hai đèn bàn toả sáng */
 function KidRoomFront({ dark }: { dark: boolean }) {
+  if (!dark) return null;
+  const n = roomPt(3.5, 0.5, 14);
   return (
     <>
-      {KIDROOM.beds.map((b, i) => <Spr key={`q${i}`} sprite={kidQuiltSprite(i)} x={b.x} y={122} z={101} />)}
-      {KIDROOM.desks.map((d, i) => <Spr key={`d${i}`} sprite={kidDeskSprite(i)} x={d.x} y={d.top + 22} z={102} />)}
-      <Glow x={56} y={84} r={dark ? 26 : 14} />
-      {KIDROOM.desks.map((d, i) => <Glow key={`g${i}`} x={d.x + 7} y={d.top - 6} r={dark ? 20 : 10} />)}
-      {dark && <Glow x={56} y={30} r={30} />}
+      <Glow x={n.x} y={n.y} r={26} />
+      {KIDROOM.desks.map((d, i) => { const g = roomPt(1.3, i ? 4.2 : 1.2, 22); return <Glow key={i} x={g.x} y={g.y} r={18} />; })}
     </>
   );
 }
-
-function KidAtHome({ idx, sprite, walk, sad, onClick, name }: { idx: number; sprite: Sprite; walk: Sprite; sad: boolean; onClick: () => void; name: string }) {
-  const spots = useMemo(() => [roomPt(2.6, 6.2), roomPt(5.2, 6.4), roomPt(3.6, 5.4), roomPt(6.2, 5.6), roomPt(1.8, 5.2)], []);
-  const [i, setI] = useState((idx * 2) % 5);
-  useEffect(() => {
-    const t = setInterval(() => setI(v => (v + 1) % spots.length), 5000);   // các bé cùng bước một nhịp, cách nhau 2 chỗ → không bao giờ trùng
-    return () => clearInterval(t);
-  }, [spots.length, idx]);
-  const at = spots[i];
+/** Ăn dặm / ăn cơm: con ngồi ghế ăn cạnh bếp, ba mẹ đút từng thìa */
+const FEED = KID_FEED;
+function KidEating({ sprite, name, onClick }: { sprite: Sprite; name: string; onClick: () => void }) {
+  const [t, setT] = useState(0);
+  useEffect(() => { const i = setInterval(() => setT(v => v + 1), 800); return () => clearInterval(i); }, []);
+  const c = FEED.chair, z = Math.round(c.y), mouth = t % 2 === 1;
   return (
     <>
-      <Follower sprite={sprite} walk={walk} x={at.x} y={at.y} title={`👶 ${name}`} onClick={onClick} />
-      {sad && <Tag x={at.x} y={at.y - 24} className="hint">🥺</Tag>}
+      <SprPx sprite={kidPropSprite('highchair')} x={c.x} y={c.y + 2} z={z} k={1.25} onClick={onClick} title={`👶 ${name} đang ăn`} />
+      <SprPx sprite={sprite} x={c.x} y={c.y - 7} z={z + 1} k={KID_K} clip="inset(0 0 35% 0)" onClick={onClick} />
+      <SprPx sprite={kidPropSprite('bowl')} x={c.x + 3} y={c.y - 4} z={z + 3} k={1} />
+      <SprPx sprite={kidPropSprite('spoon')} x={mouth ? c.x + 2 : c.x + 9} y={mouth ? c.y - 13 : c.y - 8} z={z + 4} k={1} />
+      {t % 5 === 4 && <Tag x={c.x} y={c.y - 26} className="float-notes">😋</Tag>}
     </>
   );
 }
@@ -1380,7 +1415,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
         return (
           <div key={d.id}>
             <Spr sprite={decorSprite(d)} x={foot.x} y={foot.y} z={art?.flat ? 1 : depth.get(d.id)} flip={!!d.rot}
-              onHold={editing ? undefined : () => on.pickDecor(d)} className={`decor ${sel} ${d.id === p.ghost?.movingId ? 'moving' : ''} ${cellsOf(scene, d.item_id, d.x, d.y, d.rot ?? 0).some(([cx, cy]) => RESERVED[scene]?.(cx, cy)) ? 'over-door' : ''}`}
+              onHold={editing || d.id.startsWith('kid:') ? undefined : () => on.pickDecor(d)} className={`decor ${sel} ${d.id === p.ghost?.movingId ? 'moving' : ''} ${cellsOf(scene, d.item_id, d.x, d.y, d.rot ?? 0).some(([cx, cy]) => RESERVED[scene]?.(cx, cy)) ? 'over-door' : ''}`}
               title={d.item_id === 'wardrobe' && !editing ? '👗 Tủ đồ — thay trang phục' : d.item_id === 'dresser' && !editing ? '💄 Bàn trang điểm — ngồi trang điểm' : d.item_id === 'bed' && !editing ? '🛏️ Giường — ngủ, âu yếm' : item(d.item_id).name}
               onClick={d.item_id === 'wardrobe' && !editing ? () => go(roomPt(d.x + 0.5, d.y + 1.6), on.wardrobe)
                 : d.item_id === 'dresser' && !editing ? () => on.makeup(vanitySeat(d))
@@ -1408,9 +1443,9 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
       {!editing && (
         <>
           {scene === 'house' && <Hot x={54} y={38} w={44} h={36} title="Bếp — nấu ăn" onClick={() => go(HOUSE.kitchen.stand, on.kitchen)} />}
-          <Hot x={20} y={50} w={16} h={38} title={scene === 'house' ? 'Vào phòng ngủ' : scene === 'bedroom' ? 'Ra phòng khách' : 'Về phòng ngủ'}
-            onClick={() => go(HOUSE.toBedroom, () => (scene === 'bathroom' ? enter('bedroom', BATH.toBath) : enter(scene === 'house' ? 'bedroom' : 'house', SCENES.bedroom.spawn)))} />
-          <Tag x={28} y={44} className="label">{scene === 'house' ? '🛏️' : scene === 'bedroom' ? '🛋️' : '🛏️'}</Tag>
+          <Hot x={20} y={50} w={16} h={38} title={scene === 'house' ? 'Vào phòng ngủ' : scene === 'bedroom' || scene === 'kidroom' ? 'Ra phòng khách' : 'Về phòng ngủ'}
+            onClick={() => go(HOUSE.toBedroom, () => (scene === 'bathroom' ? enter('bedroom', BATH.toBath) : scene === 'kidroom' ? enter('house', HOUSE.toKid) : enter(scene === 'house' ? 'bedroom' : 'house', SCENES.bedroom.spawn)))} />
+          <Tag x={28} y={44} className="label">{scene === 'house' ? '🛏️' : scene === 'bedroom' || scene === 'kidroom' ? '🛋️' : '🛏️'}</Tag>
           {scene === 'bedroom' && (
             <>
               <Hot x={156} y={50} w={16} h={38} title="Vào phòng tắm" onClick={() => go(BATH.toBath, () => enter('bathroom'))} />
@@ -1424,7 +1459,12 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
             </>
           )}
           {scene === 'house' && p.theme && <Tag x={96} y={8} className="fest-banner small">{THEMES[p.theme].hang} {THEMES[p.theme].label.slice(3)} {THEMES[p.theme].hang}</Tag>}
-          {scene === 'house' && p.kids.some(k => k.name && k.born_on <= p.kidDay && kidStage(k, p.kidDay) !== 'baby') && <Tag x={164} y={44} className="label" onClick={() => go(roomPt(6.3, 1.2), () => enter('kidroom'))}>🧸 Phòng các con</Tag>}
+          {scene === 'house' && (
+            <>
+              <Hot x={159} y={52} w={16} h={36} title="🧸 Vào phòng các con" onClick={() => go(HOUSE.toKid, () => enter('kidroom'))} />
+              <Tag x={167} y={46} className="label" onClick={() => go(HOUSE.toKid, () => enter('kidroom'))}>🧸</Tag>
+            </>
+          )}
           {scene === 'house' && <Hot x={58} y={106} w={28} h={13} title="Ra ngoài" onClick={() => go(HOUSE.door, () => enter('town', BUILDINGS[0].door))} />}
         </>
       )}
@@ -1746,11 +1786,11 @@ function MakeupFx({ look, mi, st, s, z }: { look: Profile['avatar']; mi: Pt; st:
 }
 
 /** Sprite vẽ theo cỡ nhân vật (avatarPx) × k — cho đồ em bé khỏi to quá */
-function SprPx({ sprite, x, y, z, k, title, onClick, className = '' }: { sprite: Sprite; x: number; y: number; z?: number; k: number; title?: string; onClick?: () => void; className?: string }) {
+function SprPx({ sprite, x, y, z, k, title, onClick, className = '', clip, flip }: { sprite: Sprite; x: number; y: number; z?: number; k: number; title?: string; onClick?: () => void; className?: string; clip?: string; flip?: boolean }) {
   const s = useScale(), ps = avatarPx(s) * k;
   return <img src={sprite.url} alt={title ?? ''} title={title} draggable={false} className={`spr ${onClick ? 'tappable' : ''} ${className}`}
     onClick={onClick ? e => { e.stopPropagation(); onClick(); } : undefined}
-    style={{ left: x * s - (sprite.w * ps) / 2, top: y * s - sprite.h * ps, width: sprite.w * ps, height: sprite.h * ps, zIndex: z ?? Math.round(y) }} />;
+    style={{ left: x * s - (sprite.w * ps) / 2, top: y * s - sprite.h * ps, width: sprite.w * ps, height: sprite.h * ps, zIndex: z ?? Math.round(y), clipPath: clip, transform: flip ? 'scaleX(-1)' : undefined }} />;
 }
 
 /** Bướm & chim ghé nông trại theo loài hoa đang trồng — bấm để chụp ảnh lưu vào sổ */

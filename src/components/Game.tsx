@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { InviteBanner } from './InviteBanner';
 import * as api from '../lib/api';
 import { animal, content, item, type Combo } from '../lib/content';
@@ -18,8 +18,8 @@ import { loadMusicPref, music, saveMusicPref, type Mood } from '../lib/music';
 import { cradleSpots, occupant } from '../lib/placement';
 import { weatherIcon } from '../lib/weather';
 import { villageWeather } from '../lib/villageWeather';
-import { BATH, BEACH, BUILDINGS, NURSERY, RIDE_MS, SCENES, TOWN, farmCell, roomPt, type GameId, type Pt, type SceneId } from '../lib/world';
-import { KIDROOM, kidSlot } from '../lib/kidRoom';
+import { BATH, BEACH, BUILDINGS, HOUSE, NURSERY, RIDE_MS, SCENES, TOWN, farmCell, type GameId, type Pt, type SceneId } from '../lib/world';
+import { KID_FEED, KID_FURN, KIDROOM, kidSlot } from '../lib/kidRoom';
 import { addDays, festivalsOn, mainTheme, THEMES, type CustomDay } from '../lib/festivals';
 import { BedPanel, BedSheet, InviteModal } from './Bed';
 import { KidNameSheet, KidSheet } from './Family';
@@ -128,7 +128,9 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
 
   const [couple] = useSynced('profiles', () => api.getCouple(coupleId), null as api.Couple | null);
   const [partner, reloadPartner] = useSynced('profiles', () => api.getPartner(me), null as api.Profile | null);
-  const [decor, reloadDecor, decorLoaded] = useSynced('decor', api.loadDecor, [] as api.Decor[]);
+  const [decorDb, reloadDecor, decorLoaded] = useSynced('decor', api.loadDecor, [] as api.Decor[]);
+  // đồ cố định của phòng các con (giường, bàn học...) trộn vào để vẽ & chặn đường đi
+  const decor = useMemo(() => [...decorDb, ...KID_FURN], [decorDb]);
   const [inventory] = useSynced('inventory', () => api.loadInventory(me.id), [] as api.InvRow[]);
   const [animals] = useSynced('ranch', api.loadRanch, [] as api.Animal[]);
   const [outfits] = useSynced('outfits', api.loadOutfits, [] as api.OutfitRow[]);
@@ -924,7 +926,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     arcade: ['town', TOWN.toArcade, '🚪 Ra ngoài'],
     house: ['town', BUILDINGS[0].door, '🚪 Ra ngoài'],
     bedroom: ['house', SCENES.bedroom.spawn, '🚪 Ra phòng khách'],
-    kidroom: ['house', roomPt(6.3, 1.2), '🚪 Ra phòng khách'],
+    kidroom: ['house', HOUSE.toKid, '🚪 Ra phòng khách'],
     ranch: ['farm', { x: 230, y: 180 }, '🌾 Về nông trại'],
     farm: ['town', TOWN.toFarm, '🏘️ Về làng'],
     beach: ['town', { x: TOWN.toBeach.x, y: TOWN.toBeach.y - 6 }, '🏘️ Về làng'],
@@ -973,10 +975,22 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     const scrub = (n: number) => { for (let k = 0; k < n; k++) setTimeout(() => doAct('wash'), k * 1100); };
     const hold = (act: string, ms: number, after?: () => void) => { live.update({ act, care: kid.id }); setTimeout(() => { if (liveNow.current.mine.act === act) { live.update({ act: null }); after?.(); } }, ms); };
     const at = (where: SceneId, stand: Pt, then: () => void) => { if (scene === where) go(stand, then); else { enter(where, stand); setTimeout(then, 400); } };
-    if (id === 'bath') at('bathroom', BATH.stand, () => { hold('kidbath', 9000); scrub(7); });
-    else if (id === 'potty') at('bathroom', BATH.toiletStand, () => hold('kidpotty', 5000, () => go(BATH.sink, () => { hold('kidwash', 5000); scrub(4); })));
-    else if (id === 'nap' || id === 'bedtime') at('kidroom', KIDROOM.beds[gi].stand, () => { hold('kidbed', 16000); live.say('📖 Ngày xửa ngày xưa… ngủ ngon nha con 💤'); });
+    const runBack = () => { hold('kidback', 2600); toast(`🏃 ${kid.name} chạy về phòng các con`); };
+    if (id === 'bath') at('bathroom', BATH.stand, () => { hold('kidbath', 9000, runBack); scrub(7); });
+    else if (id === 'potty') at('bathroom', BATH.toiletStand, () => hold('kidpotty', 5000, () => go(BATH.sink, () => { hold('kidwash', 5000, runBack); scrub(4); })));
+    else if (id === 'nap' || id === 'bedtime') at('kidroom', KIDROOM.beds[gi].stand, () => { hold('kidbed', 16000, () => toast(`💤 ${kid.name} ngủ say rồi — con sẽ ngủ khoảng 3 tiếng`)); live.say('📖 Ngày xửa ngày xưa… ngủ ngon nha con 💤'); });
     else if (id === 'study' || id === 'homework') at('kidroom', KIDROOM.desks[gi].stand, () => { hold('kidstudy', 14000); setTimeout(() => doAct('point'), 2200); });
+    else if (id === 'draw' || id === 'card') at('kidroom', KIDROOM.desks[gi].stand, () => { hold('kiddraw', 12000); setTimeout(() => doAct('point'), 2500); });
+    else if (id === 'puree' || id === 'meal') at('house', KID_FEED.stand, () => { hold('kidfeed', 11000); for (let k = 0; k < 6; k++) setTimeout(() => doAct('flick'), 600 + k * 1600); });
+    else if (id === 'toy') at('kidroom', KIDROOM.toy.stand, () => hold('kidtoy', 11000));
+    else if (id === 'ball') at('kidroom', KIDROOM.ball.stand, () => { hold('kidball', 12000); for (let k = 0; k < 4; k++) setTimeout(() => doAct('throw'), 1300 + k * 2800); });
+    else if (id === 'talk') at('kidroom', KIDROOM.talk.stand, () => hold('kidtalk', 9000));
+    else if (id === 'walk') at('kidroom', KIDROOM.walk[0], () => {   // tập đi: nắm tay con chập chững đi một vòng quanh thảm
+      live.update({ walkKid: kid.id, walkAll: false });
+      const pts = KIDROOM.walk.slice(1).concat(KIDROOM.walk[0]);
+      const next = (n: number) => { if (n >= pts.length) { live.update({ walkKid: null }); return; } go(pts[n], () => setTimeout(() => next(n + 1), 400)); };
+      setTimeout(() => next(0), 500);
+    });
   };
   const dismount = () => { live.update({ horse: null }); live.say('🐴 Cảm ơn bạn ngựa! Về chuồng nghỉ nhé'); };
   const exit = !editing && !fishing && !inBed && !festIcon ? EXITS[scene] : undefined;

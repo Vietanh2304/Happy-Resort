@@ -52,7 +52,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   arcade: { name: 'Khu vui chơi', icon: '🎮', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 92, y1: 140 }, spawn: { x: 96, y: 136 } },
   house: { name: 'Nhà gỗ', icon: '🏡', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(5, 7.4) },
   bedroom: { name: 'Phòng ngủ', icon: '🛏️', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(1.2, 6.6) },
-  kidroom: { name: 'Phòng các con', icon: '🧸', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 182, y0: 122, y1: 140 }, spawn: { x: 176, y: 134 } },
+  kidroom: { name: 'Phòng các con', icon: '🧸', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(1.2, 6.6) },
   bathroom: { name: 'Phòng tắm', icon: '🛁', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(1.2, 6.6) },
   shop: { name: 'Cửa hàng', icon: '🛍️', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 94, y1: 140 }, spawn: { x: 96, y: 136 } },
   cinema: { name: 'Rạp phim', icon: '🎬', w: 160, h: 120, outdoor: false, spawn: { x: 68, y: 100 } },
@@ -134,6 +134,7 @@ export const BEACH = {
 export const HOUSE = {
   door: roomPt(5, 7.6),                       // thảm cửa ra làng
   toBedroom: roomPt(0.3, 6.5),                // cửa trên tường trái
+  toKid: roomPt(7.1, 0.4),                    // cửa phòng các con (tường phải)
   kitchen: { stand: roomPt(1.6, 2) },
   calendar: wallSlot(WALL_L, 0, 30),
 };
@@ -151,11 +152,12 @@ export const BATH = {
 };
 
 /** Ô chỉ cấm đặt đồ nhưng vẫn đi qua được (thảm cửa, lối vào phòng tắm) */
-export const WALK_THROUGH = (scene: string, x: number, y: number) => (scene === 'house' && y === 7) || (scene === 'bedroom' && x >= 6 && y <= 1);
+export const WALK_THROUGH = (scene: string, x: number, y: number) => (scene === 'house' && (y === 7 || (x >= 6 && y === 0))) || (scene === 'bedroom' && x >= 6 && y <= 1) || (scene === 'kidroom' && x <= 1 && y >= 6);
 
 /** Ô sàn/tường đã có đồ cố định (bếp, cửa, cửa sổ) — không đặt đồ trang trí lên */
 export const RESERVED: Record<string, (x: number, y: number) => boolean> = {
-  house: (x, y) => (y < 8 && x === 0 && y <= 4) || (y === WALL_L && (x <= 4 || x >= 6)) || (y === WALL_R && x >= 3 && x <= 5) || (y === 7 && x >= 4 && x <= 5),
+  house: (x, y) => (y < 8 && x === 0 && y <= 4) || (y === WALL_L && (x <= 4 || x >= 6)) || (y === WALL_R && x >= 3) || (y === 7 && x >= 4 && x <= 5) || (y === 0 && x >= 6),
+  kidroom: (x, y) => (y < 8 && x <= 1 && y >= 6) || (y === WALL_L && x >= 6),
   // lối vào phòng tắm (góc tường phải phía trong) để trống, không đặt tủ che cửa
   bedroom: (x, y) => (y < 8 && x >= 6 && y <= 1) || (y === WALL_L && x >= 6) || (y === WALL_R && x >= 3),
   bathroom: (x, y) => (y < 8 && x >= 2 && x <= 5 && y >= 1 && y <= 3) || (y < 8 && x === 0 && ((y >= 1 && y <= 2) || y === 5))

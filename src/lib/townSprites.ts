@@ -427,13 +427,13 @@ export function mailboxSprite() {
 // ───────── Nội thất phòng nhìn nghiêng ─────────
 
 /** Phòng búp bê: hai bức tường, sàn gỗ hình thoi, đồ cố định (bếp, cửa, khung cửa sổ) */
-export function roomBackground(kind: 'house' | 'bedroom' | 'bath') {
-  return makeSprite(`room:v3:${kind}`, 192, 144, p => {
+export function roomBackground(kind: 'house' | 'bedroom' | 'bath' | 'kid') {
+  return makeSprite(`room:v4:${kind}`, 192, 144, p => {
     const { ox, oy, n, wallH } = ROOM;
     const q = isoPen(p, ox, oy);
-    p.rect(0, 0, 192, 144, kind === 'house' ? '#fbecd6' : '#fbe4ea');
+    p.rect(0, 0, 192, 144, kind === 'house' ? '#fbecd6' : kind === 'kid' ? '#eef0fb' : '#fbe4ea');
     const rand = seeded(kind);
-    for (let i = 0; i < 40; i++) p.px(Math.floor(rand() * 192), Math.floor(rand() * 144), kind === 'house' ? '#ffd6a8' : '#ffc6d6');
+    for (let i = 0; i < 40; i++) p.px(Math.floor(rand() * 192), Math.floor(rand() * 144), kind === 'house' ? '#ffd6a8' : kind === 'kid' ? '#d6dcf6' : '#ffc6d6');
 
     // Bệ sàn (độ dày nhà búp bê)
     q.poly([q.pt(0, n), q.pt(n, n), q.pt(n, 0), q.pt(n, 0, -6), q.pt(n, n, -6), q.pt(0, n, -6)], '#a06a48');
@@ -453,8 +453,8 @@ export function roomBackground(kind: 'house' | 'bedroom' | 'bath') {
           p.px(x, y, grout ? '#d8d0d8' : (Math.floor(tx) + Math.floor(ty)) % 2 ? '#fffaf6' : '#f6d6e0');
           continue;
         }
-        const base = kind === 'house' ? (plank % 2 ? '#e4ae78' : '#dca06a') : (plank % 2 ? '#e8b07a' : '#e0a46c');
-        p.px(x, y, seamRow || seamCol ? '#b98456' : base);
+        const base = kind === 'house' ? (plank % 2 ? '#e4ae78' : '#dca06a') : kind === 'kid' ? (plank % 2 ? '#f2d2a4' : '#ecc898') : (plank % 2 ? '#e8b07a' : '#e0a46c');
+        p.px(x, y, seamRow || seamCol ? (kind === 'kid' ? '#d4ae80' : '#b98456') : base);
       }
     }
 
@@ -474,6 +474,10 @@ export function roomBackground(kind: 'house' | 'bedroom' | 'bath') {
             const log = Math.floor(v / 6), lv = v % 6;
             c = lv === 0 ? '#b07a4a' : lv === 5 ? '#ecc18e' : log % 2 ? '#d9a06a' : '#d29660';
             if (left) c = mix(c, '#3a1a0a', 0.06);
+          } else if (kind === 'kid') {
+            if (v < 13) c = v === 12 ? '#e6d8c8' : i % 10 === 0 ? '#efe4d8' : '#fffaf4';          // ốp gỗ trắng chân tường
+            else if (left) c = (Math.floor(i / 2) + Math.floor(v / 4)) % 9 === 0 && v % 4 === 1 ? '#ffffff' : '#e3eafb';   // xanh trời lấm tấm sao
+            else c = Math.floor(i / 5) % 2 ? '#f8eefc' : '#efe2f8';                              // sọc oải hương
           } else if (v < 12) {
             c = v === 11 ? '#d29660' : v % 4 === 0 ? '#dca474' : '#e8b488';
             if (i % 8 === 0) c = '#d29660';
@@ -495,8 +499,16 @@ export function roomBackground(kind: 'house' | 'bedroom' | 'bath') {
 
     // Cửa sang phòng khác (tường trái, ô 6–7)
     q.poly([q.pt(0, 6.1, 0), q.pt(0, 7.5, 0), q.pt(0, 7.5, 30), q.pt(0, 6.1, 30)], '#8a5a3c');
-    q.poly([q.pt(0, 6.3, 0), q.pt(0, 7.3, 0), q.pt(0, 7.3, 28), q.pt(0, 6.3, 28)], kind === 'house' ? '#f7b8cc' : kind === 'bath' ? '#c8b8f0' : '#b0e0f0');
-    q.poly([q.pt(0, 6.45, 16), q.pt(0, 7.15, 16), q.pt(0, 7.15, 25), q.pt(0, 6.45, 25)], kind === 'house' ? '#ffc6dc' : kind === 'bath' ? '#e0d8f8' : '#cdeef7');
+    q.poly([q.pt(0, 6.3, 0), q.pt(0, 7.3, 0), q.pt(0, 7.3, 28), q.pt(0, 6.3, 28)], kind === 'house' ? '#f7b8cc' : kind === 'bath' ? '#c8b8f0' : kind === 'kid' ? '#ffe08a' : '#b0e0f0');
+    q.poly([q.pt(0, 6.45, 16), q.pt(0, 7.15, 16), q.pt(0, 7.15, 25), q.pt(0, 6.45, 25)], kind === 'house' ? '#ffc6dc' : kind === 'bath' ? '#e0d8f8' : kind === 'kid' ? '#fff2c0' : '#cdeef7');
+    if (kind === 'house') {                                            // cửa sang phòng các con (tường phải): cửa vàng có ngôi sao hồng
+      q.poly([q.pt(6.4, 0, 0), q.pt(7.8, 0, 0), q.pt(7.8, 0, 31), q.pt(6.4, 0, 31)], '#8a5a3c');
+      q.poly([q.pt(6.6, 0, 0), q.pt(7.6, 0, 0), q.pt(7.6, 0, 29), q.pt(6.6, 0, 29)], '#ffe08a');
+      q.poly([q.pt(6.75, 0, 3), q.pt(7.45, 0, 3), q.pt(7.45, 0, 12), q.pt(6.75, 0, 12)], '#ffd060');
+      { const [x, y] = q.pt(7.1, 0, 21); for (const [dx, dy] of [[0, -3], [0, -2], [-1, -1], [0, -1], [1, -1], [-3, 0], [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], [3, 0], [-1, 1], [0, 1], [1, 1], [-2, 2], [-1, 2], [1, 2], [2, 2]]) p.px(x + dx, y + dy, '#f59ab3'); }
+      { const [dx, dy] = q.pt(7.4, 0, 13); p.rect(dx, dy, 2, 2, '#c08658'); }
+      q.flat(6.5, 0.05, 0, 1.2, 0.5, '#b8d8f4');
+    }
     if (kind === 'bedroom') {                                          // cửa sang phòng tắm (tường phải, ô 6–7)
       q.poly([q.pt(6.1, 0, 0), q.pt(7.5, 0, 0), q.pt(7.5, 0, 30), q.pt(6.1, 0, 30)], '#8a5a3c');
       q.poly([q.pt(6.3, 0, 0), q.pt(7.3, 0, 0), q.pt(7.3, 0, 28), q.pt(6.3, 0, 28)], '#c8b8f0');
@@ -515,6 +527,8 @@ export function roomBackground(kind: 'house' | 'bedroom' | 'bath') {
       }
       q.poly([q.pt(2.0, 0, 42), q.pt(7.0, 0, 42), q.pt(7.0, 0, 43), q.pt(2.0, 0, 43)], '#a06a48');
     }
+
+    if (kind === 'kid') kidWalls(p, q);
 
     if (kind === 'bath') {
       // Bàn rửa mặt + gương tròn + kệ nến dọc tường trái
@@ -671,3 +685,46 @@ export const moonSprite = () => makeSprite('moon', 9, 9, p => p.map([
 export const sparkleSprite = () => makeSprite('sparkle', 7, 7, p => p.map([
   '...W...', '...W...', '..WYW..', 'WWYYYWW', '..WYW..', '...W...', '...W...',
 ], { W: '#ffffff', Y: '#fbe6a0' }), null);
+
+/** Trang trí phòng các con: cầu vồng & mây dán tường, sao, đèn dây, dây cờ, rèm sao, tranh con vẽ, thước đo chiều cao, thảm cầu vồng */
+function kidWalls(p: Pen, q: ReturnType<typeof isoPen>) {
+  const dot = (x: number, y: number, c: string, s = 2) => p.rect(x, y, s, s, c);
+  // cầu vồng dán tường trái (gy 1.6–5.2), mây hai đầu
+  const bands = ['#f59ab3', '#f6b884', '#f6e08a', '#a8dc9a', '#9cc8f4', '#c4a8f0'];
+  bands.forEach((c, b) => { const r = 1.75 - b * 0.17; for (let t = 0; t <= Math.PI; t += 0.035) { const [x, y] = q.pt(0, 3.4 + Math.cos(t) * r, 17 + Math.sin(t) * r * 9); dot(x, y, c); } });
+  for (const g of [1.55, 5.25]) { const [x, y] = q.pt(0, g, 18); ellipse(p, x, y, 6, 3, '#ffffff'); ellipse(p, x - 3, y - 2, 3.5, 3, '#ffffff'); ellipse(p, x + 3, y - 2.5, 3.5, 3.2, '#ffffff'); }
+  // sao vàng rải tường trái
+  for (const [g, z] of [[0.7, 36], [2.2, 40], [4.6, 38], [5.9, 33], [7.3, 38], [1.2, 26], [6.6, 24]]) { const [x, y] = q.pt(0, g, z); dot(x, y - 1, '#f6c64e', 1); dot(x - 1, y, '#f6c64e', 3); p.px(x, y + 1, '#f6c64e'); }
+  // đèn dây dọc mép trên tường trái
+  for (let k = 0; k < 15; k++) { const g = 0.3 + k * 0.5, sag = Math.sin(((k % 5) / 4) * Math.PI) * 2.5; const [x, y] = q.pt(0, g, 42 - sag); p.px(x, y - 1, '#8a7a6a'); dot(x, y, ['#fff2a0', '#ffc8e0', '#c8f0ff'][k % 3]); }
+  // dây cờ đuôi nheo trên tường phải
+  for (let k = 0; k < 15; k++) {
+    const g = 0.35 + k * 0.5, sag = Math.sin(((k % 5) / 4) * Math.PI) * 3; const [x, y] = q.pt(g, 0, 43 - sag);
+    const c = ['#f59ab3', '#8db8ef', '#f6c64e', '#a5d470', '#c4a8f0'][k % 5];
+    p.px(x, y - 1, '#c8a080'); for (let j = 0; j < 4; j++) p.rect(x - 1 + Math.floor(j / 2), y + j, 4 - j, 1, c);
+  }
+  // rèm sao hai bên cửa sổ
+  for (const [a, b] of [[2.2, 2.95], [6.05, 6.8]]) {
+    q.poly([q.pt(a, 0, 8), q.pt(b, 0, 8), q.pt(b, 0, 40), q.pt(a, 0, 40)], '#c4d8f8');
+    for (let z = 12; z < 40; z += 6) { const [x, y] = q.pt((a + b) / 2, 0, z); p.px(x, y, '#ffffff'); p.px(x - 1, y, '#fff6b0'); }
+  }
+  q.poly([q.pt(2.0, 0, 40), q.pt(7.0, 0, 40), q.pt(7.0, 0, 41), q.pt(2.0, 0, 41)], '#e8c46a');
+  // tranh các con vẽ dán tường phải
+  for (const [g, z, c] of [[0.5, 28, '#fff6d0'], [1.25, 22, '#e8f6ff']] as const) {
+    q.poly([q.pt(g, 0, z), q.pt(g + 0.6, 0, z), q.pt(g + 0.6, 0, z + 8), q.pt(g, 0, z + 8)], c);
+    const [x, y] = q.pt(g + 0.3, 0, z + 4);
+    ellipse(p, x - 1, y - 1, 1.5, 1.5, '#f6c64e'); p.rect(x - 3, y + 2, 6, 1, '#8ad08a'); p.px(x + 2, y, '#e8606a'); p.px(x + 2, y + 1, '#e8606a');
+  }
+  // thước đo chiều cao hươu cao cổ (tường phải, sát góc)
+  for (let z = 2; z < 34; z++) { const [x, y] = q.pt(7.55, 0, z); p.rect(x, y, 3, 1, Math.floor(z / 4) % 2 ? '#f6c64e' : '#f6dc94'); if (z % 4 === 0) p.px(x - 1, y, '#a06a48'); }
+  { const [x, y] = q.pt(7.6, 0, 34); ellipse(p, x + 1, y - 2, 3, 2.5, '#f6c64e'); p.px(x + 2, y - 3, '#3a2a2a'); p.px(x - 1, y - 5, '#a06a48'); p.px(x + 2, y - 5, '#a06a48'); }
+  // trăng khuyết trên cửa
+  { const [x, y] = q.pt(0, 6.8, 37); ellipse(p, x, y, 4.5, 4.5, '#f6c64e'); ellipse(p, x + 2, y - 1, 3.5, 3.5, '#e3eafb'); }
+  // thảm tròn cầu vồng giữa phòng
+  { const [x, y] = q.pt(4, 5, 0); for (const [rx, c] of [[26, '#f6c4d4'], [22, '#fde2b8'], [18, '#d6ecc4'], [14, '#cfe2f8'], [10, '#e6d8f6'], [5, '#fffaf4']] as const) ellipse(p, x, y, rx, rx / 2, c); }
+  // thảm mây trước hai giường
+  for (const g of [4.5, 6.5]) { const [x, y] = q.pt(g + 0.5, 3.6, 0); ellipse(p, x, y, 9, 3.5, '#ffffff'); ellipse(p, x - 5, y - 1, 4, 2.5, '#ffffff'); ellipse(p, x + 5, y - 1, 4, 2.5, '#ffffff'); }
+  // khối gỗ & xe đồ chơi trên sàn
+  for (const [g, h, c] of [[6.6, 6.2, '#e8606a'], [6.9, 6.0, '#6aa8e0'], [6.75, 6.5, '#f6c64e']] as const) { const [x, y] = q.pt(g, h, 0); p.rect(x - 2, y - 4, 4, 4, c); p.px(x - 1, y - 3, '#ffffff'); }
+  { const [x, y] = q.pt(5.6, 7.0, 0); p.rect(x - 4, y - 4, 8, 3, '#8ad08a'); p.rect(x - 2, y - 6, 4, 2, '#bfe6ee'); p.rect(x - 3, y - 1, 2, 2, '#3a3a4a'); p.rect(x + 2, y - 1, 2, 2, '#3a3a4a'); }
+}
