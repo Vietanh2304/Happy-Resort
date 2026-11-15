@@ -181,3 +181,10 @@ export const STALLS: Record<StallId, { icon: string; name: string; vendor: strin
   store: { icon: '🏪', name: 'Cửa hàng tiện lợi 24h', vendor: 'Bạn thu ngân', hello: 'Xin chào quý khách! Hôm nay có khuyến mãi mì ly đó ạ.', menu: [{ id: 'mi_ly', price: 20 }, { id: 'sandwich', price: 25 }, { id: 'onigiri', price: 18 }, { id: 'sua_chuoi', price: 15 }, { id: 'keo_deo', price: 10 }] },
   sweet: { icon: '🍦', name: 'Xe kem & bánh tráng', vendor: 'Chú Bảy', hello: 'Kem mát lạnh, bánh tráng trộn đây các con ơi!', menu: [{ id: 'kem_que', price: 15 }, { id: 'banh_trang', price: 20 }, { id: 'tra_sua', price: 30 }, { id: 'keo_bong', price: 15 }] },
 };
+
+/** Giờ ra chơi: các con (từ tập đi trở lên) chạy chơi cùng nhau quanh quảng trường làng.
+ *  Ngày thường 16:30–18:30 (sau giờ tan học), cuối tuần thêm buổi sáng 9:00–11:00. */
+export function playOut(date: string, hour: number, minute: number) {
+  const dow = new Date(`${date}T12:00:00`).getDay(), h = hour + minute / 60, weekend = dow === 0 || dow === 6;
+  return (h >= 16.5 && h < 18.5) || (weekend && h >= 9 && h < 11);
+}

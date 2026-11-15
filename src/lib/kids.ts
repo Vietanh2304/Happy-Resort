@@ -51,8 +51,8 @@ export function kidSprite(stage: KidStage, look: Look, frame: 'idle' | 'walk' | 
     ellipse(p, cx, hy, hr, hr, look.skin);
     p.rect(cx - hr + 1, hy - hr, hr * 2 - 1, 2, look.hair); p.px(cx - hr + 1, hy - hr + 2, look.hair); p.px(cx + hr - 1, hy - hr + 2, look.hair);
     if (girl) { p.px(cx - hr, hy - 1, look.hair); p.px(cx + hr, hy - 1, look.hair); p.px(cx + hr, hy - hr + 1, '#f59ab3'); }
-    p.px(cx - 2, hy, '#3b2d3f'); p.px(cx + 1, hy, '#3b2d3f');
-    p.px(cx - 2, hy - 1, '#ffffff');
+    if (frame === 'sleep') { p.rect(cx - 3, hy, 2, 1, '#3b2d3f'); p.rect(cx + 1, hy, 2, 1, '#3b2d3f'); }   // nhắm mắt ngủ
+    else { p.px(cx - 2, hy, '#3b2d3f'); p.px(cx + 1, hy, '#3b2d3f'); p.px(cx - 2, hy - 1, '#ffffff'); }
     p.px(cx - 3, hy + 1, '#f8a8b8'); p.px(cx + 2, hy + 1, '#f8a8b8');
     p.px(cx - 0.5, hy + 2, '#e86a7a');
     if (look.scarf) { p.rect(cx - 3, by - 1, 6, 2, look.scarf); p.rect(cx + 1, by + 1, 2, 3, look.scarf); p.px(cx + 1, by + 4, mix(look.scarf, '#ffffff', 0.4)); }   // khăn quàng ấm
@@ -112,6 +112,7 @@ export const ACTIONS: Record<KidStage, CareAction[]> = {
   toddler: [
     { id: 'puree', kind: 'feed', icon: '🥣', label: 'Ăn dặm', say: '🥣 Măm măm!' },
     { id: 'bath', kind: 'clean', icon: '🛁', label: 'Tắm', say: '🛁 Vịt cao su nổi lềnh bềnh' },
+    { id: 'potty', kind: 'clean', icon: '🚽', label: 'Đi vệ sinh', say: '🚽 Con giỏi quá, xong rồi rửa tay nào!' },
     { id: 'nap', kind: 'sleep', icon: '😴', label: 'Ru ngủ trưa', say: '😴 Khò khò…' },
     { id: 'toy', kind: 'play', icon: '🧸', label: 'Chơi đồ chơi', say: '🧸 Bé ôm gấu cười tít mắt' },
     { id: 'walk', kind: 'play', icon: '👣', label: 'Tập đi', say: '👣 Chập chững… chập chững!', milestone: 'walk' },
@@ -120,6 +121,7 @@ export const ACTIONS: Record<KidStage, CareAction[]> = {
   child: [
     { id: 'meal', kind: 'feed', icon: '🍚', label: 'Ăn cơm', say: '🍚 Con ăn hết sạch!' },
     { id: 'bath', kind: 'clean', icon: '🛁', label: 'Tắm', say: '🛁 Thơm phức!' },
+    { id: 'potty', kind: 'clean', icon: '🚽', label: 'Đi vệ sinh', say: '🚽 Xong rồi, rửa tay thật sạch nha!' },
     { id: 'bedtime', kind: 'sleep', icon: '🛏️', label: 'Kể chuyện đi ngủ', say: '📖 Ngày xửa ngày xưa…' },
     { id: 'ball', kind: 'play', icon: '⚽', label: 'Chơi bóng', say: '⚽ Sút nè!' },
     { id: 'study', kind: 'play', icon: '📚', label: 'Học bài', say: '📚 A, ă, â…', milestone: 'read' },
@@ -128,6 +130,7 @@ export const ACTIONS: Record<KidStage, CareAction[]> = {
   student: [
     { id: 'meal', kind: 'feed', icon: '🍱', label: 'Chuẩn bị cơm hộp', say: '🍱 Cơm hộp hình gấu!' },
     { id: 'bath', kind: 'clean', icon: '🛁', label: 'Tắm', say: '🛁 Thơm phức!' },
+    { id: 'potty', kind: 'clean', icon: '🚽', label: 'Đi vệ sinh', say: '🚽 Xong rồi, rửa tay thật sạch nha!' },
     { id: 'bedtime', kind: 'sleep', icon: '🛏️', label: 'Đi ngủ sớm', say: '🌙 Mai con đi học nha' },
     { id: 'school', kind: 'play', icon: '🏫', label: 'Đưa bé đi học', say: '🏫 Con chào ba mẹ, con đi học đây!', milestone: 'school' },
     { id: 'homework', kind: 'play', icon: '✏️', label: 'Kèm bài tập', say: '✏️ 1 + 1 = 2!', milestone: 'homework' },

@@ -53,7 +53,8 @@ import { SkyContent } from './Skydive';
 import { reefBackground } from '../lib/reef';
 import { SWIMMERS } from '../lib/critters';
 import { Follower, Wanderer } from './Wander';
-import { atSchool, classroomSprite, SCHOOL, type StallId } from '../lib/school';
+import { KIDROOM, kidSlot, kidDeskSprite, kidQuiltSprite, kidRoomBg, toiletFrontSprite } from '../lib/kidRoom';
+import { atSchool, playOut, classroomSprite, SCHOOL, type StallId } from '../lib/school';
 import { CAMPUS, campusBackground, gymBackground, schoolStopSprite, toiletSprite, stoolSprite, babyTubSprite } from '../lib/campusArt';
 import { CampusContent } from './Campus';
 import { bakeryRoom, BAKERY, FLORIST, floristRoom, STREET, streetBackground, streetSignSprite } from '../lib/shopsArt';
@@ -229,6 +230,7 @@ export function World(raw: WorldProps) {
     house: () => roomBackground('house'),
     bedroom: () => roomBackground('bedroom'),
     bathroom: () => roomBackground('bath'),
+    kidroom: kidRoomBg,
     farm: farmBackground,
     arcade: arcadeRoom,
     shop: shopRoom,
@@ -508,6 +510,7 @@ function SceneContent(p: WorldProps) {
       )}
 
       {(scene === 'house' || scene === 'bedroom' || scene === 'bathroom') && <RoomContent {...p} dark={phase === 'night'} />}
+      {scene === 'kidroom' && <KidRoomFront dark={phase === 'night' || phase === 'sunset'} />}
 
       {scene === 'shop' && (
         <>
@@ -1111,11 +1114,80 @@ function KidLayer(p: WorldProps & { mySeat?: Pt & { left: boolean }; theirSeat?:
           {feed && (() => { const who = live.mine.act === 'babyfeed' ? live.mine : theirs!; return <Tag x={who.pos.x + 5} y={who.pos.y - 20} className="float-notes">🍼</Tag>; })()}
         </div>,
       );
-    } else if (stage !== 'baby' && scene === 'house' && !atSchool(k, today, p.myView.time.hour, p.myView.time.minute)) {
+    } else if (stage !== 'baby' && scene === 'town' && playOut(today, p.myView.time.hour, p.myView.time.minute)) {
+      const gi = born.filter(b => kidStage(b, today) !== 'baby').indexOf(k);
+      out.push(<KidAtPlay key={k.id} idx={gi} n={born.filter(b => kidStage(b, today) !== 'baby').length} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} onClick={() => p.on.kid(k.id)} name={k.name} />);
+    } else if (stage !== 'baby' && scene === 'kidroom' && !atSchool(k, today, p.myView.time.hour, p.myView.time.minute)) {
+      const gi = kidSlot(k, born.filter(b => kidStage(b, today) !== 'baby'));
+      const doing = (a: string) => [live.mine, theirs].some(w => w?.act === a && (w.care === k.id || w.care === 'all'));
+      if (playOut(today, p.myView.time.hour, p.myView.time.minute) && !doing('kidstudy') && !doing('kidbed')) continue;   // giờ ra chơi: các con đang ở ngoài làng
+      const h = p.myView.time.hour, mode = doing('kidstudy') ? 'desk' : doing('kidbed') || h >= 21 || h < 6 ? 'bed' : 'play';
+      out.push(<KidInRoom key={k.id} idx={gi} mode={mode} tuck={doing('kidbed')} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} sleep={kidSprite(stage, look, 'sleep', girl)} sad={sad} onClick={() => p.on.kid(k.id)} name={k.name} />);
+    } else if (stage !== 'baby' && scene === 'bathroom') {
+      const w = [live.mine, theirs].find(x => x?.care === k.id && ['kidbath', 'kidpotty', 'kidwash'].includes(x.act ?? ''));
+      if (!w) continue;
+      const idle = kidSprite(stage, look, 'idle', girl);
+      if (w.act === 'kidbath') { const st = BATH.seats[0]; out.push(<div key={k.id}><SprPx sprite={idle} x={st.x + 2} y={st.y + 3} z={Math.round(st.y) + 1} k={0.85} /><Tag x={st.x + 2} y={st.y - 14} className="float-notes">🫧 🦆 🫧</Tag></div>); }
+      else if (w.act === 'kidpotty') { const t = BATH.toilet; out.push(<div key={k.id}><SprPx sprite={idle} x={t.x} y={t.y - 2} z={Math.round(t.y) + 2} k={0.85} /><SprPx sprite={toiletFrontSprite()} x={t.x} y={t.y + 3} z={Math.round(t.y) + 3} k={0.85} /></div>); }
+      else { const s0 = roomPt(1.35, 2.75); out.push(<div key={k.id}><SprPx sprite={idle} x={s0.x} y={s0.y} z={Math.round(s0.y) + 2} k={0.85} /><Tag x={s0.x} y={s0.y - 18} className="float-notes">💧 🧼 💧</Tag></div>); }
+    } else if (stage !== 'baby' && scene === 'house' && !atSchool(k, today, p.myView.time.hour, p.myView.time.minute) && !playOut(today, p.myView.time.hour, p.myView.time.minute)) {
       out.push(<KidAtHome key={k.id} idx={homeIdx++} sprite={kidSprite(stage, look, 'idle', girl)} walk={kidSprite(stage, look, 'walk', girl)} sad={sad} onClick={() => p.on.kid(k.id)} name={k.name} />);
     }
   }
   return <>{out}</>;
+}
+
+/** Giờ ra chơi: các con đuổi bắt nhau vòng quanh đài phun nước giữa làng (đứa sau chạy theo đứa trước) */
+function KidAtPlay({ idx, n, sprite, walk, onClick, name }: { idx: number; n: number; sprite: Sprite; walk: Sprite; onClick: () => void; name: string }) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => { const t = setInterval(() => setTick(v => v + 1), 1400); return () => clearInterval(t); }, []);
+  const lap = Math.floor(tick / 18) % 2, a = tick * 0.55 * (lap ? -1 : 1) - (idx * Math.PI * 2) / Math.max(2, n) * 0.35, r = 40 + (idx % 2) * 6;
+  const at = { x: TOWN.fountain.x + Math.cos(a) * r, y: TOWN.fountain.y + 16 + Math.sin(a) * r * 0.42 };
+  return (
+    <>
+      <Follower sprite={sprite} walk={walk} x={at.x} y={at.y} speed={60} title={`👶 ${name} đang chơi đuổi bắt`} onClick={onClick} />
+      {tick % 9 === idx % 9 && <Tag x={at.x} y={at.y - 22} className="float-notes">{['😆', '🏃', '🎈', '⚽', '🤸'][(tick + idx) % 5]}</Tag>}
+    </>
+  );
+}
+/** Các con trong phòng riêng: chơi trên thảm · được dắt lên giường, nằm xuống đắp chăn (đêm tự ngủ) · ngồi vào bàn học */
+function KidInRoom({ idx, mode, tuck, sprite, walk, sleep, sad, onClick, name }: { idx: number; mode: 'play' | 'bed' | 'desk'; tuck: boolean; sprite: Sprite; walk: Sprite; sleep: Sprite; sad: boolean; onClick: () => void; name: string }) {
+  const [i, setI] = useState((idx * 2) % KIDROOM.play.length);
+  const [settled, setSettled] = useState(false);
+  useEffect(() => { if (mode !== 'play') return; const t = setInterval(() => setI(v => (v + 1) % KIDROOM.play.length), 5000); return () => clearInterval(t); }, [mode]);
+  useEffect(() => { setSettled(false); if (mode === 'play') return; const t = setTimeout(() => setSettled(true), 1900); return () => clearTimeout(t); }, [mode]);   // đi tới nơi rồi mới leo lên giường / ngồi vào bàn
+  const bed = KIDROOM.beds[idx], desk = KIDROOM.desks[idx];
+  if (mode === 'bed' && settled) return (
+    <>
+      <SprPx sprite={sleep} x={bed.x} y={bed.pillow + 7} z={100} k={0.85} onClick={onClick} />
+      <Tag x={bed.x + 8} y={bed.pillow - 8} className="float-notes">{tuck ? '📖 💤' : '💤'}</Tag>
+    </>
+  );
+  if (mode === 'desk' && settled) return (
+    <>
+      <SprPx sprite={sprite} x={desk.x - 5} y={desk.top - 1} z={100} k={0.85} onClick={onClick} />
+      <Tag x={desk.x - 2} y={desk.top - 18} className="float-notes">✏️ 📚</Tag>
+    </>
+  );
+  const at = mode === 'bed' ? { x: bed.x, y: 126 } : mode === 'desk' ? { x: desk.x - 2, y: 132 } : KIDROOM.play[i];
+  return (
+    <>
+      <Follower sprite={sprite} walk={walk} x={at.x} y={at.y} title={`👶 ${name}`} onClick={onClick} />
+      {sad && mode === 'play' && <Tag x={at.x} y={at.y - 24} className="hint">🥺</Tag>}
+    </>
+  );
+}
+/** Đồ phủ phía trước trong phòng các con: chăn trên hai giường, mặt trước hai bàn học, đèn ngủ ấm */
+function KidRoomFront({ dark }: { dark: boolean }) {
+  return (
+    <>
+      {KIDROOM.beds.map((b, i) => <Spr key={`q${i}`} sprite={kidQuiltSprite(i)} x={b.x} y={122} z={101} />)}
+      {KIDROOM.desks.map((d, i) => <Spr key={`d${i}`} sprite={kidDeskSprite(i)} x={d.x} y={d.top + 22} z={102} />)}
+      <Glow x={56} y={84} r={dark ? 26 : 14} />
+      {KIDROOM.desks.map((d, i) => <Glow key={`g${i}`} x={d.x + 7} y={d.top - 6} r={dark ? 20 : 10} />)}
+      {dark && <Glow x={56} y={30} r={30} />}
+    </>
+  );
 }
 
 function KidAtHome({ idx, sprite, walk, sad, onClick, name }: { idx: number; sprite: Sprite; walk: Sprite; sad: boolean; onClick: () => void; name: string }) {
@@ -1327,6 +1399,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
             </>
           )}
           {scene === 'house' && p.theme && <Tag x={96} y={8} className="fest-banner small">{THEMES[p.theme].hang} {THEMES[p.theme].label.slice(3)} {THEMES[p.theme].hang}</Tag>}
+          {scene === 'house' && p.kids.some(k => k.name && k.born_on <= p.myView.time.date && kidStage(k, p.myView.time.date) !== 'baby') && <Tag x={164} y={44} className="label" onClick={() => go(roomPt(6.3, 1.2), () => enter('kidroom'))}>🧸 Phòng các con</Tag>}
           {scene === 'house' && <Hot x={58} y={106} w={28} h={13} title="Ra ngoài" onClick={() => go(HOUSE.door, () => enter('town', BUILDINGS[0].door))} />}
         </>
       )}

@@ -11,7 +11,7 @@ import { useScale } from './Stage';
 import { avatarPx } from './Avatar';
 
 const TAU = Math.PI * 2, HIP = 13.5, TORSO = 12, ARM = 6, LEG = 6;
-const OW = 216, OH = 156, OX = 108, OY = 142, B = 1.5;   // B: thân/tay/chân kéo dài gấp rưỡi (đầu giữ nguyên) cho dáng khiêu vũ thanh thoát       // khổ canvas phụ (đơn vị = nửa pixel nhân vật), gốc = điểm giữa hai người trên sàn
+const OW = 216, OH = 156, OX = 108, OY = 142, B = 1.32;   // B: thân/tay/chân kéo dài gấp rưỡi (đầu giữ nguyên) cho dáng khiêu vũ thanh thoát       // khổ canvas phụ (đơn vị = nửa pixel nhân vật), gốc = điểm giữa hai người trên sàn
 type V2 = [number, number];
 type Arm = V2 | 'J' | 'J2' | 'pBack' | 'pWaist' | 'pShoulder' | 'pNeck' | 'down' | 'hip' | 'out' | 'outUp' | 'up' | 'skirt';
 /** tư thế một người: x = vị trí hông, y = độ cao hông; lean = nghiêng thân (+ = chúi về phía đang nhìn); turn = góc xoay người (0 nghiêng, π/2 quay ra, π quay lưng lại bạn nhảy, 3π/2 quay vào) */
@@ -32,9 +32,9 @@ const stand = (x: number, dir: 1 | -1): D => ({ x, y: HIP, dir, lean: 0, head: 0
 const walk = (d: D, ph: number, stride: number) => { const s = Math.sin(TAU * ph), c = Math.cos(TAU * ph); d.f1 = [d.x + d.dir * 1.5 + stride * s, Math.max(0, c) * 1.4]; d.f2 = [d.x - d.dir * 1.5 - stride * s, Math.max(0, -c) * 1.4]; };
 /** ôm kiểu khiêu vũ cổ điển: tay xa nắm nhau đưa ra ngoài, tay gần của nam đỡ lưng nữ, tay gần của nữ đặt lên vai nam */
 function hold(o: { sep?: number; bob?: number; sw?: number; ph?: number; stride?: number; lL?: number; lF?: number; hL?: number; hF?: number; jx?: number; jy?: number } = {}): Pair {
-  const sep = o.sep ?? 15, sw = o.sw ?? 0, y = HIP + (o.bob ?? 0);
+  const sep = o.sep ?? 17.5, sw = o.sw ?? 0, y = HIP + (o.bob ?? 0) * 0.7;
   const L = stand(-sep / 2 + sw, 1), F = stand(sep / 2 + sw, -1);
-  L.y = F.y = y; L.lean = o.lL ?? -0.13; F.lean = o.lF ?? -0.24; L.head = o.hL ?? 0.04; F.head = o.hF ?? 0.02;
+  L.y = F.y = y; L.lean = (o.lL ?? -0.13) * 0.6; F.lean = (o.lF ?? -0.24) * 0.6; L.head = o.hL ?? 0.04; F.head = o.hF ?? 0.02;
   L.a2 = 'J'; F.a2 = 'J'; L.a1 = 'pBack'; L.late1 = true; F.a1 = 'pShoulder';
   if (o.ph !== undefined) { walk(L, o.ph, o.stride ?? 3); walk(F, o.ph, o.stride ?? 3); }
   return { L, F, front: 'F', J: [F.x + 10 + (o.jx ?? 0), y + TORSO - 2 + (o.jy ?? 0)] };
@@ -228,16 +228,19 @@ function drawDancer(c: Cx, r: R, kit: DancerKit, part: 'main' | 'late') {
 // ───────── chọn tư thế theo thời gian ─────────
 function poseAt(now: number): { r: { L: R; F: R }; front: 'L' | 'F'; fx?: 'hearts' | 'spark'; both: boolean; el: number; mood: DanceMood; running: boolean } {
   const { at, end, mood, hits } = danceStage, U = unitMs(mood), el = now - at, running = at > 0 && el >= 0 && now < end;
-  let p: Pair;
+  let p: Pair, blended: { L: R; F: R } | null = null;
   if (running) {
     const seq = SEQ[mood], total = seq.reduce((s, x) => s + x[1], 0), u = el / U, loop = Math.floor(u / total); let rem = u - loop * total, n = loop * 7;
     let f = seq[0];
     for (const s of seq) { if (rem < s[1]) { f = s; break; } rem -= s[1]; n += s[1]; }
-    const multi = f[0] === 'twirl' || f[0] === 'corte' || f[0] === 'dip' || f[0] === 'lift' || f[0] === 'swingout' || f[0] === 'nestle' || f[0] === 'newyork' || f[0] === 'turn' || f[0] === 'slowturn';   // thế kéo dài trọn số đơn vị
-    p = multi ? FIG[f[0]](rem / f[1], n) : FIG[f[0]](rem % 1, n + Math.floor(rem));
+    const MULTI = ['twirl', 'corte', 'dip', 'lift', 'swingout', 'nestle', 'newyork', 'turn', 'slowturn'];   // thế kéo dài trọn số đơn vị
+    const at_ = (g: [string, number], r0: number, k: number) => (MULTI.includes(g[0]) ? FIG[g[0]](Math.min(0.999, r0 / g[1]), k) : FIG[g[0]](r0 % 1, k + Math.floor(r0)));
+    p = at_(f, rem, n);
+    const fi = seq.indexOf(f), prev = seq[(fi + seq.length - 1) % seq.length], blend = 0.35;
+    if (rem < blend && prev[0] !== f[0]) { const a = resolve(at_(prev, prev[1] - 0.001, n - prev[1])), w = ease(rem / blend), b = resolve(p); blended = { L: mixR(a.L, b.L, w), F: mixR(a.F, b.F, w) }; }
   } else if (at > 0 && now >= end && now < end + 4200) p = FIG.bow((now - end) / 4200, 0);
   else p = FIG.idle((now / 3200) % 1, 0);
-  let r = resolve(p), front = p.front, fx = p.fx, both = false;
+  let r = blended ?? resolve(p), front = p.front, fx = p.fx, both = false;
   // động tác phô diễn khi vừa bấm trúng
   const last = hits[hits.length - 1], dur = Math.min(1500, arrowMs(mood) * 0.96);
   if (last && running) {

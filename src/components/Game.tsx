@@ -18,7 +18,8 @@ import { loadMusicPref, music, saveMusicPref, type Mood } from '../lib/music';
 import { cradleSpots, occupant } from '../lib/placement';
 import { weatherIcon } from '../lib/weather';
 import { villageWeather } from '../lib/villageWeather';
-import { BATH, BEACH, BUILDINGS, NURSERY, RIDE_MS, SCENES, TOWN, farmCell, type GameId, type Pt, type SceneId } from '../lib/world';
+import { BATH, BEACH, BUILDINGS, NURSERY, RIDE_MS, SCENES, TOWN, farmCell, roomPt, type GameId, type Pt, type SceneId } from '../lib/world';
+import { KIDROOM, kidSlot } from '../lib/kidRoom';
 import { addDays, festivalsOn, mainTheme, THEMES, type CustomDay } from '../lib/festivals';
 import { BedPanel, BedSheet, InviteModal } from './Bed';
 import { KidNameSheet, KidSheet } from './Family';
@@ -921,6 +922,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     arcade: ['town', TOWN.toArcade, '🚪 Ra ngoài'],
     house: ['town', BUILDINGS[0].door, '🚪 Ra ngoài'],
     bedroom: ['house', SCENES.bedroom.spawn, '🚪 Ra phòng khách'],
+    kidroom: ['house', roomPt(6.3, 1.2), '🚪 Ra phòng khách'],
     ranch: ['farm', { x: 230, y: 180 }, '🌾 Về nông trại'],
     farm: ['town', TOWN.toFarm, '🏘️ Về làng'],
     beach: ['town', { x: TOWN.toBeach.x, y: TOWN.toBeach.y - 6 }, '🏘️ Về làng'],
@@ -944,6 +946,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const washHands = () => atSink('wash');
   // Chăm bé sơ sinh bằng động tác thật: tới nôi rồi bế / cho bú / thay tã / hát ru; tắm thì bế bé sang phòng tắm
   const babyCare = (id: string, kid: api.Kid) => {
+    if (kidStage(kid, myTime.date) !== 'baby') return grownCare(id, kid);
     const babies = kids.filter(k => k.name && k.born_on <= myTime.date && kidStage(k, myTime.date) === 'baby');
     const cs = cradleSpots(decor)[Math.max(0, babies.findIndex(k => k.id === kid.id)) % 3].stand;
     const plan: Record<string, [SceneId, Pt, string, number]> = {
@@ -961,6 +964,17 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     if (scene === where) go(stand, begin);
     else if (where === 'bathroom' && scene === 'bedroom') { live.update({ act: 'carry' }); go(BATH.toBath, () => { enter('bathroom', NURSERY.babyTubStand); setTimeout(begin, 300); }); }
     else { enter(where, stand); setTimeout(begin, 300); }
+  };
+  /** Chăm các con lớn bằng động tác thật: dắt vào phòng tắm tắm bồn, ngồi bồn cầu rồi rửa tay, dắt lên giường đắp chăn kể chuyện, ngồi bàn học kèm bài */
+  const grownCare = (id: string, kid: api.Kid) => {
+    const grown = kids.filter(k => k.name && k.born_on <= myTime.date && kidStage(k, myTime.date) !== 'baby'), gi = kidSlot(kid, grown);
+    const scrub = (n: number) => { for (let k = 0; k < n; k++) setTimeout(() => doAct('wash'), k * 1100); };
+    const hold = (act: string, ms: number, after?: () => void) => { live.update({ act, care: kid.id }); setTimeout(() => { if (liveNow.current.mine.act === act) { live.update({ act: null }); after?.(); } }, ms); };
+    const at = (where: SceneId, stand: Pt, then: () => void) => { if (scene === where) go(stand, then); else { enter(where, stand); setTimeout(then, 400); } };
+    if (id === 'bath') at('bathroom', BATH.stand, () => { hold('kidbath', 9000); scrub(7); });
+    else if (id === 'potty') at('bathroom', BATH.toiletStand, () => hold('kidpotty', 5000, () => go(BATH.sink, () => { hold('kidwash', 5000); scrub(4); })));
+    else if (id === 'nap' || id === 'bedtime') at('kidroom', KIDROOM.beds[gi].stand, () => { hold('kidbed', 16000); live.say('📖 Ngày xửa ngày xưa… ngủ ngon nha con 💤'); });
+    else if (id === 'study' || id === 'homework') at('kidroom', KIDROOM.desks[gi].stand, () => { hold('kidstudy', 14000); setTimeout(() => doAct('point'), 2200); });
   };
   const dismount = () => { live.update({ horse: null }); live.say('🐴 Cảm ơn bạn ngựa! Về chuồng nghỉ nhé'); };
   const exit = !editing && !fishing && !inBed && !festIcon ? EXITS[scene] : undefined;
@@ -981,7 +995,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         {!partner && couple && <span>Mã resort: <b className="code">{couple.invite_code}</b></span>}
         <CallButtons call={call} partnerName={partnerName} partnerMic={!!theirs?.mic} partnerCam={!!theirs?.cam} />
         {call.remote && <RemoteAudio stream={call.remote} />}
-        {students.length > 0 && studyTime(myTime.hour) && <button className={`chip ${studyLeft ? 'glow' : ''}`} onClick={() => setSheet({ kind: 'study' })}>📚 Dạy con học{studyLeft ? ` (còn ${studyLeft})` : ' ✓'}</button>}
+        {students.length > 0 && studyTime(myTime.hour) && <button className={`chip ${studyLeft ? 'glow' : ''}`} onClick={() => { const sit = () => live.update({ act: 'kidstudy', care: 'all' }); if (scene !== 'kidroom') { enter('kidroom', KIDROOM.desks[0].stand); setTimeout(sit, 400); } else go(KIDROOM.desks[0].stand, sit); setSheet({ kind: 'study' }); }}>📚 Dạy con học{studyLeft ? ` (còn ${studyLeft})` : ' ✓'}</button>}
         {students.length > 0 && meetingDay(myTime.date) && myTime.hour >= 17 && <button className="chip glow" onClick={() => { if (scene !== 'school') enter('school'); setSheet({ kind: 'meeting' }); }}>📣 Họp phụ huynh</button>}
         {unnamed && <button className="chip glow ping" onClick={() => setSheet({ kind: 'kidname', id: unnamed.id })}>🐦 Đón bé về · đặt tên</button>}
         {festKind && <button className="chip glow" onClick={() => setSheet({ kind: 'festival' })}>{({ tet: '🧧 Hoạt động Tết', midautumn: '🏮 Làm đèn Trung Thu', halloween: '🎃 Đi xin kẹo', xmas: '🎄 Cây thông & quà' } as const)[festKind]}</button>}

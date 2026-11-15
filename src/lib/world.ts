@@ -4,7 +4,7 @@ import { HH, HW } from './iso';
 import { TRIP_WALK, TRIPS, type TripId } from './trips';
 import { SPOTS, type SpotScene } from './tripSpots';
 
-export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'campus' | 'gym' | 'street' | 'florist' | 'bakery' | 'ranch' | 'office' | 'city' | `trip_${TripId}` | SpotScene;
+export type SceneId = 'town' | 'beach' | 'hill' | 'farm' | 'arcade' | 'house' | 'bedroom' | 'bathroom' | 'kidroom' | 'shop' | 'cinema' | 'restaurant' | 'cafe' | 'wheel' | 'camp' | 'twin' | 'disco' | 'lounge' | 'reef' | 'sky' | 'school' | 'campus' | 'gym' | 'street' | 'florist' | 'bakery' | 'ranch' | 'office' | 'city' | `trip_${TripId}` | SpotScene;
 export interface Pt { x: number; y: number }
 export interface Box { x0: number; x1: number; y0: number; y1: number }
 
@@ -52,6 +52,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   arcade: { name: 'Khu vui chơi', icon: '🎮', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 92, y1: 140 }, spawn: { x: 96, y: 136 } },
   house: { name: 'Nhà gỗ', icon: '🏡', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(5, 7.4) },
   bedroom: { name: 'Phòng ngủ', icon: '🛏️', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(1.2, 6.6) },
+  kidroom: { name: 'Phòng các con', icon: '🧸', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 182, y0: 122, y1: 140 }, spawn: { x: 176, y: 134 } },
   bathroom: { name: 'Phòng tắm', icon: '🛁', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(1.2, 6.6) },
   shop: { name: 'Cửa hàng', icon: '🛍️', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 94, y1: 140 }, spawn: { x: 96, y: 136 } },
   cinema: { name: 'Rạp phim', icon: '🎬', w: 160, h: 120, outdoor: false, spawn: { x: 68, y: 100 } },
