@@ -29,8 +29,8 @@ export async function checkRelay(key: string, pc: RTCPeerConnection) {
 }
 /** Giới hạn hình gửi đi: chiếu phim (room:…) ưu tiên nét — đi vòng 1,8 Mbps/24 khung, đi thẳng 3 Mbps/30 khung;
  *  gọi video đi vòng 700 kbps (mặt người không cần nét như phim), đi thẳng 1,5 Mbps */
-//  chiếu phim: đi vòng giữ 720p (2,5 Mbps), đi thẳng 1080p (4,5 Mbps); mạng yếu thì giảm khung chứ không hạ độ phân giải
-export const videoCaps = (key: string, relay: boolean) => key.startsWith('room:') ? (relay ? { bps: 2_500_000, fps: 24, h: 720 } : { bps: 4_500_000, fps: 30, h: 1080 }) : (relay ? { bps: 700_000, fps: 20, h: 720 } : { bps: 1_500_000, fps: 24, h: 720 });
+//  chiếu phim: luôn 720p — đi vòng 1,8 Mbps / 24 khung, đi thẳng 2,5 Mbps / 30 khung; mạng yếu thì giảm khung chứ không hạ độ phân giải
+export const videoCaps = (key: string, relay: boolean) => key.startsWith('room:') ? (relay ? { bps: 1_800_000, fps: 24, h: 720 } : { bps: 2_500_000, fps: 30, h: 720 }) : (relay ? { bps: 700_000, fps: 20, h: 720 } : { bps: 1_500_000, fps: 24, h: 720 });
 /** hạ về đúng độ cao h (720p / 1080p), không bao giờ thấp hơn */
 export const scaleFor = (t: MediaStreamTrack | null, h: number) => Math.max(1, (t?.getSettings().height ?? h) / h);
 export const relayOf = (key: string) => !!via.get(key);
