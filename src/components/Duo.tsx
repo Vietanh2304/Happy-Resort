@@ -20,6 +20,8 @@ export interface F {
   seats: (Seat | null)[]; n: number;
   /** cả hai nhân vật (kể cả người chưa vào màn) — để vẽ hình hai đứa */
   all: Seat[];
+  /** ghế của người bấm mời trước (-1 nếu không rõ) */
+  host: number;
   /** ms từ lần trúng nhịp / bấm nút gần nhất của ghế i (chưa bấm = Infinity) */
   last: (i: number, id?: string) => number;
   /** tỉ lệ trúng nhịp của ghế i trong một công đoạn */
@@ -53,7 +55,7 @@ const BEAT = 1500, HIT_WIN = 450, AHEAD = 6500;
 const DIRS = [{ k: 'ArrowLeft', icon: '⬅️' }, { k: 'ArrowUp', icon: '⬆️' }, { k: 'ArrowDown', icon: '⬇️' }, { k: 'ArrowRight', icon: '➡️' }];
 const stars = (n: number) => (n >= 0.8 ? 3 : n >= 0.5 ? 2 : 1);
 
-function DuoRoom({ k, at: sid, go, me, mate, them, onExit, onSolo }: { k: DuoKey; at: number; go?: number; me: AvatarLook; mate: AvatarLook; them: AvatarLook | null; onExit: () => void; onSolo: () => void }) {
+function DuoRoom({ k, at: sid, go, by, me, mate, them, onExit, onSolo }: { k: DuoKey; at: number; go?: number; by?: string; me: AvatarLook; mate: AvatarLook; them: AvatarLook | null; onExit: () => void; onSolo: () => void }) {
   const cfg = DUO_SCENES[k] as DuoCfg;
   const waiting = go === undefined, t0 = go ?? sid;
   const W = cfg.W ?? 320, H = cfg.H ?? 180, Z = cfg.Z ?? 2;
@@ -106,7 +108,7 @@ function DuoRoom({ k, at: sid, go, me, mate, them, onExit, onSolo }: { k: DuoKey
     let raf = 0, last = '', ended = false; const snapped = new Set<number>();
     snapRef.current = () => { const ph = document.createElement('canvas'); ph.width = 640; ph.height = Math.round(640 * H / W); const pc = ph.getContext('2d')!; pc.imageSmoothingEnabled = false; pc.drawImage(c, 0, 0, W * Z, H * Z, 0, 0, ph.width, ph.height); setPhotos(p => [...p.slice(-3), ph.toDataURL('image/jpeg', 0.88)]); };
     const f: F = {
-      c: ctx, el: 0, t: 0, now: 0, W, H, seats, all, n: seats.filter(Boolean).length,
+      c: ctx, el: 0, t: 0, now: 0, W, H, seats, all, n: seats.filter(Boolean).length, host: by ? looks.findIndex(l => JSON.stringify(l) === by) : -1,
       last: (i, id) => { const s = seats[i]; if (!s) return Infinity; const tp = taps.current.filter(x => x.i === i && (!id || x.id === id)).pop(); const a = id ? Infinity : Date.now() - (lastHit.current[s.key] ?? -1e12); return Math.min(a, tp ? Date.now() - tp.at : Infinity); },
       score: (i, ph) => { const s = seats[i]; const h = s && hits.current[s.key]; const n = BEATS.filter(b => b.ph === ph).length; if (!h || !n) return 0; let m = 0; h.forEach(b => { if (BEATS[b].ph === ph) m++; }); return m / n; },
       taps: [], text: i => (seats[i] ? texts.current[seats[i]!.key] ?? '' : ''),
@@ -176,6 +178,7 @@ function DuoRoom({ k, at: sid, go, me, mate, them, onExit, onSolo }: { k: DuoKey
 /** Gắn một lần trong World: nghe lệnh bắt đầu, lời rủ của người ấy, và vẽ màn đang chơi */
 export function DuoHost({ live, looks }: { live: Live; looks: { me: AvatarLook; them: AvatarLook } }) {
   const L = useRef(live); L.current = live;
+  const LK = useRef(looks); LK.current = looks;
   const [inv, setInv] = useState<{ k: DuoKey; at: number } | null>(null);
   const pay = async (cfg: DuoCfg) => { if (!cfg.gift || cfg.price < 1) return; const n = cfg.gift.n ?? 1; await api.buyItems(cfg.gift.item, Math.max(1, Math.ceil(cfg.price / n)), n); notify('inventory', 'profiles'); };
   useEffect(() => {
@@ -187,8 +190,8 @@ export function DuoHost({ live, looks }: { live: Live; looks: { me: AvatarLook; 
           if (!confirm(cfg.price ? `${cfg.ask} (${cfg.price} xu)?` : `${cfg.ask}?`)) return;
           await pay(cfg); if (cfg.onStart) await cfg.onStart();
           const th = L.current.theirs;
-          if (th?.act === k && th.trip && (cfg.wait ? !th.trip.go || Date.now() - th.trip.go < cfg.join : Date.now() - th.trip.at < cfg.join)) { setInv(null); L.current.update({ act: k, trip: { i: 0, at: th.trip.at, ...(cfg.wait ? { go: th.trip.go ?? Date.now() + COUNTDOWN } : {}) }, dish: null, drink: null }); return; }
-          const at = Date.now(); L.current.update({ act: k, trip: { i: 0, at, ...(cfg.wait && !duoPresence.partnerOnline ? { go: at } : {}) }, dish: null, drink: null });
+          if (th?.act === k && th.trip && (cfg.wait ? !th.trip.go || Date.now() - th.trip.go < cfg.join : Date.now() - th.trip.at < cfg.join)) { setInv(null); L.current.update({ act: k, trip: { i: 0, at: th.trip.at, by: th.trip.by, ...(cfg.wait ? { go: th.trip.go ?? Date.now() + COUNTDOWN } : {}) }, dish: null, drink: null }); return; }
+          const at = Date.now(); L.current.update({ act: k, trip: { i: 0, at, by: JSON.stringify(LK.current.me), ...(cfg.wait && !duoPresence.partnerOnline ? { go: at } : {}) }, dish: null, drink: null });
           sendEvent('duo-invite', { k, at });
         } catch (err) { toastError(err); }
       })();
@@ -207,7 +210,7 @@ export function DuoHost({ live, looks }: { live: Live; looks: { me: AvatarLook; 
         const th = L.current.theirs, sgo = th?.act === d.k && th.trip?.at === d.at ? th.trip.go : undefined;
         if (cfg.wait ? (sgo !== undefined && Date.now() - sgo > cfg.join) || (th?.act !== d.k) : Date.now() - d.at > cfg.join) return toastError(new Error(cfg.late));
         await pay(cfg);
-        L.current.update({ act: d.k, trip: { i: 0, at: d.at, ...(cfg.wait ? { go: sgo ?? Date.now() + COUNTDOWN } : {}) }, dish: null, drink: null });
+        L.current.update({ act: d.k, trip: { i: 0, at: d.at, by: th?.trip?.at === d.at ? th.trip.by : undefined, ...(cfg.wait ? { go: sgo ?? Date.now() + COUNTDOWN } : {}) }, dish: null, drink: null });
       } catch (err) { toastError(err); }
     })();
   };
@@ -218,7 +221,7 @@ export function DuoHost({ live, looks }: { live: Live; looks: { me: AvatarLook; 
   return (
     <>
       {inv && <InviteBanner text={(DUO_SCENES[inv.k] as DuoCfg).invite} yes={(DUO_SCENES[inv.k] as DuoCfg).yes} onYes={join} onNo={() => setInv(null)} />}
-      {isDuo(mine.act) && mine.trip && <DuoRoom key={`${mine.act}${mine.trip.at}`} k={mine.act} at={mine.trip.at} me={looks.me} mate={looks.them}
+      {isDuo(mine.act) && mine.trip && <DuoRoom key={`${mine.act}${mine.trip.at}`} k={mine.act} at={mine.trip.at} by={mine.trip.by} me={looks.me} mate={looks.them}
         go={(DUO_SCENES[mine.act] as DuoCfg).wait ? mine.trip.go ?? (theirs?.act === mine.act && theirs.trip?.at === mine.trip.at ? theirs.trip.go : undefined) : mine.trip.at}
         them={theirs?.act === mine.act && theirs.trip?.at === mine.trip.at ? looks.them : null} onExit={() => live.update({ act: null, trip: null })}
         onSolo={() => { const tr = L.current.mine.trip; if (tr) L.current.update({ trip: { ...tr, go: Date.now() } }); }} />}

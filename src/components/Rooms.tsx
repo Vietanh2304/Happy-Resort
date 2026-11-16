@@ -92,21 +92,32 @@ export type Rtc = ReturnType<typeof useRtc>;
 export function StreamVideo({ stream, muted, className }: { stream: MediaStream; muted?: boolean; className?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
   const [blocked, setBlocked] = useState(false);
+  const [paused, setPaused] = useState(false);     // iPhone chặn cả phát tắt tiếng → cần một lần bấm
+  const [noPic, setNoPic] = useState(false);       // vài giây vẫn chưa có hình → mạng đang chặn kết nối trực tiếp
   // Chrome chặn tự phát video CÓ TIẾNG khi chưa bấm gì → màn đen. Phát tắt tiếng trước, bấm để bật tiếng.
   useEffect(() => {
     const v = ref.current; if (!v) return;
     v.srcObject = stream; v.muted = !!muted;
-    const go = () => v.play().catch(() => { v.muted = true; setBlocked(!muted); return v.play().catch(() => {}); });
+    const go = () => v.play().then(() => setPaused(false)).catch(() => { v.muted = true; setBlocked(!muted); return v.play().then(() => setPaused(false)).catch(() => setPaused(true)); });
     void go();
     // Track hình tới sau (thương lượng lại) → phát lại
     stream.onaddtrack = () => void go();
-    return () => { stream.onaddtrack = null; };
+    const seen = () => { if (v.videoWidth > 0) setNoPic(false); };
+    v.addEventListener('resize', seen); v.addEventListener('loadeddata', seen);
+    const t = setTimeout(() => { if (!v.videoWidth && stream.getVideoTracks().length) setNoPic(true); }, 7000);
+    return () => { stream.onaddtrack = null; clearTimeout(t); v.removeEventListener('resize', seen); v.removeEventListener('loadeddata', seen); };
   }, [stream, muted]);
-  const unmute = () => { const v = ref.current; if (v) { v.muted = false; void v.play(); } setBlocked(false); };
+  const unmute = () => { const v = ref.current; if (v) { v.muted = false; void v.play().then(() => setPaused(false)); } setBlocked(false); };
   return (
-    <div style={{ position: 'relative' }} className={className} onClick={blocked ? unmute : undefined}>
+    <div style={{ position: 'relative' }} className={className} onClick={blocked || paused ? unmute : undefined}>
       <video ref={ref} style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} autoPlay playsInline muted={muted} />
-      {blocked && <button className="btn small" style={{ position: 'absolute', left: '50%', top: 8, transform: 'translateX(-50%)' }} onClick={unmute}>🔊 Bấm để bật tiếng</button>}
+      {paused && <button className="btn small" style={{ position: 'absolute', left: '50%', top: '40%', transform: 'translateX(-50%)' }} onClick={unmute}>▶️ Bấm để xem</button>}
+      {blocked && !paused && <button className="btn small" style={{ position: 'absolute', left: '50%', top: 8, transform: 'translateX(-50%)' }} onClick={unmute}>🔊 Bấm để bật tiếng</button>}
+      {noPic && !paused && (
+        <p className="screen-hint" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', margin: 0, padding: 12, color: '#fff', textAlign: 'center' }}>
+          📡 Chưa nhận được hình từ máy kia — mạng 4G / wifi trường hay chặn chiếu trực tiếp. Thử đổi sang wifi khác, hoặc dùng "Xem YouTube cùng nhau" (mỗi máy tự phát, chạy được mọi mạng).
+        </p>
+      )}
     </div>
   );
 }

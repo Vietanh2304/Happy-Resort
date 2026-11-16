@@ -1306,7 +1306,12 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'avatar' && <AvatarEditor me={me} onSaved={reloadMe} onClose={close} />}
       {sheet?.kind === 'emote' && <EmoteMenu onCallKids={kids.some(k => k.name && k.born_on <= kidDay && kidStage(k, kidDay) !== 'baby') ? () => { live.update({ walkAll: true, walkKid: kids.find(k => k.name && kidStage(k, kidDay) !== 'baby')?.id ?? null }); live.say('📣 Các con ơi, về với ba mẹ nào!'); toast('👣 Các con chạy về nắm tay đi cùng bạn'); } : undefined} onCamera={openCam} onPick={e => live.say(e)} onClose={close} onEdit={() => setSheet({ kind: 'avatar' })} status={liveStatus(me)} onCouple={partner ? coupleDo : undefined} onSnow={partner && outWx.on && outWx.type === 'snow' ? throwSnow : undefined}
         onStatus={st => run(async () => { await api.setStatus(me, st); reloadMe(); notify('profiles'); if (st) toast(`💭 ${partnerName} sẽ thấy: ${st}`); })} />}
-      {sheet?.kind === 'bag' && <BagSheet inventory={inventory} partner={partner} onClose={close} />}
+      {sheet?.kind === 'bag' && <BagSheet inventory={inventory} partner={partner} onClose={close} onDecorate={id => {
+        // cầm món đồ từ túi ra đặt: đang ở nơi trang trí được thì đặt luôn, không thì vào nhà gỗ rồi đặt
+        close();
+        const pick = () => { setEditing(true); editor.selectItem(id); toast(`🎨 Đang cầm ${item(id).icon} ${item(id).name}: chạm chỗ muốn đặt, 🔄 để xoay`); };
+        if (editIsland) pick(); else { enter('house', SCENES.house.spawn); setTimeout(pick, 500); }
+      }} />}
       {playing && (() => {
         const pp = { me, partner, date: myTime.date, onLeave: () => setPlaying(null) };
         // Ném tuyết vào mùa đông hoặc lúc làng có tuyết; các mùa khác té nước ở bãi biển

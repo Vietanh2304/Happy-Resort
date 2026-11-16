@@ -11,7 +11,7 @@ const GROUPS: [Item['kind'], string][] = [
 ];
 
 /** Túi đồ: xem mọi thứ đang có, chọn một món để tặng người ấy */
-export function BagSheet({ inventory, partner, onClose }: { inventory: api.InvRow[]; partner: api.Profile | null; onClose: () => void }) {
+export function BagSheet({ inventory, partner, onClose, onDecorate }: { inventory: api.InvRow[]; partner: api.Profile | null; onClose: () => void; onDecorate?: (itemId: string) => void }) {
   const [picked, setPicked] = useState<string | null>(null);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -70,6 +70,7 @@ export function BagSheet({ inventory, partner, onClose }: { inventory: api.InvRo
       {picked && (
         <div className="gift-box stack">
           {['dish', 'crop'].includes(item(picked).kind) && <button className="btn" disabled={busy} onClick={eat}>🍽️ Ăn ngay (+1 💗 thiện cảm)</button>}
+          {onDecorate && <button className="btn" disabled={busy} onClick={() => onDecorate(picked)}>🎨 Mang ra trang trí</button>}
           <b>Tặng {item(picked).icon} {item(picked).name} cho {partner?.display_name || 'người ấy'}?</b>
           <input value={note} maxLength={120} onChange={e => setNote(e.target.value)} placeholder="Kèm lời nhắn (không bắt buộc)" />
           <button className="btn" disabled={busy || !partner} onClick={give}>{partner ? 'Gửi qua cầu 🎁' : 'Người ấy chưa vào resort'}</button>

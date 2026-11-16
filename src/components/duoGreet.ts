@@ -14,12 +14,14 @@ const ease = (v: number) => v * v * (3 - 2 * v);
 const lerp = (a: number, b: number, q: number) => a + (b - a) * q;
 const grad = (c: Ctx, y0: number, y1: number, cols: string[]) => { const g = c.createLinearGradient(0, y0, 0, y1); cols.forEach((col, i) => g.addColorStop(i / (cols.length - 1), col)); c.fillStyle = g; c.fillRect(0, y0, W, y1 - y0); };
 const putAt = (f: F, im: HTMLImageElement, x: number, foot: number, sc: number, flip = false) => { if (im.width) f.put(im, x - (im.width * sc) / 2, foot - im.height * sc, sc, flip); };
-export const giverOf = (f: F) => { const i = f.seats.findIndex(p => !!p && (JSON.parse(p.key) as AvatarLook).gender === 'm'); return i < 0 ? 0 : i; };
+/** người tặng = người bấm mời trước (không rõ thì nhân vật nam) */
+export const giverOf = (f: F) => { if (f.host >= 0) return f.host; const i = f.seats.findIndex(p => !!p && (JSON.parse(p.key) as AvatarLook).gender === 'm'); return i < 0 ? 0 : i; };
 const petals = (c: Ctx, t: number, n: number, cols: string[]) => { for (let k = 0; k < n; k++) { const sp = 6 + rr(k, 1) * 8, x = ((rr(k, 2) * W + Math.sin(t * 0.8 + k) * 14 + t * 4) % (W + 10) + W + 10) % (W + 10) - 5, y = (rr(k, 3) * H + t * sp) % (H + 10) - 5; ell(c, x, y, 1.3, 0.8, cols[k % cols.length], Math.sin(t * 2 + k)); } };
 
-const GIFTS = ['teddy', 'chocolate', 'love_cake', 'swiss_snowglobe', 'cupcake', 'balloon', 'candle'];
+const GIFTS = ['teddy', 'chocolate', 'love_cake', 'swiss_snowglobe', 'cupcake', 'balloon', 'candle', 'fa_music_box', 'candy_box', 'love_lock', 'heart_frame', 'photo_frame', 'firefly_jar', 'is_puffin_plush', 'kr_hanbok_doll', 'jp_maneki', 'choco_strawberry', 'hot_choco', 'star_lantern', 'cheesecake', 'tiramisu', 'sparkler', 'mv_glow_jar', 'tw_sky_lantern', 'fa_castle_model', 'peach_tea', 'strawberry_milk'];
 export const dayKey = () => new Date().toLocaleDateString('sv');
-export const giftToday = () => GIFTS[Math.floor(Date.now() / 864e5) % GIFTS.length];
+/** quà hôm nay: bốc ngẫu nhiên theo ngày (hai máy cùng ra một món) */
+export const giftToday = () => { const d = dayKey(); let h = 2166136261; for (const ch of d) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return GIFTS[(h >>> 0) % GIFTS.length]; };
 
 function bouquet(c: Ctx, x: number, y: number, s = 1) {
   for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.32; line(c, x, y + 4 * s, x + Math.cos(a) * 11 * s, y - 2 * s + Math.sin(a) * 6 * s, 1.2 * s, '#4a8a3a'); }
