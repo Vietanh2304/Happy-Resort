@@ -1017,7 +1017,7 @@ function PetSprite({ pet, x, y, onClick, sit, sleepy, trick }: { pet: Pet; x: nu
   }, [moving]);
   const sprite = petSprite(pet.kind, moving && step ? 'walk' : sleepy && !sit ? 'sleep' : 'sit');
   const s = useScale();
-  const grow = Math.min(1.3, 0.8 + (Math.floor(pet.love / 10) + 1) * 0.05);   // lớn dần theo cấp thân thiết
+  const grow = Math.min(0.78, 0.55 + Math.floor(pet.love / 10) * 0.03);   // cỡ thật (chó mèo ngang đầu gối người), lớn dần chút ít theo cấp thân thiết
   return (
     <img src={sprite.url} alt={pet.name} title={`🐾 ${pet.name}`} draggable={false} className={`spr tappable pet ${trick ? `trick-${trick}` : ''}`}
       onClick={e => { e.stopPropagation(); onClick(); }}
