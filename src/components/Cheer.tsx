@@ -50,7 +50,7 @@ function DronePhotos({ me, pics }: { me: api.Profile; pics: api.Memory[] }) {
   const [view, setView] = useState<'dots' | 'photo'>('dots');
   const pick = (e: React.ChangeEvent<HTMLInputElement>) => { const fl = e.target.files?.[0]; e.target.value = ''; if (fl) void run(async () => setDraft(await shrink(fl))); };
   const save = () => run(async () => { if (!draft) return; await api.addMemory(me, 'dronepic', { img: draft }); notify('memories'); setDraft(null); toast('🛸 Đã thêm ảnh vào show drone'); });
-  const del = (id: string) => { if (confirm('Bỏ ảnh này khỏi show drone?')) void run(async () => { await api.delMemory(id); notify('memories'); }); };
+  const del = (id: string) => { if (confirm('Bỏ ảnh này khỏi show drone? (bỏ xong là thêm được ảnh khác)')) void run(async () => { await api.delMemory(id); notify('memories'); toast('🗑️ Đã bỏ ảnh — giờ thêm ảnh mới được rồi'); }); };
   return (
     <>
       <h4>📸 Ảnh cho show drone ({pics.length}/{MAX_PICS})</h4>
@@ -59,7 +59,7 @@ function DronePhotos({ me, pics }: { me: api.Profile; pics: api.Memory[] }) {
         {pics.map(p => (
           <div key={p.id} style={{ position: 'relative' }}>
             {view === 'dots' ? <DotPreview src={p.data.img} w={96} /> : <img src={p.data.img} alt="" style={{ width: 96, borderRadius: 6, display: 'block' }} />}
-            {p.user_id === me.id && <button className="btn small ghost" style={{ position: 'absolute', top: 2, right: 2, padding: '0 6px' }} onClick={() => del(p.id)}>✖</button>}
+            <button className="btn small ghost" title="Bỏ ảnh này (để thay ảnh khác)" style={{ position: 'absolute', top: 2, right: 2, padding: '0 6px' }} onClick={() => del(p.id)}>✖</button>
           </div>
         ))}
       </div>

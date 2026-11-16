@@ -175,8 +175,8 @@ export function samplePic(im: HTMLImageElement, L = picLayout(im.width, im.heigh
   return out;
 }
 const rrect = (c: Ctx, x: number, y: number, w: number, h: number, r: number) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
-const D_MS = 110000, ND = PIC_DOTS;
-const PH: { t: number; k: string }[] = [{ t: 0, k: 'ground' }, { t: 2500, k: 'cloud' }, { t: 8000, k: 'heart' }, { t: 16000, k: 'pic0' }, { t: 26000, k: 'star' }, { t: 33000, k: 'pic1' }, { t: 43000, k: 'flower' }, { t: 51000, k: 'pic2' }, { t: 61000, k: 'text' }, { t: 78000, k: 'pic3' }, { t: 88000, k: 'couple' }, { t: 97000, k: 'big' }];
+const D_MS = 130000, ND = PIC_DOTS;
+const PH: { t: number; k: string }[] = [{ t: 0, k: 'ground' }, { t: 2500, k: 'cloud' }, { t: 8000, k: 'heart' }, { t: 16000, k: 'pic0' }, { t: 26000, k: 'star' }, { t: 33000, k: 'pic1' }, { t: 43000, k: 'flower' }, { t: 51000, k: 'pic2' }, { t: 61000, k: 'text' }, { t: 78000, k: 'pic3' }, { t: 88000, k: 'pic4' }, { t: 98000, k: 'pic5' }, { t: 108000, k: 'couple' }, { t: 117000, k: 'big' }];   // 6 suất ảnh — mỗi ảnh xuất hiện đúng 1 lần
 const PI = (k: string) => PH.findIndex(p => p.k === k);
 const shuffle = <T,>(a: T[]) => a.map((v, i) => [rr(i, 77), v] as const).sort((x, y) => x[0] - y[0]).map(x => x[1]);
 const fill = (pts: Pt3[]): Pt3[] => (!pts.length ? [] : pts.length >= ND ? Array.from({ length: ND }, (_, i) => pts[Math.floor((i * pts.length) / ND)]) : Array.from({ length: ND }, (_, i) => (i < pts.length ? pts[i] : [pts[i % pts.length][0], pts[i % pts.length][1], ''] as Pt3)));
@@ -206,8 +206,8 @@ const textSpan = () => [PH[PI('text')].t, PH[PI('text') + 1].t] as const;
 const pageAt = (pg: string[], e: number) => { const [a, b] = textSpan(); return Math.max(0, Math.min(pg.length - 1, Math.floor(((e - a) / (b - a)) * pg.length))); };
 function shape(k: string, f: F, msg: string): Pt3[] {
   if (k.startsWith('pic')) { const n = dronePics.list.length, j = +k.slice(3);
-    if (!n) return shape(['couple', 'flower', 'star', 'heart'][j % 4], f, msg);
-    const pic = dronePics.list[j % n], key = `pic:${pic.id}`, hit = shapes.get(key); if (hit) return hit;
+    if (j >= n) return shape(['heart', 'flower', 'star', 'heart', 'flower', 'star'][j], f, msg);   // ít ảnh hơn 6: suất thừa xếp hình khác, không lặp ảnh
+    const pic = dronePics.list[j], key = `pic:${pic.id}`, hit = shapes.get(key); if (hit) return hit;
     const im = picImg(pic.id, pic.img); if (!im) return shape('heart', f, msg);   // ảnh chưa tải xong: tạm xếp tim
     const out = fill(shuffle(samplePic(im))); shapes.set(key, out); return out; }
   const key = k === 'text' ? `text:${msg}` : k === 'couple' ? `couple:${f.all.map(p => p.key).join('|')}` : k;
@@ -274,7 +274,7 @@ function drawDrone(f: F) {
   // ảnh thật hiện dần trong khung bầu dục sáng khi drone đã xếp xong — mặt giữ y như ảnh gốc
   { let k = 0; while (k + 1 < PH.length && PH[k + 1].t <= el) k++;
     const n = dronePics.list.length, ph = PH[k];
-    if (n && ph.k.startsWith('pic')) { const pic = dronePics.list[+ph.k.slice(3) % n], im = picImg(pic.id, pic.img), next = PH[k + 1]?.t ?? D_MS;
+    if (ph.k.startsWith('pic') && +ph.k.slice(3) < n) { const pic = dronePics.list[+ph.k.slice(3)], im = picImg(pic.id, pic.img), next = PH[k + 1]?.t ?? D_MS;
       const a = ease(clamp((el - ph.t - 3400) / 2200)) * clamp((next - el - 300) / 1300);
       if (im && a > 0) { const { x0, y0, w, h } = picLayout(im.width, im.height);
         c.save(); rrect(c, x0, y0, w, h, 3); c.clip(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.globalAlpha = a * 0.97; c.drawImage(im, x0, y0, w, h); c.restore();
