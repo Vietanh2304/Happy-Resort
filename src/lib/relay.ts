@@ -17,14 +17,18 @@ export async function checkRelay(key: string, pc: RTCPeerConnection) {
     const loc = st.get(pair.localCandidateId) as { candidateType?: string } | undefined, rem = st.get(pair.remoteCandidateId) as { candidateType?: string } | undefined;
     const relay = loc?.candidateType === 'relay' || rem?.candidateType === 'relay';
     if (via.get(key) !== relay) { via.set(key, relay); emit(); }
-    // đi vòng: còn ~600 kbps, khung 15 — tiết kiệm khoảng một nửa dung lượng; nối thẳng: trả lại độ nét cao
+    const cap = videoCaps(key, relay);
     for (const tr of pc.getTransceivers()) {
       const s = tr.sender;
       if ((s.track?.kind ?? tr.receiver.track.kind) !== 'video') continue;
       const p = s.getParameters(); if (!p.encodings?.length) continue;
-      p.encodings[0].maxBitrate = relay ? 600_000 : 1_200_000; p.encodings[0].maxFramerate = relay ? 15 : 20;
+      p.encodings[0].maxBitrate = cap.bps; p.encodings[0].maxFramerate = cap.fps;
       await s.setParameters(p).catch(() => {});
     }
   } catch { /* trình duyệt không cho đọc thống kê: bỏ qua */ }
 }
+/** Giới hạn hình gửi đi: chiếu phim (room:…) ưu tiên nét — đi vòng 1,8 Mbps/24 khung, đi thẳng 3 Mbps/30 khung;
+ *  gọi video đi vòng 700 kbps (mặt người không cần nét như phim), đi thẳng 1,5 Mbps */
+export const videoCaps = (key: string, relay: boolean) => key.startsWith('room:') ? (relay ? { bps: 1_800_000, fps: 24 } : { bps: 3_000_000, fps: 30 }) : (relay ? { bps: 700_000, fps: 20 } : { bps: 1_500_000, fps: 24 });
+export const relayOf = (key: string) => !!via.get(key);
 export function dropRelay(key: string) { if (via.delete(key)) emit(); }

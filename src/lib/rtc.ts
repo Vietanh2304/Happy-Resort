@@ -2,7 +2,7 @@
 // Tín hiệu bắt tay đi qua kênh realtime của cặp đôi; hình và tiếng đi thẳng giữa hai máy.
 // Dùng mẫu "perfect negotiation": bên nào thêm hình/tiếng thì bên đó gửi offer, va chạm thì bên "polite" nhường.
 import { onEvent, sendEvent } from './realtime';
-import { checkRelay, dropRelay, relayNow } from './relay';
+import { checkRelay, dropRelay, relayOf, videoCaps } from './relay';
 
 // STUN (miễn phí) đủ cho phần lớn mạng nhà. Mạng 4G/công ty chặn kết nối thẳng thì cần TURN chuyển tiếp:
 // điền VITE_TURN_URL / VITE_TURN_USERNAME / VITE_TURN_CREDENTIAL trong .env (nhiều URL cách nhau dấu phẩy).
@@ -97,8 +97,8 @@ export class RtcRoom {
     const tune = () => {
       const p = sender.getParameters();
       if (!p.encodings?.length) return void setTimeout(tune, 500);
-      p.encodings[0].maxBitrate = relayNow() ? 600_000 : 1_200_000; p.encodings[0].maxFramerate = relayNow() ? 15 : 20; p.encodings[0].scaleResolutionDownBy = Math.max(1, (t.getSettings().height ?? 720) / 720);
-      (p as RTCRtpSendParameters & { degradationPreference?: string }).degradationPreference = 'maintain-framerate';
+      const cap = videoCaps(`room:${this.room}`, relayOf(`room:${this.room}`)); p.encodings[0].maxBitrate = cap.bps; p.encodings[0].maxFramerate = cap.fps; p.encodings[0].scaleResolutionDownBy = Math.max(1, (t.getSettings().height ?? 720) / 720);
+      (p as RTCRtpSendParameters & { degradationPreference?: string }).degradationPreference = 'balanced';   // phim: giữ cân bằng nét & mượt, không hạ độ phân giải quá tay
       sender.setParameters(p).catch(() => {});
     };
     setTimeout(tune, 300);
