@@ -1,4 +1,5 @@
 // Danh sách các màn hoạt động hai người (xem Duo.tsx)
+import { REEF_SCENES } from './duoReef';
 import { SKY_SCENES } from './duoSky';
 import { CRAFT_SCENES } from './duoCraft';
 import { icecastle } from './duoIce';
@@ -7,4 +8,4 @@ import { CHEER_SCENES } from './duoCheer';
 import { greet } from './duoGreet';
 import { DREAM_SCENES } from './duoDream';
 
-export const DUO_SCENES = { ...SKY_SCENES, ...CRAFT_SCENES, icecastle, glacier: glacier_train, ...CHEER_SCENES, greet, ...DREAM_SCENES };
+export const DUO_SCENES = { ...SKY_SCENES, ...CRAFT_SCENES, icecastle, glacier: glacier_train, ...CHEER_SCENES, greet, ...DREAM_SCENES, ...REEF_SCENES };
