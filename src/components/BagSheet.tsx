@@ -68,7 +68,7 @@ export function BagSheet({ inventory, partner, onClose, onDecorate }: { inventor
         );
       })}
       {picked && (
-        <div className="gift-box stack">
+        <div className="bag-act stack">
           {['dish', 'crop'].includes(item(picked).kind) && <button className="btn" disabled={busy} onClick={eat}>🍽️ Ăn ngay (+1 💗 thiện cảm)</button>}
           {onDecorate && <button className="btn" disabled={busy} onClick={() => onDecorate(picked)}>🎨 Mang ra trang trí</button>}
           <b>Tặng {item(picked).icon} {item(picked).name} cho {partner?.display_name || 'người ấy'}?</b>
