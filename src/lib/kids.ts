@@ -3,6 +3,7 @@ import type { CareKind, Kid, Profile } from './api';
 import { ellipse } from './iso';
 import { makeSprite, mix } from './pixel';
 import { HAIR_COLORS, SKINS } from './sprites';
+import { familyTime } from './time';
 
 export type KidStage = 'baby' | 'toddler' | 'child' | 'student';
 const DAY = 86400e3;
@@ -136,8 +137,17 @@ export const NEEDS: { kind: CareKind; field: keyof Kid; label: string; icon: str
   { kind: 'play', field: 'played_at', label: 'Vui vẻ', icon: '🧸', hours: 12 },
 ];
 /** 0..100 cho mỗi nhu cầu */
+/** Giờ ngủ đêm của các con (giờ gia đình): 21:00 → 6:30 */
+export const KID_NIGHT = { from: 21, to: 6.5 };
 export function needLevel(k: Kid, field: keyof Kid, hours: number) {
-  const at = k[field] as string | null;
+  let at = k[field] as string | null;
+  if (field === 'slept_at') {
+    // đang ngủ đêm → giấc ngủ đang nạp đầy; ban ngày thì tính từ lúc dậy sáng nay (6:30) nếu muộn hơn lần ru ngủ gần nhất
+    const ft = familyTime(), h = ft.hour + ft.minute / 60;
+    if (h >= KID_NIGHT.from || h < KID_NIGHT.to) return 100;
+    const woke = new Date(Date.parse(`${ft.date}T06:30:00+08:00`)).toISOString();
+    if (!at || Date.parse(at) < Date.parse(woke)) at = woke;
+  }
   if (!at) return 20;
   return Math.max(0, Math.min(100, Math.round(100 - ((Date.now() - Date.parse(at)) / 3600e3 / hours) * 100)));
 }
