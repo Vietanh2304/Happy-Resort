@@ -165,7 +165,7 @@ textarea { resize: vertical; }
 .chip { border: 2px solid var(--ink); background: #fff; border-radius: 8px; padding: 1px 8px; font-size: 11px; font-weight: 700; }
 .chip.glow { background: #ffe3ec; animation: glowchip 1.4s steps(2) infinite; }
 .chip.done { opacity: .75; }
-@keyframes glowchip { 50% { background: #fff; } }
+@keyframes glowchip { 50% { opacity: .62; } }   /* chỉ đổi độ mờ: card đồ hoạ tự làm, không phải vẽ lại cả nút mỗi khung */
 
 /* ───────── Thanh trên (HUD), thế giới ───────── */
 
@@ -364,7 +364,7 @@ textarea { resize: vertical; }
 .tint-night { background: #3a3f8a; opacity: .62; }
 .room-night { position: absolute; inset: 0; pointer-events: none; z-index: 400; background: #4a3f7a; mix-blend-mode: multiply; opacity: .35; }
 .lightglow { position: absolute; z-index: 420; pointer-events: none; border-radius: 50%; mix-blend-mode: screen;
-  background: radial-gradient(circle, #ffe9a0cc 0%, #ffcf6a55 35%, transparent 70%); animation: flicker 3s ease-in-out infinite; }
+  background: radial-gradient(circle, #ffe9a0cc 0%, #ffcf6a55 35%, transparent 70%); }   /* không nhấp nháy: hoà màu 'screen' + đổi độ mờ mỗi khung làm máy phải vẽ lại cả cảnh → nóng máy */
 @keyframes flicker { 50% { opacity: .82; } }
 
 /* ───── Đồi ngắm cảnh ───── */
@@ -1730,7 +1730,7 @@ textarea { resize: vertical; }
 .fx-sway { transform-origin: 50% -40%; animation: fxsway 2s ease-in-out infinite alternate; border-top: 1px solid #3a2a1a; border-bottom: 1px solid #3a2a1a; }
 .fx-sway.lit { box-shadow: 0 0 10px 4px var(--g); }
 .fx-steam { border-radius: 50%; background: #ffffffa0; filter: blur(2px); animation: steam 3s ease-out infinite; }
-.fx-glow { border-radius: 50%; animation: flicker 2.4s ease-in-out infinite; mix-blend-mode: screen; }
+.fx-glow { border-radius: 50%; mix-blend-mode: screen; }
 .spr.fx-move { animation: fxmove 20s linear infinite; }
 .fx-bird { animation: flutter 6s ease-in-out infinite; }
 .fx-aurora { position: absolute; inset: 0 -10%; background: linear-gradient(90deg, transparent, #3af0a088 20%, #8affc8aa 40%, #8a6af088 65%, #3af0a066 85%, transparent); filter: blur(6px); mix-blend-mode: screen; border-radius: 50%; animation: aurora 7s ease-in-out infinite alternate; }
@@ -1897,3 +1897,10 @@ textarea { resize: vertical; }
 .emote-box button.btn.ghost { background: var(--paper); color: var(--ink); }
 
 .relay-badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #fff3c8; border: 2px solid var(--ink); color: var(--ink); white-space: nowrap; }
+
+/* 🔋 Tiết kiệm pin: dừng các lấp lánh trang trí nhỏ (vẫn hiện, chỉ đứng yên), bớt một nửa hạt bay — hoạt động & nhân vật vẫn chạy bình thường */
+.lite .spr.twinkle, .lite .twinkle-soft, .lite .px-fog, .lite .sl-star, .lite .glam-stars i, .lite .string-lights i, .lite .reef-plankton i,
+.lite .squid-light, .lite .candle-glow, .lite .sea-lantern b, .lite .moon-halo, .lite .clam-pearl, .lite .hold-glow, .lite .spr.flicker,
+.lite .reef-rays i, .lite .kelp-sway, .lite .coral-neon, .lite .fireflies i, .lite .reef-motes i, .lite .chip.glow, .lite .chip.ping { animation-play-state: paused !important; }
+.lite .reef-motes i:nth-child(2n), .lite .fireflies i:nth-child(2n), .lite .reef-bubbles i:nth-child(3n) { display: none; }
+.lite .reef-rays, .lite .reef-caustics { mix-blend-mode: normal; opacity: .35; }

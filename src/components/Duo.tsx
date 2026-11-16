@@ -65,6 +65,7 @@ function DuoRoom({ k, at: sid, go, by, me, mate, them, onExit, onSolo }: { k: Du
   const [photos, setPhotos] = useState<string[]>([]);
   const [done, setDone] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const nowRef = useRef(0);
   const [flash, setFlash] = useState<'hit' | 'miss' | null>(null);
   const meKey = JSON.stringify(me);
   const looks = useMemo(() => [me, mate].sort((a, b) => (JSON.stringify(a) < JSON.stringify(b) ? -1 : 1)), [meKey, JSON.stringify(mate)]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -106,7 +107,8 @@ function DuoRoom({ k, at: sid, go, by, me, mate, them, onExit, onSolo }: { k: Du
 
   useEffect(() => {
     const c = cv.current!, ctx = c.getContext('2d')!;
-    let raf = 0, last = '', ended = false; const snapped = new Set<number>();
+    let raf = 0, last = '', ended = false, lastDraw = 0; const snapped = new Set<number>();
+    const lite = document.documentElement.classList.contains('lite');
     snapRef.current = () => { const ph = document.createElement('canvas'); ph.width = 640; ph.height = Math.round(640 * H / W); const pc = ph.getContext('2d')!; pc.imageSmoothingEnabled = false; pc.drawImage(c, 0, 0, W * Z, H * Z, 0, 0, ph.width, ph.height); setPhotos(p => [...p.slice(-3), ph.toDataURL('image/jpeg', 0.88)]); };
     const f: F = {
       c: ctx, el: 0, t: 0, now: 0, W, H, seats, all, n: seats.filter(Boolean).length, host: by ? looks.findIndex(l => JSON.stringify(l) === by) : -1,
@@ -117,7 +119,10 @@ function DuoRoom({ k, at: sid, go, by, me, mate, them, onExit, onSolo }: { k: Du
     };
     const frame = () => {
       const nowMs = Date.now(), el = nowMs - t0;
-      setNow(nowMs);
+      // tiết kiệm pin (điện thoại): vẽ 30 khung/giây thay vì 60
+      if (lite && nowMs - lastDraw < 30) { raf = requestAnimationFrame(frame); return; } lastDraw = nowMs;
+      // giao diện: có mũi tên nhịp thì cập nhật liền tay cho mượt; không thì 4 lần/giây là đủ (đỡ nóng máy)
+      if (BEATS.length || Math.floor(nowMs / 250) !== Math.floor(nowRef.current / 250)) { nowRef.current = nowMs; setNow(nowMs); }   // giao diện (nút, chữ) chỉ cần cập nhật 4 lần/giây; tranh vẽ vẫn 60 khung
       ctx.setTransform(Z, 0, 0, Z, 0, 0); ctx.imageSmoothingEnabled = false; ctx.globalAlpha = 1;
       if (waiting || el < 0) { ctx.fillStyle = '#0a0a1e'; ctx.fillRect(0, 0, W, H); raf = requestAnimationFrame(frame); return; }   // đang chờ người ấy / đếm ngược
       f.el = el; f.t = el / 1000; f.now = nowMs; f.taps = taps.current;

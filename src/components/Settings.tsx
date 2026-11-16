@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { liteOn, setLite } from '../lib/lite';
 import * as api from '../lib/api';
 import { supabase } from '../lib/supabase';
 import { notify } from '../lib/realtime';
@@ -19,6 +20,7 @@ export function Settings({ me, couple, onSaved, onClose, onAvatar }: Props) {
   const [name, setName] = useState(me.display_name);
   const [changingCity, setChangingCity] = useState(false);
   const [noti, setNoti] = useState(notifyOn());
+  const [lite, setLiteS] = useState(liteOn());
   const ios = /iphone|ipad/i.test(navigator.userAgent);
 
   async function save(fields: Parameters<typeof api.updateProfile>[1]) {
@@ -67,6 +69,10 @@ export function Settings({ me, couple, onSaved, onClose, onAvatar }: Props) {
             🔔 Báo khi người ấy vào làng, nhắn tin, gửi thư, rủ chơi (lúc game đang mở nền)
           </label>
         )}
+        <label className="check">
+          <input type="checkbox" checked={lite} onChange={e => { setLite(e.target.checked); setLiteS(e.target.checked); toast(e.target.checked ? '🔋 Đã bật tiết kiệm pin — ít lấp lánh hơn, máy mát & mượt hơn' : '✨ Đã tắt tiết kiệm pin — hiệu ứng đầy đủ'); }} />
+          🔋 Tiết kiệm pin: giảm hiệu ứng lấp lánh trang trí cho máy đỡ nóng, đỡ giật (điện thoại tự bật)
+        </label>
         {canInstall()
           ? <button className="btn ghost" onClick={() => installApp()}>📲 Cài game ra màn hình chính</button>
           : <p className="muted small-note">📲 Muốn mở như một app: {ios ? 'trên Safari bấm Chia sẻ → "Thêm vào MH chính"' : 'trong menu trình duyệt chọn "Cài đặt ứng dụng" / "Thêm vào màn hình chính"'}.</p>}

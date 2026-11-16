@@ -13,19 +13,22 @@ const hx = (h: string) => { const n = parseInt(h.slice(1, 7), 16); return [n >> 
 const mix = (a: string, b: string, t: number) => { const A = hx(a), B = hx(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
 const rr = (i: number, k: number) => ((Math.sin(i * 12.9898 + k * 78.233) * 43758.5453) % 1 + 1) % 1;
 
-/** canvas phủ cả cảnh, vẽ lại ~30 khung/giây; độ phân giải bám theo màn hình để nét không nhoè */
-function Glam({ z, draw, fps = 30, box = [0, 0, W, H] }: { z: number; draw: (c: Ctx, t: number, K: number) => void; fps?: number; box?: [number, number, number, number] }) {
+/** điện thoại (màn cảm ứng): vẽ thưa hơn để máy đỡ nóng */
+const TOUCH = () => document.documentElement.classList.contains('lite');
+/** canvas phủ cả cảnh, vẽ lại ~24 khung/giây (điện thoại ~16); fps = 0 thì chỉ vẽ một lần (lớp tĩnh); độ phân giải tối đa ×3 cho nhẹ */
+function Glam({ z, draw, fps = 24, box = [0, 0, W, H] }: { z: number; draw: (c: Ctx, t: number, K: number) => void; fps?: number; box?: [number, number, number, number] }) {
   const [bx, by, bw, bh] = box;
   const s = useScale();
-  const K = Math.max(2, Math.min(6, Math.round(s * (window.devicePixelRatio || 1))));
+  const K = Math.max(2, Math.min(TOUCH() ? 2 : 3, Math.round(s * (window.devicePixelRatio || 1))));
   const ref = useRef<HTMLCanvasElement>(null);
   const dr = useRef(draw); dr.current = draw;
   useEffect(() => {
     const c = ref.current!, ctx = c.getContext('2d')!;
     let raf = 0, last = 0;
+    const gap = 1000 / (TOUCH() ? Math.min(fps, 12) : fps);
     const f = (now: number) => {
-      raf = requestAnimationFrame(f);
-      if (now - last < 1000 / fps) return; last = now;
+      if (fps > 0) raf = requestAnimationFrame(f);
+      if (fps > 0 && now - last < gap) return; last = now;
       ctx.setTransform(K, 0, 0, K, 0, 0); ctx.clearRect(0, 0, bw, bh); ctx.imageSmoothingEnabled = false;
       dr.current(ctx, now / 1000, K);
     };
@@ -366,7 +369,7 @@ export function GardenSeason({ month, dark, box }: { month: number; dark: boolea
       for (let k = 0; k < 50; k++) { const sp = 5 + rr(k, 1) * 7, xx = (rr(k, 2) * bw + Math.sin(t * 0.7 + k) * 5) % bw, yy = (rr(k, 3) * bh + t * sp) % bh; circ(c, xx, yy, 0.4 + rr(k, 4) * 0.5, '#ffffff'); }
     }
   };
-  return <><Glam z={2} box={box} fps={4} draw={c => ground(c)} /><Glam z={300} box={box} draw={front} /></>;
+  return <><Glam z={2} box={box} fps={0} draw={c => ground(c)} /><Glam z={300} box={box} draw={front} /></>;
 }
 
 // ═════════ BỒN TẮM: nến lung linh quanh thành bồn, cánh hồng & bọt nổi, hơi nước, ánh hồng ═════════
