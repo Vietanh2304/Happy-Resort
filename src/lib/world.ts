@@ -177,7 +177,7 @@ export const SEATS: Partial<Record<SceneId, [Pt & { left: boolean }, Pt & { left
   restaurant: [{ x: 70, y: 119, left: false }, { x: 122, y: 119, left: true }],
   hill: [{ x: 88, y: 125, left: false }, { x: 104, y: 125, left: true }],
   cafe: [{ x: 70, y: 119, left: false }, { x: 122, y: 119, left: true }],
-  wheel: [{ x: 48, y: 117, left: false }, { x: 144, y: 117, left: true }],
+  wheel: [{ x: 84, y: 117, left: false }, { x: 108, y: 117, left: true }],   // ngồi sát nhau trên ghế đôi
   camp: [{ x: 70, y: 118, left: false }, { x: 122, y: 118, left: true }],
   twin: [{ x: 86, y: 129, left: false }, { x: 106, y: 129, left: true }],
   // Đứng sát nhau vừa một cánh tay để nắm tay khiêu vũ

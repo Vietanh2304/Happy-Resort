@@ -149,7 +149,7 @@ export function ferrisWheelSprite() {
 
 /** Cabin nhìn từ bên trong: khung cửa sổ lớn (trong suốt để thấy cảnh trôi bên ngoài), hai ghế đối diện */
 export function wheelCabinSprite() {
-  return makeSprite('wheel-cabin:v1', 192, 144, p => {
+  return makeSprite('wheel-cabin:v2', 192, 144, p => {
     const wall = '#f6b8cc', wallD = '#e898b0', wallL = '#ffd6e2';
     for (let y = 0; y < 144; y++) for (let x = 0; x < 192; x++) {
       const inWin = x >= 18 && x < 174 && y >= 12 && y < 96 && !((x < 24 || x >= 168) && (y < 18 || y >= 90) && ((x < 24 ? 24 - x : x - 167) + (y < 18 ? 18 - y : y - 89)) > 7);
@@ -164,17 +164,19 @@ export function wheelCabinSprite() {
     // Tay vịn, trần có đèn tim
     p.rect(0, 0, 192, 4, wallD); p.rect(0, 4, 192, 1, wallL);
     p.rect(88, 2, 16, 6, '#fff1a8'); p.map(['.R.R.', 'RRRRR', '.RRR.', '..R..'], { R: '#f59ab3' }, 94, 2);
-    // Hai ghế bọc nệm đối diện
-    for (const [x0, dir] of [[8, 1], [128, -1]] as const) {
-      p.rect(x0, 104, 56, 10, '#e86a8a'); p.rect(x0, 104, 56, 2, '#ff9ab4');
-      p.rect(x0 + (dir === 1 ? 0 : 50), 84, 6, 24, '#d8607a'); p.rect(x0 + (dir === 1 ? 1 : 51), 85, 4, 22, '#ff9ab4');
-      p.rect(x0, 114, 56, 14, wallD);
-    }
+    // Ghế đôi lưng hình trái tim ở giữa cabin — hai đứa ngồi sát nhau ngắm cảnh
+    for (const [cx, r] of [[84, 15], [108, 15]] as const) { for (let y = -r; y <= 0; y++) { const w = Math.round(Math.sqrt(r * r - y * y)); p.rect(cx - w, 92 + y, w * 2, 1, '#e86a8a'); } }
+    for (let y = 92; y < 110; y++) { const w = Math.max(0, 38 - (y - 92) * 2); p.rect(96 - w, y, w * 2, 1, '#e86a8a'); }
+    for (const [cx, r] of [[84, 12], [108, 12]] as const) { for (let y = -r; y <= 0; y++) { const w = Math.round(Math.sqrt(r * r - y * y)); p.rect(cx - w, 93 + y, w * 2, 1, '#ff9ab4'); } }
+    p.rect(54, 104, 84, 10, '#e86a8a'); p.rect(54, 104, 84, 2, '#ffb8cc');           // đệm ngồi
+    p.rect(50, 100, 6, 14, '#d8607a'); p.rect(136, 100, 6, 14, '#d8607a');           // tay vịn
+    p.rect(56, 114, 80, 14, wallD); p.rect(58, 126, 4, 2, '#b06078'); p.rect(130, 126, 4, 2, '#b06078');
+    for (const x of [70, 96, 122]) { p.px(x, 108, '#ffffff'); p.px(x + 1, 108, '#ffd6e2'); }
     // Sàn
     p.rect(0, 128, 192, 16, '#c8a8b8'); for (let x = 0; x < 192; x += 10) p.rect(x, 128, 1, 16, '#b898a8');
-    // Bàn nhỏ giữa có lọ hoa
-    p.rect(84, 112, 24, 3, '#ffffff'); p.rect(94, 115, 4, 13, '#e8e0e8');
-    p.rect(93, 106, 6, 6, '#bfe3ef'); p.px(94, 104, '#e86a7a'); p.px(96, 103, '#f59ab3'); p.px(97, 105, '#e86a7a'); p.rect(95, 104, 1, 3, '#6aa645');
+    // bó hoa nhỏ & gối tim hai đầu ghế
+    for (const x of [40, 152]) { p.rect(x - 3, 120, 6, 8, '#bfe3ef'); p.px(x - 2, 117, '#e86a7a'); p.px(x, 116, '#f59ab3'); p.px(x + 2, 118, '#e86a7a'); p.rect(x, 117, 1, 3, '#6aa645'); }
+    p.map(['.R.R.', 'RRRRR', '.RRR.', '..R..'], { R: '#ffffff' }, 58, 98); p.map(['.R.R.', 'RRRRR', '.RRR.', '..R..'], { R: '#ffffff' }, 129, 98);
   }, null);
 }
 

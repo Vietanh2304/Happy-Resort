@@ -323,13 +323,15 @@ function SceneContent(p: WorldProps) {
   const theirs = live.theirs;
   // Trên đồi: cả hai cùng bấm "Tựa vai" thì ngồi sát lại
   const cuddle = scene === 'hill' && p.partnerHere && live.mine.act === 'cuddle' && theirs?.act === 'cuddle';
-  const nudge = (seat: (Pt & { left: boolean }) | undefined) => (seat && cuddle ? { ...seat, x: seat.x + (seat.left ? -4 : 4) } : seat);
+  // đu quay: hôn / ôm thì hai đứa xích lại, quay sang nhau
+  const wheelLove = scene === 'wheel' && !!p.couple && p.partnerHere;
+  const nudge = (seat: (Pt & { left: boolean }) | undefined) => (seat && wheelLove ? { ...seat, x: 96 + (seat.left ? 1 : -1) * (p.couple!.kind === 'hug' ? 3 : 3.5) } : seat && cuddle ? { ...seat, x: seat.x + (seat.left ? -4 : 4) } : seat);
   const mySeat = nudge(seats?.[p.firstSeat ? 0 : 1]);
   const theirSeat = nudge(seats?.[p.firstSeat ? 1 : 0]);
   const phase = p.myView.phase;
   const dark = phase === 'night' || phase === 'sunset';
   const realSky = scene !== 'hill' || p.hillReal;
-  const sitting = ['cinema', 'hill', 'restaurant', 'cafe', 'wheel', 'camp', 'twin'].includes(scene);
+  const sitting = ['cinema', 'hill', 'restaurant', 'cafe', 'wheel', 'camp', 'twin'].includes(scene) && !wheelLove;
   const inTub = (who: typeof live.mine | null) => scene === 'bathroom' && who?.act === 'bath';
   const bathLook = (look: Profile['avatar']) => ({ ...look, outfit: 15, acc: 12, design: null });
   const myTub = inTub(live.mine) ? BATH.seats[p.firstSeat ? 0 : 1] : null;

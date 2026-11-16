@@ -448,6 +448,10 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   function coupleDo(kind: 'hug' | 'kiss', hold = false) {
     const icon = kind === 'hug' ? '🤗' : '😘💋';
     if (!partnerHere || !theirs) return toast(`${icon} ${partnerName} cần ở cùng chỗ với bạn mới ${kind === 'hug' ? 'ôm' : 'hôn'} được`);
+    if (scene === 'wheel') {   // trong cabin đu quay: hai đứa xích lại, quay sang hôn / ôm nhau thật
+      const side: 'L' | 'R' = firstSeat ? 'L' : 'R';
+      showCouple({ kind, at: Date.now(), mySide: side }, hold); sendEvent('couple-act', { kind, side, hold }); live.say(kind === 'hug' ? '🤗💕' : '💋'); return;
+    }
     if (!SCENES[scene].walk) { live.say(`${icon} 💕`); return; }   // đang ngồi ghế cố định: gửi cử chỉ thôi
     const side: 'L' | 'R' = live.mine.pos.x <= theirs.pos.x ? 'L' : 'R';
     const gap = kind === 'hug' ? 6 : 7;
