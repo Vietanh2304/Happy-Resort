@@ -31,7 +31,7 @@ import {
 import type { Live } from '../lib/useLive';
 import { outWx, weatherIcon, type Weather } from '../lib/weather';
 import {
-  ARCADE, BATH, BEACH, RIDE_MS, BUILDINGS, FARM, GARDEN, HOUSE, ROOM, SCENES, SEATS, SHOP, TOWN, WALL_L, WALL_R, RESERVED, farmCell, roomPt, walkTarget, wallSlot,
+  ARCADE, BATH, BEACH, RIDE_MS, BUILDINGS, FARM, GARDEN, HOUSE, SCENES, SEATS, SHOP, TOWN, WALL_L, WALL_R, RESERVED, farmCell, roomPt, walkTarget, wallSlot,
   type GameId, type Pt, type SceneId,
   SIT_ACTS,
   BACK_ACTS,
@@ -39,7 +39,7 @@ import {
   vanitySeat,
   vanityMirror,
   NURSERY,
-  BABY_OUT, roomGridIn, roomPtIn } from '../lib/world';
+  BABY_OUT, roomGridIn, roomPtIn, roomOf } from '../lib/world';
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
 import { LoungeContent } from './Lounge';
@@ -515,6 +515,7 @@ function SceneContent(p: WorldProps) {
 
       {(scene === 'house' || scene === 'bedroom' || scene === 'bathroom' || scene === 'kidroom') && <RoomContent {...p} dark={phase === 'night'} />}
       {scene === 'kidroom' && <KidRoomFront dark={phase === 'night' || phase === 'sunset'} />}
+      {scene === 'bedroom' && <BedroomFront dark={phase === 'night' || phase === 'sunset'} />}
 
       {scene === 'shop' && (
         <>
@@ -1031,7 +1032,7 @@ function PetSprite({ pet, x, y, onClick, sit, sleepy, trick }: { pet: Pet; x: nu
 
 /** Vị trí gối thứ `slot` trên một chiếc giường đã bày (tọa độ cảnh) */
 function pillow(d: Decor, slot: number) {
-  const foot = roomPt(d.x + 1, d.y + 1);
+  const foot = roomPtIn(d.island, d.x + 1, d.y + 1);
   const [lx, ly] = BED_PILLOWS[slot];
   const ox = lx - 2, oy = ly - 3;
   const [gx, gy] = d.rot ? [oy, ox] : [ox, oy];
@@ -1063,7 +1064,7 @@ function BedLayer(p: WorldProps & { myBed?: Decor; theirBed?: Decor }) {
     <>
       {p.myBed && head(p.me.avatar, p.myBed, mySlot, live.mine.act === 'sleep', live.bubbles.me)}
       {p.theirBed && p.partner && head(p.partner.avatar, p.theirBed, theirSlot, theirs?.act === 'sleep', live.bubbles.partner)}
-      {beds.map(d => { const f = roomPt(d.x + 1, d.y + 1); return <Spr key={`q-${d.id}`} sprite={bedQuiltSprite()} x={f.x} y={f.y} z={Math.round(f.y) + 2} flip={!!d.rot} />; })}
+      {beds.map(d => { const f = roomPtIn(d.island, d.x + 1, d.y + 1); return <Spr key={`q-${d.id}`} sprite={bedQuiltSprite()} x={f.x} y={f.y} z={Math.round(f.y) + 2} flip={!!d.rot} />; })}
       {sleeping && !intimate && <div className="sleep-dim" />}
       {intimate && (
         <>
@@ -1263,6 +1264,18 @@ function KidInRoom({ idx, order, mode, tuck, sprite, walk, sleep, sad, onClick, 
   );
 }
 /** Phòng các con lúc tối: đèn ngủ nấm & hai đèn bàn toả sáng */
+/** Phòng ngủ hoàng gia: đèn chùm, đèn tường nến toả sáng buổi tối & cánh hoa hồng bay lất phất */
+function BedroomFront({ dark }: { dark: boolean }) {
+  const lights = [roomPtIn('bedroom', 0, 1.3, 27), roomPtIn('bedroom', 0, 5.2, 27), roomPtIn('bedroom', 1.2, 0, 27), roomPtIn('bedroom', 9.5, 0, 27)];
+  return (
+    <>
+      {dark && lights.map((g, i) => <Glow key={i} x={g.x} y={g.y} r={16} />)}
+      {dark && <Glow x={108} y={20} r={34} />}
+      <div className="petal-fall">{Array.from({ length: 9 }, (_, i) => <i key={i} style={{ left: `${8 + ((i * 37) % 86)}%`, animationDelay: `${i * 1.7}s`, animationDuration: `${11 + (i % 4) * 2}s` }} />)}</div>
+    </>
+  );
+}
+
 function KidRoomFront({ dark }: { dark: boolean }) {
   if (!dark) return null;
   const n = roomPtIn('kidroom', 3.5, 0.5, 14);
@@ -1401,6 +1414,7 @@ function FestFall({ theme, date }: { theme: Theme; date: string }) {
 // ───────── Phòng (nhà gỗ, phòng ngủ) ─────────
 
 function RoomContent(p: WorldProps & { dark: boolean }) {
+  const big = p.scene === 'kidroom' || p.scene === 'bedroom';
   const { scene, go, enter, on, editing } = p;
   const s = useScale();
   const island = scene;
@@ -1424,7 +1438,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
       {decor.map(d => {
         const sel = d.id === p.selectedId ? 'selected' : '';
         if (isWallCell(island, d.y)) {
-          const c = wallSlot(d.y, d.x);
+          const c = wallSlot(d.y, d.x, 25, scene);
           return <WallSpr key={d.id} sprite={decorSprite(d)} x={c.x} y={c.y} left={d.y === WALL_L} onHold={editing ? undefined : () => on.pickDecor(d)} className={`decor ${sel} ${d.id === p.ghost?.movingId ? 'moving' : ''}`} title={item(d.item_id).name} />;
         }
         const art = ART[d.item_id];
@@ -1442,9 +1456,9 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
               onHold={editing || d.id.startsWith('kid:') ? undefined : () => on.pickDecor(d)} className={`decor ${sel} ${d.id === p.ghost?.movingId ? 'moving' : ''} ${cellsOf(scene, d.item_id, d.x, d.y, d.rot ?? 0).some(([cx, cy]) => RESERVED[scene]?.(cx, cy)) ? 'over-door' : ''}`}
               title={d.item_id === 'kid_wardrobe' && !editing ? '👕 Tủ đồ của các con — chọn đồ cho bé mặc' : d.item_id === 'wardrobe' && !editing ? '👗 Tủ đồ — thay trang phục' : d.item_id === 'dresser' && !editing ? '💄 Bàn trang điểm — ngồi trang điểm' : d.item_id === 'bed' && !editing ? '🛏️ Giường — ngủ, âu yếm' : item(d.item_id).name}
               onClick={d.item_id === 'kid_wardrobe' && !editing ? () => go(roomPtIn(scene, d.x + 0.4, d.y + 1.45), () => on.kidCloset?.())
-                : d.item_id === 'wardrobe' && !editing ? () => go(roomPt(d.x + 0.5, d.y + 1.6), on.wardrobe)
+                : d.item_id === 'wardrobe' && !editing ? () => go(roomPtIn(scene, d.x + 0.5, d.y + 1.6), on.wardrobe)
                 : d.item_id === 'dresser' && !editing ? () => on.makeup(vanitySeat(d))
-                : d.item_id === 'bed' && !editing ? () => go(walkTarget(scene, roomPt(d.x + 1.5, d.y - 0.5)) ?? p.live.mine.pos, () => on.bed(d)) : undefined} />
+                : d.item_id === 'bed' && !editing ? () => go(walkTarget(scene, roomPtIn(scene, d.x + 1.5, d.y - 0.5)) ?? p.live.mine.pos, () => on.bed(d)) : undefined} />
             {d.item_id === 'dresser' && (() => {
               const st = vanitySeat(d), mi = vanityMirror(d);
               // ai đang ngồi trang điểm ở ghế này → hiện mặt người đó trong gương + cây son đưa lên đưa xuống
@@ -1468,13 +1482,13 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
       {!editing && (
         <>
           {scene === 'house' && <Hot x={54} y={38} w={44} h={36} title="Bếp — nấu ăn" onClick={() => go(HOUSE.kitchen.stand, on.kitchen)} />}
-          <Hot x={scene === 'kidroom' ? 12 : 20} y={scene === 'kidroom' ? 62 : 50} w={16} h={38} title={scene === 'house' ? 'Vào phòng ngủ' : scene === 'bedroom' || scene === 'kidroom' ? 'Ra phòng khách' : 'Về phòng ngủ'}
-            onClick={() => go(HOUSE.toBedroom, () => (scene === 'bathroom' ? enter('bedroom', BATH.toBath) : scene === 'kidroom' ? enter('house', HOUSE.toKid) : enter(scene === 'house' ? 'bedroom' : 'house', SCENES.bedroom.spawn)))} />
-          <Tag x={scene === 'kidroom' ? 20 : 28} y={scene === 'kidroom' ? 56 : 44} className="label">{scene === 'house' ? '🛏️' : scene === 'bedroom' || scene === 'kidroom' ? '🛋️' : '🛏️'}</Tag>
+          <Hot x={big ? 12 : 20} y={big ? 62 : 50} w={16} h={38} title={scene === 'house' ? 'Vào phòng ngủ' : scene === 'bedroom' || scene === 'kidroom' ? 'Ra phòng khách' : 'Về phòng ngủ'}
+            onClick={() => go(big ? roomPtIn(scene, 0.3, 8.6) : HOUSE.toBedroom, () => (scene === 'bathroom' ? enter('bedroom', BATH.toBath) : scene === 'kidroom' ? enter('house', HOUSE.toKid) : enter(scene === 'house' ? 'bedroom' : 'house', SCENES.bedroom.spawn)))} />
+          <Tag x={big ? 20 : 28} y={big ? 56 : 44} className="label">{scene === 'house' ? '🛏️' : scene === 'bedroom' || scene === 'kidroom' ? '🛋️' : '🛏️'}</Tag>
           {scene === 'bedroom' && (
             <>
-              <Hot x={156} y={50} w={16} h={38} title="Vào phòng tắm" onClick={() => go(BATH.toBath, () => enter('bathroom'))} />
-              <Tag x={164} y={44} className="label" onClick={() => go(BATH.toBath, () => enter('bathroom'))}>🛁</Tag>
+              <Hot x={183} y={56} w={16} h={38} title="Vào phòng tắm" onClick={() => go(BATH.toBath, () => enter('bathroom'))} />
+              <Tag x={191} y={50} className="label" onClick={() => go(BATH.toBath, () => enter('bathroom'))}>🛁</Tag>
             </>
           )}
           {scene === 'house' && !p.pet && (
@@ -1630,11 +1644,11 @@ function WallSpr({ sprite, x, y, left, className, title, onHold }: { sprite: Spr
 function RoomGhost({ ghost, island, decor }: { ghost: Ghost; island: string; decor: Decor[] }) {
   const cls = `ghost ${ghost.why ? 'bad' : 'ok'}`;
   if (isWallCell(island, ghost.y)) {
-    const c = wallSlot(ghost.y, ghost.x);
+    const c = wallSlot(ghost.y, ghost.x, 25, island);
     return <WallSpr sprite={itemSprite(ghost.itemId)} x={c.x} y={c.y} left={ghost.y === WALL_L} className={cls} title="" />;
   }
   const art = ART[ghost.itemId];
-  const foot = art ? roomPt(ghost.x + 1, ghost.y + 1) : { x: roomPt(ghost.x + 0.5, ghost.y + 0.5).x, y: roomPt(ghost.x + 0.5, ghost.y + 0.5).y + 4 };
+  const foot = art ? roomPtIn(island, ghost.x + 1, ghost.y + 1) : { x: roomPtIn(island, ghost.x + 0.5, ghost.y + 0.5).x, y: roomPtIn(island, ghost.x + 0.5, ghost.y + 0.5).y + 4 };
   const under = ghost.top ? surfaceAt(island, decor, ghost.x, ghost.y, ghost.movingId) : undefined;
   if (under) foot.y -= SURFACE[under.item_id] ?? 0;
   return <Spr sprite={itemSprite(ghost.itemId)} x={foot.x} y={foot.y} z={460} flip={!!ghost.rot} className={cls} />;
@@ -1643,9 +1657,10 @@ function RoomGhost({ ghost, island, decor }: { ghost: Ghost; island: string; dec
 function RoomCells(p: WorldProps) {
   const s = useScale();
   const cells: ReactNode[] = [];
-  for (let gy = 0; gy < ROOM.n; gy++) {
-    for (let gx = 0; gx < ROOM.n; gx++) {
-      const t = roomPt(gx, gy), l = roomPt(gx, gy + 1);
+  const RN = roomOf(p.scene).n, rp = (gx: number, gy: number) => roomPtIn(p.scene, gx, gy);
+  for (let gy = 0; gy < RN; gy++) {
+    for (let gx = 0; gx < RN; gx++) {
+      const t = rp(gx, gy), l = rp(gx, gy + 1);
       const { hint, events } = cellBind(p, gx, gy);
       cells.push(
         <button key={`f${gx}-${gy}`} className={`px-cell iso-cell ${hint}`} aria-label={`Ô sàn ${gx + 1},${gy + 1}`}
@@ -1654,8 +1669,8 @@ function RoomCells(p: WorldProps) {
     }
   }
   for (const row of [WALL_L, WALL_R]) {
-    for (let i = 0; i < ROOM.n; i++) {
-      const base = row === WALL_L ? roomPt(0, i + 1) : roomPt(i, 0);
+    for (let i = 0; i < RN; i++) {
+      const base = row === WALL_L ? rp(0, i + 1) : rp(i, 0);
       const { hint, events } = cellBind(p, i, row);
       cells.push(
         <button key={`w${row}-${i}`} className={`px-cell wall-cell ${hint}`} aria-label={`Tường ${row === WALL_L ? 'trái' : 'phải'} ${i + 1}`}

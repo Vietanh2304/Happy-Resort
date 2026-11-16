@@ -19,7 +19,6 @@ export interface Art {
 
 const WOOD = '#c99366';
 const WOOD_D = '#a8703f';
-const CREAM = '#fbefdc';
 const PINK = '#f4a7b9';
 const LEAF = '#a5d470';
 
@@ -41,19 +40,57 @@ function leaves(p: Pen, cx: number, cy: number, r: number, base = LEAF, seed = 0
 
 // ───────── Nội thất (isometric) ─────────
 
-const bed = () => isoSprite('bed:v3', 2, 3, 30, q => {
-  const w = shade(WOOD);
-  q.box(0, 0, 0, 2, 0.3, 20, w);                                // đầu giường
-  bearEars(q, ...xy(q.pt(1, 0.15, 21)), WOOD_D);
-  q.box(0, 0.3, 0, 2, 2.7, 6, w);                               // khung
-  q.box(0.1, 0.35, 6, 1.8, 2.55, 3, shade(CREAM, 0.6));          // nệm
-  q.box(0.2, 0.5, 9, 0.75, 0.55, 3, shade('#fff8ee', 0.5));      // gối có tai thỏ
-  q.box(1.05, 0.5, 9, 0.75, 0.55, 3, shade('#fff8ee', 0.5));
-  for (const g of [0.45, 1.3]) { const [x, y] = q.pt(g, 0.7, 12); q.px(x - 1, y - 1, PINK); q.px(x + 1, y - 1, PINK); }
-  q.box(0.05, 1.2, 6, 1.9, 1.75, 6, shade('#8e8e98'));           // chăn bông xám đậm, mặt ngoài mịn
-  q.flat(0.05, 1.2, 12, 1.9, 0.35, '#ffffff');                    // mép gập: lớp lót bông trắng bên trong
+const ROYAL = '#9a2244', ROYAL_D = '#6e1632', VELVET = '#c23a62', GOLD = '#e8b84a', GOLD_L = '#ffe08a', BLUSH = '#f8c4d2';
+/** rèm voan buông từ màn trướng, thắt eo bằng dây vàng, xoè ra dưới chân (mặt phẳng gx cố định) */
+function drape(q: IsoPen, gx: number) {
+  for (let z = 0; z <= 59; z++) {
+    const w = z > 26 && z < 34 ? 0.14 : z >= 34 ? 0.14 + (z - 34) / 25 * 0.2 : 0.14 + (26 - z) / 26 * 0.22, c0 = 0.42;
+    const [x0, y0] = q.pt(gx, c0 - w, z), [x1] = q.pt(gx, c0 + w, z);
+    for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) { const k = Math.abs(x - x0); q.px(x, y0 - Math.round((x - x0) / 2), k % 3 === 0 ? mix(BLUSH, '#c86a8a', 0.35) : k % 3 === 1 ? BLUSH : '#fde6ee'); }
+  }
+}
+/** Giường vua & hoàng hậu: đầu giường nhung đỏ đính nút vàng hình vòm có vương miện, màn trướng treo trên đầu, rèm voan hồng buộc dây vàng, chân giường mạ vàng */
+const bed = () => isoSprite('bed:v4', 2, 3, 64, q => {
+  const v = shade(ROYAL), g = shade(GOLD, 0.7);
+  // hai cột vàng phía sau đỡ màn trướng
+  q.box(0, 0, 0, 0.16, 0.16, 60, g); q.box(1.84, 0, 0, 0.16, 0.16, 60, g);
+  // rèm voan bên trái (mặt gx = 0), buộc túm giữa bằng dây vàng
+  drape(q, 0);
+  { const [x, y] = q.pt(0, 0.5, 30); q.rect(x - 2, y, 5, 2, GOLD); q.px(x, y + 2, GOLD_L); q.px(x, y + 3, GOLD); }
+  // đầu giường nhung: khối + vòm cong + vương miện
+  q.box(0, 0.06, 0, 2, 0.24, 24, v);
+  const arch = (z0: number, h: number, inset: number) => { const pts: [number, number][] = [q.pt(inset, 0.3, 6)]; for (let s2 = 0; s2 <= 20; s2++) { const u = s2 / 20, gx = inset + u * (2 - inset * 2); pts.push(q.pt(gx, 0.3, z0 + Math.sin(u * Math.PI) * h)); } pts.push(q.pt(2 - inset, 0.3, 6)); return pts; };
+  q.poly(arch(24, 16, 0), GOLD); q.poly(arch(23, 14, 0.12), ROYAL); q.poly(arch(22, 11, 0.24), VELVET);
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 6; c++) { const gx = 0.4 + c * 0.24 + (r % 2) * 0.12; if (gx > 1.7) continue; const [x, y] = q.pt(gx, 0.3, 12 + r * 6); q.px(x, y, r === 3 && (c === 0 || c === 5) ? VELVET : GOLD_L); q.px(x + 1, y + 1, ROYAL_D); }
+  { const [x, y] = q.pt(1, 0.3, 41); // vương miện
+    q.rect(x - 4, y, 9, 3, GOLD); for (const dx of [-4, -2, 0, 2, 4]) q.rect(x + dx, y - (dx === 0 ? 4 : Math.abs(dx) === 2 ? 2 : 3), 1, 4, GOLD); q.px(x, y - 5, GOLD_L); q.px(x - 4, y - 4, GOLD_L); q.px(x + 4, y - 4, GOLD_L);
+    q.px(x - 2, y + 1, '#e8406a'); q.px(x, y + 1, '#5ac8f0'); q.px(x + 2, y + 1, '#e8406a'); q.rect(x - 4, y + 3, 9, 1, '#a8782a'); }
+  // màn trướng nhung treo trên đầu giường, viền tua vàng hình vỏ sò
+  q.flat(0, 0, 60, 2, 0.95, ROYAL_D);
+  q.poly([q.pt(0, 0.95, 60), q.pt(2, 0.95, 60), q.pt(2, 0.95, 53), q.pt(0, 0.95, 53)], ROYAL);
+  q.poly([q.pt(2, 0, 60), q.pt(2, 0.95, 60), q.pt(2, 0.95, 53), q.pt(2, 0, 53)], mix(ROYAL, '#3b2416', 0.2));
+  for (let k = 0; k < 10; k++) { const [x, y] = q.pt(0.1 + k * 0.2, 0.95, 53); q.rect(x - 1, y, 3, 1, GOLD); q.px(x, y + 1, GOLD); q.px(x, y + 2, GOLD_L); }
+  { const [x0, y0] = q.pt(0, 0.95, 60), [x1, y1] = q.pt(2, 0.95, 60); for (let x = Math.min(x0, x1); x <= Math.max(x0, x1); x++) q.px(x, Math.round(y0 + (y1 - y0) * (x - x0) / (x1 - x0 || 1)), GOLD_L); }
+  // khung giường nhung, viền chỉ vàng & tua rua
+  q.box(0, 0.3, 0, 2, 2.7, 6, v);
+  for (const z of [1, 5]) { q.poly([q.pt(0, 3, z), q.pt(2, 3, z), q.pt(2, 3, z + 1), q.pt(0, 3, z + 1)], GOLD); q.poly([q.pt(2, 0.3, z), q.pt(2, 3, z), q.pt(2, 3, z + 1), q.pt(2, 0.3, z + 1)], GOLD); }
+  // nệm lụa, gối viền vàng
+  q.box(0.1, 0.35, 6, 1.8, 2.55, 3, shade('#fff4e6', 0.6));
+  q.box(0.2, 0.5, 9, 0.75, 0.55, 3, shade('#fff8ee', 0.5)); q.box(1.05, 0.5, 9, 0.75, 0.55, 3, shade('#fff8ee', 0.5));
+  for (const gx of [0.2, 1.05]) q.poly([q.pt(gx, 1.05, 9), q.pt(gx + 0.75, 1.05, 9), q.pt(gx + 0.75, 1.05, 10), q.pt(gx, 1.05, 10)], GOLD);
+  for (const g2 of [0.45, 1.3]) { const [x, y] = q.pt(g2, 0.7, 12); q.px(x - 1, y - 1, PINK); q.px(x + 1, y - 1, PINK); }
+  // chăn bông xám (giữ nguyên màu), mép gập trắng, rắc cánh hoa hồng
+  q.box(0.05, 1.2, 6, 1.9, 1.75, 6, shade('#8e8e98'));
+  q.flat(0.05, 1.2, 12, 1.9, 0.35, '#ffffff');
   q.flat(0.05, 1.55, 12, 1.9, 0.06, '#e4e4ea');
-  q.box(0, 2.9, 0, 2, 0.12, 9, w);                               // chân giường
+  for (const [gx, gy, c] of [[0.4, 2.0, '#e8406a'], [0.9, 2.4, '#ff7a9a'], [1.5, 1.9, '#e8406a'], [1.2, 2.7, '#c82a4a'], [0.6, 2.8, '#ff7a9a'], [1.7, 2.5, '#e8406a']] as const) { const [x, y] = q.pt(gx, gy, 12); q.rect(x, y, 2, 1, c); q.px(x, y + 1, mix(c, '#000000', 0.2)); }
+  { const [x, y] = q.pt(1, 2.3, 12); q.px(x - 1, y, '#e8406a'); q.px(x + 1, y, '#e8406a'); q.rect(x - 1, y + 1, 3, 1, '#e8406a'); q.px(x, y + 2, '#e8406a'); }
+  // chân giường mạ vàng + hai cột trụ có quả cầu
+  q.box(0, 2.88, 0, 2, 0.12, 13, v); q.flat(0, 2.88, 13, 2, 0.12, GOLD);
+  for (const gx of [0, 1.84]) { q.box(gx, 2.84, 0, 0.16, 0.16, 18, g); const [x, y] = q.pt(gx + 0.08, 2.92, 19); q.ellipse(x, y, 1.8, 1.8, GOLD_L); }
+  // rèm voan bên phải (mặt gx = 2) trước đầu giường
+  drape(q, 2);
+  { const [x, y] = q.pt(2, 0.5, 30); q.rect(x - 2, y, 5, 2, GOLD); q.px(x, y + 2, GOLD_L); q.px(x, y + 3, GOLD); }
 });
 
 const wardrobe = () => isoSprite('wardrobe', 2, 1, 40, q => {

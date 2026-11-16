@@ -1904,3 +1904,11 @@ textarea { resize: vertical; }
 .lite .reef-rays i, .lite .kelp-sway, .lite .coral-neon, .lite .fireflies i, .lite .reef-motes i, .lite .chip.glow, .lite .chip.ping { animation-play-state: paused !important; }
 .lite .reef-motes i:nth-child(2n), .lite .fireflies i:nth-child(2n), .lite .reef-bubbles i:nth-child(3n) { display: none; }
 .lite .reef-rays, .lite .reef-caustics { mix-blend-mode: normal; opacity: .35; }
+
+/* Phòng ngủ hoàng gia: cánh hoa hồng rơi lất phất */
+.petal-fall { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 900; }
+.petal-fall i { position: absolute; top: -6%; width: 6px; height: 4px; border-radius: 60% 0 60% 0; background: #e8406a; opacity: .85; animation: petal-drop 12s linear infinite; }
+.petal-fall i:nth-child(2n) { background: #ff9ab4; width: 5px; }
+.petal-fall i:nth-child(3n) { background: #c82a4a; }
+@keyframes petal-drop { 0% { transform: translate(0, 0) rotate(0); opacity: 0; } 8% { opacity: .85; } 50% { transform: translate(18px, 55vh) rotate(200deg); } 92% { opacity: .8; } 100% { transform: translate(-6px, 108vh) rotate(420deg); opacity: 0; } }
+.lite .petal-fall i:nth-child(n+5) { display: none; }

@@ -24,7 +24,7 @@ export const ROOM = { ox: 96, oy: 50, n: 8, wallH: 44 };
 export const roomPt = (gx: number, gy: number, z = 0): Pt => ({ x: ROOM.ox + (gx - gy) * HW, y: ROOM.oy + (gx + gy) * HH - z });
 /** Phòng các con rộng hơn: sàn 10×10 ô (cảnh 216×164) */
 export const KROOM = { ox: 108, oy: 52, n: 10, wallH: 44 };
-export const roomOf = (scene: string) => (scene === 'kidroom' ? KROOM : ROOM);
+export const roomOf = (scene: string) => (scene === 'kidroom' || scene === 'bedroom' ? KROOM : ROOM);
 export const roomPtIn = (scene: string, gx: number, gy: number, z = 0): Pt => { const R = roomOf(scene); return { x: R.ox + (gx - gy) * HW, y: R.oy + (gx + gy) * HH - z }; };
 export function roomGridIn(scene: string, p: Pt) { const R = roomOf(scene), a = (p.x - R.ox) / HW, b = (p.y - R.oy) / HH; return { gx: (a + b) / 2, gy: (b - a) / 2 }; }
 export function roomGrid(p: Pt) {
@@ -33,8 +33,8 @@ export function roomGrid(p: Pt) {
 }
 /** Ô tường: tường trái là hàng y = 10, tường phải là hàng y = 11 (x = vị trí dọc tường) */
 export const WALL_L = 10, WALL_R = 11;
-export function wallSlot(row: number, i: number, z = 25): Pt {
-  return row === WALL_L ? roomPt(0, i + 0.5, z) : roomPt(i + 0.5, 0, z);
+export function wallSlot(row: number, i: number, z = 25, scene = 'house'): Pt {
+  return row === WALL_L ? roomPtIn(scene, 0, i + 0.5, z) : roomPtIn(scene, i + 0.5, 0, z);
 }
 
 export const SCENES: Record<SceneId, SceneDef> = {
@@ -56,7 +56,7 @@ export const SCENES: Record<SceneId, SceneDef> = {
   farm: { name: 'Nông trại', icon: '🌾', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 58, y1: 188 }, spawn: { x: 128, y: 182 } },
   arcade: { name: 'Khu vui chơi', icon: '🎮', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 92, y1: 140 }, spawn: { x: 96, y: 136 } },
   house: { name: 'Nhà gỗ', icon: '🏡', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(5, 7.4) },
-  bedroom: { name: 'Phòng ngủ', icon: '🛏️', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(1.2, 6.6) },
+  bedroom: { name: 'Phòng ngủ', icon: '🛏️', w: 216, h: 164, outdoor: false, walk: 'room', spawn: roomPtIn('bedroom', 1.2, 8.8) },
   kidroom: { name: 'Phòng các con', icon: '🧸', w: 216, h: 164, outdoor: false, walk: 'room', spawn: roomPtIn('kidroom', 1.2, 8.8) },
   bathroom: { name: 'Phòng tắm', icon: '🛁', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(1.2, 6.6) },
   shop: { name: 'Cửa hàng', icon: '🛍️', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 94, y1: 140 }, spawn: { x: 96, y: 136 } },
@@ -149,7 +149,7 @@ export const BATH = {
   front: roomPt(6, 4),
   seats: [{ ...roomPt(3.1, 3.3, 11), left: false }, { ...roomPt(4.9, 3.3, 11), left: true }] as (Pt & { left: boolean })[],
   stand: roomPt(4, 4.7),
-  toBath: roomPt(6.8, 0.4),      // cửa phòng ngủ → phòng tắm (tường phải)
+  toBath: roomPtIn('bedroom', 8.3, 0.4),      // cửa phòng ngủ → phòng tắm (tường phải)
   toilet: roomPt(0.6, 5.5),      // bồn cầu sát tường trái
   toiletStand: roomPt(1.7, 5.5),
   peeStand: { x: roomPt(1.7, 5.5).x - 6, y: roomPt(1.7, 5.5).y - 2 },   // nam đứng sát, che miệng bồn cầu
@@ -157,14 +157,14 @@ export const BATH = {
 };
 
 /** Ô chỉ cấm đặt đồ nhưng vẫn đi qua được (thảm cửa, lối vào phòng tắm) */
-export const WALK_THROUGH = (scene: string, x: number, y: number) => (scene === 'house' && (y === 7 || (x >= 6 && y === 0))) || (scene === 'bedroom' && x >= 6 && y <= 1) || (scene === 'kidroom' && x <= 1 && y >= 8);
+export const WALK_THROUGH = (scene: string, x: number, y: number) => (scene === 'house' && (y === 7 || (x >= 6 && y === 0))) || (scene === 'bedroom' && ((x >= 7 && x <= 8 && y <= 1) || (x <= 1 && y >= 8))) || (scene === 'kidroom' && x <= 1 && y >= 8);
 
 /** Ô sàn/tường đã có đồ cố định (bếp, cửa, cửa sổ) — không đặt đồ trang trí lên */
 export const RESERVED: Record<string, (x: number, y: number) => boolean> = {
   house: (x, y) => (y < 8 && x === 0 && y <= 4) || (y === WALL_L && (x <= 4 || x >= 6)) || (y === WALL_R && x >= 3) || (y === 7 && x >= 4 && x <= 5) || (y === 0 && x >= 6),
   kidroom: (x, y) => (y < 10 && x <= 1 && y >= 8) || (y === WALL_L && x >= 8),
   // lối vào phòng tắm (góc tường phải phía trong) để trống, không đặt tủ che cửa
-  bedroom: (x, y) => (y < 8 && x >= 6 && y <= 1) || (y === WALL_L && x >= 6) || (y === WALL_R && x >= 3),
+  bedroom: (x, y) => (y < 10 && ((x >= 7 && x <= 8 && y <= 1) || (x <= 1 && y >= 8))) || (y === WALL_L && x >= 8) || (y === WALL_R && x >= 2 && x <= 8),
   bathroom: (x, y) => (y < 8 && x >= 2 && x <= 5 && y >= 1 && y <= 3) || (y < 8 && x === 0 && ((y >= 1 && y <= 2) || y === 5))
     || (y === WALL_L && (x >= 6 || (x >= 1 && x <= 2))) || (y === WALL_R && x >= 3 && x <= 5),
   garden: () => false,
@@ -208,17 +208,17 @@ export const SIT_ACTS = ['sit', 'soak', 'mask', 'jar', 'paint', 'poop', 'peesit'
 /** Đứng ở bồn rửa mặt (sau lưng bồn tắm) */
 export const SINK_ACTS = ['wash', 'brush', 'face'];
 /** Ghế đôn ngay giữa phía trước bàn trang điểm (đồ 'dresser' chiếm ô x-1..x; xoay thì chiếm y-1..y, mặt quay về +x) */
-export const vanitySeat = (d: { x: number; y: number; rot?: number }) => (d.rot ? roomPt(d.x + 1.45, d.y) : roomPt(d.x, d.y + 1.45));
+export const vanitySeat = (d: { x: number; y: number; rot?: number; island?: string }) => { const s = d.island ?? 'house'; return d.rot ? roomPtIn(s, d.x + 1.45, d.y) : roomPtIn(s, d.x, d.y + 1.45); };
 /** Tâm gương của bàn trang điểm (cao ~19 px trên mặt sàn) */
-export const vanityMirror = (d: { x: number; y: number; rot?: number }) => (d.rot ? roomPt(d.x + 0.3, d.y, 19) : roomPt(d.x, d.y + 0.3, 19));
+export const vanityMirror = (d: { x: number; y: number; rot?: number; island?: string }) => { const s = d.island ?? 'house'; return d.rot ? roomPtIn(s, d.x + 0.3, d.y, 19) : roomPtIn(s, d.x, d.y + 0.3, 19); };
 /** Động tác đứng quay lưng (đi tè, rửa tay) */
 export const BACK_ACTS = ['pray', 'wall', 'gaze', 'firework', 'jar', 'pee', 'wash', 'brush', 'face', 'makeup'];
 
 /** Chăm bé sơ sinh: nôi (phòng ngủ) + chỗ đứng cạnh nôi; bồn tắm em bé (phòng tắm) + chỗ đứng */
 export const NURSERY = {
-  cradle: roomPt(4.6, 2.6), cradleStand: roomPt(4.7, 3.7),
-  cradles: [roomPt(4.6, 2.6), roomPt(5.9, 2.4), roomPt(4.4, 4.2)],
-  cradleStands: [roomPt(4.7, 3.7), roomPt(6.2, 3.5), roomPt(3.6, 4.6)],
+  cradle: roomPtIn('bedroom', 4.6, 2.6), cradleStand: roomPtIn('bedroom', 4.7, 3.7),
+  cradles: [roomPtIn('bedroom', 4.6, 2.6), roomPtIn('bedroom', 5.9, 2.4), roomPtIn('bedroom', 4.4, 4.2)],
+  cradleStands: [roomPtIn('bedroom', 4.7, 3.7), roomPtIn('bedroom', 6.2, 3.5), roomPtIn('bedroom', 3.6, 4.6)],
   babyTub: roomPt(5.4, 5.6), babyTubStand: roomPt(4.5, 5.9),
 };
 /** Động tác chăm bé: bé không còn nằm trong nôi khi đang được bế / bú / tắm */
