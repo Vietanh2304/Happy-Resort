@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { albumCtx } from './AlbumSave';
 import { InviteBanner } from './InviteBanner';
 import * as api from '../lib/api';
 import { animal, content, item, type Combo } from '../lib/content';
@@ -116,6 +117,7 @@ const FULLSCREEN: GameId[] = ['golf', 'snow', 'boat', 'hide'];
 
 export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }) {
   const coupleId = me.couple_id;
+  albumCtx.me = me;
   const now = useNow(30_000);
   // giờ trong game = giờ gia đình (Đài Loan) cho cả hai; realTime = giờ thật bên mình, chỉ dùng ở Đài quan sát
   const myTime = familyTime(now), realTime = localTime(me.tz, now);

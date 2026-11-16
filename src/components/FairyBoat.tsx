@@ -1,6 +1,7 @@
 // Thuyền cổ tích: hai người ngồi thuyền trôi trên dòng suối, qua cổng tháp đồng hồ vào 6 hầm cổ tích
 // (Kẹo Ngọt, Đáy đại dương, Rừng phép thuật, Bầu trời sao, Vũ hội lâu đài, Cổng cầu vồng) — búp bê nhảy múa, đèn lấp lánh.
 // Mỗi hầm: lớp nền xa trôi chậm (chiều sâu) + lớp cảnh chính vẽ sẵn chi tiết + đồ động vẽ từng khung; mặt nước soi bóng cả cảnh.
+import { AlbumSave } from './AlbumSave';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { characterSprite, type AvatarLook } from '../lib/sprites';
@@ -482,6 +483,7 @@ export function BoatRide({ at: t0, me, them, onExit }: { at: number; me: AvatarL
         <div className="coaster-end">
           <h3>🛶 Ảnh trên thuyền cổ tích</h3>
           {photo && <img src={photo} alt="Ảnh thuyền cổ tích" />}
+          <AlbumSave photos={photo ? [photo] : []} scene="fairyboat" caption="🛶 Thuyền cổ tích" />
           <div className="row">
             {photo && <a className="btn small ghost" href={photo} download="thuyen-co-tich.png">💾 Lưu ảnh</a>}
             <button className="btn small" onClick={() => exitRef.current()}>🚶 Lên bờ</button>

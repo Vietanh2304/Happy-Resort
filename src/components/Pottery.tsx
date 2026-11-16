@@ -1,5 +1,6 @@
 // Xưởng gốm Thanh Hà (Hội An): hai người ngồi bàn xoay — vuốt đất thành dáng bình, vẽ hoa văn, cho vào lò nung, ra lò bình men bóng.
 // Đồng bộ theo mốc thời gian `at` chung nên hai máy thấy cùng một cảnh.
+import { AlbumSave } from './AlbumSave';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { characterSprite, type AvatarLook } from '../lib/sprites';
@@ -237,6 +238,7 @@ export function PotteryRoom({ at: t0, me, mate, them, onExit }: { at: number; me
           <h3>🏺 Bình gốm tự tay nặn đã vào túi đồ!</h3>
           <p>Bạn {'⭐'.repeat(stars(total(meKey)))}{other ? ` · Người ấy ${'⭐'.repeat(stars(total(other.key)))}` : ''}</p>
           {photo && <img src={photo} alt="Ảnh xưởng gốm" />}
+          <AlbumSave photos={photo ? [photo] : []} scene="pottery" caption="🏺 Nặn gốm cùng nhau" />
           <div className="row">
             {photo && <a className="btn small ghost" href={photo} download="xuong-gom-thanh-ha.png">💾 Lưu ảnh</a>}
             <button className="btn small" onClick={() => exitRef.current()}>🚶 Ra về</button>

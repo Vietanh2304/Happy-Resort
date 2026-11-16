@@ -1,6 +1,7 @@
 // Khung chung cho các hoạt động hai người toàn màn hình (thả đèn trời, khinh khí cầu, ngắm sao, trượt băng, làm socola…):
 // rủ nhau / vào cùng / đồng bộ theo mốc `at`, bấm nhịp mũi tên hoặc nút bấm (hai máy cùng thấy), chụp ảnh, quà mang về.
 // Bắt đầu từ bất cứ đâu: window.dispatchEvent(new CustomEvent('duo-start', { detail: 'balloon' })).
+import { AlbumSave } from './AlbumSave';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { characterSprite, type AvatarLook, type Frame } from '../lib/sprites';
@@ -166,6 +167,7 @@ function DuoRoom({ k, at: sid, go, by, me, mate, them, onExit, onSolo }: { k: Du
           {BEATS.length > 0 && <p>Bạn {'⭐'.repeat(stars(total(meKey)))}{other ? ` · Người ấy ${'⭐'.repeat(stars(total(other.key)))}` : ''}</p>}
           <div className="cb-photos">{photos.map((p, i) => <a key={i} href={p} download={`${k}-${i + 1}.jpg`}><img src={p} alt={`Ảnh ${i + 1}`} /></a>)}</div>
           {photos.length > 0 && <p className="muted small-note">Bấm vào ảnh để lưu về máy</p>}
+          <div className="row"><AlbumSave photos={photos} scene={k} caption={cfg.title} /></div>
           <div className="row"><button className="btn small" onClick={() => exitRef.current()}>🚶 Về thôi</button></div>
         </div>
       )}

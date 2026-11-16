@@ -3,6 +3,7 @@
 // Bốn công đoạn như ngoài đời: xát muối cải thảo → trộn sốt ớt (ớt bột, tỏi, gừng, củ cải, hành, mắm) → đeo găng phết sốt
 // từng lá → cuộn bắp cải xếp vào chum. Cuối cùng theo phong tục, hai người đút cho nhau miếng kim chi cuộn thịt luộc (bossam).
 // Bấm mũi tên đúng nhịp như sàn nhảy; hai máy đồng bộ theo mốc `at`.
+import { AlbumSave } from './AlbumSave';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { characterSprite, type AvatarLook } from '../lib/sprites';
@@ -248,6 +249,7 @@ export function KimchiRoom({ at: t0, me, mate, them, onExit }: { at: number; me:
           <p>Cất vào tủ lạnh bếp nhà để làm Cơm chiên kim chi, Đĩa kim chi nha 🍳</p>
           <p>Bạn {'⭐'.repeat(stars(total(meKey)))}{other ? ` · Người ấy ${'⭐'.repeat(stars(total(other.key)))}` : ''}</p>
           {photo && <img src={photo} alt="Ảnh muối kim chi" />}
+          <AlbumSave photos={photo ? [photo] : []} scene="kimchi" caption="🥬 Muối kim chi cùng nhau" />
           <div className="row">
             {photo && <a className="btn small ghost" href={photo} download="muoi-kim-chi-gwangju.png">💾 Lưu ảnh</a>}
             <button className="btn small" onClick={() => exitRef.current()}>🚶 Ra về</button>

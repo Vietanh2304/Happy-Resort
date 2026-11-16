@@ -1,5 +1,6 @@
 // Disneyland: tàu lượn siêu tốc (toàn màn hình, lên dốc → lao xuống → lộn vòng → hầm sao), ngựa gỗ, tách trà xoay,
 // đoàn xe hoa diễu hành, show chiếu sáng + pháo hoa trên lâu đài, rút gươm trong đá, hoá trang hoàng gia.
+import { AlbumSave } from './AlbumSave';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import type { AnimName } from '../lib/acts';
@@ -518,6 +519,7 @@ function CoasterRide({ at: t0, phase, me, them, onExit }: { at: number; phase: P
         <div className="coaster-end">
           <h3>📸 Ảnh trên tàu lượn</h3>
           {photo && <img src={photo} alt="Ảnh tàu lượn" />}
+          <AlbumSave photos={photo ? [photo] : []} scene="coaster" caption="🎢 Tàu lượn sao băng" />
           <div className="row">
             {photo && <a className="btn small ghost" href={photo} download="tau-luon-sao-bang.png">💾 Lưu ảnh</a>}
             <button className="btn small" onClick={() => exitRef.current()}>🚶 Xuống tàu</button>

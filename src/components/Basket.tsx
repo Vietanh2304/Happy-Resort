@@ -1,6 +1,7 @@
 // Thuyền thúng rừng dừa Bảy Mẫu (Cẩm Thanh, Hội An): hai người ngồi thúng, chú lái đội nón lá chèo len rừng dừa nước.
 // Trên đường: câu cua (giật cần đúng lúc phao chìm) · múa quay thúng theo nhạc loa (bấm cho thúng quay nhanh)
 // · xem quăng chài · đan cào cào lá dừa mang về. Đồng bộ theo mốc `at` chung, mỗi lần bấm gửi cho người kia thấy.
+import { AlbumSave } from './AlbumSave';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { characterSprite, type AvatarLook } from '../lib/sprites';
@@ -242,6 +243,7 @@ export function BasketRide({ at: t0, me, mate, them, onExit }: { at: number; me:
           <h3>🧺 Thuyền thúng rừng dừa Bảy Mẫu</h3>
           <p>🦀 Bạn câu {crabs(meKey)} con cua{other ? ` · người ấy ${crabs(other.key)} con` : ''} · 🦗 Cào cào lá dừa đã vào túi đồ!</p>
           {photo && <img src={photo} alt="Ảnh múa thúng" />}
+          <AlbumSave photos={photo ? [photo] : []} scene="basket" caption="🧺 Thuyền thúng rừng dừa Bảy Mẫu" />
           <div className="row">
             {photo && <a className="btn small ghost" href={photo} download="thuyen-thung-bay-mau.png">💾 Lưu ảnh</a>}
             <button className="btn small" onClick={() => exitRef.current()}>🚶 Lên bờ</button>

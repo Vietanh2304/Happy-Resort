@@ -3,6 +3,7 @@
 // → lên đỉnh thấy biển mây, núi Trung Ương phủ tuyết trùng điệp, tháp Từ Ân → hạ xuống ga bên kia.
 // Góc nhìn xa: cabin nhỏ giữa trời đất bao la, nhiều lớp núi mờ dần trong sương, cabin khác nối đuôi trên dây.
 // Trong lúc đi: 📸 chụp ảnh (giữ tới 4 tấm), 👉 "Nhìn kìa!" chỉ cảnh cho người ấy (hai máy cùng thấy).
+import { AlbumSave } from './AlbumSave';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { characterSprite, type AvatarLook } from '../lib/sprites';
@@ -242,6 +243,7 @@ export function CableRide({ at: t0, me, mate, them, onExit }: { at: number; me: 
           <p>🎁 Móc khoá cabin cáp treo đã vào túi đồ!</p>
           <div className="cb-photos">{photos.map((p, i) => <a key={i} href={p} download={`cap-treo-${i + 1}.jpg`}><img src={p} alt={`Ảnh ${i + 1}`} /></a>)}</div>
           <p className="muted small-note">Bấm vào ảnh để lưu về máy</p>
+          <div className="row"><AlbumSave photos={photos} scene="cable" caption="🚡 Cáp treo Nhật Nguyệt Đàm" /></div>
           <div className="row"><button className="btn small" onClick={() => exitRef.current()}>🚶 Ra khỏi ga</button></div>
         </div>
       )}
