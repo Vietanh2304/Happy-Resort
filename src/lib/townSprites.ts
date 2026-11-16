@@ -728,7 +728,7 @@ function kidWalls(p: Pen, q: ReturnType<typeof isoPen>) {
   // thảm tròn cầu vồng giữa phòng
   { const [x, y] = q.pt(6, 6.6, 0); for (const [rx, c] of [[32, '#f6c4d4'], [27, '#fde2b8'], [22, '#d6ecc4'], [17, '#cfe2f8'], [12, '#e6d8f6'], [6, '#fffaf4']] as const) ellipse(p, x, y, rx, rx / 2, c); }
   // thảm mây trước hai giường
-  for (const g of [3.5, 5.5, 7.5]) { const [x, y] = q.pt(g + 0.5, 3.6, 0); ellipse(p, x, y, 9, 3.5, '#ffffff'); ellipse(p, x - 5, y - 1, 4, 2.5, '#ffffff'); ellipse(p, x + 5, y - 1, 4, 2.5, '#ffffff'); }
+  for (const g of [4.5, 6.5, 8.4]) { const [x, y] = q.pt(g + 0.5, 3.6, 0); ellipse(p, x, y, 9, 3.5, '#ffffff'); ellipse(p, x - 5, y - 1, 4, 2.5, '#ffffff'); ellipse(p, x + 5, y - 1, 4, 2.5, '#ffffff'); }
   // khối gỗ & xe đồ chơi trên sàn
   for (const [g, h, c] of [[8.6, 8.2, '#e8606a'], [8.9, 8.0, '#6aa8e0'], [8.75, 8.5, '#f6c64e']] as const) { const [x, y] = q.pt(g, h, 0); p.rect(x - 2, y - 4, 4, 4, c); p.px(x - 1, y - 3, '#ffffff'); }
   { const [x, y] = q.pt(7.2, 9.0, 0); p.rect(x - 4, y - 4, 8, 3, '#8ad08a'); p.rect(x - 2, y - 6, 4, 2, '#bfe6ee'); p.rect(x - 3, y - 1, 2, 2, '#3a3a4a'); p.rect(x + 2, y - 1, 2, 2, '#3a3a4a'); }

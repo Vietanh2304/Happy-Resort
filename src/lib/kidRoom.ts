@@ -19,9 +19,8 @@ const kp = (gx: number, gy: number, z = 0) => roomPtIn('kidroom', gx, gy, z);
 const fix = (id: string, item_id: string, x: number, y: number, rot = 0): Decor => ({ id: `kid:${id}`, owner_id: '', island: 'kidroom', item_id, x, y, rot });
 /** Đồ cố định của phòng các con (không nằm trong DB — trộn vào danh sách đồ để vẽ & chặn đường đi) */
 export const KID_FURN: Decor[] = [
-  fix('plant', 'potted_plant', 0, 0), fix('night', 'kid_night', 2, 0),
-  fix('bed0', 'kid_bed_0', 4, 2), fix('bed1', 'kid_bed_1', 6, 2), fix('bed2', 'kid_bed_2', 8, 2),
-  fix('night2', 'kid_night', 9, 0), fix('teddy', 'teddy', 9, 1),
+  fix('plant', 'potted_plant', 0, 0), fix('wardrobe', 'kid_wardrobe', 2, 0), fix('night', 'kid_night', 3, 0),
+  fix('bed0', 'kid_bed_0', 5, 2), fix('bed1', 'kid_bed_1', 7, 2), fix('bed2', 'kid_bed_2', 9, 2), fix('teddy', 'teddy', 9, 4),
   fix('desk0', 'kid_desk_0', 1, 2, 1), fix('stool0', 'kid_stool_0', 0, 1),
   fix('desk1', 'kid_desk_1', 1, 4, 1), fix('stool1', 'kid_stool_1', 0, 3),
   fix('desk2', 'kid_desk_2', 1, 6, 1), fix('stool2', 'kid_stool_2', 0, 5),
@@ -38,7 +37,7 @@ export const kidBedFoot = (i: number) => { const d = bedOf(i); return kp(d.x + 1
 const desk = (y: number) => ({ seat: kp(0.5, y + 0.6), top: kp(1.4, y + 0.75, 13), stand: kp(2.55, y + 1.2) });
 /** Vị trí trong phòng (toạ độ cảnh) */
 export const KIDROOM = {
-  beds: [{ stand: kp(4.0, 3.5) }, { stand: kp(6.0, 3.5) }, { stand: kp(8.0, 3.5) }],
+  beds: [{ stand: kp(5.0, 3.5) }, { stand: kp(7.0, 3.5) }, { stand: kp(8.9, 3.5) }],
   desks: [desk(1), desk(3), desk(5)],
   play: [kp(4.6, 5.6), kp(6.6, 6.8), kp(4.4, 7.6), kp(7.6, 5.2), kp(6.0, 8.4), kp(3.4, 7.0), kp(8.2, 7.4)] as Pt[],
   /** chơi cùng ba mẹ trên thảm cầu vồng: chỗ con & chỗ ba mẹ đứng */
@@ -108,6 +107,19 @@ const kidNight = () => isoSprite('kid_night', 1, 1, 26, q => {
   const [x, y] = q.pt(0.5, 0.5, 11);                                               // đèn ngủ cây nấm
   q.rect(x - 1, y - 5, 3, 5, '#fff2dc'); q.ellipse(x, y - 7, 5, 3.2, '#f59ab3'); for (const dx of [-3, 0, 2]) q.px(x + dx, y - 8, '#ffffff');
 });
+/** Tủ quần áo của các con: trắng kem, hai cánh hồng & xanh, núm ngôi sao, vương miện trên nóc, móc áo nhỏ bên hông */
+const kidWardrobe = () => isoSprite('kid_wardrobe', 2, 1, 40, q => {
+  q.box(0.06, 0.1, 0, 1.88, 0.8, 30, shade(WHITE));
+  q.box(0.0, 0.05, 30, 2, 0.9, 2.5, shade('#f6c64e'));
+  for (const [g, col] of [[0.5, COL[0].head], [1.5, COL[1].head]] as const) {
+    q.poly([q.pt(g - 0.4, 0.9, 3), q.pt(g + 0.4, 0.9, 3), q.pt(g + 0.4, 0.9, 27), q.pt(g - 0.4, 0.9, 27)], col);
+    q.poly([q.pt(g - 0.3, 0.9, 16), q.pt(g + 0.3, 0.9, 16), q.pt(g + 0.3, 0.9, 25), q.pt(g - 0.3, 0.9, 25)], mix(col, '#ffffff', 0.45));
+    const [x, y] = q.pt(g + (g < 1 ? 0.3 : -0.3), 0.9, 14); q.px(x, y - 1, '#f6c64e'); q.px(x - 1, y, '#f6c64e'); q.px(x, y, '#ffe680'); q.px(x + 1, y, '#f6c64e'); q.px(x, y + 1, '#f6c64e');
+  }
+  { const [x, y] = q.pt(1, 0.9, 1); q.rect(x - 1, y - 30, 2, 28, '#e8dccc'); }
+  for (const g of [0.4, 1.0, 1.6]) { const [x, y] = q.pt(g, 0.5, 33); q.rect(x - 1, y - 4, 2, 4, '#f6c64e'); q.px(x, y - 5, '#ff8ab0'); }   // vương miện
+  { const [x, y] = q.pt(2, 0.4, 24); q.rect(x, y, 3, 1, '#a8a8b8'); q.rect(x, y + 1, 4, 6, COL[2].head); q.px(x + 1, y + 3, '#ffffff'); }   // áo treo bên hông
+});
 const kidToybox = () => isoSprite('kid_toybox', 1, 1, 22, q => {
   q.box(0.08, 0.15, 0, 0.84, 0.7, 9, shade('#f6c084'));
   q.box(0.08, 0.15, 9, 0.84, 0.7, 1.5, shade('#e8a060'));
@@ -128,6 +140,7 @@ export const KID_ART = {
   kid_stool_2: { place: 'floor' as const, sprite: kidStool(2) },
   kid_night: { place: 'floor' as const, sprite: kidNight, glow: true },
   kid_toybox: { place: 'floor' as const, sprite: kidToybox },
+  kid_wardrobe: { place: 'floor' as const, size: [2, 1] as [number, number], sprite: kidWardrobe },
 };
 /** Mép bồn cầu phía trước (che chân con đang ngồi) */
 export function toiletFrontSprite() {

@@ -189,6 +189,7 @@ export interface WorldProps {
     star: () => void;
     meteor: () => void;
     wardrobe: () => void;
+    kidCloset?: () => void;
     pickDecor: (d: Decor) => void;   // nhấn giữ / bấm đúp đồ đã bày → cầm lên dời, xoay hoặc cất
     festPlace: (x: number, y: number) => void;
     festRemove: (d: FestDecor) => void;
@@ -1264,11 +1265,10 @@ function KidInRoom({ idx, order, mode, tuck, sprite, walk, sleep, sad, onClick, 
 /** Phòng các con lúc tối: đèn ngủ nấm & hai đèn bàn toả sáng */
 function KidRoomFront({ dark }: { dark: boolean }) {
   if (!dark) return null;
-  const n = roomPtIn('kidroom', 2.5, 0.5, 14), n2 = roomPtIn('kidroom', 9.5, 0.5, 14);
+  const n = roomPtIn('kidroom', 3.5, 0.5, 14);
   return (
     <>
       <Glow x={n.x} y={n.y} r={26} />
-      <Glow x={n2.x} y={n2.y} r={22} />
       {KIDROOM.desks.map((d, i) => { const g = roomPtIn('kidroom', 1.3, 1.2 + i * 2, 22); return <Glow key={i} x={g.x} y={g.y} r={18} />; })}
     </>
   );
@@ -1440,8 +1440,9 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
           <div key={d.id}>
             <Spr sprite={decorSprite(d)} x={foot.x} y={foot.y} z={art?.flat ? 1 : depth.get(d.id)} flip={!!d.rot}
               onHold={editing || d.id.startsWith('kid:') ? undefined : () => on.pickDecor(d)} className={`decor ${sel} ${d.id === p.ghost?.movingId ? 'moving' : ''} ${cellsOf(scene, d.item_id, d.x, d.y, d.rot ?? 0).some(([cx, cy]) => RESERVED[scene]?.(cx, cy)) ? 'over-door' : ''}`}
-              title={d.item_id === 'wardrobe' && !editing ? '👗 Tủ đồ — thay trang phục' : d.item_id === 'dresser' && !editing ? '💄 Bàn trang điểm — ngồi trang điểm' : d.item_id === 'bed' && !editing ? '🛏️ Giường — ngủ, âu yếm' : item(d.item_id).name}
-              onClick={d.item_id === 'wardrobe' && !editing ? () => go(roomPt(d.x + 0.5, d.y + 1.6), on.wardrobe)
+              title={d.item_id === 'kid_wardrobe' && !editing ? '👕 Tủ đồ của các con — chọn đồ cho bé mặc' : d.item_id === 'wardrobe' && !editing ? '👗 Tủ đồ — thay trang phục' : d.item_id === 'dresser' && !editing ? '💄 Bàn trang điểm — ngồi trang điểm' : d.item_id === 'bed' && !editing ? '🛏️ Giường — ngủ, âu yếm' : item(d.item_id).name}
+              onClick={d.item_id === 'kid_wardrobe' && !editing ? () => go(roomPtIn(scene, d.x + 0.4, d.y + 1.45), () => on.kidCloset?.())
+                : d.item_id === 'wardrobe' && !editing ? () => go(roomPt(d.x + 0.5, d.y + 1.6), on.wardrobe)
                 : d.item_id === 'dresser' && !editing ? () => on.makeup(vanitySeat(d))
                 : d.item_id === 'bed' && !editing ? () => go(walkTarget(scene, roomPt(d.x + 1.5, d.y - 0.5)) ?? p.live.mine.pos, () => on.bed(d)) : undefined} />
             {d.item_id === 'dresser' && (() => {

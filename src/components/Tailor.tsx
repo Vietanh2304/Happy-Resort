@@ -8,6 +8,7 @@ import { DEFAULT_DESIGN, designPrice, FABRIC_NEED, GARMENTS, PALETTE, PATTERNS, 
 import { characterSprite } from '../lib/sprites';
 import { toast, toastError } from '../lib/toast';
 import { Sheet } from './Sheet';
+import { KidSewForm } from './Family';
 
 function Preview({ look, design, size = 4 }: { look: api.Profile['avatar']; design: Design | null; size?: number }) {
   const views = ['front', 'side', 'back'] as const;
@@ -21,11 +22,12 @@ function Swatches({ value, onPick }: { value: string; onPick: (c: string) => voi
   return <div className="swatches">{PALETTE.map(c => <button key={c} className={value === c ? 'on' : ''} style={{ background: c }} onClick={() => onPick(c)} aria-label={c} />)}</div>;
 }
 
-export function TailorSheet({ me, partnerName, inventory, outfits, wearing, onWear, onClose }: {
+export function TailorSheet({ me, partnerName, inventory, outfits, wearing, onWear, onClose, kids = [], partner = null, today = '' }: {
+  kids?: api.Kid[]; partner?: api.Profile | null; today?: string;
   me: api.Profile; partnerName: string; inventory: api.InvRow[]; outfits: api.OutfitRow[]; wearing: Design | null | undefined;
   onWear: (d: Design | null) => Promise<void>; onClose: () => void;
 }) {
-  const [tab, setTab] = useState<'design' | 'closet'>('design');
+  const [tab, setTab] = useState<'design' | 'closet' | 'kid'>('design');
   const [d, setD] = useState<Design>(DEFAULT_DESIGN);
   const [name, setName] = useState('');
   const set = (patch: Partial<Design>) => setD(v => ({ ...v, ...patch }));
@@ -55,8 +57,9 @@ export function TailorSheet({ me, partnerName, inventory, outfits, wearing, onWe
       <div className="tabs">
         <button className={tab === 'design' ? 'active' : ''} onClick={() => setTab('design')}>✏️ Thiết kế</button>
         <button className={tab === 'closet' ? 'active' : ''} onClick={() => setTab('closet')}>🚪 Tủ đồ ({outfits.length})</button>
+        <button className={tab === 'kid' ? 'active' : ''} onClick={() => setTab('kid')}>👶 May cho bé</button>
       </div>
-      {tab === 'design' ? (
+      {tab === 'kid' ? <KidSewForm kids={kids} me={me} partner={partner} today={today} inventory={inventory} /> : tab === 'design' ? (
         <div className="tailor">
           <Preview look={me.avatar} design={d} />
           <p className="tl-label">Kiểu</p>

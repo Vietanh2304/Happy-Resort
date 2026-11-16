@@ -1,7 +1,7 @@
 // Em bé: đặt tên khi cò mang tới, chăm bé (ăn, vệ sinh, ngủ, chơi), mốc đáng nhớ, dắt bé đi chơi.
 import { useState } from 'react';
 import * as api from '../lib/api';
-import { ACTIONS, KID_GARMENTS, KID_PATTERNS, kidAge, kidLook, kidMood, kidSprite, kidStage, MILESTONES, NEEDS, needLevel, STAGE_NAME, type CareAction, type KidDesign, type KidStage } from '../lib/kids';
+import { ACTIONS, KID_GARMENTS, KID_PATTERNS, kidAge, kidLook, kidMood, kidSprite, kidStage, MILESTONES, NEEDS, needLevel, STAGE_NAME, type CareAction, type KidDesign } from '../lib/kids';
 import { item } from '../lib/content';
 import { PALETTE } from '../lib/ranch';
 import { notify } from '../lib/realtime';
@@ -43,12 +43,8 @@ interface KidSheetProps {
   onClose: () => void;
   /** Làm động tác thật (đi tới nôi, bế, cho bú, ru, tắm…) */
   onDo?: (actionId: string, kid: api.Kid) => void;
-  /** bộ đồ đã may cho các con & túi đồ (để lấy vải) */
-  outfits?: api.OutfitRow[];
-  inventory?: api.InvRow[];
 }
-export function KidSheet({ kids, me, partner, today, live, pick, onClose, onDo, outfits = [], inventory = [] }: KidSheetProps) {
-  const [sew, setSew] = useState(false);
+export function KidSheet({ kids, me, partner, today, live, pick, onClose, onDo }: KidSheetProps) {
   const born = kids.filter(k => k.name && k.born_on <= today);
   const [sel, setSel] = useState(pick ?? born[0]?.id);
   const kid = born.find(k => k.id === sel) ?? born[0];
@@ -106,8 +102,6 @@ export function KidSheet({ kids, me, partner, today, live, pick, onClose, onDo, 
       <button className={`btn small ${walking ? '' : 'ghost'}`} onClick={() => { live.update({ walkKid: walking ? null : kid.id, walkAll: false }); onClose(); toast(walking ? `🏠 Đưa bé ${kid.name} về nhà` : stage === 'baby' ? `👶 Đẩy xe cho bé ${kid.name} đi dạo` : `🧒 Bé ${kid.name} nắm tay ${callMe.toLowerCase()} đi chơi`); }}>
         {walking ? '🏠 Đưa bé về nhà' : stage === 'baby' ? '👶 Đẩy xe đưa bé đi dạo' : '🧒 Dắt bé đi chơi'}
       </button>
-      {stage !== 'baby' && <button className={`btn small ${sew ? '' : 'ghost'}`} onClick={() => setSew(v => !v)}>🧵 Tủ đồ của bé {kid.outfit ? '· đang mặc đồ ba mẹ may' : ''}</button>}
-      {sew && stage !== 'baby' && <KidCloset kid={kid} stage={stage} look={look} outfits={outfits} inventory={inventory} />}
       <div className="field">
         <span>📒 Sổ của bé</span>
         <ul className="cal-events">
@@ -120,52 +114,84 @@ export function KidSheet({ kids, me, partner, today, live, pick, onClose, onDo, 
   );
 }
 
-/** Tủ đồ của bé: ba mẹ tự may (kiểu, màu, hoạ tiết) bằng 1 cuộn len hoặc 1 tấm lụa, rồi cho bé mặc — bé mặc thật trên bản đồ */
-function KidCloset({ kid, stage, look, outfits, inventory }: { kid: api.Kid; stage: KidStage; look: ReturnType<typeof kidLook>; outfits: api.OutfitRow[]; inventory: api.InvRow[] }) {
-  const [d, setD] = useState<KidDesign>({ type: kid.gender === 'f' ? 'dress' : 'tee', c1: '#f6c64e', c2: '#5a6ad0', pattern: 'dots' });
+/** May đồ cho các con (ở xưởng may nông trại): chọn bé để xem trước, kiểu, màu, hoạ tiết; 1 cuộn len hoặc 1 tấm lụa một bộ */
+export function KidSewForm({ kids, me, partner, today, inventory, onDone }: { kids: api.Kid[]; me: api.Profile; partner: api.Profile | null; today: string; inventory: api.InvRow[]; onDone?: () => void }) {
+  const grown = kids.filter(k => k.name && k.born_on <= today && kidStage(k, today) !== 'baby');
+  const [sel, setSel] = useState(grown[0]?.id);
+  const kid = grown.find(k => k.id === sel) ?? grown[0];
+  const [d, setD] = useState<KidDesign>({ type: kid?.gender === 'f' ? 'dress' : 'tee', c1: '#f6c64e', c2: '#5a6ad0', pattern: 'dots' });
   const [fabric, setFabric] = useState<'yarn' | 'silk'>('yarn');
   const [name, setName] = useState('');
+  if (!kid) return <p className="muted">Các con lớn hơn chút (qua giai đoạn sơ sinh) là may đồ cho con được nhé 👶</p>;
   const have = (id: string) => inventory.find(r => r.item_id === id)?.qty ?? 0;
-  const girl = kid.gender === 'f';
-  const prev = (dz: KidDesign | null) => kidSprite(stage, { ...look, cloth: dz?.c1 ?? look.cloth, design: dz }, 'idle', girl).url;
-  const same = (a: KidDesign | null | undefined, b: KidDesign) => !!a && a.type === b.type && a.c1 === b.c1 && a.c2 === b.c2 && a.pattern === b.pattern;
+  const look = kidLook(kid, me, partner), stage = kidStage(kid, today);
+  const prev = kidSprite(stage, { ...look, cloth: d.c1, design: d }, 'idle', kid.gender === 'f').url;
   const sewIt = async () => {
     try {
       const title = name.trim() || `${KID_GARMENTS.find(g => g.id === d.type)?.name} cho ${kid.name}`;
       await api.outfitMake(title, { kid: true, ...d }, [{ id: fabric, n: 1 }]);
       notify('outfits', 'inventory'); setName('');
-      toast(`✂️ May xong "${title}" — bấm 👕 Cho bé mặc nhé`);
+      toast(`✂️ May xong "${title}" — đã cất vào 👕 tủ đồ trong phòng các con`);
+      onDone?.();
     } catch (e) { toastError(e); }
   };
-  const wear = async (dz: KidDesign | null) => {
-    try { await api.kidWear(kid.id, dz); notify('kids'); toast(dz ? `👕 ${kid.name} mặc đồ mới rồi, xinh quá!` : `👕 ${kid.name} thay lại đồ thường`); } catch (e) { toastError(e); }
-  };
   const sw = (v: string, on: (c: string) => void) => <div className="swatches">{PALETTE.map(c => <button key={c} className={v === c ? 'on' : ''} style={{ background: c }} onClick={() => on(c)} aria-label={c} />)}</div>;
-  const kidsOutfits = outfits.map(o => ({ o, dz: { type: o.spec.type, c1: o.spec.c1, c2: o.spec.c2, pattern: o.spec.pattern } as KidDesign }));
   return (
     <div className="tailor">
-      <div className="row center"><img src={prev(d)} className="px-img" style={{ width: 72, imageRendering: 'pixelated' }} alt="" /></div>
+      {grown.length > 1 && <div className="chips left">{grown.map(k => <button key={k.id} className={`chip ${k.id === kid.id ? 'active' : ''}`} onClick={() => setSel(k.id)}>{k.gender === 'm' ? '👦' : '👧'} May cho {k.name}</button>)}</div>}
+      <div className="row center"><img src={prev} className="px-img" style={{ width: 72, imageRendering: 'pixelated' }} alt="" /></div>
       <p className="tl-label">Kiểu</p>
       <div className="chips left">{KID_GARMENTS.map(g => <button key={g.id} className={`chip ${d.type === g.id ? 'active' : ''}`} onClick={() => setD({ ...d, type: g.id })}>{g.icon} {g.name}</button>)}</div>
       <p className="tl-label">Màu áo</p>{sw(d.c1, c => setD({ ...d, c1: c }))}
       <p className="tl-label">{d.type === 'skirt' ? 'Màu chân váy' : d.type === 'dress' ? 'Màu phụ' : 'Màu quần'}</p>{sw(d.c2, c => setD({ ...d, c2: c }))}
       <p className="tl-label">Hoạ tiết</p>
       <div className="chips left">{KID_PATTERNS.map(pt => <button key={pt.id} className={`chip ${d.pattern === pt.id ? 'active' : ''}`} onClick={() => setD({ ...d, pattern: pt.id })}>{pt.name}</button>)}</div>
+      <p className="tl-label">Chất liệu</p>
       <div className="chips left">{(['yarn', 'silk'] as const).map(f => <button key={f} className={`chip ${fabric === f ? 'active' : ''}`} onClick={() => setFabric(f)}>{item(f).icon} {item(f).name} (có {have(f)})</button>)}</div>
       <input value={name} maxLength={30} onChange={e => setName(e.target.value)} placeholder={`Đặt tên bộ đồ… (vd: Váy đi chơi của ${kid.name})`} />
-      <button className="btn" disabled={have(fabric) < 1} onClick={() => void sewIt()}>✂️ May cho bé (1 {item(fabric).name.toLowerCase()})</button>
-      {have(fabric) < 1 && <p className="muted small-note">Chưa có vải: cừu ở trang trại cho lông → 🧶 cuộn len; tằm cho kén → 🧵 tấm lụa.</p>}
-      {kidsOutfits.length > 0 && <p className="tl-label">Đồ đã may cho các con</p>}
-      <div className="closet-grid">
-        {kidsOutfits.map(({ o, dz }) => (
-          <div key={o.id} className={`closet-item ${same(kid.outfit, dz) ? 'on' : ''}`}>
-            <img src={prev(dz)} className="px-img" style={{ width: 48, imageRendering: 'pixelated' }} alt="" />
-            <small>{o.name}</small>
-            <button className="btn small" onClick={() => void wear(dz)}>{same(kid.outfit, dz) ? '✓ Đang mặc' : '👕 Cho bé mặc'}</button>
-          </div>
-        ))}
-      </div>
-      {kid.outfit && <button className="btn small ghost" onClick={() => void wear(null)}>↩️ Mặc lại đồ thường</button>}
+      <button className="btn" disabled={have(fabric) < 1} onClick={() => void sewIt()}>✂️ May cho {kid.name} (1 {item(fabric).name.toLowerCase()})</button>
+      {have(fabric) < 1 && <p className="muted small-note">Chưa có vải: cừu cho lông → 🧶 cuộn len; tằm cho kén → 🧵 tấm lụa (ở nhà chế biến).</p>}
     </div>
+  );
+}
+
+/** Tủ đồ của các con (trong phòng các con): đồ ba mẹ may ở xưởng may nông trại — chọn cho từng bé mặc */
+export function KidWardrobeSheet({ kids, me, partner, today, outfits, onClose }: { kids: api.Kid[]; me: api.Profile; partner: api.Profile | null; today: string; outfits: api.OutfitRow[]; onClose: () => void }) {
+  const grown = kids.filter(k => k.name && k.born_on <= today && kidStage(k, today) !== 'baby');
+  const [sel, setSel] = useState(grown[0]?.id);
+  const kid = grown.find(k => k.id === sel) ?? grown[0];
+  const wear = async (dz: KidDesign | null) => {
+    if (!kid) return;
+    try { await api.kidWear(kid.id, dz); notify('kids'); toast(dz ? `👕 ${kid.name} mặc đồ mới rồi, xinh quá!` : `👕 ${kid.name} thay lại đồ thường`); } catch (e) { toastError(e); }
+  };
+  const same = (a: KidDesign | null | undefined, b: KidDesign) => !!a && a.type === b.type && a.c1 === b.c1 && a.c2 === b.c2 && a.pattern === b.pattern;
+  return (
+    <Sheet title="👕 Tủ đồ của các con" onClose={onClose}>
+      {!kid ? <p className="muted">Các con còn nhỏ quá, chưa mặc đồ may được 👶</p> : (
+        <>
+          {grown.length > 1 && <div className="tabs">{grown.map(k => <button key={k.id} className={k.id === kid.id ? 'active' : ''} onClick={() => setSel(k.id)}>{k.gender === 'm' ? '👦' : '👧'} {k.name}</button>)}</div>}
+          {(() => {
+            const look = kidLook(kid, me, partner), stage = kidStage(kid, today), girl = kid.gender === 'f';
+            const prev = (dz: KidDesign | null) => kidSprite(stage, { ...look, cloth: dz?.c1 ?? look.cloth, design: dz }, 'idle', girl).url;
+            const list = outfits.map(o => ({ o, dz: { type: o.spec.type, c1: o.spec.c1, c2: o.spec.c2, pattern: o.spec.pattern } as KidDesign }));
+            return (
+              <div className="closet">
+                {!list.length && <p className="muted">Tủ còn trống — ra 🧵 xưởng may ở nông trại, chọn "May cho bé" nhé!</p>}
+                <div className="closet-grid">
+                  {list.map(({ o, dz }) => (
+                    <div key={o.id} className={`closet-item ${same(kid.outfit, dz) ? 'on' : ''}`}>
+                      <img src={prev(dz)} className="px-img" style={{ width: 48, imageRendering: 'pixelated' }} alt="" />
+                      <small>{o.name}</small>
+                      <button className="btn small" onClick={() => void wear(dz)}>{same(kid.outfit, dz) ? '✓ Đang mặc' : `👕 Cho ${kid.name} mặc`}</button>
+                    </div>
+                  ))}
+                </div>
+                {kid.outfit && <button className="btn small ghost" onClick={() => void wear(null)}>↩️ Mặc lại đồ thường</button>}
+              </div>
+            );
+          })()}
+        </>
+      )}
+    </Sheet>
   );
 }
