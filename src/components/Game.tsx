@@ -42,7 +42,7 @@ import { TailorSheet } from './Tailor';
 import { WorkSheet } from './Work';
 import { bragClassGrade, MeetingSheet, StudySheet } from './Study';
 import { meetingDay, studyTime, subjectsOn } from '../lib/study';
-import { kidStage } from '../lib/kids';
+import { kidStage, setKidOrder } from '../lib/kids';
 import { newJob, type JobData } from '../lib/work';
 import { atSchool, SCHOOL } from '../lib/school';
 import { logName } from '../lib/reef';
@@ -164,6 +164,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   const [pet, , petLoaded] = useSynced('pets', api.loadPet, null as api.Pet | null);
   const [days] = useSynced('days', api.loadDays, [] as CustomDay[]);
   const [kids] = useSynced('kids', api.loadKids, [] as api.Kid[]);
+  setKidOrder(kids.filter(k => k.name).map(k => k.id));
   const [festDecor] = useSynced('festdecor', () => api.loadFestDecor(myTime.date), [] as api.FestDecor[], [myTime.date]);
 
   const partnerOnline = !!partner && online.includes(partner.id);
@@ -1256,7 +1257,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           onSleep={() => { live.update({ act: 'sleep', bed: sheet.bed }); setSheet(null); toast('😴 Chúc ngủ ngon…'); }}
           onInvite={() => askBed('love', sheet.bed)} onBaby={() => askBed('baby', sheet.bed)} onClose={close} />
       )}
-      {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={kidDay} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
+      {sheet?.kind === 'kid' && <KidSheet outfits={outfits.filter(o => o.spec.kid)} inventory={inventory} kids={kids} me={me} partner={partner} today={kidDay} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
       {sheet?.kind === 'animal' && animals.find(a => a.id === sheet.id) && <AnimalSheet animal={animals.find(a => a.id === sheet.id)!} inventory={inventory} onClose={close} riding={live.mine.horse === sheet.id} onDismount={() => { close(); dismount(); }} onRide={() => { close(); live.update({ horse: sheet.id }); live.say('🐎 Hí hí! Đi dạo nào!'); enter('town', TOWN.toFarm); }} />}
       {sheet?.kind === 'flowershop' && <FlowerShopSheet date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
       {sheet?.kind === 'bakery' && <BakeryStationSheet station={sheet.station ?? 'case'} hold={bakeHold} setHold={setBakeHoldSaved} me={me} date={myTime.date} hour={myTime.hour} minute={myTime.minute} inventory={inventory} claimed={claimed} live={live} onClose={close} />}
@@ -1272,7 +1273,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {festKind === 'midautumn' && myTime.hour >= 18 && <LanternParade mems={mems} year={myTime.date.slice(0, 4)} />}
       {sheet?.kind === 'ranchshop' && <RanchShopSheet count={animals.length} kinds={animals.reduce<Record<string, number>>((m, a) => ({ ...m, [a.kind]: (m[a.kind] ?? 0) + 1 }), {})} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'workshop' && <WorkshopSheet inventory={inventory} together={!!partnerHere} partnerName={partnerName} onClose={close} />}
-      {sheet?.kind === 'tailor' && <TailorSheet me={me} partnerName={partnerName} inventory={inventory} outfits={outfits} wearing={me.avatar.design}
+      {sheet?.kind === 'tailor' && <TailorSheet me={me} partnerName={partnerName} inventory={inventory} outfits={outfits.filter(o => !o.spec.kid)} wearing={me.avatar.design}
         onWear={d => run(async () => { await api.updateProfile(me.id, { avatar: { ...me.avatar, design: d } }); reloadMe(); notify('profiles'); toast(d ? '👕 Đã mặc bộ đồ tự may' : '↩️ Đã mặc lại đồ cũ'); })} onClose={close} />}
       {sheet?.kind === 'work' && <WorkSheet me={me} partner={partner} jobs={jobs} date={myTime.date} onClose={close}
         onSave={async j => { await api.saveJob(me, j); reloadJobs(); notify('jobs'); }}

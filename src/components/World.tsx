@@ -31,7 +31,7 @@ import {
 import type { Live } from '../lib/useLive';
 import { outWx, weatherIcon, type Weather } from '../lib/weather';
 import {
-  ARCADE, BATH, BEACH, RIDE_MS, BUILDINGS, FARM, GARDEN, HOUSE, ROOM, SCENES, SEATS, SHOP, TOWN, WALL_L, WALL_R, RESERVED, farmCell, roomGrid, roomPt, walkTarget, wallSlot,
+  ARCADE, BATH, BEACH, RIDE_MS, BUILDINGS, FARM, GARDEN, HOUSE, ROOM, SCENES, SEATS, SHOP, TOWN, WALL_L, WALL_R, RESERVED, farmCell, roomPt, walkTarget, wallSlot,
   type GameId, type Pt, type SceneId,
   SIT_ACTS,
   BACK_ACTS,
@@ -39,8 +39,7 @@ import {
   vanitySeat,
   vanityMirror,
   NURSERY,
-  BABY_OUT,
-} from '../lib/world';
+  BABY_OUT, roomGridIn, roomPtIn } from '../lib/world';
 import { Avatar, avatarPx } from './Avatar';
 import { Spr, Stage, Tag, useScale } from './Stage';
 import { LoungeContent } from './Lounge';
@@ -306,8 +305,8 @@ function itemSprite(itemId: string): Sprite {
 const decorSprite = (d: Decor) => itemSprite(d.item_id);
 /** Chân đế của món đặt trên sàn phòng (đồ vẽ tay neo ở góc trước, đồ emoji ở giữa ô) */
 const roomFoot = (d: Decor): Pt => {
-  if (ART[d.item_id]) return roomPt(d.x + 1, d.y + 1);
-  const c = roomPt(d.x + 0.5, d.y + 0.5);
+  if (ART[d.item_id]) return roomPtIn(d.island, d.x + 1, d.y + 1);
+  const c = roomPtIn(d.island, d.x + 0.5, d.y + 0.5);
   return { x: c.x, y: c.y + 4 };
 };
 /** Thứ tự lớp của đồ trên sàn phòng: món đứng trước luôn vẽ đè món đứng sau (kể cả giường to) */
@@ -394,7 +393,7 @@ function SceneContent(p: WorldProps) {
   const roomItems = def.walk === 'room' ? p.decor.filter(d => d.island === scene && !d.top && !isWallCell(scene, d.y) && !ART[d.item_id]?.flat) : [];
   const depth = def.walk === 'room' ? roomDepth(scene, p.decor) : new Map<string, number>();
   const zAt = def.walk === 'room' ? (x: number, y: number) => {
-    const g = roomGrid({ x, y });
+    const g = roomGridIn(scene, { x, y });
     let z = Math.round(y) + 1;
     for (const d of roomItems) {
       const cells = cellsOf(scene, d.item_id, d.x, d.y, d.rot ?? 0);
@@ -1265,11 +1264,12 @@ function KidInRoom({ idx, order, mode, tuck, sprite, walk, sleep, sad, onClick, 
 /** Phòng các con lúc tối: đèn ngủ nấm & hai đèn bàn toả sáng */
 function KidRoomFront({ dark }: { dark: boolean }) {
   if (!dark) return null;
-  const n = roomPt(3.5, 0.5, 14);
+  const n = roomPtIn('kidroom', 2.5, 0.5, 14), n2 = roomPtIn('kidroom', 9.5, 0.5, 14);
   return (
     <>
       <Glow x={n.x} y={n.y} r={26} />
-      {KIDROOM.desks.map((d, i) => { const g = roomPt(1.3, i ? 4.2 : 1.2, 22); return <Glow key={i} x={g.x} y={g.y} r={18} />; })}
+      <Glow x={n2.x} y={n2.y} r={22} />
+      {KIDROOM.desks.map((d, i) => { const g = roomPtIn('kidroom', 1.3, 1.2 + i * 2, 22); return <Glow key={i} x={g.x} y={g.y} r={18} />; })}
     </>
   );
 }
@@ -1408,7 +1408,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
   const depth = roomDepth(island, decor);
   const pv = p.partnerView;
   const [top, bottom] = SKY[pv?.phase ?? p.myView.phase];
-  const win = roomPt(3, 0);
+  const win = roomPtIn(scene, 3, 0);
 
   return (
     <>
@@ -1467,9 +1467,9 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
       {!editing && (
         <>
           {scene === 'house' && <Hot x={54} y={38} w={44} h={36} title="Bếp — nấu ăn" onClick={() => go(HOUSE.kitchen.stand, on.kitchen)} />}
-          <Hot x={20} y={50} w={16} h={38} title={scene === 'house' ? 'Vào phòng ngủ' : scene === 'bedroom' || scene === 'kidroom' ? 'Ra phòng khách' : 'Về phòng ngủ'}
+          <Hot x={scene === 'kidroom' ? 12 : 20} y={scene === 'kidroom' ? 62 : 50} w={16} h={38} title={scene === 'house' ? 'Vào phòng ngủ' : scene === 'bedroom' || scene === 'kidroom' ? 'Ra phòng khách' : 'Về phòng ngủ'}
             onClick={() => go(HOUSE.toBedroom, () => (scene === 'bathroom' ? enter('bedroom', BATH.toBath) : scene === 'kidroom' ? enter('house', HOUSE.toKid) : enter(scene === 'house' ? 'bedroom' : 'house', SCENES.bedroom.spawn)))} />
-          <Tag x={28} y={44} className="label">{scene === 'house' ? '🛏️' : scene === 'bedroom' || scene === 'kidroom' ? '🛋️' : '🛏️'}</Tag>
+          <Tag x={scene === 'kidroom' ? 20 : 28} y={scene === 'kidroom' ? 56 : 44} className="label">{scene === 'house' ? '🛏️' : scene === 'bedroom' || scene === 'kidroom' ? '🛋️' : '🛏️'}</Tag>
           {scene === 'bedroom' && (
             <>
               <Hot x={156} y={50} w={16} h={38} title="Vào phòng tắm" onClick={() => go(BATH.toBath, () => enter('bathroom'))} />

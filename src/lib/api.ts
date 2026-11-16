@@ -302,7 +302,7 @@ export const removeFestDecor = (id: string) => run(supabase.from('fest_decor').d
 
 // Em bé
 export type CareKind = 'feed' | 'clean' | 'sleep' | 'play';
-export interface Kid { id: string; name: string; gender: 'm' | 'f' | null; born_on: string; love: number; fed_at: string | null; bathed_at: string | null; slept_at: string | null; played_at: string | null; milestones: string[]; created_at: string }
+export interface Kid { outfit?: import('./kids').KidDesign | null; id: string; name: string; gender: 'm' | 'f' | null; born_on: string; love: number; fed_at: string | null; bathed_at: string | null; slept_at: string | null; played_at: string | null; milestones: string[]; created_at: string }
 // ───── Chăn nuôi, xưởng may, công ty, điểm học (013_life.sql) ─────
 /** Bảng chưa tạo (chưa chạy SQL 013) thì trả về rỗng thay vì báo lỗi */
 const soft = <T,>(p: Promise<T>, empty: T) => p.catch(e => { if (/relation|does not exist|schema cache|404/i.test(String((e as Error)?.message ?? e))) return empty; throw e; });
@@ -318,7 +318,9 @@ export const ranchCollect = async (id: string, item: string, n: number, hours: n
 };
 export const ranchSpawn = (id: string) => run<string>(supabase.rpc('ranch_spawn', { p_id: id }));
 export const ranchSell = (id: string, price: number) => run(supabase.rpc('ranch_sell', { p_id: id, p_price: price }));
-export interface OutfitRow { id: string; couple_id: string; user_id: string; name: string; spec: import('./ranch').Design; created_at: string }
+export interface OutfitRow { id: string; couple_id: string; user_id: string; name: string; spec: import('./ranch').Design & { kid?: boolean }; created_at: string }
+/** Cho bé mặc bộ đồ đã may (null = mặc lại đồ thường) */
+export const kidWear = (kidId: string, outfit: object | null) => run(supabase.rpc('kid_wear', { p_kid: kidId, p_outfit: outfit }));
 export const loadOutfits = () => soft(run<OutfitRow[]>(supabase.from('outfits').select('*').order('created_at')), [] as OutfitRow[]);
 export const outfitMake = (name: string, spec: object, take: Gift[]) => run<string>(supabase.rpc('outfit_make', { p_name: name, p_spec: spec, p_take: take }));
 export const outfitSell = (id: string, price: number) => run(supabase.rpc('outfit_sell', { p_id: id, p_price: price }));

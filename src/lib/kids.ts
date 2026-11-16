@@ -11,16 +11,41 @@ export const kidStage = (k: Kid, today: string): KidStage => { const a = kidAge(
 export const STAGE_NAME: Record<KidStage, string> = { baby: 'Sơ sinh', toddler: 'Tập đi', child: 'Bé con', student: 'Đi học' };
 
 /** Màu da lấy từ bố hoặc mẹ, màu tóc từ người còn lại (cố định theo bé) */
+/** Quần áo ba mẹ may cho bé */
+export type KidGarment = 'tee' | 'dress' | 'overall' | 'pajama' | 'hoodie' | 'aodai' | 'skirt';
+export type KidPattern = 'plain' | 'stripe' | 'dots' | 'check' | 'heart' | 'star';
+export interface KidDesign { type: KidGarment; c1: string; c2: string; pattern: KidPattern }
+export const KID_GARMENTS: { id: KidGarment; name: string; icon: string }[] = [
+  { id: 'tee', name: 'Áo phông + quần', icon: '👕' }, { id: 'dress', name: 'Váy xoè', icon: '👗' }, { id: 'skirt', name: 'Áo + chân váy', icon: '🩰' },
+  { id: 'overall', name: 'Quần yếm', icon: '🧑‍🌾' }, { id: 'hoodie', name: 'Áo hoodie', icon: '🧥' }, { id: 'pajama', name: 'Đồ ngủ', icon: '😴' }, { id: 'aodai', name: 'Áo dài', icon: '🎎' },
+];
+export const KID_PATTERNS: { id: KidPattern; name: string }[] = [
+  { id: 'plain', name: 'Trơn' }, { id: 'stripe', name: 'Sọc' }, { id: 'dots', name: 'Chấm bi' }, { id: 'check', name: 'Caro' }, { id: 'heart', name: 'Trái tim' }, { id: 'star', name: 'Ngôi sao' },
+];
+/** Thứ tự các con (Game cập nhật) — bé thứ 3 mặc màu xanh lá cho dễ nhận */
+const kidOrder: string[] = [];
+export function setKidOrder(ids: string[]) { if (ids.join() !== kidOrder.join()) kidOrder.splice(0, kidOrder.length, ...ids); }
 export function kidLook(k: Kid, a: Profile | null, b: Profile | null) {
   const h = [...k.id].reduce((s, c) => s + c.charCodeAt(0), 0);
   const [p1, p2] = h % 2 ? [a, b] : [b, a];
-  return { skin: SKINS[p1?.avatar?.skin ?? 0], hair: HAIR_COLORS[p2?.avatar?.hairColor ?? 0], cloth: k.gender === 'm' ? '#8db8ef' : k.gender === 'f' ? '#f59ab3' : '#f6e27a' };
+  const base = kidOrder.indexOf(k.id) === 2 ? '#8ad08a' : k.gender === 'm' ? '#8db8ef' : k.gender === 'f' ? '#f59ab3' : '#f6e27a';
+  return { skin: SKINS[p1?.avatar?.skin ?? 0], hair: HAIR_COLORS[p2?.avatar?.hairColor ?? 0], cloth: k.outfit?.c1 ?? base, design: k.outfit ?? null as KidDesign | null };
 }
-type Look = ReturnType<typeof kidLook> & { scarf?: string; coat?: string };
+type Look = { skin: string; hair: string; cloth: string; design?: KidDesign | null; scarf?: string; coat?: string };
+/** màu một điểm áo theo hoạ tiết */
+function patPx(pt: KidPattern, c: string, x: number, y: number) {
+  if (pt === 'stripe') return y % 2 ? mix(c, '#ffffff', 0.55) : c;
+  if (pt === 'dots') return (x + (y % 4 < 2 ? 0 : 2)) % 4 === 0 && y % 2 === 0 ? '#ffffff' : c;
+  if (pt === 'check') return (Math.floor(x / 2) + Math.floor(y / 2)) % 2 ? mix(c, '#2a2030', 0.2) : c;
+  if (pt === 'heart') return (x * 3 + y * 5) % 7 === 0 ? '#e8406a' : c;
+  if (pt === 'star') return (x * 5 + y * 3) % 7 === 0 ? '#ffe070' : c;
+  return c;
+}
 
 export function kidSprite(stage: KidStage, look: Look, frame: 'idle' | 'walk' | 'sleep', girl: boolean) {
   look = look.coat ? { ...look, cloth: look.coat } : look;
-  const key = `kid:${stage}:${look.skin}:${look.hair}:${look.cloth}:${frame}:${girl}:${look.scarf ?? ''}`;
+  const dz = stage === 'baby' ? null : look.design ?? null;
+  const key = `kid:${stage}:${look.skin}:${look.hair}:${look.cloth}:${frame}:${girl}:${look.scarf ?? ''}:${dz ? JSON.stringify(dz) : ''}`;
   if (stage === 'baby') {
     return makeSprite(key, 12, 10, p => {
       ellipse(p, 6.5, 6.5, 5.5, 3.5, look.cloth);                     // khăn quấn
@@ -41,12 +66,34 @@ export function kidSprite(stage: KidStage, look: Look, frame: 'idle' | 'walk' | 
     const ly = Math.round(hy + hr + (tall ? 7 : 4));
     p.rect(cx - 3 + (step ? 1 : 0), ly, 2, H - ly, look.skin); p.rect(cx + 1 - (step ? 1 : 0), ly, 2, H - ly, look.skin);
     p.rect(cx - 3 + (step ? 1 : 0), H - 1, 2, 1, '#8a5a3c'); p.rect(cx + 1 - (step ? 1 : 0), H - 1, 2, 1, '#8a5a3c');
-    // Thân (váy cho bé gái lớn)
+    // Thân (váy cho bé gái lớn) — hoặc bộ đồ ba mẹ may
     const by = Math.round(hy + hr - 1);
-    if (girl && tall) { for (let y = by; y < ly + 1; y++) { const w = 3 + Math.floor((y - by) / 2); p.rect(cx - w, y, w * 2, 1, look.cloth); } }
-    else p.rect(cx - 3, by, 6, ly - by + (tall ? 0 : 1), look.cloth);
-    p.rect(cx - 3, by, 6, 1, mix(look.cloth, '#ffffff', 0.4));
-    if (!tall) p.rect(cx - 3, ly - 1, 6, 2, '#ffffff');               // tã
+    if (dz) {
+      const px = (x: number, y: number, c: string) => p.px(x, y, patPx(dz.pattern, c, x, y));
+      const legs = (c: string, to: number) => { for (const lx of [cx - 3 + (step ? 1 : 0), cx + 1 - (step ? 1 : 0)]) p.rect(lx, ly, 2, Math.max(0, to - ly), c); };
+      if (dz.type === 'dress' || dz.type === 'aodai') {
+        const end = dz.type === 'aodai' ? H - 3 : ly + 1;
+        if (dz.type === 'aodai') legs(dz.c2, H - 1);
+        for (let y = by; y < end; y++) { const w = dz.type === 'aodai' ? 3 + (y > ly ? 1 : 0) : 3 + Math.floor((y - by) / 2); for (let x = cx - w; x < cx + w; x++) px(x, y, dz.c1); }
+        if (dz.type === 'aodai') p.rect(cx - 0.5, by, 1, ly - by, mix(dz.c1, '#ffffff', 0.5));
+      } else if (dz.type === 'skirt') {
+        const mid = by + Math.max(2, Math.round((ly - by) / 2));
+        for (let y = by; y < mid; y++) for (let x = cx - 3; x < cx + 3; x++) px(x, y, dz.c1);
+        for (let y = mid; y < ly + 1; y++) { const w = 3 + Math.floor((y - mid + 1) / 1.5); p.rect(cx - w, y, w * 2, 1, dz.c2); }
+      } else {
+        legs(dz.c2, dz.type === 'pajama' || dz.type === 'overall' ? H - 1 : Math.min(H - 1, ly + (tall ? 4 : 2)));
+        for (let y = by; y < ly + (tall ? 0 : 1); y++) for (let x = cx - 3; x < cx + 3; x++) px(x, y, dz.type === 'overall' && y < by + 2 ? dz.c2 : dz.c1);
+        if (dz.type === 'overall') { p.px(cx - 2, by, dz.c1); p.px(cx + 1, by, dz.c1); p.px(cx - 1, by + 3, '#f6c64e'); p.px(cx, by + 3, '#f6c64e'); }
+        if (dz.type === 'hoodie') { p.rect(cx - 0.5, by + 1, 1, 3, '#ffffff'); p.rect(cx - 2, ly - 2, 4, 1, mix(dz.c1, '#2a2030', 0.2)); }
+      }
+      if (dz.type !== 'overall') p.rect(cx - 3, by, 6, 1, mix(dz.c1, '#ffffff', 0.4));
+      if (dz.type === 'hoodie') { p.rect(cx - hr, by - 1, hr * 2, 2, dz.c1); }   // mũ hoodie sau gáy
+    } else {
+      if (girl && tall) { for (let y = by; y < ly + 1; y++) { const w = 3 + Math.floor((y - by) / 2); p.rect(cx - w, y, w * 2, 1, look.cloth); } }
+      else p.rect(cx - 3, by, 6, ly - by + (tall ? 0 : 1), look.cloth);
+      p.rect(cx - 3, by, 6, 1, mix(look.cloth, '#ffffff', 0.4));
+      if (!tall) p.rect(cx - 3, ly - 1, 6, 2, '#ffffff');               // tã
+    }
     // Đầu, tóc, mặt
     ellipse(p, cx, hy, hr, hr, look.skin);
     p.rect(cx - hr + 1, hy - hr, hr * 2 - 1, 2, look.hair); p.px(cx - hr + 1, hy - hr + 2, look.hair); p.px(cx + hr - 1, hy - hr + 2, look.hair);

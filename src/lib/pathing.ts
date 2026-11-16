@@ -4,26 +4,26 @@ import { ART } from './furniture';
 import { cellsOf, isWallCell } from './placement';
 import { SCHOOL } from './school';
 import { CAMPUS } from './campusArt';
-import { BEACH, BUILDINGS, FARM, GARDEN, RESERVED, WALK_THROUGH, ROOM, roomGrid, roomPt, SCENES, TOWN, type Pt, type SceneId } from './world';
+import { BEACH, BUILDINGS, FARM, GARDEN, RESERVED, WALK_THROUGH, roomGridIn, roomOf, roomPtIn, SCENES, TOWN, type Pt, type SceneId } from './world';
 
 interface Grid { cols: number; rows: number; blocked: Uint8Array; toCell: (p: Pt) => [number, number]; toPt: (c: number, r: number) => Pt }
 
 // ───────── Phòng ─────────
 const SUB = 2; // chia mỗi ô sàn thành 2×2 để đi mềm hơn
 function roomGridFor(scene: SceneId, decor: Decor[]): Grid {
-  const n = ROOM.n * SUB;
+  const N = roomOf(scene).n, n = N * SUB;
   const blocked = new Uint8Array(n * n);
   const block = (cx: number, cy: number) => { for (let i = 0; i < SUB; i++) for (let j = 0; j < SUB; j++) blocked[(cy * SUB + j) * n + cx * SUB + i] = 1; };
   // Ô cố định (bếp, bồn tắm...) — trừ thảm cửa ra vào của nhà gỗ
-  for (let y = 0; y < ROOM.n; y++) for (let x = 0; x < ROOM.n; x++) if (RESERVED[scene]?.(x, y) && !WALK_THROUGH(scene, x, y)) block(x, y);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (RESERVED[scene]?.(x, y) && !WALK_THROUGH(scene, x, y)) block(x, y);
   for (const d of decor) {
     if (d.island !== scene || isWallCell(scene, d.y) || ART[d.item_id]?.flat) continue;
-    for (const [cx, cy] of cellsOf(scene, d.item_id, d.x, d.y, d.rot ?? 0)) if (cx >= 0 && cy >= 0 && cx < ROOM.n && cy < ROOM.n) block(cx, cy);
+    for (const [cx, cy] of cellsOf(scene, d.item_id, d.x, d.y, d.rot ?? 0)) if (cx >= 0 && cy >= 0 && cx < N && cy < N) block(cx, cy);
   }
   return {
     cols: n, rows: n, blocked,
-    toCell: p => { const g = roomGrid(p); return [clamp(Math.floor(g.gx * SUB), 0, n - 1), clamp(Math.floor(g.gy * SUB), 0, n - 1)]; },
-    toPt: (c, r) => roomPt((c + 0.5) / SUB, (r + 0.5) / SUB),
+    toCell: p => { const g = roomGridIn(scene, p); return [clamp(Math.floor(g.gx * SUB), 0, n - 1), clamp(Math.floor(g.gy * SUB), 0, n - 1)]; },
+    toPt: (c, r) => roomPtIn(scene, (c + 0.5) / SUB, (r + 0.5) / SUB),
   };
 }
 
