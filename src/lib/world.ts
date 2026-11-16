@@ -19,12 +19,12 @@ export interface SceneDef {
 }
 
 // ───────── Phòng isometric (nhà gỗ, phòng ngủ) ─────────
-// Sàn 8×8 ô hình thoi, hai bức tường phía sau (trái: gx = 0, phải: gy = 0).
-export const ROOM = { ox: 96, oy: 50, n: 8, wallH: 44 };
+// Sàn 10×10 ô hình thoi (cảnh 216×164), hai bức tường phía sau (trái: gx = 0, phải: gy = 0).
+export const ROOM = { ox: 108, oy: 52, n: 10, wallH: 44 };
 export const roomPt = (gx: number, gy: number, z = 0): Pt => ({ x: ROOM.ox + (gx - gy) * HW, y: ROOM.oy + (gx + gy) * HH - z });
-/** Phòng các con rộng hơn: sàn 10×10 ô (cảnh 216×164) */
-export const KROOM = { ox: 108, oy: 52, n: 10, wallH: 44 };
-export const roomOf = (scene: string) => (scene === 'kidroom' || scene === 'bedroom' ? KROOM : ROOM);
+/** mọi phòng đều 10×10 (giữ tên KROOM cho phòng các con) */
+export const KROOM = ROOM;
+export const roomOf = (_scene: string) => ROOM;
 export const roomPtIn = (scene: string, gx: number, gy: number, z = 0): Pt => { const R = roomOf(scene); return { x: R.ox + (gx - gy) * HW, y: R.oy + (gx + gy) * HH - z }; };
 export function roomGridIn(scene: string, p: Pt) { const R = roomOf(scene), a = (p.x - R.ox) / HW, b = (p.y - R.oy) / HH; return { gx: (a + b) / 2, gy: (b - a) / 2 }; }
 export function roomGrid(p: Pt) {
@@ -55,10 +55,10 @@ export const SCENES: Record<SceneId, SceneDef> = {
   hill: { name: 'Đồi ngắm cảnh', icon: '⛰️', w: 192, h: 144, outdoor: true, spawn: { x: 86, y: 124 } },
   farm: { name: 'Nông trại', icon: '🌾', w: 256, h: 192, outdoor: true, walk: { x0: 6, x1: 250, y0: 58, y1: 188 }, spawn: { x: 128, y: 182 } },
   arcade: { name: 'Khu vui chơi', icon: '🎮', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 92, y1: 140 }, spawn: { x: 96, y: 136 } },
-  house: { name: 'Nhà gỗ', icon: '🏡', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(5, 7.4) },
+  house: { name: 'Nhà gỗ', icon: '🏡', w: 216, h: 164, outdoor: false, walk: 'room', spawn: roomPt(5, 9.3) },
   bedroom: { name: 'Phòng ngủ', icon: '🛏️', w: 216, h: 164, outdoor: false, walk: 'room', spawn: roomPtIn('bedroom', 1.2, 8.8) },
   kidroom: { name: 'Phòng các con', icon: '🧸', w: 216, h: 164, outdoor: false, walk: 'room', spawn: roomPtIn('kidroom', 1.2, 8.8) },
-  bathroom: { name: 'Phòng tắm', icon: '🛁', w: 192, h: 144, outdoor: false, walk: 'room', spawn: roomPt(1.2, 6.6) },
+  bathroom: { name: 'Phòng tắm', icon: '🛁', w: 216, h: 164, outdoor: false, walk: 'room', spawn: roomPt(1.2, 8.8) },
   shop: { name: 'Cửa hàng', icon: '🛍️', w: 192, h: 144, outdoor: false, walk: { x0: 8, x1: 184, y0: 94, y1: 140 }, spawn: { x: 96, y: 136 } },
   cinema: { name: 'Rạp phim', icon: '🎬', w: 160, h: 120, outdoor: false, spawn: { x: 68, y: 100 } },
   restaurant: { name: 'Nhà hàng', icon: '🕯️', w: 192, h: 144, outdoor: false, spawn: { x: 70, y: 118 } },
@@ -137,8 +137,8 @@ export const BEACH = {
 };
 
 export const HOUSE = {
-  door: roomPt(5, 7.6),                       // thảm cửa ra làng
-  toBedroom: roomPt(0.3, 6.5),                // cửa trên tường trái
+  door: roomPt(5, 9.6),                       // thảm cửa ra làng
+  toBedroom: roomPt(0.3, 8.6),                // cửa trên tường trái
   toKid: roomPt(7.1, 0.4),                    // cửa phòng các con (tường phải)
   kitchen: { stand: roomPt(1.6, 2) },
   calendar: wallSlot(WALL_L, 0, 30),
@@ -157,16 +157,16 @@ export const BATH = {
 };
 
 /** Ô chỉ cấm đặt đồ nhưng vẫn đi qua được (thảm cửa, lối vào phòng tắm) */
-export const WALK_THROUGH = (scene: string, x: number, y: number) => (scene === 'house' && (y === 7 || (x >= 6 && y === 0))) || (scene === 'bedroom' && ((x >= 7 && x <= 8 && y <= 1) || (x <= 1 && y >= 8))) || (scene === 'kidroom' && x <= 1 && y >= 8);
+export const WALK_THROUGH = (scene: string, x: number, y: number) => (scene === 'house' && ((y === 9 && x >= 4 && x <= 5) || (x <= 1 && y >= 8) || (x >= 6 && x <= 7 && y === 0))) || (scene === 'bedroom' && ((x >= 7 && x <= 8 && y <= 1) || (x <= 1 && y >= 8))) || (scene === 'kidroom' && x <= 1 && y >= 8);
 
 /** Ô sàn/tường đã có đồ cố định (bếp, cửa, cửa sổ) — không đặt đồ trang trí lên */
 export const RESERVED: Record<string, (x: number, y: number) => boolean> = {
-  house: (x, y) => (y < 8 && x === 0 && y <= 4) || (y === WALL_L && (x <= 4 || x >= 6)) || (y === WALL_R && x >= 3) || (y === 7 && x >= 4 && x <= 5) || (y === 0 && x >= 6),
+  house: (x, y) => (y < 8 && x === 0 && y <= 4) || (y === WALL_L && (x <= 4 || x >= 8)) || (y === WALL_R && x >= 3) || (y === 9 && x >= 4 && x <= 5) || (y < 10 && x <= 1 && y >= 8) || (y === 0 && x >= 6),
   kidroom: (x, y) => (y < 10 && x <= 1 && y >= 8) || (y === WALL_L && x >= 8),
   // lối vào phòng tắm (góc tường phải phía trong) để trống, không đặt tủ che cửa
   bedroom: (x, y) => (y < 10 && ((x >= 7 && x <= 8 && y <= 1) || (x <= 1 && y >= 8))) || (y === WALL_L && x >= 8) || (y === WALL_R && x >= 2 && x <= 8),
   bathroom: (x, y) => (y < 8 && x >= 2 && x <= 5 && y >= 1 && y <= 3) || (y < 8 && x === 0 && ((y >= 1 && y <= 2) || y === 5))
-    || (y === WALL_L && (x >= 6 || (x >= 1 && x <= 2))) || (y === WALL_R && x >= 3 && x <= 5),
+    || (y === WALL_L && (x >= 8 || (x >= 1 && x <= 2))) || (y === WALL_R && x >= 3 && x <= 5) || (y < 10 && x <= 1 && y >= 8),
   garden: () => false,
   farm: () => false,
 };

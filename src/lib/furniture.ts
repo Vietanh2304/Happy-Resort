@@ -22,13 +22,6 @@ const WOOD_D = '#a8703f';
 const PINK = '#f4a7b9';
 const LEAF = '#a5d470';
 
-function bearEars(q: IsoPen, x: number, y: number, c: string) {
-  q.ellipse(x - 4, y, 3, 3, c);
-  q.ellipse(x + 4, y, 3, 3, c);
-  q.ellipse(x - 4, y, 1.4, 1.4, mix(c, '#ffffff', 0.35));
-  q.ellipse(x + 4, y, 1.4, 1.4, mix(c, '#ffffff', 0.35));
-}
-
 function leaves(p: Pen, cx: number, cy: number, r: number, base = LEAF, seed = 0) {
   const blobs: [number, number, number][] = [[0, 0, 1], [-0.6, 0.25, 0.7], [0.6, 0.3, 0.7], [-0.25, -0.55, 0.65], [0.35, -0.45, 0.6]];
   blobs.forEach(([dx, dy, k], i) => ellipse(p, cx + dx * r, cy + dy * r, r * k * 0.75, r * k * 0.7, i % 2 ? mix(base, '#2f6b3a', 0.15) : base));
@@ -38,7 +31,14 @@ function leaves(p: Pen, cx: number, cy: number, r: number, base = LEAF, seed = 0
   }
 }
 
-// ───────── Nội thất (isometric) ─────────
+// ───────── Nội thất (isometric) — phong cách cung điện: gỗ trắng ngà, nhung hồng, viền vàng ─────────
+const IVORY = '#f6ecdc', IVORY_D = '#e2cfb4', ROSE = '#d8607a', ROSE_L = '#f29ab0', WALNUT = '#7a4a30', MARBLE = '#f8f4ee';
+/** tô một mặt đứng theo trục gx (mặt trước, gy cố định) */
+const face = (q: IsoPen, g0: number, g1: number, gy: number, z0: number, z1: number, c: string) => q.poly([q.pt(g0, gy, z0), q.pt(g1, gy, z0), q.pt(g1, gy, z1), q.pt(g0, gy, z1)], c);
+/** chân tủ/bàn mạ vàng */
+const goldFeet = (q: IsoPen, pts: [number, number][], h: number, s = 0.12) => pts.forEach(([a, b]) => q.box(a, b, 0, s, s, h, shade('#e8b84a', 0.6)));
+/** bó hoa hồng nhỏ trong bình */
+function roses(q: IsoPen, x: number, y: number, vase = '#bfe3f2') { q.rect(x - 1, y - 4, 3, 4, vase); q.px(x - 1, y - 4, '#ffffff'); for (const [dx, dy, c] of [[-2, -6, '#e8406a'], [0, -7, '#ff7a9a'], [2, -6, '#e8406a'], [-1, -8, '#c82a4a'], [1, -9, '#ff9ab4']] as const) { q.px(x + dx, y + dy, c); q.px(x + dx, y + dy + 1, '#5a9a4a'); } }
 
 const ROYAL = '#9a2244', ROYAL_D = '#6e1632', VELVET = '#c23a62', GOLD = '#e8b84a', GOLD_L = '#ffe08a', BLUSH = '#f8c4d2';
 /** rèm voan buông từ màn trướng, thắt eo bằng dây vàng, xoè ra dưới chân (mặt phẳng gx cố định) */
@@ -94,85 +94,96 @@ const bed = () => isoSprite('bed:v4', 2, 3, 64, q => {
 });
 
 const wardrobe = () => isoSprite('wardrobe', 2, 1, 40, q => {
-  const w = shade(WOOD);
-  q.box(0.05, 0.1, 0, 1.9, 0.8, 34, w);
-  q.box(0, 0.05, 34, 2, 0.9, 3, shade(WOOD_D));
-  const [x0, y0] = q.pt(1, 0.9, 3), [, y1] = q.pt(1, 0.9, 32);
-  q.rect(x0, y1, 1, y0 - y1, WOOD_D);                            // khe hai cánh tủ
-  for (const g of [0.85, 1.15]) { const [x, y] = q.pt(g, 0.9, 18); q.rect(x, y, 1, 3, '#f6c64e'); }
-  const [hx, hy] = q.pt(0.45, 0.9, 27);                          // hình trái tim trên cánh
-  q.px(hx, hy, PINK); q.px(hx + 2, hy, PINK); q.rect(hx, hy + 1, 3, 1, PINK); q.px(hx + 1, hy + 2, PINK);
+  goldFeet(q, [[0.08, 0.12], [1.8, 0.12], [0.08, 0.78], [1.8, 0.78]], 2);
+  q.box(0.05, 0.1, 2, 1.9, 0.8, 32, shade(IVORY));
+  q.box(0, 0.05, 34, 2, 0.9, 3, shade(GOLD, 0.6));
+  const ar: [number, number][] = [q.pt(0.45, 0.95, 37)]; for (let s = 0; s <= 10; s++) { const u = s / 10; ar.push(q.pt(0.45 + u * 1.1, 0.95, 37 + Math.sin(u * Math.PI) * 5)); } ar.push(q.pt(1.55, 0.95, 37)); q.poly(ar, GOLD);
+  { const [x, y] = q.pt(1, 0.95, 39); q.rect(x - 1, y - 1, 2, 2, '#e8406a'); q.px(x - 2, y, '#5a9a4a'); q.px(x + 1, y, '#5a9a4a'); }
+  for (const [a, b] of [[0.14, 0.94], [1.06, 1.86]]) {
+    face(q, a, b, 0.9, 5, 32, GOLD); face(q, a + 0.04, b - 0.04, 0.9, 6, 31, IVORY);
+    face(q, a + 0.1, b - 0.1, 0.9, 8, 17, IVORY_D); face(q, a + 0.13, b - 0.13, 0.9, 9, 16, IVORY);
+    face(q, a + 0.1, b - 0.1, 0.9, 19, 29, IVORY_D); face(q, a + 0.13, b - 0.13, 0.9, 20, 28, IVORY);
+  }
+  { const [x, y] = q.pt(0.54, 0.9, 24); q.ellipse(x, y, 3, 4.4, GOLD); q.ellipse(x, y, 2.2, 3.6, '#d7ecf7'); q.px(x - 1, y - 2, '#ffffff'); }
+  for (const g of [0.88, 1.12]) { const [x, y] = q.pt(g, 0.9, 18); q.rect(x, y, 1, 3, GOLD_L); }
 });
 
 const nightstand = () => isoSprite('nightstand', 1, 1, 18, q => {
-  q.box(0.1, 0.1, 0, 0.8, 0.8, 11, shade(WOOD));
-  const [x, y] = q.pt(0.5, 0.9, 6); q.rect(x - 3, y, 6, 1, WOOD_D); q.px(x, y - 2, '#f6c64e');
-  q.box(0.3, 0.3, 11, 0.4, 0.35, 3, shade('#f7e6d4', 0.5));       // hộp khăn giấy
-  const [tx, ty] = q.pt(0.5, 0.45, 14); q.rect(tx, ty - 2, 1, 2, '#ffffff');
+  goldFeet(q, [[0.12, 0.12], [0.76, 0.12], [0.12, 0.76], [0.76, 0.76]], 3);
+  q.box(0.1, 0.1, 3, 0.8, 0.8, 8, shade(IVORY));
+  q.flat(0.1, 0.1, 11, 0.8, 0.8, MARBLE); { const [x0, y0] = q.pt(0.2, 0.3, 11), [x1, y1] = q.pt(0.7, 0.6, 11); q.px(Math.round((x0 + x1) / 2), Math.round((y0 + y1) / 2), '#d8d4dc'); }
+  face(q, 0.18, 0.82, 0.9, 5, 10, GOLD); face(q, 0.21, 0.79, 0.9, 5.5, 9.5, IVORY_D);
+  const [x, y] = q.pt(0.5, 0.9, 7); q.rect(x - 1, y, 2, 1, GOLD_L);
+  roses(q, ...xy(q.pt(0.3, 0.3, 11)));
 });
 
 const floorLamp = () => isoSprite('floor_lamp', 1, 1, 34, q => {
-  q.flat(0.3, 0.3, 0, 0.4, 0.4, '#8a5a3c');
   const [x, y] = q.pt(0.5, 0.5, 0);
-  q.rect(x, y - 22, 1, 22, '#8a5a3c');
-  q.box(0.18, 0.18, 21, 0.64, 0.64, 9, { top: '#fff1b8', left: '#f6c64e', right: '#e8b84a' });
+  q.ellipse(x, y, 4, 2, '#c8902a'); q.ellipse(x, y - 1, 3, 1.4, GOLD);
+  q.rect(x, y - 22, 1, 22, GOLD); q.px(x + 1, y - 22, GOLD_L); q.rect(x - 1, y - 12, 3, 1, GOLD_L); q.rect(x - 1, y - 6, 3, 1, GOLD_L);
+  q.box(0.18, 0.18, 21, 0.64, 0.64, 9, { top: '#fff4c8', left: '#fbd8e0', right: '#f2c0cc' });
+  for (let g = 0.2; g <= 0.8; g += 0.12) { const [fx, fy] = q.pt(g, 0.82, 21); q.px(fx, fy, GOLD); q.px(fx, fy + 1, GOLD_L); const [rx, ry] = q.pt(0.82, g, 21); q.px(rx, ry, GOLD); }
 });
 
 const pottedPlant = () => isoSprite('potted_plant', 1, 1, 28, q => {
-  q.box(0.25, 0.25, 0, 0.5, 0.5, 7, shade('#d9895a'));
+  q.box(0.25, 0.25, 0, 0.5, 0.5, 7, shade('#fbfbff'));
+  q.flat(0.25, 0.25, 7, 0.5, 0.5, '#5a3a2a');
+  for (const z of [1, 6]) face(q, 0.25, 0.75, 0.75, z, z + 1, GOLD);
+  { const [x, y] = q.pt(0.5, 0.75, 4); q.px(x - 1, y, '#5a8ad8'); q.px(x + 1, y, '#5a8ad8'); q.px(x, y - 1, '#5a8ad8'); }
   const [x, y] = q.pt(0.5, 0.5, 15);
-  leaves(q, x, y, 8, LEAF, 1);
+  leaves(q, x, y, 8, '#6ab85a', 1);
+  for (const [dx, dy] of [[-4, -3], [3, -5], [5, 1], [-2, 3], [0, -7]]) { q.px(x + dx, y + dy, '#ff7a9a'); q.px(x + dx + 1, y + dy, '#ffd0dc'); }
 });
 
 const bearChair = () => isoSprite('chair', 1, 1, 26, q => {
-  const w = shade(WOOD);
-  q.box(0.2, 0.2, 0, 0.12, 0.12, 6, w); q.box(0.68, 0.2, 0, 0.12, 0.12, 6, w);
-  q.box(0.2, 0.68, 0, 0.12, 0.12, 6, w); q.box(0.68, 0.68, 0, 0.12, 0.12, 6, w);
-  q.box(0.15, 0.15, 6, 0.7, 0.7, 2, w);
-  q.flat(0.22, 0.25, 8, 0.56, 0.55, '#f2b8c6');                  // nệm hồng
-  q.box(0.15, 0.1, 8, 0.7, 0.14, 10, w);                         // tựa lưng
-  bearEars(q, ...xy(q.pt(0.5, 0.15, 19)), WOOD);
+  goldFeet(q, [[0.2, 0.2], [0.68, 0.2], [0.2, 0.68], [0.68, 0.68]], 6);
+  q.box(0.15, 0.15, 6, 0.7, 0.7, 2, shade(IVORY));
+  q.box(0.2, 0.22, 8, 0.6, 0.58, 1, shade(ROSE));
+  { const [x, y] = q.pt(0.5, 0.5, 9); q.px(x, y, GOLD_L); }
+  q.box(0.15, 0.1, 8, 0.7, 0.14, 10, shade(IVORY));
+  const [ox, oy] = q.pt(0.5, 0.24, 13); q.ellipse(ox, oy, 3.6, 3.6, GOLD); q.ellipse(ox, oy, 2.8, 2.8, ROSE); q.px(ox, oy, GOLD_L);
+  const [cx, cy] = q.pt(0.5, 0.15, 19); q.rect(cx - 2, cy, 5, 1, GOLD); q.px(cx, cy - 1, GOLD_L);
 });
 
 const lowTable = () => isoSprite('low_table', 2, 1, 14, q => {
-  const w = shade(WOOD);
-  for (const [a, b] of [[0.1, 0.15], [1.8, 0.15], [0.1, 0.75], [1.8, 0.75]]) q.box(a, b, 0, 0.12, 0.12, 6, w);
-  q.box(0, 0.05, 6, 2, 0.9, 2, w);
-  q.flat(0.6, 0.25, 8, 0.8, 0.5, '#fff8ee');                      // khăn bàn
-  const [x, y] = q.pt(1, 0.5, 8);
-  leaves(q, x, y - 2, 3, '#7cc576', 3);                          // chậu cây nhỏ
+  goldFeet(q, [[0.1, 0.15], [1.8, 0.15], [0.1, 0.75], [1.8, 0.75]], 6);
+  q.box(0, 0.05, 6, 2, 0.9, 2, { top: MARBLE, left: GOLD, right: '#c8902a' });
+  for (const [a, b, c, d] of [[0.2, 0.3, 0.7, 0.6], [1.1, 0.2, 1.6, 0.7]]) { const [x0, y0] = q.pt(a, b, 8), [x1, y1] = q.pt(c, d, 8); for (let k = 0; k <= 6; k++) q.px(Math.round(x0 + (x1 - x0) * k / 6), Math.round(y0 + (y1 - y0) * k / 6), '#dcd6de'); }
+  roses(q, ...xy(q.pt(1, 0.5, 8)), '#fbe0e8');
 });
 
 const roundRug = () => isoSprite('round_rug', 2, 2, 2, q => {
   const [x, y] = q.pt(1, 1, 0);
-  q.ellipse(x, y, 19, 9.5, '#e8d6b8');
-  q.ellipse(x, y, 16, 8, '#fbf3e4');
-  q.ellipse(x, y, 10, 5, '#f6e0c4');
-  q.ellipse(x, y, 5, 2.5, '#fbf3e4');
-}, '#c9a882');
+  for (const [r, c] of [[19, '#b8324e'], [17.5, GOLD], [16.5, '#f6ecdc'], [12, '#f29ab0'], [11, GOLD], [10, '#f6ecdc'], [4, '#d8607a']] as const) q.ellipse(x, y, r, r / 2, c);
+  for (let k = 0; k < 16; k++) { const a = (k / 16) * Math.PI * 2; q.px(Math.round(x + Math.cos(a) * 14), Math.round(y + Math.sin(a) * 7), k % 2 ? '#e8406a' : '#5a9a4a'); q.px(Math.round(x + Math.cos(a) * 7), Math.round(y + Math.sin(a) * 3.5), '#e8b84a'); }
+}, '#8a1e3a');
 
 const sofa = () => isoSprite('sofa', 2, 1, 20, q => {
-  const c = shade(PINK);
-  q.box(0, 0.1, 0, 2, 0.85, 7, c);
-  q.box(0, 0.05, 7, 2, 0.25, 9, c);                              // tựa
-  q.box(0, 0.1, 7, 0.22, 0.85, 4, c);                            // tay vịn
-  q.box(1.78, 0.1, 7, 0.22, 0.85, 4, c);
-  q.flat(0.25, 0.35, 7, 0.7, 0.55, '#f9c6d2');
-  q.flat(1.05, 0.35, 7, 0.7, 0.55, '#f9c6d2');
-  q.box(1.2, 0.3, 7, 0.35, 0.18, 4, shade('#f6c64e'));           // gối vàng
+  const c = shade(ROSE);
+  goldFeet(q, [[0.05, 0.15], [1.83, 0.15], [0.05, 0.8], [1.83, 0.8]], 1);
+  q.box(0, 0.1, 1, 2, 0.85, 6, c);
+  q.box(0, 0.05, 7, 2, 0.25, 9, c);
+  for (let r = 0; r < 2; r++) for (let k = 0; k < 7; k++) { const [x, y] = q.pt(0.28 + k * 0.24 + (r % 2) * 0.12, 0.3, 10 + r * 3.5); q.px(x, y, '#a83a56'); q.px(x, y - 1, ROSE_L); }
+  q.box(0, 0.1, 7, 0.22, 0.85, 4, c); q.box(1.78, 0.1, 7, 0.22, 0.85, 4, c);
+  q.flat(0.25, 0.35, 7, 0.7, 0.55, ROSE_L); q.flat(1.05, 0.35, 7, 0.7, 0.55, ROSE_L);
+  face(q, 0, 2, 0.95, 6, 6.6, GOLD);
+  q.box(0.3, 0.3, 7, 0.3, 0.16, 4, shade('#fff4e6')); q.box(1.35, 0.3, 7, 0.3, 0.16, 4, shade(GOLD));
 });
 
 const bookshelf = () => isoSprite('bookshelf', 2, 1, 36, q => {
-  q.box(0.05, 0.1, 0, 1.9, 0.6, 30, shade(WOOD));
-  q.poly([q.pt(0.15, 0.7, 2), q.pt(1.85, 0.7, 2), q.pt(1.85, 0.7, 28), q.pt(0.15, 0.7, 28)], '#7a4a34');
-  const cols = ['#f59ab3', '#8db8ef', '#d6f1a4', '#f6c64e', '#b9a2e8', '#f5a36c', '#ffffff'];
+  q.box(0.05, 0.1, 0, 1.9, 0.6, 30, shade(WALNUT));
+  q.box(0, 0.06, 30, 2, 0.68, 2, shade(GOLD, 0.6));
+  face(q, 0.15, 1.85, 0.7, 2, 28, '#4a2a1a');
+  const cols = ['#9a2244', '#2a5a8a', '#3a7a4a', '#e8b84a', '#6a3a8a', '#c86a3a', '#f6ecdc'];
   for (const z of [3, 12, 21]) {
     const [sx, sy] = q.pt(0.15, 0.7, z), [ex] = q.pt(1.85, 0.7, z);
-    q.poly([q.pt(0.15, 0.7, z), q.pt(1.85, 0.7, z), q.pt(1.85, 0.7, z - 1), q.pt(0.15, 0.7, z - 1)], WOOD);
+    face(q, 0.15, 1.85, 0.7, z - 1, z, GOLD);
     for (let x = sx + 1, i = z; x < ex - 1; x += 2, i++) {
-      const h = Math.max(3, Math.round((5 + ((i * 7) % 3)) * q.k));
       const y = sy + Math.round((x - sx) * 0.5);
-      q.rect(x, y - h, 2, h, cols[(i * 3) % cols.length]);
+      if (z === 12 && x > sx + 18 && x < sx + 24) { if (x < sx + 20) { q.ellipse(x + 1, y - 3, 2.4, 2.4, '#5ab0e8'); q.px(x, y - 4, '#6ac86a'); q.rect(x + 1, y - 1, 1, 1, GOLD); } continue; }
+      if (z === 21 && x > sx + 6 && x < sx + 10) { if (x < sx + 8) roses(q, x + 1, y); continue; }
+      const h = Math.max(3, Math.round((5 + ((i * 7) % 3)) * q.k));
+      const c = cols[(i * 3) % cols.length]; q.rect(x, y - h, 2, h, c); q.px(x, y - h + 1, GOLD_L);
     }
   }
 });
@@ -190,29 +201,33 @@ const teddy = () => isoSprite('teddy', 1, 1, 18, q => {
 });
 
 const desk = () => isoSprite('desk', 2, 1, 26, q => {
-  const w = shade(WOOD);
-  q.box(0.05, 0.1, 0, 0.4, 0.8, 12, w);                          // ngăn kéo
-  q.box(1.85, 0.1, 0, 0.12, 0.12, 12, w); q.box(1.85, 0.78, 0, 0.12, 0.12, 12, w);
-  q.box(0, 0.05, 12, 2, 0.9, 2, w);
-  q.box(0.8, 0.25, 14, 0.7, 0.45, 1, shade('#d8dbe6'));          // laptop
-  q.poly([q.pt(0.8, 0.25, 15), q.pt(1.5, 0.25, 15), q.pt(1.5, 0.25, 23), q.pt(0.8, 0.25, 23)], '#bcd8f2');
-  const [x, y] = q.pt(0.3, 0.5, 14); q.rect(x - 1, y - 4, 3, 4, '#f6c64e'); q.ellipse(x, y - 6, 3, 2, '#fff1b8'); // đèn bàn
+  q.box(0.05, 0.1, 0, 0.4, 0.8, 12, shade(IVORY));
+  face(q, 0.1, 0.4, 0.9, 2, 6, IVORY_D); face(q, 0.1, 0.4, 0.9, 7, 11, IVORY_D);
+  for (const z of [4, 9]) { const [x, y] = q.pt(0.25, 0.9, z); q.px(x, y, GOLD_L); }
+  goldFeet(q, [[1.85, 0.1], [1.85, 0.78]], 12);
+  q.box(0, 0.05, 12, 2, 0.9, 2, { top: MARBLE, left: GOLD, right: '#c8902a' });
+  q.box(0.8, 0.25, 14, 0.7, 0.45, 1, shade('#f0c8c0'));
+  face(q, 0.8, 1.5, 0.25, 15, 23, '#e8b8b0'); face(q, 0.85, 1.45, 0.25, 16, 22, '#bcd8f2');
+  const [x, y] = q.pt(0.3, 0.5, 14); q.rect(x, y - 5, 1, 5, GOLD); q.ellipse(x, y - 7, 3, 2, '#fbd8e0'); q.px(x, y - 8, '#fff4c8');
+  roses(q, ...xy(q.pt(1.75, 0.4, 14)));
 });
 
 // ───────── Đồ treo tường (vẽ thẳng, khi hiển thị sẽ được nghiêng theo tường) ─────────
 
 const painting = () => makeSprite('wall:painting', 14, 11, p => {
-  p.rect(0, 0, 14, 11, '#b98256'); p.rect(1, 1, 12, 9, '#cfe8f7');
-  p.rect(1, 6, 12, 4, '#d6f1a4'); p.rect(4, 4, 3, 3, '#f6c64e'); p.rect(8, 5, 4, 2, '#ffffff');
-}, '#5a3a2e');
+  p.rect(0, 0, 14, 11, '#e8b84a'); p.rect(1, 1, 12, 9, '#c8902a'); p.rect(2, 2, 10, 7, '#ffd8a8');
+  p.rect(2, 2, 10, 3, '#f8b0a0'); p.rect(2, 6, 10, 3, '#8ac08a'); ellipse(p, 9, 5, 1.6, 1.6, '#fff4c8'); p.rect(3, 5, 4, 1, '#6a9a6a');
+  for (const [x, y] of [[0, 0], [13, 0], [0, 10], [13, 10]]) p.px(x, y, '#ffe08a');
+}, '#7a5020');
 const clock = () => makeSprite('wall:clock', 11, 11, p => {
-  ellipse(p, 5.5, 5.5, 5.5, 5.5, '#c99366'); ellipse(p, 5.5, 5.5, 4.2, 4.2, '#fff8ee');
-  p.rect(5, 2, 1, 4, '#5a3a2e'); p.rect(5, 5, 3, 1, '#5a3a2e');
-}, '#5a3a2e');
+  ellipse(p, 5.5, 5.5, 5.5, 5.5, '#e8b84a'); ellipse(p, 5.5, 5.5, 4.4, 4.4, '#c8902a'); ellipse(p, 5.5, 5.5, 3.8, 3.8, '#fffaf0');
+  for (const [x, y] of [[5, 2], [5, 8], [2, 5], [8, 5]]) p.px(x, y, '#c8902a');
+  p.rect(5, 3, 1, 3, '#3a2a2a'); p.rect(5, 5, 2, 1, '#3a2a2a'); p.px(5, 0, '#ffe08a');
+}, '#7a5020');
 const mirror = () => makeSprite('wall:mirror', 10, 15, p => {
-  ellipse(p, 5, 7.5, 5, 7.5, '#e8c070'); ellipse(p, 5, 7.5, 3.8, 6.2, '#d7ecf7');
-  p.rect(3, 3, 1, 4, '#ffffff'); p.px(4, 2, '#ffffff');
-}, '#5a3a2e');
+  ellipse(p, 5, 7.5, 5, 7.5, '#e8b84a'); ellipse(p, 5, 7.5, 4.2, 6.6, '#c8902a'); ellipse(p, 5, 7.5, 3.6, 6, '#d7ecf7');
+  p.rect(3, 3, 1, 4, '#ffffff'); p.px(4, 2, '#ffffff'); p.px(5, 0, '#ffe08a'); p.px(4, 0, '#e8406a'); p.px(6, 0, '#e8406a');
+}, '#7a5020');
 const bunting = () => makeSprite('wall:bunting', 20, 8, p => {
   for (let x = 0; x < 20; x++) p.px(x, Math.round(Math.abs(x - 10) / 5), '#8a5a3c');
   ['#f59ab3', '#f6c64e', '#d6f1a4', '#8db8ef'].forEach((c, i) => {

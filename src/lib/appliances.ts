@@ -1,10 +1,13 @@
 // Đồ gia dụng (nhìn nghiêng) và đồ trang trí nông trại (nhìn chính diện).
 import type { Art } from './furniture';
 import { ellipse, isoSprite, shade, type IsoPen } from './iso';
-import { makeSprite, mix, type Pen } from './pixel';
+import { makeSprite, type Pen } from './pixel';
 
 const WOOD = '#d29a63';
 const WOOD_D = '#a8703f';
+const GOLD = '#e8b84a', GOLD_L = '#ffe08a', IVORY = '#f6ecdc', WALNUT = '#7a4a30', MARBLE = '#f8f4ee';
+const goldLegs = (q: IsoPen, pts: [number, number][], h: number, s = 0.1) => pts.forEach(([a, b]) => q.box(a, b, 0, s, s, h, shade(GOLD, 0.6)));
+const vein = (q: IsoPen, a: number, b: number, c: number, d: number, z: number) => { const [x0, y0] = q.pt(a, b, z), [x1, y1] = q.pt(c, d, z); for (let k = 0; k <= 6; k++) q.px(Math.round(x0 + (x1 - x0) * k / 6), Math.round(y0 + (y1 - y0) * k / 6 + (k % 2)), '#d8d2dc'); };
 
 function leftFace(q: IsoPen, g0: number, g1: number, gy: number, z0: number, z1: number, c: string) {
   q.poly([q.pt(g0, gy, z0), q.pt(g1, gy, z0), q.pt(g1, gy, z1), q.pt(g0, gy, z1)], c);
@@ -12,21 +15,26 @@ function leftFace(q: IsoPen, g0: number, g1: number, gy: number, z0: number, z1:
 // ───────── Gia dụng ─────────
 
 const tv = () => isoSprite('tv', 2, 1, 30, q => {
-  q.box(0.05, 0.15, 0, 1.9, 0.75, 9, shade(WOOD));
-  leftFace(q, 0.15, 0.95, 0.9, 2, 7, mix(WOOD, '#000', 0.12)); leftFace(q, 1.05, 1.85, 0.9, 2, 7, mix(WOOD, '#000', 0.12));
-  q.box(0.85, 0.4, 9, 0.3, 0.2, 2, shade('#5a5a6a'));
-  q.box(0.15, 0.4, 11, 1.7, 0.12, 15, shade('#3a3a4a'));
-  leftFace(q, 0.25, 1.75, 0.52, 12, 25, '#7ac0e8');
-  leftFace(q, 0.25, 1.75, 0.52, 20, 25, '#a8dcf5');
+  q.box(0.05, 0.15, 0, 1.9, 0.75, 9, shade(WALNUT));
+  leftFace(q, 0.15, 0.95, 0.9, 2, 7, '#5a3420'); leftFace(q, 1.05, 1.85, 0.9, 2, 7, '#5a3420');
+  for (const g of [0.85, 1.15]) { const [x, y] = q.pt(g, 0.9, 4.5); q.rect(x, y, 1, 2, GOLD_L); }
+  leftFace(q, 0.05, 1.95, 0.9, 8.4, 9, GOLD);
+  q.box(0.85, 0.4, 9, 0.3, 0.2, 2, shade('#c8902a'));
+  q.box(0.15, 0.4, 11, 1.7, 0.12, 15, shade('#2a2630'));
+  leftFace(q, 0.25, 1.75, 0.52, 12, 25, '#f0a070'); leftFace(q, 0.25, 1.75, 0.52, 18, 25, '#c870a8'); leftFace(q, 0.25, 1.75, 0.52, 22, 25, '#6a5ab8');
+  leftFace(q, 0.25, 1.75, 0.52, 12, 15, '#3a4a8a');
+  { const [x, y] = q.pt(1.2, 0.52, 17); q.ellipse(x, y, 2, 2, '#ffe0a0'); }
   const [x, y] = q.pt(0.5, 0.52, 23); q.px(x, y, '#ffffff'); q.px(x + 1, y, '#ffffff');
-}, '#3a2a2a');
+}, '#2a1a1a');
 
 const fridge = () => isoSprite('fridge', 1, 1, 38, q => {
-  q.box(0.1, 0.1, 0, 0.8, 0.8, 34, shade('#a8dcc8'));
-  leftFace(q, 0.1, 0.9, 0.9, 21, 22, '#7ab8a4');
-  for (const z of [12, 26]) { const [x, y] = q.pt(0.8, 0.9, z); q.rect(x, y - 3, 1, 5, '#e8f4f0'); }
+  q.box(0.1, 0.1, 0, 0.8, 0.8, 34, shade('#bfe6d6'));
+  q.box(0.1, 0.1, 34, 0.8, 0.8, 1, shade('#e8ecf0'));
+  leftFace(q, 0.1, 0.9, 0.9, 21, 22, '#c8ccd4');
+  for (const z of [12, 26]) { const [x, y] = q.pt(0.8, 0.9, z); q.rect(x, y - 3, 1, 6, '#f0f4f8'); q.px(x, y - 3, '#ffffff'); }
   const [hx, hy] = q.pt(0.35, 0.9, 28); q.px(hx, hy, '#f08aa6'); q.px(hx + 2, hy, '#f08aa6'); q.rect(hx, hy + 1, 3, 1, '#f08aa6'); q.px(hx + 1, hy + 2, '#f08aa6');
-  const [sx, sy] = q.pt(0.3, 0.9, 16); q.rect(sx, sy, 3, 3, '#f6c64e');
+  const [sx, sy] = q.pt(0.3, 0.9, 16); q.rect(sx, sy, 3, 3, '#f6c64e'); q.rect(sx + 4, sy + 1, 2, 3, '#8db8ef');
+  const [lx, ly] = q.pt(0.5, 0.9, 32); q.rect(lx - 1, ly, 3, 1, GOLD);
 });
 
 const washer = () => isoSprite('washer', 1, 1, 22, q => {
@@ -39,18 +47,22 @@ const washer = () => isoSprite('washer', 1, 1, 22, q => {
 
 const stove = () => isoSprite('stove', 1, 1, 20, q => {
   q.box(0.1, 0.1, 0, 0.8, 0.8, 15, shade('#fbf1dc'));
-  for (const [a, b] of [[0.3, 0.3], [0.7, 0.3], [0.3, 0.7], [0.7, 0.7]]) { const [x, y] = q.pt(a, b, 15); ellipse(q, x, y, 2, 1, '#3a3a4a'); }
-  leftFace(q, 0.2, 0.8, 0.9, 3, 10, '#4a3a3a'); leftFace(q, 0.28, 0.72, 0.9, 4, 9, '#f8a85a');
-  const [x, y] = q.pt(0.3, 0.3, 18); q.rect(x - 2, y, 5, 3, '#c0c4d0'); q.px(x, y - 2, '#ffffff');      // nồi đang sôi
+  q.flat(0.1, 0.1, 15, 0.8, 0.8, '#2a2a34');
+  for (const [a, b] of [[0.3, 0.3], [0.7, 0.3], [0.3, 0.7], [0.7, 0.7]]) { const [x, y] = q.pt(a, b, 15); ellipse(q, x, y, 2, 1, '#4a4a5a'); q.px(x, y, '#c8902a'); }
+  leftFace(q, 0.2, 0.8, 0.9, 3, 10, '#3a2a2a'); leftFace(q, 0.28, 0.72, 0.9, 4, 9, '#f8a85a'); leftFace(q, 0.2, 0.8, 0.9, 10, 10.6, GOLD);
+  for (const g of [0.25, 0.42, 0.58, 0.75]) { const [x, y] = q.pt(g, 0.9, 12.5); q.px(x, y, GOLD_L); }
+  const [x, y] = q.pt(0.3, 0.3, 18); q.rect(x - 2, y, 5, 3, '#d8884a'); q.rect(x - 2, y, 5, 1, '#f0a868'); q.px(x + 3, y + 1, '#c87038'); q.px(x, y - 2, '#ffffff'); q.px(x + 1, y - 3, '#ffffff');
 });
 
 const kitchenCounter = () => isoSprite('kitchen_counter', 2, 1, 22, q => {
-  q.box(0.05, 0.1, 0, 1.9, 0.8, 13, shade('#f7b8cc'));
-  q.flat(0.05, 0.1, 13, 1.9, 0.8, '#fdf6ee');
-  q.flat(0.3, 0.25, 13, 0.6, 0.5, '#bfe3f2');
-  const [fx, fy] = q.pt(0.6, 0.2, 13); q.rect(fx, fy - 5, 1, 5, '#a8a8b8'); q.rect(fx, fy - 5, 3, 1, '#a8a8b8');
-  for (const g of [0.5, 1.5]) { const [x, y] = q.pt(g, 0.9, 7); q.rect(x - 1, y, 3, 1, '#f6c64e'); }
-  const [px_, py] = q.pt(1.5, 0.45, 13); ellipse(q, px_, py - 3, 2.5, 3, '#a5d470'); q.rect(px_ - 1, py - 1, 3, 2, '#dc9a6a');
+  q.box(0.05, 0.1, 0, 1.9, 0.8, 13, shade('#f8d0da'));
+  for (const [a, b] of [[0.12, 0.95], [1.05, 1.88]]) { leftFace(q, a, b, 0.9, 2, 11, GOLD); leftFace(q, a + 0.04, b - 0.04, 0.9, 2.5, 10.5, '#fbe0e6'); leftFace(q, a + 0.12, b - 0.12, 0.9, 4, 9, '#f2c4d0'); }
+  q.box(0, 0.06, 13, 2, 0.88, 1, { top: MARBLE, left: '#e8e2e8', right: '#d8d2dc' });
+  vein(q, 0.2, 0.3, 0.9, 0.7, 14); vein(q, 1.2, 0.2, 1.8, 0.6, 14);
+  q.flat(0.3, 0.25, 14, 0.6, 0.5, '#bfe3f2');
+  const [fx, fy] = q.pt(0.6, 0.2, 14); q.rect(fx, fy - 5, 1, 5, GOLD); q.rect(fx, fy - 5, 3, 1, GOLD);
+  for (const g of [0.5, 1.5]) { const [x, y] = q.pt(g, 0.9, 7); q.rect(x - 1, y, 3, 1, GOLD_L); }
+  const [px_, py] = q.pt(1.5, 0.45, 14); ellipse(q, px_, py - 3, 2.5, 3, '#a5d470'); q.rect(px_ - 1, py - 1, 3, 2, '#fbfbff'); q.px(px_, py - 1, GOLD);
 });
 
 const microwave = () => isoSprite('microwave', 1, 1, 22, q => {
@@ -60,56 +72,67 @@ const microwave = () => isoSprite('microwave', 1, 1, 22, q => {
 });
 
 const diningTable = () => isoSprite('dining_table', 2, 2, 24, q => {
-  const w = shade(WOOD);
-  for (const [a, b] of [[0.2, 0.2], [1.7, 0.2], [0.2, 1.7], [1.7, 1.7]]) q.box(a, b, 0, 0.12, 0.12, 11, w);
-  q.box(0.1, 0.1, 11, 1.8, 1.8, 2, w);
-  q.flat(0.3, 0.3, 13, 1.4, 1.4, '#fffaf0');
-  q.flat(0.3, 0.8, 13, 1.4, 0.4, '#f7b8cc');
+  goldLegs(q, [[0.2, 0.2], [1.7, 0.2], [0.2, 1.7], [1.7, 1.7]], 11, 0.12);
+  q.box(0.1, 0.1, 11, 1.8, 1.8, 2, { top: MARBLE, left: GOLD, right: '#c8902a' });
+  q.flat(0.3, 0.3, 13, 1.4, 1.4, '#fffaf4');
+  q.flat(0.1, 0.8, 13, 1.8, 0.4, '#d8607a'); q.flat(0.1, 0.8, 13, 1.8, 0.05, GOLD); q.flat(0.1, 1.15, 13, 1.8, 0.05, GOLD);
   const [x, y] = q.pt(1, 1, 13);
-  q.rect(x - 1, y - 5, 3, 5, '#bfe3f2'); ellipse(q, x, y - 7, 3, 2.5, '#f59ab3'); q.px(x - 1, y - 8, '#ffffff');
+  q.rect(x, y - 7, 1, 7, GOLD); q.rect(x - 4, y - 5, 9, 1, GOLD);
+  for (const dx of [-4, 0, 4]) { q.rect(x + dx, y - (dx ? 8 : 10), 1, 3, '#fffaf0'); q.px(x + dx, y - (dx ? 9 : 11), '#ffb347'); q.px(x + dx, y - (dx ? 10 : 12), '#fff2a0'); }
+  for (const [g, h] of [[0.5, 0.55], [1.5, 1.45]]) { const [px_, py] = q.pt(g, h, 13); ellipse(q, px_, py, 2.6, 1.3, '#ffffff'); ellipse(q, px_, py, 1.4, 0.7, '#f2c4d0'); }
 }, '#5a3a2e');
 
 const armchair = () => isoSprite('armchair', 1, 1, 22, q => {
-  const c = shade('#f6c64e');
-  q.box(0.1, 0.15, 0, 0.8, 0.75, 7, c);
+  const c = shade('#2a8a8a');
+  goldLegs(q, [[0.12, 0.17], [0.78, 0.17], [0.12, 0.8], [0.78, 0.8]], 1);
+  q.box(0.1, 0.15, 1, 0.8, 0.75, 6, c);
   q.box(0.1, 0.08, 7, 0.8, 0.22, 10, c);
+  for (let k = 0; k < 3; k++) { const [x, y] = q.pt(0.3 + k * 0.2, 0.3, 12); q.px(x, y, '#1a6a6a'); q.px(x, y - 1, '#5ac0b8'); }
   q.box(0.1, 0.15, 7, 0.16, 0.75, 4, c); q.box(0.74, 0.15, 7, 0.16, 0.75, 4, c);
-  q.flat(0.3, 0.35, 7, 0.4, 0.45, '#fbe08a');
-  q.box(0.35, 0.3, 7, 0.3, 0.12, 4, shade('#f59ab3'));
+  q.flat(0.3, 0.35, 7, 0.4, 0.45, '#4ab0a8');
+  leftFace(q, 0.1, 0.9, 0.9, 6, 6.6, GOLD);
+  q.box(0.35, 0.3, 7, 0.3, 0.12, 4, shade('#f29ab0'));
 });
 
 const dresser = () => isoSprite('dresser:v2', 2, 1, 40, q => {
-  // bàn trang điểm: mặt bàn trắng hồng, 4 chân mảnh, ngăn kéo giữa
-  for (const [a, b] of [[0.12, 0.25], [1.8, 0.25], [0.12, 0.8], [1.8, 0.8]]) q.box(a, b, 0, 0.08, 0.08, 11, shade('#e8c8a8'));
-  q.box(0.05, 0.15, 11, 1.9, 0.75, 3, shade('#fbeee4'));
-  leftFace(q, 0.6, 1.4, 0.9, 8, 11, '#f2dcc8'); { const [x, y] = q.pt(1, 0.9, 9.5); q.px(x, y, '#d29a63'); }
-  // gương bầu dục lớn viền vàng + bóng đèn
+  goldLegs(q, [[0.12, 0.25], [1.8, 0.25], [0.12, 0.8], [1.8, 0.8]], 11, 0.08);
+  q.box(0.05, 0.15, 11, 1.9, 0.75, 3, { top: MARBLE, left: IVORY, right: '#e2cfb4' });
+  leftFace(q, 0.05, 1.95, 0.9, 11, 11.6, GOLD);
+  leftFace(q, 0.6, 1.4, 0.9, 7, 11, GOLD); leftFace(q, 0.63, 1.37, 0.9, 7.5, 10.5, '#f6ecdc'); { const [x, y] = q.pt(1, 0.9, 9); q.px(x, y, GOLD_L); }
   const [mx, my] = q.pt(1, 0.3, 14);
-  ellipse(q, mx, my - 11, 7, 10, '#e8c070'); ellipse(q, mx, my - 11, 5.5, 8.5, '#d7ecf7'); q.rect(mx - 3, my - 16, 1, 4, '#ffffff'); q.px(mx - 2, my - 17, '#ffffff');
-  for (const [dx, dy] of [[-7, -16], [7, -16], [-8, -9], [8, -9], [0, -22]]) { q.px(mx + dx, my + dy, '#fff1a8'); q.px(mx + dx, my + dy - 1, '#ffffff'); }
-  // nước hoa, son, hộp phấn, lọ hoa
-  const [ax, ay] = q.pt(0.35, 0.55, 14); q.rect(ax - 1, ay - 4, 3, 4, '#f59ab3'); q.px(ax, ay - 5, '#e8c070');
-  const [bx, by] = q.pt(0.55, 0.7, 14); q.rect(bx, by - 3, 1, 3, '#e8604a'); q.px(bx, by - 4, '#c8483a');
-  const [cx, cy] = q.pt(1.55, 0.6, 14); ellipse(q, cx, cy - 1, 2, 1, '#c8a2e8'); q.px(cx, cy - 2, '#ffffff');
-  const [dx, dy] = q.pt(1.75, 0.45, 14); q.rect(dx - 1, dy - 3, 2, 3, '#a8d8f0'); ellipse(q, dx, dy - 5, 2, 1.6, '#f59ab3'); q.px(dx - 1, dy - 6, '#f6c64e');
+  ellipse(q, mx, my - 11, 7.5, 10.5, GOLD); ellipse(q, mx, my - 11, 6.6, 9.6, '#c8902a'); ellipse(q, mx, my - 11, 5.5, 8.5, '#d7ecf7'); q.rect(mx - 3, my - 16, 1, 4, '#ffffff'); q.px(mx - 2, my - 17, '#ffffff');
+  q.rect(mx - 2, my - 23, 5, 2, GOLD); q.px(mx, my - 24, GOLD_L); q.px(mx - 1, my - 22, '#e8406a'); q.px(mx + 1, my - 22, '#e8406a');
+  for (const [dx, dy] of [[-8, -16], [8, -16], [-8, -9], [8, -9]]) { q.px(mx + dx, my + dy, '#fff1a8'); q.px(mx + dx, my + dy - 1, '#ffffff'); }
+  const [ax, ay] = q.pt(0.35, 0.55, 14); q.rect(ax - 1, ay - 4, 3, 4, '#f59ab3'); q.px(ax, ay - 5, GOLD);
+  const [bx, by] = q.pt(0.55, 0.7, 14); q.rect(bx, by - 3, 1, 3, '#e8604a'); q.px(bx, by - 4, GOLD);
+  const [cx, cy] = q.pt(1.55, 0.6, 14); ellipse(q, cx, cy - 1, 2, 1, GOLD); q.px(cx, cy - 2, '#ffffff');
+  const [dx, dy] = q.pt(1.75, 0.45, 14); q.rect(dx - 1, dy - 3, 2, 3, '#fbe0e8'); ellipse(q, dx, dy - 5, 2, 1.6, '#e8406a'); q.px(dx - 1, dy - 6, '#ff9ab4');
 });
 
 const piano = () => isoSprite('piano', 2, 1, 30, q => {
-  const c = shade('#3a3040');
+  const c = shade('#1e1a24');
   q.box(0.05, 0.1, 0, 1.9, 0.5, 24, c);
-  q.box(0.05, 0.55, 9, 1.9, 0.35, 2, shade('#4a4050'));
+  leftFace(q, 0.05, 1.95, 0.6, 23, 24, GOLD); leftFace(q, 0.2, 1.8, 0.6, 13, 21, '#2a2630'); leftFace(q, 0.25, 1.75, 0.6, 14, 20, '#1e1a24');
+  q.box(0.05, 0.55, 9, 1.9, 0.35, 2, shade('#2a2630'));
   leftFace(q, 0.1, 1.9, 0.9, 10.5, 11.5, '#fffaf0');
-  for (let g = 0.2; g < 1.9; g += 0.18) { const [x, y] = q.pt(g, 0.9, 11.5); q.px(x, y - 1, '#3a3040'); }
-  for (const [a, b] of [[0.15, 0.6], [1.75, 0.6]]) q.box(a, b, 0, 0.1, 0.1, 9, c);
+  for (let g = 0.2; g < 1.9; g += 0.18) { const [x, y] = q.pt(g, 0.9, 11.5); q.px(x, y - 1, '#1e1a24'); }
+  for (const [a, b] of [[0.15, 0.6], [1.75, 0.6]]) q.box(a, b, 0, 0.1, 0.1, 9, shade(GOLD, 0.6));
   const [nx, ny] = q.pt(1, 0.6, 20); q.rect(nx - 3, ny, 6, 4, '#fffaf0'); q.px(nx - 1, ny + 1, '#3a3040'); q.px(nx + 1, ny + 2, '#3a3040');
-}, '#2a2030');
+  const [cx, cy] = q.pt(0.35, 0.35, 24); q.rect(cx, cy - 4, 1, 4, GOLD); q.rect(cx - 2, cy - 3, 5, 1, GOLD); for (const dx of [-2, 0, 2]) { q.rect(cx + dx, cy - 6, 1, 2, '#fffaf0'); q.px(cx + dx, cy - 7, '#ffb347'); }
+  roses(q, ...(q.pt(1.6, 0.35, 24) as [number, number]));
+}, '#100c14');
+function roses(q: IsoPen, x: number, y: number) { q.rect(x - 1, y - 4, 3, 4, '#fbe0e8'); for (const [dx, dy, c] of [[-2, -6, '#e8406a'], [0, -7, '#ff7a9a'], [2, -6, '#e8406a'], [1, -8, '#c82a4a']] as const) { q.px(x + dx, y + dy, c); q.px(x + dx, y + dy + 1, '#5a9a4a'); } }
 
 const aquarium = () => isoSprite('aquarium', 2, 1, 28, q => {
-  q.box(0.05, 0.15, 0, 1.9, 0.75, 9, shade(WOOD));
-  q.box(0.1, 0.2, 9, 1.8, 0.65, 14, { top: '#d0f0f8', left: '#8fd6e8', right: '#6cc0dc' });
-  leftFace(q, 0.1, 1.9, 0.85, 9, 12, '#e8d8a8');
-  for (const [g, z, c] of [[0.5, 16, '#f7a98a'], [1.2, 19, '#f6c64e'], [1.5, 14, '#f59ab3']] as const) { const [x, y] = q.pt(g, 0.85, z); q.rect(x, y, 3, 2, c); q.px(x + 3, y, c); }
-  const [wx, wy] = q.pt(0.3, 0.85, 12); q.rect(wx, wy - 6, 1, 6, '#86c257'); q.rect(wx + 2, wy - 4, 1, 4, '#a5d470');
+  q.box(0.05, 0.15, 0, 1.9, 0.75, 9, shade(WALNUT));
+  leftFace(q, 0.05, 1.95, 0.9, 8.4, 9, GOLD);
+  q.box(0.1, 0.2, 9, 1.8, 0.65, 14, { top: '#d0f0f8', left: '#7ad0e8', right: '#5ab8dc' });
+  leftFace(q, 0.1, 1.9, 0.85, 22.4, 23, GOLD); leftFace(q, 0.1, 0.14, 0.85, 9, 23, GOLD); leftFace(q, 1.86, 1.9, 0.85, 9, 23, GOLD);
+  leftFace(q, 0.14, 1.86, 0.85, 9, 12, '#f0e0b0');
+  for (const [g, z, c] of [[0.5, 16, '#ff8a5a'], [1.2, 19, '#f6c64e'], [1.5, 14, '#f59ab3'], [0.9, 13, '#ffffff']] as const) { const [x, y] = q.pt(g, 0.85, z); q.rect(x, y, 3, 2, c); q.px(x + 3, y, c); q.px(x, y, '#1a1a2a'); }
+  const [wx, wy] = q.pt(0.3, 0.85, 12); q.rect(wx, wy - 6, 1, 6, '#3a9a4a'); q.rect(wx + 2, wy - 4, 1, 4, '#6ac86a');
+  const [kx, ky] = q.pt(1.6, 0.85, 12); q.rect(kx, ky - 3, 3, 3, '#e86a8a'); q.px(kx + 1, ky - 4, '#ff9ab4');
+  for (const [g, z] of [[0.7, 18], [0.75, 20], [1.3, 21]]) { const [x, y] = q.pt(g, 0.85, z); q.px(x, y, '#ffffff'); }
 });
 
 const recordPlayer = () => isoSprite('record_player', 1, 1, 20, q => {
@@ -128,17 +151,21 @@ const fan = () => isoSprite('standing_fan', 1, 1, 30, q => {
 });
 
 const bathtub = () => isoSprite('bathtub', 2, 1, 16, q => {
-  q.box(0.05, 0.1, 0, 1.9, 0.8, 9, shade('#fbfbff'));
-  q.flat(0.2, 0.25, 9, 1.6, 0.5, '#bfe3f2');
+  for (const [a, b] of [[0.15, 0.2], [1.75, 0.2], [0.15, 0.75], [1.75, 0.75]]) { const [x, y] = q.pt(a + 0.05, b + 0.05, 0); q.rect(x - 1, y - 2, 3, 2, GOLD); q.px(x, y, GOLD_L); }
+  q.box(0.05, 0.1, 2, 1.9, 0.8, 7, shade('#fbfbff'));
+  q.box(0.05, 0.1, 9, 1.9, 0.8, 0.6, shade(GOLD, 0.6));
+  q.flat(0.2, 0.25, 9.6, 1.6, 0.5, '#bfe3f2');
   for (const [g, d] of [[0.4, 0.4], [0.8, 0.5], [1.3, 0.35], [1.6, 0.55]]) { const [x, y] = q.pt(g, d, 10); ellipse(q, x, y, 2, 1.5, '#ffffff'); }
-  const [dx, dy] = q.pt(1.2, 0.45, 10); q.rect(dx, dy - 2, 3, 2, '#f6c64e'); q.px(dx + 3, dy - 2, '#f7a98a');   // vịt cao su
+  for (const [g, d] of [[0.6, 0.35], [1.1, 0.55]]) { const [x, y] = q.pt(g, d, 10); q.px(x, y, '#e8406a'); }
+  const [fx, fy] = q.pt(0.1, 0.5, 9); q.rect(fx, fy - 6, 1, 6, GOLD); q.rect(fx, fy - 6, 3, 1, GOLD);
+  const [dx, dy] = q.pt(1.2, 0.45, 10); q.rect(dx, dy - 2, 3, 2, '#f6c64e'); q.px(dx + 3, dy - 2, '#f7a98a');
 });
 
 const coatRack = () => isoSprite('coat_rack', 1, 1, 32, q => {
   const [x, y] = q.pt(0.5, 0.5, 0);
-  ellipse(q, x, y, 3, 1.5, WOOD_D); q.rect(x, y - 28, 1, 28, WOOD_D);
-  q.rect(x - 3, y - 26, 7, 1, WOOD_D);
-  q.rect(x - 4, y - 25, 3, 9, '#f59ab3'); q.rect(x + 2, y - 25, 3, 6, '#f6c64e'); ellipse(q, x + 3, y - 18, 2, 1.5, '#8db8ef');
+  ellipse(q, x, y, 3.4, 1.7, '#c8902a'); ellipse(q, x, y - 0.5, 2.6, 1.2, GOLD); q.rect(x, y - 28, 1, 28, GOLD); q.px(x, y - 29, GOLD_L);
+  q.rect(x - 3, y - 26, 7, 1, GOLD); q.px(x - 3, y - 27, GOLD_L); q.px(x + 3, y - 27, GOLD_L);
+  q.rect(x - 4, y - 25, 3, 9, '#9a2244'); q.rect(x - 4, y - 25, 3, 1, '#c23a62'); q.rect(x + 2, y - 25, 3, 6, '#f6ecdc'); ellipse(q, x + 3, y - 18, 2, 1.5, '#e8b84a');
 });
 
 const beanBag = () => isoSprite('bean_bag', 1, 1, 12, q => {

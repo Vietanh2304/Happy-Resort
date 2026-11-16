@@ -515,6 +515,7 @@ function SceneContent(p: WorldProps) {
 
       {(scene === 'house' || scene === 'bedroom' || scene === 'bathroom' || scene === 'kidroom') && <RoomContent {...p} dark={phase === 'night'} />}
       {scene === 'kidroom' && <KidRoomFront dark={phase === 'night' || phase === 'sunset'} />}
+      {scene === 'house' && (phase === 'night' || phase === 'sunset') && <><Glow x={108} y={20} r={34} /><Glow x={roomPt(8.95, 0, 6).x} y={roomPt(8.95, 0, 6).y} r={26} /></>}
       {scene === 'bedroom' && <BedroomFront dark={phase === 'night' || phase === 'sunset'} />}
 
       {scene === 'shop' && (
@@ -1188,7 +1189,7 @@ const KID_ACTS = Object.keys(KID_ACT_SCENE);
 const KID_SLEEP_MS = 1.5 * 3600e3;
 /** cỡ hình con khi ngồi / nằm (bằng cỡ lúc đi lại) */
 const KID_K = 1.25;
-const BATH_OUT = roomPt(0.5, 6.6);
+const BATH_OUT = roomPt(0.5, 8.6);
 type KidMode = 'play' | 'bed' | 'desk' | 'draw' | 'toy' | 'ball' | 'talk';
 /** Các con trong phòng riêng: chơi trên thảm · lên giường đắp chăn ngủ (đầu trên gối) · ngồi đôn học / vẽ · chơi gấu & xếp khối, đá bóng, tập nói với ba mẹ */
 function KidInRoom({ idx, order, mode, tuck, sprite, walk, sleep, sad, onClick, name }: { idx: number; order: number; mode: KidMode; tuck: boolean; sprite: Sprite; walk: Sprite; sleep: Sprite; sad: boolean; onClick: () => void; name: string }) {
@@ -1414,7 +1415,7 @@ function FestFall({ theme, date }: { theme: Theme; date: string }) {
 // ───────── Phòng (nhà gỗ, phòng ngủ) ─────────
 
 function RoomContent(p: WorldProps & { dark: boolean }) {
-  const big = p.scene === 'kidroom' || p.scene === 'bedroom';
+  const big = true;   // mọi phòng 10×10: cửa trái ở ô 8–9
   const { scene, go, enter, on, editing } = p;
   const s = useScale();
   const island = scene;
@@ -1481,7 +1482,7 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
       {editing && <RoomCells {...p} />}
       {!editing && (
         <>
-          {scene === 'house' && <Hot x={54} y={38} w={44} h={36} title="Bếp — nấu ăn" onClick={() => go(HOUSE.kitchen.stand, on.kitchen)} />}
+          {scene === 'house' && <Hot x={66} y={40} w={44} h={36} title="Bếp — nấu ăn" onClick={() => go(HOUSE.kitchen.stand, on.kitchen)} />}
           <Hot x={big ? 12 : 20} y={big ? 62 : 50} w={16} h={38} title={scene === 'house' ? 'Vào phòng ngủ' : scene === 'bedroom' || scene === 'kidroom' ? 'Ra phòng khách' : 'Về phòng ngủ'}
             onClick={() => go(big ? roomPtIn(scene, 0.3, 8.6) : HOUSE.toBedroom, () => (scene === 'bathroom' ? enter('bedroom', BATH.toBath) : scene === 'kidroom' ? enter('house', HOUSE.toKid) : enter(scene === 'house' ? 'bedroom' : 'house', SCENES.bedroom.spawn)))} />
           <Tag x={big ? 20 : 28} y={big ? 56 : 44} className="label">{scene === 'house' ? '🛏️' : scene === 'bedroom' || scene === 'kidroom' ? '🛋️' : '🛏️'}</Tag>
@@ -1497,14 +1498,14 @@ function RoomContent(p: WorldProps & { dark: boolean }) {
               <Tag x={roomPt(7, 5.5).x} y={roomPt(7, 5.5).y - 22} className="hint">🐾</Tag>
             </>
           )}
-          {scene === 'house' && p.theme && <Tag x={96} y={8} className="fest-banner small">{THEMES[p.theme].hang} {THEMES[p.theme].label.slice(3)} {THEMES[p.theme].hang}</Tag>}
+          {scene === 'house' && p.theme && <Tag x={108} y={8} className="fest-banner small">{THEMES[p.theme].hang} {THEMES[p.theme].label.slice(3)} {THEMES[p.theme].hang}</Tag>}
           {scene === 'house' && (
             <>
-              <Hot x={159} y={52} w={16} h={36} title="🧸 Vào phòng các con" onClick={() => go(HOUSE.toKid, () => enter('kidroom'))} />
-              <Tag x={167} y={46} className="label" onClick={() => go(HOUSE.toKid, () => enter('kidroom'))}>🧸</Tag>
+              <Hot x={171} y={54} w={16} h={36} title="🧸 Vào phòng các con" onClick={() => go(HOUSE.toKid, () => enter('kidroom'))} />
+              <Tag x={179} y={48} className="label" onClick={() => go(HOUSE.toKid, () => enter('kidroom'))}>🧸</Tag>
             </>
           )}
-          {scene === 'house' && <Hot x={58} y={106} w={28} h={13} title="Ra ngoài" onClick={() => go(HOUSE.door, () => enter('town', BUILDINGS[0].door))} />}
+          {scene === 'house' && <Hot x={49} y={118} w={28} h={13} title="Ra ngoài" onClick={() => go(HOUSE.door, () => enter('town', BUILDINGS[0].door))} />}
         </>
       )}
       {scene === 'bathroom' && <BathContent {...p} />}
