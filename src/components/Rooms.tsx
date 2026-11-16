@@ -59,11 +59,11 @@ export function useRtc(room: string | null, me: api.Profile, partner: api.Profil
         stream = s;
       } else if (kind === 'screen') {
         try {
-          stream = await md.getDisplayMedia({ video: { width: { max: 1280 }, height: { max: 720 }, frameRate: { max: 20 } }, audio: opt.audio !== false });
+          stream = await md.getDisplayMedia({ video: { width: { ideal: 1920, max: 1920 }, height: { ideal: 1080, max: 1080 }, frameRate: { ideal: 30, max: 30 } }, audio: opt.audio !== false });
         } catch (e) {
           // Một số trình duyệt (Safari, Firefox) không cho lấy tiếng khi chia sẻ màn hình → thử lại chỉ hình
           if ((e as Error).name === 'NotAllowedError' || (e as Error).name === 'AbortError') throw e;
-          stream = await md.getDisplayMedia({ video: { width: { max: 1280 }, height: { max: 720 }, frameRate: { max: 20 } } });
+          stream = await md.getDisplayMedia({ video: { width: { ideal: 1920, max: 1920 }, height: { ideal: 1080, max: 1080 }, frameRate: { ideal: 30, max: 30 } } });
         }
       } else {
         stream = await md.getUserMedia({ video: { width: 640, height: 480 }, audio: false }); // tiếng nói đi qua nút 🎙️ Mic

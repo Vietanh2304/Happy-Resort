@@ -2,7 +2,7 @@
 // Tín hiệu bắt tay đi qua kênh realtime của cặp đôi; hình và tiếng đi thẳng giữa hai máy.
 // Dùng mẫu "perfect negotiation": bên nào thêm hình/tiếng thì bên đó gửi offer, va chạm thì bên "polite" nhường.
 import { onEvent, sendEvent } from './realtime';
-import { checkRelay, dropRelay, relayOf, videoCaps } from './relay';
+import { checkRelay, dropRelay, relayOf, scaleFor, videoCaps } from './relay';
 
 // STUN (miễn phí) đủ cho phần lớn mạng nhà. Mạng 4G/công ty chặn kết nối thẳng thì cần TURN chuyển tiếp:
 // điền VITE_TURN_URL / VITE_TURN_USERNAME / VITE_TURN_CREDENTIAL trong .env (nhiều URL cách nhau dấu phẩy).
@@ -93,12 +93,12 @@ export class RtcRoom {
   private add(pc: RTCPeerConnection, t: MediaStreamTrack, s: MediaStream) {
     const sender = pc.addTrack(t, s);
     if (t.kind !== 'video') return;
-    try { (t as MediaStreamTrack & { contentHint: string }).contentHint = 'motion'; } catch { /* */ }
+    try { (t as MediaStreamTrack & { contentHint: string }).contentHint = 'detail'; } catch { /* */ }   // màn hình/phim: giữ chi tiết (độ nét) thay vì khung hình
     const tune = () => {
       const p = sender.getParameters();
       if (!p.encodings?.length) return void setTimeout(tune, 500);
-      const cap = videoCaps(`room:${this.room}`, relayOf(`room:${this.room}`)); p.encodings[0].maxBitrate = cap.bps; p.encodings[0].maxFramerate = cap.fps; p.encodings[0].scaleResolutionDownBy = Math.max(1, (t.getSettings().height ?? 720) / 720);
-      (p as RTCRtpSendParameters & { degradationPreference?: string }).degradationPreference = 'balanced';   // phim: giữ cân bằng nét & mượt, không hạ độ phân giải quá tay
+      const cap = videoCaps(`room:${this.room}`, relayOf(`room:${this.room}`)); p.encodings[0].maxBitrate = cap.bps; p.encodings[0].maxFramerate = cap.fps; p.encodings[0].scaleResolutionDownBy = scaleFor(t, cap.h);
+      (p as RTCRtpSendParameters & { degradationPreference?: string }).degradationPreference = 'maintain-resolution';   // mạng yếu thì giảm khung hình, giữ nguyên độ phân giải (≥ 720p)
       sender.setParameters(p).catch(() => {});
     };
     setTimeout(tune, 300);
