@@ -1895,3 +1895,5 @@ textarea { resize: vertical; }
 /* các nút chữ trong menu nhân vật: giữ nền hồng chữ trắng của .btn (không bị nút emoji nền trắng đè thành chữ trắng trên nền trắng) */
 .emote-box button.btn { width: auto; height: auto; font-size: 14px; background: var(--accent); color: #fff; border-width: 3px; }
 .emote-box button.btn.ghost { background: var(--paper); color: var(--ink); }
+
+.relay-badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #fff3c8; border: 2px solid var(--ink); color: var(--ink); white-space: nowrap; }

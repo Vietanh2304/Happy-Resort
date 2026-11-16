@@ -6,6 +6,7 @@
 // không cần thương lượng lại. Mỗi kết nối có mã phiên (sid); tin bắt tay không đúng phiên thì bỏ qua.
 import { onEvent, sendEvent } from './realtime';
 import { ICE } from './rtc';
+import { checkRelay, dropRelay } from './relay';
 
 const rid = () => Math.random().toString(36).slice(2, 10);
 export interface CallState { mic: boolean; cam: boolean }
@@ -71,6 +72,7 @@ export class CallLink {
       clearTimeout(this.iceTimer);
       this.emit();
       // Mạng chập chờn: thử nối lại đường truyền (không phải làm lại cả cuộc gọi)
+      if (pc.connectionState === 'connected') setTimeout(() => void checkRelay('call', pc), 1500);
       if (pc.connectionState === 'failed') pc.restartIce();
       else if (pc.connectionState === 'disconnected') this.iceTimer = setTimeout(() => pc.connectionState === 'disconnected' && pc.restartIce(), 4000);
     };
@@ -157,5 +159,6 @@ export class CallLink {
     clearTimeout(this.iceTimer);
     this.off.forEach(f => f());
     this.pc.close();
+    dropRelay('call');
   }
 }

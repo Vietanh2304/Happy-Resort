@@ -2,6 +2,7 @@
 // Tín hiệu bắt tay đi qua kênh realtime của cặp đôi; hình và tiếng đi thẳng giữa hai máy.
 // Dùng mẫu "perfect negotiation": bên nào thêm hình/tiếng thì bên đó gửi offer, va chạm thì bên "polite" nhường.
 import { onEvent, sendEvent } from './realtime';
+import { checkRelay, dropRelay, relayNow } from './relay';
 
 // STUN (miễn phí) đủ cho phần lớn mạng nhà. Mạng 4G/công ty chặn kết nối thẳng thì cần TURN chuyển tiếp:
 // điền VITE_TURN_URL / VITE_TURN_USERNAME / VITE_TURN_CREDENTIAL trong .env (nhiều URL cách nhau dấu phẩy).
@@ -71,7 +72,7 @@ export class RtcRoom {
     this.pc = pc;
     this.onRemote(null);
     pc.onicecandidate = e => e.candidate && this.send({ candidate: e.candidate.toJSON() });
-    pc.oniceconnectionstatechange = () => { if (pc.iceConnectionState === 'failed') pc.restartIce(); };
+    pc.oniceconnectionstatechange = () => { if (pc.iceConnectionState === 'failed') pc.restartIce(); if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') setTimeout(() => void checkRelay(`room:${this.room}`, pc), 1500); };
     // Mỗi lần có thêm hình/tiếng: tạo luồng mới để giao diện vẽ lại (mic rồi mới bật cam...)
     pc.ontrack = e => this.onRemote(new MediaStream(e.streams[0]?.getTracks() ?? [e.track]));
     pc.onnegotiationneeded = async () => {
@@ -96,7 +97,7 @@ export class RtcRoom {
     const tune = () => {
       const p = sender.getParameters();
       if (!p.encodings?.length) return void setTimeout(tune, 500);
-      p.encodings[0].maxBitrate = 1_200_000; p.encodings[0].maxFramerate = 20; p.encodings[0].scaleResolutionDownBy = Math.max(1, (t.getSettings().height ?? 720) / 720);
+      p.encodings[0].maxBitrate = relayNow() ? 600_000 : 1_200_000; p.encodings[0].maxFramerate = relayNow() ? 15 : 20; p.encodings[0].scaleResolutionDownBy = Math.max(1, (t.getSettings().height ?? 720) / 720);
       (p as RTCRtpSendParameters & { degradationPreference?: string }).degradationPreference = 'maintain-framerate';
       sender.setParameters(p).catch(() => {});
     };
@@ -165,5 +166,6 @@ export class RtcRoom {
     this.off.forEach(f => f());
     this.stopLocal(true);
     this.pc.close();
+    dropRelay(`room:${this.room}`);
   }
 }

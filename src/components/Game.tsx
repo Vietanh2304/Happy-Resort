@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { RelayBadge } from './RelayBadge';
 import { albumCtx } from './AlbumSave';
 import { InviteBanner } from './InviteBanner';
 import * as api from '../lib/api';
@@ -1018,6 +1019,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
         )}
         {!partner && couple && <span>Mã resort: <b className="code">{couple.invite_code}</b></span>}
         <CallButtons call={call} partnerName={partnerName} partnerMic={!!theirs?.mic} partnerCam={!!theirs?.cam} />
+        <RelayBadge />
         {call.remote && <RemoteAudio stream={call.remote} />}
         {students.length > 0 && studyTime(myTime.hour) && <button className={`chip ${studyLeft ? 'glow' : ''}`} onClick={() => { const sit = () => live.update({ act: 'kidstudy', care: 'all' }); if (scene !== 'kidroom') { enter('kidroom', KIDROOM.desks[0].stand); setTimeout(sit, 400); } else go(KIDROOM.desks[0].stand, sit); setSheet({ kind: 'study' }); }}>📚 Dạy con học{studyLeft ? ` (còn ${studyLeft})` : ' ✓'}</button>}
         {students.length > 0 && meetingDay(myTime.date) && myTime.hour >= 17 && <button className="chip glow" onClick={() => { if (scene !== 'school') enter('school'); setSheet({ kind: 'meeting' }); }}>📣 Họp phụ huynh</button>}
