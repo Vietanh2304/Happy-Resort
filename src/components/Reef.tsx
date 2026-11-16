@@ -131,7 +131,7 @@ export function ReefPanel({ live, partnerHere, partnerName, seen, onLeave }: { l
           {all.map(c => <span key={c.id} className={`chip ${seen.includes(c.id) ? 'active' : 'locked'}`} title={seen.includes(c.id) ? c.fact : 'Chưa chạm'}>{seen.includes(c.id) ? `${c.icon} ${c.name}` : '❔'}</span>)}
         </div>
         <div className="row wrap">
-          {([['turtle', '🐢 Cưỡi rùa biển'], ['glow', '✨ Đêm biển phát quang'], ['pearl', '🦪 Săn ngọc trai']] as const).map(([k, l]) => <button key={k} className="btn small" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: k }))}>{l}</button>)}
+          {([['whale', '🐋 Hát cùng cá voi'], ['wreck', '🏴‍☠️ Kho báu tàu đắm'], ['mermaid', '🧜 Vũ hội tiên cá']] as const).map(([k, l]) => <button key={k} className="btn small" onClick={() => window.dispatchEvent(new CustomEvent('duo-start', { detail: k }))}>{l}</button>)}
         </div>
         <div className="row wrap">
           <button className="btn small ghost" onClick={() => live.say('👌 Ổn cả!')}>👌 Ổn</button>
