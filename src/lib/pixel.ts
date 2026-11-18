@@ -131,6 +131,12 @@ export function emojiSprite(emoji: string, size = 16): Sprite {
   const canvas = document.createElement('canvas');
   canvas.width = n; canvas.height = n;
   const ctx = canvas.getContext('2d')!;
+  if (HYS_CAN[emoji]) {
+    hysFeelCan(ctx, n, HYS_CAN[emoji]);
+    const sprite = { url: canvas.toDataURL(), w: size + 2, h: size + 2, smooth: true };
+    emojiCache.set(key, sprite);
+    return sprite;
+  }
   ctx.font = `${Math.round(size * 0.9 * k)}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -144,6 +150,53 @@ export function emojiSprite(emoji: string, size = 16): Sprite {
   const sprite = { url: canvas.toDataURL(), w: size + 2, h: size + 2, smooth: true };
   emojiCache.set(key, sprite);
   return sprite;
+}
+
+/** Hộp lon Hy's Feel theo vị: [thân, tối, sáng, chữ vị] */
+const HYS_CAN: Record<string, [string, string, string, string]> = {
+  '🩷🌱': ['#b6e4a8', '#78b06c', '#e2f6d8', 'ORIGINAL'],
+  '🩷🍓': ['#f7a6c2', '#d8648e', '#ffdbe6', 'STRAWBERRY'],
+  '🩷🍫': ['#9a6446', '#64381f', '#c9997a', 'CHOCOLATE'],
+  '🩷🔥': ['#f9a24e', '#d4661c', '#ffd3a0', 'WARM'],
+};
+function hysFeelCan(ctx: CanvasRenderingContext2D, n: number, [c, d, l, word]: [string, string, string, string]) {
+  const cx = n / 2, w = n * 0.56, x0 = cx - w / 2, x1 = cx + w / 2, top = n * 0.17, bot = n * 0.88, ry = w * 0.15, lid = n * 0.1;
+  const OUT = '#4a2a30';
+  const band = (a: string, b: string, m: string) => { const g = ctx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, a); g.addColorStop(0.28, b); g.addColorStop(0.6, m); g.addColorStop(1, a); return g; };
+  const body = (y0: number, y1: number) => { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0, y1); ctx.ellipse(cx, y1, w / 2, ry, 0, Math.PI, 0, true); ctx.lineTo(x1, y0); ctx.ellipse(cx, y0, w / 2, ry, 0, 0, Math.PI, false); ctx.closePath(); };
+  // bóng đổ
+  ctx.fillStyle = 'rgba(60,30,40,.25)'; ctx.beginPath(); ctx.ellipse(cx + n * 0.03, bot + ry * 0.6, w * 0.55, ry * 1.1, 0, 0, Math.PI * 2); ctx.fill();
+  // thân lon màu theo vị
+  body(top + lid, bot); ctx.fillStyle = band(d, l, c); ctx.fill();
+  ctx.lineWidth = n * 0.022; ctx.strokeStyle = OUT; ctx.stroke();
+  // băng nhãn trắng ôm quanh thân
+  const ly0 = n * 0.4, ly1 = n * 0.66;
+  ctx.save(); body(top + lid, bot); ctx.clip();
+  ctx.beginPath(); ctx.moveTo(x0, ly0); ctx.ellipse(cx, ly0, w / 2, ry, 0, Math.PI, 0, true); ctx.lineTo(x1, ly1); ctx.ellipse(cx, ly1, w / 2, ry, 0, 0, Math.PI, false); ctx.closePath();
+  ctx.fillStyle = band('#e8e0e4', '#ffffff', '#fbf7f8'); ctx.fill();
+  ctx.strokeStyle = d; ctx.lineWidth = n * 0.012; ctx.stroke();
+  // vệt bóng dọc
+  ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.fillRect(x0 + w * 0.16, top + lid, w * 0.07, bot - top);
+  ctx.restore();
+  // chữ Hy's Feel + trái tim
+  const fit = (t: string, px: number, max: number, font: string) => { let s = px; do { ctx.font = font.replace('#', `${s}px`); s -= 1; } while (ctx.measureText(t).width > max && s > 6); };
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  fit("Hy's Feel", n * 0.12, w * 0.86, 'italic 800 # "Segoe UI","Trebuchet MS",sans-serif');
+  ctx.fillStyle = d; ctx.fillText("Hy's Feel", cx, n * 0.53 + ry * 0.5);
+  ctx.fillStyle = '#ff5a8a'; heart(ctx, cx, n * 0.43 + ry * 0.4, n * 0.032);
+  fit(word, n * 0.055, w * 0.8, '700 # "Segoe UI",sans-serif');
+  ctx.lineJoin = 'round'; ctx.lineWidth = n * 0.02; ctx.strokeStyle = d; ctx.strokeText(word, cx, n * 0.73 + ry * 0.4); ctx.fillStyle = '#ffffff'; ctx.fillText(word, cx, n * 0.73 + ry * 0.4);
+  fit('0.03', n * 0.05, w, '700 # "Segoe UI",sans-serif'); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillText('0.03', cx, n * 0.81 + ry * 0.4);
+  // nắp bạc
+  body(top, top + lid); ctx.fillStyle = band('#a8a4b0', '#ffffff', '#dedae4'); ctx.fill(); ctx.lineWidth = n * 0.022; ctx.strokeStyle = OUT; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, top, w / 2, ry, 0, 0, Math.PI * 2); ctx.fillStyle = '#f4f2f8'; ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(cx, top, w * 0.38, ry * 0.7, 0, 0, Math.PI * 2); ctx.strokeStyle = '#c8c4d0'; ctx.lineWidth = n * 0.012; ctx.stroke();
+  ctx.fillStyle = c; heart(ctx, cx, top + ry * 0.1, n * 0.028);
+}
+function heart(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  ctx.beginPath(); ctx.moveTo(x, y + r * 1.4);
+  ctx.bezierCurveTo(x - r * 2.2, y, x - r * 1.2, y - r * 1.5, x, y - r * 0.5);
+  ctx.bezierCurveTo(x + r * 1.2, y - r * 1.5, x + r * 2.2, y, x, y + r * 1.4); ctx.fill();
 }
 
 /** Trộn hai màu hex, t = 0..1 */

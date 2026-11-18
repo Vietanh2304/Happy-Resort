@@ -1,11 +1,13 @@
 // Giường: đi ngủ, hoặc thân mật (chỉ khi cả hai cùng đồng ý — một người mời, người kia chấp nhận).
 import { useState } from 'react';
 import { item } from '../lib/content';
+import { emojiSprite } from '../lib/pixel';
 import type { Live } from '../lib/useLive';
 import { Sheet } from './Sheet';
 
 /** Các vị Hy's Feel bán ở cửa hàng */
-export const HYS_FEEL = ['hysfeel_ultra', 'hysfeel_strawberry', 'hysfeel_peach', 'hysfeel_mint', 'hysfeel_grape', 'hysfeel_choco', 'hysfeel_vanilla'];
+export const HYS_FEEL = ['hysfeel_classic', 'hysfeel_strawberry', 'hysfeel_choco', 'hysfeel_warm',
+  /* vị cũ, không bán nữa */ 'hysfeel_ultra', 'hysfeel_peach', 'hysfeel_mint', 'hysfeel_grape', 'hysfeel_vanilla'];
 
 export function BedSheet({ partnerHere, partnerInBed, callThem, canBaby, have, onSleep, onInvite, onBaby, onClose }: {
   partnerHere: boolean; partnerInBed: boolean; callThem: string; canBaby: boolean;
@@ -21,7 +23,7 @@ export function BedSheet({ partnerHere, partnerInBed, callThem, canBaby, have, o
       <div className="bed-choices">
         {owned.map(id => (
           <button key={id} className="bed-choice love" onClick={() => onInvite(id)}>
-            <span>{item(id).icon}</span><b>{item(id).name}</b><small>Còn {have[id]} cái</small>
+            <img src={emojiSprite(item(id).icon).url} className="px-img" alt="" /><b>{item(id).name}</b><small>Còn {have[id]} cái</small>
           </button>
         ))}
         {owned.length === 0 && <p className="muted small-note">Túi chưa có Hy's Feel nào.</p>}

@@ -2214,7 +2214,7 @@
     {
       "id": "hysfeel_strawberry",
       "name": "Hy's Feel vị dâu",
-      "icon": "🍓",
+      "icon": "🩷🍓",
       "kind": "goods",
       "price": 8
     },
@@ -2242,7 +2242,7 @@
     {
       "id": "hysfeel_choco",
       "name": "Hy's Feel vị sô-cô-la",
-      "icon": "🍫",
+      "icon": "🩷🍫",
       "kind": "goods",
       "price": 8
     },
@@ -2250,6 +2250,20 @@
       "id": "hysfeel_vanilla",
       "name": "Hy's Feel vani gai",
       "icon": "🍦",
+      "kind": "goods",
+      "price": 8
+    },
+    {
+      "id": "hysfeel_classic",
+      "name": "Hy's Feel nguyên bản",
+      "icon": "🩷🌱",
+      "kind": "goods",
+      "price": 8
+    },
+    {
+      "id": "hysfeel_warm",
+      "name": "Hy's Feel ấm nóng",
+      "icon": "🩷🔥",
       "kind": "goods",
       "price": 8
     }
@@ -4118,7 +4132,7 @@
       "cat": "seed"
     },
     {
-      "id": "hysfeel_ultra",
+      "id": "hysfeel_classic",
       "price": 15,
       "cat": "love"
     },
@@ -4128,27 +4142,12 @@
       "cat": "love"
     },
     {
-      "id": "hysfeel_peach",
-      "price": 15,
-      "cat": "love"
-    },
-    {
-      "id": "hysfeel_mint",
-      "price": 15,
-      "cat": "love"
-    },
-    {
-      "id": "hysfeel_grape",
-      "price": 15,
-      "cat": "love"
-    },
-    {
       "id": "hysfeel_choco",
       "price": 15,
       "cat": "love"
     },
     {
-      "id": "hysfeel_vanilla",
+      "id": "hysfeel_warm",
       "price": 15,
       "cat": "love"
     }
