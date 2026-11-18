@@ -683,6 +683,54 @@ textarea { resize: vertical; }
 .love-curtain i:last-child { right: 0; animation-name: curtainR; }
 @keyframes curtainL { from { transform: translateX(-100%); } }
 @keyframes curtainR { from { transform: translateX(100%); } }
+/* ───────── Đêm thân mật: tắt đèn, nến, rèm, màn đêm ───────── */
+.love-pick { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.love-pick .chip .px-img { width: 18px; height: 18px; vertical-align: middle; }
+.love-dim { position: absolute; inset: 0; z-index: 402; pointer-events: none; animation: fade 2.4s; transition: opacity 2s; }
+.love-dim.candle { background: radial-gradient(ellipse at 50% 58%, #ffb06a22, #3a1020cc 70%, #1a0610ee); }
+.love-dim.stars { background: radial-gradient(ellipse at 50% 60%, #6a5ab022, #10143acc 65%, #05061aee); }
+.love-dim.soft { opacity: .55; }
+.love-stars { position: absolute; inset: 0; z-index: 403; pointer-events: none; animation: fade 3s; }
+.love-stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff8d0; box-shadow: 0 0 4px #fff; animation: twinkle 2.2s ease-in-out infinite; }
+@keyframes twinkle { 50% { opacity: .2; transform: scale(.6); } }
+.love-flame { position: absolute; z-index: 407; pointer-events: none; border-radius: 50% 50% 40% 40%; background: radial-gradient(circle at 50% 70%, #fff6c0, #ffb347 60%, #e8603a); animation: flicker .5s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+@keyframes flicker { from { transform: scaleY(1) rotate(-4deg); } to { transform: scaleY(1.25) rotate(4deg); } }
+.lightglow.love-glow { z-index: 405; animation: fade 2s, glowpulse 1.6s ease-in-out infinite alternate; }
+@keyframes glowpulse { to { opacity: .6; } }
+.spr.love-pop { pointer-events: none; animation: fade 1.6s .6s both; }
+.love-haze.lite { background: none; }
+.love-haze.after i { animation-duration: 9s; }
+.love-curtain.sway, .love-curtain.open { z-index: 425; }
+.love-curtain.sway i { width: 51%; animation: curtainL 1.8s ease-out both, sway 3.2s 1.8s ease-in-out infinite; transform-origin: 50% 0; }
+.love-curtain.sway i:last-child { animation: curtainR 1.8s ease-out both, sway 3.2s 2.4s ease-in-out infinite; }
+@keyframes sway { 50% { transform: skewX(1.6deg) scaleX(1.015); } }
+.love-curtain.open i { width: 51%; animation: curtainOpenL 2.2s ease-in both; }
+.love-curtain.open i:last-child { animation-name: curtainOpenR; }
+@keyframes curtainOpenL { to { transform: translateX(-102%); } }
+@keyframes curtainOpenR { to { transform: translateX(102%); } }
+.love-beat { position: absolute; inset: 0; z-index: 426; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; animation: fade 1.5s 1.4s both; }
+.love-beat svg { width: clamp(46px, 11vw, 90px); fill: #ff5a8a; filter: drop-shadow(0 0 14px #ff8ab0); animation: heartbeat 1s ease-in-out infinite; }
+.love-beat small { color: #ffe0ea; font-style: italic; text-shadow: 0 1px 4px #000a; }
+@keyframes heartbeat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.22); } 30% { transform: scale(1.02); } 45% { transform: scale(1.16); } }
+.love-night { position: absolute; inset: 0; z-index: 440; pointer-events: none; background: #07040c; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; animation: fade 2s; color: #ffe8f0; text-align: center; padding: 0 16px; }
+.love-cap { font-size: clamp(15px, 3.4vw, 24px); font-style: italic; animation: fade 2.5s 1s both; margin: 0; }
+.love-clock { font-variant-numeric: tabular-nums; font-size: clamp(13px, 2.6vw, 18px); opacity: .8; margin: 0; animation: fade 2s 2s both; }
+.love-dots i { display: inline-block; width: 6px; height: 6px; margin: 0 4px; border-radius: 50%; background: #ff8ab0; animation: dotpulse 1.4s infinite; }
+.love-dots i:nth-child(2) { animation-delay: .25s; } .love-dots i:nth-child(3) { animation-delay: .5s; }
+@keyframes dotpulse { 50% { opacity: .2; transform: translateY(-3px); } }
+.love-blush { position: absolute; z-index: 9000; pointer-events: none; border-radius: 50%; background: #ff7a9a; opacity: .75; filter: blur(.5px); animation: fade 2s 1s both; }
+.love-tuft { position: absolute; z-index: 9000; pointer-events: none; font-style: normal; font-size: 10px; color: #6a4a3a; animation: fade 2s 1.5s both, sprbob 2.4s ease-in-out infinite; }
+.love-after-hearts { position: absolute; inset: 0; z-index: 404; pointer-events: none; }
+.love-after-hearts svg { position: absolute; width: 18px; fill: #ff7aa2; bottom: 30%; opacity: 0; animation: lovefloat 6s ease-in infinite; }
+.love-after-hearts svg:nth-child(1) { left: 40%; } .love-after-hearts svg:nth-child(2) { left: 50%; animation-delay: 2s; } .love-after-hearts svg:nth-child(3) { left: 58%; animation-delay: 4s; }
+.love-bath { position: absolute; inset: 0; z-index: 430; pointer-events: none; background: radial-gradient(ellipse at 50% 55%, #ffd8e6, #b06a8a 70%, #4a2038); animation: fade 1.2s; }
+.love-bath-cap { position: absolute; left: 0; right: 0; bottom: 8%; text-align: center; color: #fff; font-style: italic; text-shadow: 0 1px 4px #0008; margin: 0; z-index: 440; }
+.love-steam { position: absolute; z-index: 434; }
+.love-steam i { position: absolute; bottom: 0; width: 10px; height: 18px; border-radius: 50%; background: #ffffffaa; filter: blur(3px); animation: steamup 3s ease-out infinite; }
+@keyframes steamup { from { transform: translateY(0) scale(.6); opacity: .8; } to { transform: translateY(-40px) scale(1.4); opacity: 0; } }
+.love-note { margin-right: 64px; background: #fff6f9; border: 2px solid var(--ink); border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; animation: fade .8s; }
+.love-note-their { margin: 0 0 6px; font-style: italic; }
+.love-diary summary { cursor: pointer; font-weight: 700; margin: 8px 0 4px; }
 
 /* ───────── Em bé ───────── */
 .spr.rock { transform-origin: 50% 100%; animation: rock 2.4s ease-in-out infinite; }

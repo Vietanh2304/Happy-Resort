@@ -45,6 +45,7 @@ import { Spr, Stage, Tag, useScale } from './Stage';
 import { LoungeContent } from './Lounge';
 import { CampGlam, HillGlam, LoungeLove, BathLove, GardenSeason } from './SceneGlam';
 import { DuoHost } from './Duo';
+import { LoveScene, type LoveNight } from './LoveNight';
 import { Ballroom } from './Ballroom';
 import { SeaLife } from './SeaLife';
 import { ReefContent } from './Reef';
@@ -114,6 +115,8 @@ export interface WorldProps {
   onTripClass?: () => void;
   scene: SceneId;
   me: Profile;
+  /** đêm thân mật đang diễn ra (hiệu ứng tắt đèn kéo rèm) */
+  love?: LoveNight | null;
   partner: Profile | null;
   /** Trời chung trong làng (random theo mùa) */
   myView: View;
@@ -1067,7 +1070,12 @@ function BedLayer(p: WorldProps & { myBed?: Decor; theirBed?: Decor }) {
       {p.theirBed && p.partner && head(p.partner.avatar, p.theirBed, theirSlot, theirs?.act === 'sleep', live.bubbles.partner)}
       {beds.map(d => { const f = roomPtIn(d.island, d.x + 1, d.y + 1); return <Spr key={`q-${d.id}`} sprite={bedQuiltSprite()} x={f.x} y={f.y} z={Math.round(f.y) + 2} flip={!!d.rot} />; })}
       {sleeping && !intimate && <div className="sleep-dim" />}
-      {intimate && (
+      {intimate && p.love && (() => {
+        const bed = p.myBed!, f = roomPtIn(bed.island, bed.x + 1, bed.y + 1), h0 = pillow(bed, 0);
+        return <LoveScene night={p.love} me={p.me} partner={p.partner} firstSeat={p.firstSeat}
+          heads={[pillow(bed, 0), pillow(bed, 1)]} nightstand={{ x: h0.x - 20, y: h0.y + 6 }} floor={{ x: f.x + 24, y: f.y + 8 }} />;
+      })()}
+      {intimate && !p.love && (
         <>
           <div className="love-haze">{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ left: `${(i * 23) % 96}%`, animationDelay: `${i * 0.6}s` }}>{['💕', '💗', '✨', '💞'][i % 4]}</i>)}</div>
           <div className="love-curtain"><i /><i /></div>

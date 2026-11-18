@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { item } from '../lib/content';
 import { emojiSprite } from '../lib/pixel';
+import { LOVE_CAPTIONS, LOVE_STYLES, type LoveStyle } from './LoveNight';
 import type { Live } from '../lib/useLive';
 import { Sheet } from './Sheet';
 
@@ -13,25 +14,40 @@ export function BedSheet({ partnerHere, partnerInBed, callThem, canBaby, have, o
   partnerHere: boolean; partnerInBed: boolean; callThem: string; canBaby: boolean;
   /** số hộp Hy's Feel đang có theo từng vị */
   have: Record<string, number>;
-  onSleep: () => void; onInvite: (protect: string | null) => void; onBaby: () => void; onClose: () => void;
+  onSleep: () => void; onInvite: (plan: LovePlan) => void; onBaby: () => void; onClose: () => void;
 }) {
   const [pick, setPick] = useState(false);
+  const [prot, setProt] = useState<string | null | undefined>(undefined);
+  const [style, setStyle] = useState<LoveStyle>('candle');
+  const [caption, setCaption] = useState(LOVE_CAPTIONS[0]);
   const owned = HYS_FEEL.filter(id => (have[id] ?? 0) > 0);
   if (pick) return (
     <Sheet title="💞 Thân mật" onClose={onClose}>
-      <p className="muted small-note">Dùng bao hay không? (mua Hy's Feel ở 🛍️ Cửa hàng → 💗 Hy's Feel)</p>
-      <div className="bed-choices">
+      <h4>1. Dùng bao hay không?</h4>
+      <p className="muted small-note">Mua Hy's Feel ở 🛍️ Cửa hàng → 💗 Hy's Feel</p>
+      <div className="love-pick">
         {owned.map(id => (
-          <button key={id} className="bed-choice love" onClick={() => onInvite(id)}>
-            <img src={emojiSprite(item(id).icon).url} className="px-img" alt="" /><b>{item(id).name}</b><small>Còn {have[id]} cái</small>
+          <button key={id} className={`chip ${prot === id ? 'on' : ''}`} onClick={() => setProt(id)}>
+            <img src={emojiSprite(item(id).icon).url} className="px-img" alt="" /> {item(id).name} <small>×{have[id]}</small>
           </button>
         ))}
-        {owned.length === 0 && <p className="muted small-note">Túi chưa có Hy's Feel nào.</p>}
-        <button className="bed-choice" onClick={() => onInvite(null)}>
-          <span>🙈</span><b>Không dùng</b><small>Hai đứa tự quyết nha</small>
-        </button>
+        <button className={`chip ${prot === null ? 'on' : ''}`} onClick={() => setProt(null)}>🙈 Không dùng</button>
       </div>
-      <button className="btn small ghost" onClick={() => setPick(false)}>← Quay lại</button>
+      <h4>2. Kiểu đêm nay</h4>
+      <div className="love-pick">
+        {LOVE_STYLES.map(st => (
+          <button key={st.id} className={`chip ${style === st.id ? 'on' : ''}`} title={st.note} onClick={() => setStyle(st.id)}>{st.icon} {st.name}</button>
+        ))}
+      </div>
+      <h4>3. Lời nhắn hiện lúc tắt đèn</h4>
+      <input value={caption} maxLength={80} onChange={e => setCaption(e.target.value)} style={{ width: '100%' }} />
+      <div className="love-pick">
+        {LOVE_CAPTIONS.map(c => <button key={c} className="chip" onClick={() => setCaption(c)}>{c}</button>)}
+      </div>
+      <div className="row">
+        <button className="btn" disabled={prot === undefined} onClick={() => onInvite({ protect: prot ?? null, style, caption: caption.trim() || LOVE_CAPTIONS[0] })}>💌 Gửi lời mời</button>
+        <button className="btn small ghost" onClick={() => setPick(false)}>← Quay lại</button>
+      </div>
     </Sheet>
   );
   return (
@@ -53,6 +69,9 @@ export function BedSheet({ partnerHere, partnerInBed, callThem, canBaby, have, o
     </Sheet>
   );
 }
+
+/** Kế hoạch cho đêm thân mật — người mời chọn, gửi kèm lời mời */
+export interface LovePlan { protect: string | null; style: LoveStyle; caption: string }
 
 /** Lời mời từ người ấy (thân mật, có em bé...): chỉ bắt đầu khi mình đồng ý */
 export function InviteModal({ icon, text, onAccept, onDecline }: { icon: string; text: string; onAccept: () => void; onDecline: () => void }) {
@@ -92,6 +111,7 @@ export function BedPanel({ live, mode, together, callThem, onWake }: { live: Liv
               <button className="btn small ghost" onClick={() => live.say('🤗')}>🤗</button>
               <button className="btn small ghost" onClick={() => live.say('🥰')}>🥰</button>
               <button className="btn small ghost" onClick={() => live.say(`💕 Yêu ${callThem}`)}>💕</button>
+              {['😳', '💓', '🌹', '🫶', '🔥'].map(e => <button key={e} className="btn small ghost" onClick={() => live.say(e)}>{e}</button>)}
             </>
           )}
         </div>

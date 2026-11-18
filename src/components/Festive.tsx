@@ -33,6 +33,16 @@ export function DiarySheet({ me, partner, today, mems, onClose }: { me: api.Prof
           <button key={m} className={`chip ${m === month ? 'on' : ''}`} onClick={() => setMonth(m)}>Tháng {+m.slice(5)}/{m.slice(0, 4)}</button>
         ))}
       </div>
+      {mems.some(m => m.kind === 'lovenote') && (
+        <details className="love-diary">
+          <summary>💞 Những đêm của hai đứa ({mems.filter(m => m.kind === 'lovenote').length})</summary>
+          <ul className="task-list">
+            {mems.filter(m => m.kind === 'lovenote').map(m => (
+              <li key={m.id} style={{ display: 'block' }}><b>{+m.day.slice(8)}/{+m.day.slice(5, 7)}</b> <small className="muted">{nameOf(m.user_id, me, partner)}:</small> {m.data.text}</li>
+            ))}
+          </ul>
+        </details>
+      )}
       <h4>📖 Tháng {+month.slice(5)} của tụi mình</h4>
       {!days.length && <p className="muted">Chưa có trang nào — mỗi ngày mỗi người viết một dòng nhé.</p>}
       <ul className="task-list">

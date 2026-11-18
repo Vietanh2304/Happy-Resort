@@ -23,7 +23,8 @@ import { villageWeather } from '../lib/villageWeather';
 import { BATH, BEACH, BUILDINGS, HOUSE, NURSERY, RIDE_MS, SCENES, TOWN, farmCell, type GameId, type Pt, type SceneId } from '../lib/world';
 import { KID_FEED, KID_FURN, KIDROOM, kidSlot } from '../lib/kidRoom';
 import { addDays, festivalsOn, mainTheme, THEMES, type CustomDay } from '../lib/festivals';
-import { BedPanel, BedSheet, HYS_FEEL, InviteModal } from './Bed';
+import { BedPanel, BedSheet, HYS_FEEL, InviteModal, type LovePlan } from './Bed';
+import { LOVE_CAPTIONS, LOVE_STYLES, LoveNoteCard, useLoveNight, type LoveNightCfg } from './LoveNight';
 import { KidNameSheet, KidSheet, KidWardrobeSheet } from './Family';
 import { captureWorld } from '../lib/photo';
 import { findPath } from '../lib/pathing';
@@ -755,31 +756,50 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
   // ───── Giường: ngủ / thân mật / có em bé (thân mật & em bé cần cả hai đồng ý) ─────
   const callThem = partner?.avatar?.gender === 'm' ? 'anh' : partner?.avatar?.gender === 'f' ? 'em' : partnerName;
   const inBed = (live.mine.act === 'sleep' || live.mine.act === 'intimate') && !!live.mine.bed;
-  const [invite, setInvite] = useState<{ kind: 'love' | 'baby'; bed: string; protect?: string | null } | null>(null);
-  const lovePlan = useRef<string | null>(null);
-  useEffect(() => onEvent('bed-invite', (m: { kind: 'love' | 'baby'; bed: string; protect?: string | null }) => { setInvite(m); void ping(m.kind === 'love' ? '💞 Lời mời' : '👶 Lời mời', m.kind === 'love' ? `${partnerName} đang đợi bạn ở phòng ngủ` : `${partnerName} muốn hai đứa có một em bé`); }), []);
+  const [invite, setInvite] = useState<{ kind: 'love' | 'baby'; bed: string } & Partial<LovePlan> | null>(null);
+  const lovePlan = useRef<LovePlan | null>(null);
+  // Đêm thân mật: trình tự hiệu ứng chạy trên máy mỗi người, bắt đầu lúc cả hai cùng vào giường
+  const [night, setNight] = useState<LoveNightCfg | null>(null);
+  const love = useLoveNight(night);
+  const startNight = (pl: Partial<LovePlan>) => setNight({ style: pl.style ?? 'candle', can: pl.protect ?? null, caption: pl.caption || LOVE_CAPTIONS[0], start: Date.now(), startMin: myTime.hour * 60 + myTime.minute });
+  useEffect(() => { if (live.mine.act !== 'intimate') setNight(null); }, [live.mine.act]);
+  const afterDone = useRef(0);
+  useEffect(() => {
+    if (love?.phase !== 'after' || !night || afterDone.current === night.start) return;
+    afterDone.current = night.start;
+    void (async () => {
+      try {
+        const a = await api.claim(`aff:love:${myTime.date}:${me.id}:1`), b = await api.claim(`aff:love:${myTime.date}:${me.id}:2`);
+        notify('claims');
+        toast(a || b ? '💗 Hai đứa gần nhau thêm chút nữa · +2 thiện cảm' : '💗 Ôm nhau thêm chút nữa nha…');
+      } catch (e) { console.error(e); }
+    })();
+  }, [love?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  const theirLoveNote = night && partner ? mems.find(m => m.kind === 'lovenote' && m.user_id === partner.id && Date.parse(m.created_at) >= night.start)?.data.text as string | undefined : undefined;
+  useEffect(() => onEvent('bed-invite', (m: { kind: 'love' | 'baby'; bed: string } & Partial<LovePlan>) => { setInvite(m); void ping(m.kind === 'love' ? '💞 Lời mời' : '👶 Lời mời', m.kind === 'love' ? `${partnerName} đang đợi bạn ở phòng ngủ` : `${partnerName} muốn hai đứa có một em bé`); }), []);
   const answerRef = useRef((_m: { kind: 'love' | 'baby'; ok: boolean; bed: string }) => {});
   answerRef.current = m => {
     if (!m.ok) return toast(m.kind === 'love' ? `😊 ${callThem} bảo để lúc khác nhé` : `😊 ${callThem} muốn đợi thêm chút nữa`);
     if (m.kind === 'love') {
-      const pf = lovePlan.current; lovePlan.current = null;
+      const plan = lovePlan.current; lovePlan.current = null;
+      const pf = plan?.protect ?? null;
       if (pf) api.craft([{ id: pf, n: 1 }]).then(() => notify('inventory'), console.error);
-      goToBed(m.bed); toast(pf ? `💞 … (${item(pf).icon} ${item(pf).name})` : '💞 …');
+      goToBed(m.bed); startNight(plan ?? {}); toast(pf ? `💞 … (${item(pf).icon} ${item(pf).name})` : '💞 …');
     }
     else toast(`🐦 ${callThem} đồng ý rồi! Ngày mai cò sẽ mang em bé tới nhà mình 💕`);
   };
   useEffect(() => onEvent('bed-answer', (m: { kind: 'love' | 'baby'; ok: boolean; bed: string }) => answerRef.current(m)), []);
-  function askBed(kind: 'love' | 'baby', bed: string, protect: string | null = null) {
+  function askBed(kind: 'love' | 'baby', bed: string, plan?: LovePlan) {
     setSheet(null);
-    if (kind === 'love') lovePlan.current = protect;
-    sendEvent('bed-invite', { kind, bed, protect });
+    if (kind === 'love') lovePlan.current = plan ?? null;
+    sendEvent('bed-invite', { kind, bed, ...plan });
     toast(kind === 'love' ? `💌 Đã gửi lời mời — chờ ${callThem} đồng ý…` : `💌 Đã hỏi ${callThem} — chờ trả lời nhé…`);
   }
   async function answerInvite(ok: boolean) {
     const inv = invite;
     setInvite(null);
     if (!inv) return;
-    if (ok && inv.kind === 'love') goToBed(inv.bed);
+    if (ok && inv.kind === 'love') { goToBed(inv.bed); startNight(inv); }
     if (ok && inv.kind === 'baby') {
       try { await api.planKid(addDays(kidDay, 1)); notify('kids'); toast('🐦 Ngày mai cò sẽ mang em bé tới nhà mình 💕'); }
       catch (e) { toastError(e); return sendEvent('bed-answer', { kind: inv.kind, ok: false, bed: inv.bed }); }
@@ -1069,7 +1089,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       <main className="world">
         <World
           scene={scene} me={me} partner={partner} myView={myView} kidDay={kidDay} realView={realView} partnerView={partnerView}
-          live={live} partnerHere={!!partnerHere} firstSeat={firstSeat}
+          live={live} partnerHere={!!partnerHere} firstSeat={firstSeat} love={love}
           decor={decor} lanterns={lanterns} editing={editing} ghost={editing ? editor.ghost : null} edit={editor.cell} hillSky={hillSky} seaSpot={seaSpot} couple={hugAct} snowball={snowball} skyFx={{ rainbow, meteor }} onRainbow={() => run(async () => { const ok = await api.grantCoins(`rainbow:${myTime.date}:${me.id}`, 20); notify('profiles'); toast(ok ? '🌈 Ngắm cầu vồng sau mưa — may mắn cả ngày! +20 xu' : '🌈 Cầu vồng đẹp quá…'); })} onMeteor={() => { const w = prompt('🌠 Sao băng! Ước một điều đi:'); if (w?.trim()) void run(async () => { await api.addWish(me, `🌠 ${w.trim()}`); notify('wishes'); toast('🌠 Điều ước đã vào lọ “Muốn cùng làm”'); }); }} animals={animals} job={myJob} stall={id => setSheet({ kind: 'stall', id })} shops={{ flower: () => setSheet({ kind: 'flowershop' }), bakery: (station?: string) => setSheet({ kind: 'bakery', station: (station ?? 'case') as BakeStation }), bugbook: () => setSheet({ kind: 'bugbook' }) }} work={{ desk: () => setSheet({ kind: 'work' }), talk: (n, line) => toast(`💬 ${n}: “${line}”`) }} ranch={{ animal: id => setSheet({ kind: 'animal', id }), shop: () => setSheet({ kind: 'ranchshop' }), workshop: () => setSheet({ kind: 'workshop' }), tailor: () => setSheet({ kind: 'tailor' }), pen: pen => setSheet({ kind: 'pen', pen }) }} onBar={() => setBarMenu(true)} onSee={seeReef} chestOpen={claimed.includes(chestKey)} onChest={openChest} hillReal={skyChoice === 'real'} bath={bathWater} cinemaMode={cinemaMode}
           selectedId={editor.selection?.kind === 'decor' ? editor.selection.id : undefined}
           farm={farm} guests={activeGuests} pickups={pickups} fishing={fishing} combos={combos}
@@ -1139,7 +1159,13 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           }}
         />
       ) : inBed ? (
+        <>
+        {love?.phase === 'after' && <LoveNoteCard callThem={callThem} theirNote={theirLoveNote} onSave={async text => {
+          try { await api.addMemory(me, 'lovenote', { text, style: night?.style, can: night?.can }, myTime.date); notify('memories'); toast(`💌 Đã gửi cho ${callThem} và cất vào nhật ký`); return true; }
+          catch (e) { toastError(e); return false; }
+        }} />}
         <BedPanel live={live} mode={live.mine.act === 'intimate' ? 'intimate' : 'sleep'} together={!!partnerHere && theirs?.bed === live.mine.bed} callThem={callThem} onWake={wake} />
+        </>
       ) : festIcon && theme && scene === 'town' ? (
         <FestTray theme={theme} icon={festIcon} onPick={setFestIcon} onDone={() => setFestIcon(null)} />
       ) : scene === 'disco' ? (
@@ -1266,7 +1292,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
           canBaby={kids.length < 3 && !expecting}
           onSleep={() => { live.update({ act: 'sleep', bed: sheet.bed }); setSheet(null); toast('😴 Chúc ngủ ngon…'); }}
           have={Object.fromEntries(HYS_FEEL.map(id => [id, inventory.find(r => r.item_id === id)?.qty ?? 0]))}
-          onInvite={pf => askBed('love', sheet.bed, pf)} onBaby={() => askBed('baby', sheet.bed)} onClose={close} />
+          onInvite={pl => askBed('love', sheet.bed, pl)} onBaby={() => askBed('baby', sheet.bed)} onClose={close} />
       )}
       {sheet?.kind === 'kidcloset' && <KidWardrobeSheet kids={kids} me={me} partner={partner} today={kidDay} outfits={outfits.filter(o => o.spec.kid)} onClose={close} />}
       {sheet?.kind === 'kid' && <KidSheet kids={kids} me={me} partner={partner} today={kidDay} live={live} pick={sheet.id} onClose={close} onDo={babyCare} />}
@@ -1298,7 +1324,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'kidname' && kids.find(k => k.id === sheet.id) && <KidNameSheet kid={kids.find(k => k.id === sheet.id)!} onClose={close} />}
       {invite && (
         <InviteModal icon={invite.kind === 'love' ? '💞' : '👶'}
-          text={invite.kind === 'love' ? `${partnerName} muốn thân mật với bạn${invite.protect ? ` · dùng ${item(invite.protect).icon} ${item(invite.protect).name}` : invite.protect === null ? ' · không dùng bao' : ''}` : `${partnerName} muốn hai đứa có một em bé`}
+          text={invite.kind === 'love' ? `${partnerName} muốn thân mật với bạn${invite.protect ? ` · dùng ${item(invite.protect).icon} ${item(invite.protect).name}` : invite.protect === null ? ' · không dùng bao' : ''}${invite.style ? ` · ${LOVE_STYLES.find(x => x.id === invite.style)?.icon ?? ''} ${LOVE_STYLES.find(x => x.id === invite.style)?.name ?? ''}` : ''}${invite.caption ? ` — “${invite.caption}”` : ''}` : `${partnerName} muốn hai đứa có một em bé`}
           onAccept={() => answerInvite(true)} onDecline={() => answerInvite(false)} />
       )}
       {sheet?.kind === 'album' && <AlbumSheet photos={photos} me={me} partner={partner} onClose={close} onShoot={shoot} />}
