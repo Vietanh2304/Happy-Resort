@@ -17,8 +17,9 @@ const CATS = [
   { id: 'garden', label: '🌷 Vườn & trại' },
   { id: 'pet', label: '🐾 Thú cưng' },
   { id: 'holiday', label: '🎊 Đồ lễ theo mùa' },
+  { id: 'love', label: "💗 Hy's Feel" },
 ] as const;
-const WHERE: Record<string, string> = { seed: 'ra nông trại gieo hạt nhé', furniture: 'vào nhà gỗ để bày nhé', appliance: 'vào nhà gỗ để lắp nhé', decor: 'bấm Trang trí để bày nhé', garden: 'ra vườn hoặc nông trại để đặt nhé', pet: 'bé cưng sẽ mừng lắm đó', holiday: 'bấm Trang trí để bày cho ngày lễ nhé' };
+const WHERE: Record<string, string> = { seed: 'ra nông trại gieo hạt nhé', furniture: 'vào nhà gỗ để bày nhé', appliance: 'vào nhà gỗ để lắp nhé', decor: 'bấm Trang trí để bày nhé', garden: 'ra vườn hoặc nông trại để đặt nhé', pet: 'bé cưng sẽ mừng lắm đó', holiday: 'bấm Trang trí để bày cho ngày lễ nhé', love: 'bấm 🛏️ giường → Thân mật để chọn dùng nhé' };
 
 const art = (id: string) => (ART[id] ? ART[id].sprite().url : emojiSprite(item(id).icon).url);
 
