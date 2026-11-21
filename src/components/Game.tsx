@@ -92,6 +92,7 @@ import { TripShopSheet } from './TripExtras';
 import { FlightOverlay } from './Trip';
 import { spotOf } from '../lib/tripSpots';
 import { ChatDock } from './ChatDock';
+import { SongSheet, songsOf, useSongPlayer } from './SongSheet';
 
 type SheetState =
   | { kind: 'games' | 'mail' | 'settings' | 'question' | 'collection' | 'meetup' | 'wish' | 'bag' | 'shop' | 'map' | 'avatar' | 'emote' | 'guestbook' | 'album' | 'calendar' | 'pet' | 'book' | 'photo' }
@@ -104,7 +105,7 @@ type SheetState =
   | { kind: 'animal'; id: string }
   | { kind: 'ranchshop' }
   | { kind: 'stall'; id: StallId }
-  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'diary' } | { kind: 'cheer' } | { kind: 'festival' } | { kind: 'travel' } | { kind: 'tripshop' } | { kind: 'pen'; pen: 'stable' | 'pond' }
+  | { kind: 'flowershop' } | { kind: 'bakery'; station?: BakeStation } | { kind: 'bugbook' } | { kind: 'diary' } | { kind: 'songs' } | { kind: 'cheer' } | { kind: 'festival' } | { kind: 'travel' } | { kind: 'tripshop' } | { kind: 'pen'; pen: 'stable' | 'pond' }
   | { kind: 'workshop' }
   | { kind: 'tailor' }
   | { kind: 'kidcloset' }
@@ -400,6 +401,18 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
     return () => { clearTimeout(t); window.removeEventListener('pointerdown', kick); window.removeEventListener('keydown', kick); };
   }, [musicPref.on]);
   useEffect(() => { music.setVolume(call.partnerTalking || call.mic ? musicPref.vol * 0.45 : musicPref.vol); }, [musicPref.vol, call.partnerTalking, call.mic]);
+  // Bài hát của tụi mình: phát thì tạm tắt lo-fi, xong bật lại (nếu đang bật)
+  const songs = songsOf(mems);
+  const songsRef = useRef(songs); songsRef.current = songs;
+  const song = useSongPlayer(on => { if (!musicPref.on) return; if (on) music.start(); else music.stop(); });
+  const songRef = useRef(song); songRef.current = song;
+  useEffect(() => onEvent('song-play', (m: { id: string; start: number }) => {
+    const s = songsRef.current.find(x => x.id === m.id);
+    if (!s) return;
+    toast(`💞 ${partnerName} mở bài "${s.title}" cho hai đứa cùng nghe`);
+    void songRef.current.play(s, false, Math.max(0, (Date.now() - m.start) / 1000));
+  }), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => onEvent('song-stop', () => songRef.current.stop()), []);
   function setMusic(p: { on: boolean; vol: number }) {
     setMusicPref(p);
     saveMusicPref(p);
@@ -1071,6 +1084,7 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
             <button data-keep className="chip" onClick={() => setMusic({ ...musicPref, on: !musicPref.on })}>{musicPref.on ? '⏸ Tắt nhạc' : '▶ Bật nhạc lo-fi'}</button>
             <input type="range" min={0} max={1} step={0.05} value={musicPref.vol} aria-label="Âm lượng nhạc"
               onChange={e => setMusic({ ...musicPref, vol: Number(e.target.value) })} />
+            <button data-keep className={`chip ${song.playing ? 'on' : ''}`} onClick={() => { setMusicPanel(false); setSheet({ kind: 'songs' }); }}>💿 Bài hát của tụi mình{song.playing ? ' · đang phát' : ''}</button>
           </span>
         )}
         <button className="chip" onClick={shoot} title="Chụp ảnh khoảnh khắc (đếm ngược 3 giây)">📸</button>
@@ -1303,6 +1317,8 @@ export function Game({ me, reloadMe }: { me: api.Profile; reloadMe: () => void }
       {sheet?.kind === 'pen' && <PenSheet pen={sheet.pen} animals={animals} inventory={inventory} onAnimal={id => setSheet({ kind: 'animal', id })} onShop={() => { close(); enter('ranch'); }} onClose={close} />}
       {sheet?.kind === 'stall' && <StallSheet id={sheet.id} coins={couple?.coins ?? 0} onClose={close} />}
       {sheet?.kind === 'cheer' && <CheerSheet me={me} partner={partner} mems={mems} pics={dpics} today={myTime.date} onClose={close} />}
+      {sheet?.kind === 'songs' && <SongSheet me={me} partnerName={partnerName} songs={songs} playing={song.playing}
+        onPlay={(s, together) => void song.play(s, together)} onStop={() => song.stop(true)} onClose={close} />}
       {sheet?.kind === 'diary' && <DiarySheet me={me} partner={partner} today={myTime.date} mems={mems} onClose={close} />}
       {sheet?.kind === 'festival' && festKind && <FestivalSheet kind={festKind} me={me} partner={partner} today={myTime.date} mems={mems} inventory={inventory} kids={kids} onClose={close} />}
       {sheet?.kind === 'tripshop' && tripHere && <TripShopSheet trip={tripHere as TripId} coins={couple?.coins ?? 0} onClose={close} onBought={(url, name) => { doAct('rummage'); setTimeout(() => { doAct('cheer'); window.dispatchEvent(new CustomEvent('trip-pop', { detail: { url } })); live.say(`🛍️ Mua ${name} mang về trang trí nhà!`); }, 900); }} />}

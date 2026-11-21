@@ -730,6 +730,16 @@ textarea { resize: vertical; }
 @keyframes steamup { from { transform: translateY(0) scale(.6); opacity: .8; } to { transform: translateY(-40px) scale(1.4); opacity: 0; } }
 .love-note { margin-right: 64px; background: #fff6f9; border: 2px solid var(--ink); border-radius: 12px; padding: 8px 10px; margin-bottom: 6px; animation: fade .8s; }
 .love-note-their { margin: 0 0 6px; font-style: italic; }
+.song-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.song-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding: 8px 10px; border: 2px solid var(--ink); border-radius: 10px; background: #fffaf3; cursor: pointer; }
+.song-row.on { background: #ffeef4; }
+.song-row .row { gap: 4px; }
+.song-seek { display: flex; align-items: center; gap: 8px; margin: 4px 0 8px; }
+.song-seek input { flex: 1; }
+.song-lyrics { max-height: 42vh; overflow-y: auto; padding: 8px 12px; border-radius: 10px; background: #fff6f9; text-align: center; line-height: 1.55; }
+.song-lyrics h5 { margin: 10px 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.song-lyrics p { margin: 0; }
+.song-add { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
 .love-diary summary { cursor: pointer; font-weight: 700; margin: 8px 0 4px; }
 
 /* ───────── Em bé ───────── */

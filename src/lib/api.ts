@@ -267,6 +267,21 @@ export async function deletePhoto(ph: Photo) {
   return run(supabase.from('photos').delete().eq('id', ph.id));
 }
 
+// Bài hát của cặp đôi: file trong kho riêng, tên + lời trong memories (kind 'song')
+export async function addSong(me: Profile, file: Blob & { name?: string }, title: string, lyrics: string) {
+  const ext = (file.name?.split('.').pop() || 'mp3').toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp3';
+  const type = { mp3: 'audio/mpeg', m4a: 'audio/mp4', aac: 'audio/aac', wav: 'audio/wav', ogg: 'audio/ogg', flac: 'audio/flac' }[ext] ?? (file.type || 'audio/mpeg');
+  const path = await upload(me, 'songs', new Blob([await file.arrayBuffer()], { type }), ext);
+  try {
+    const rows = await run<{ id: string }[]>(supabase.from('memories').insert({ couple_id: me.couple_id, user_id: me.id, kind: 'song', data: { title, path, lyrics } }).select('id'));
+    return rows?.[0]?.id ?? null;
+  } catch (e) { await supabase.storage.from(BUCKET).remove([path]); throw e; }
+}
+export async function deleteSong(id: string, path: string) {
+  await supabase.storage.from(BUCKET).remove([path]);
+  return run(supabase.from('memories').delete().eq('id', id));
+}
+
 // Tin nhắn thoại & trạng thái
 export async function sendVoice(me: Profile, toId: string, blob: Blob, secs: number) {
   const ext = blob.type.includes('mp4') ? 'm4a' : blob.type.includes('ogg') ? 'ogg' : 'webm';
